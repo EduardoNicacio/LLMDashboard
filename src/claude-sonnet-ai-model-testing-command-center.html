@@ -1,0 +1,2935 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Sonnet AI Model Testing Command Center</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* 
+        ============================================================
+        RESET + ROOT VARIABLES
+        ============================================================ 
+        */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #03030a;
+            --surface: rgba(255, 255, 255, 0.033);
+            --surface2: rgba(255, 255, 255, 0.055);
+            --border: rgba(0, 245, 255, 0.1);
+            --border2: rgba(0, 245, 255, 0.28);
+            --cyan: #00f5ff;
+            --cyan-g: rgba(0, 245, 255, 0.3);
+            --cyan-d: rgba(0, 245, 255, 0.09);
+            --violet: #a78bfa;
+            --violet-g: rgba(167, 139, 250, 0.3);
+            --violet-d: rgba(167, 139, 250, 0.09);
+            --pink: #f472b6;
+            --pink-g: rgba(244, 114, 182, 0.3);
+            --amber: #fbbf24;
+            --amber-g: rgba(251, 191, 36, 0.3);
+            --amber-d: rgba(251, 191, 36, 0.09);
+            --green: #34d399;
+            --green-g: rgba(52, 211, 153, 0.3);
+            --red: #f87171;
+            --text: #e2e8f0;
+            --ts: #94a3b8;
+            --td: #475569;
+            --ff-d: 'Orbitron', monospace;
+            --ff-m: 'JetBrains Mono', monospace;
+            --ff-b: 'Rajdhani', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: var(--ff-b);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 245, 255, 0.022) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 255, 0.022) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Atmospheric glows */
+        .glow-1,
+        .glow-2 {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 50%;
+        }
+
+        .glow-1 {
+            top: -25%;
+            left: -15%;
+            width: 55%;
+            height: 60%;
+            background: radial-gradient(ellipse, rgba(0, 245, 255, 0.055) 0%, transparent 65%);
+        }
+
+        .glow-2 {
+            bottom: -30%;
+            right: -15%;
+            width: 50%;
+            height: 55%;
+            background: radial-gradient(ellipse, rgba(167, 139, 250, 0.055) 0%, transparent 65%);
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1580px;
+            margin: 0 auto;
+            padding: 0 22px 90px;
+        }
+
+        /* 
+        ============================================================
+        TOPBAR
+        ============================================================ 
+        */
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 13px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 26px;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: rgba(3, 3, 10, 0.95);
+            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(24px);
+        }
+
+        .brand {
+            font-family: var(--ff-d);
+            font-size: 0.85rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            color: var(--cyan);
+            text-shadow: 0 0 28px var(--cyan-g), 0 0 60px rgba(0, 245, 255, 0.12);
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 3px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .ntab {
+            font-family: var(--ff-d);
+            font-size: 0.56rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: transparent;
+            color: var(--td);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.22s ease;
+            text-transform: uppercase;
+        }
+
+        .ntab:hover {
+            color: var(--ts);
+            border-color: rgba(0, 245, 255, 0.22);
+        }
+
+        .ntab.active {
+            color: var(--cyan);
+            border-color: var(--cyan);
+            background: var(--cyan-d);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.14), 0 2px 0 var(--cyan);
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--ff-m);
+            font-size: 0.58rem;
+            color: var(--green);
+            letter-spacing: 0.07em;
+            padding: 5px 10px;
+            border: 1px solid rgba(52, 211, 153, 0.22);
+            border-radius: 3px;
+            background: rgba(52, 211, 153, 0.06);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 7px var(--green);
+            animation: pulse-live 2s ease-in-out infinite;
+        }
+
+        .sess-tag {
+            font-family: var(--ff-m);
+            font-size: 0.56rem;
+            color: var(--td);
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes pulse-live {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 7px var(--green);
+            }
+
+            50% {
+                opacity: 0.35;
+                box-shadow: 0 0 2px var(--green);
+            }
+        }
+
+        /* 
+        ============================================================
+        HERO STATS
+        ============================================================ 
+        */
+        .hero {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 13px;
+            margin-bottom: 28px;
+        }
+
+        .hcard {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 17px 19px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s, border-color 0.3s;
+            cursor: default;
+        }
+
+        .hcard:hover {
+            transform: translateY(-3px);
+            border-color: color-mix(in srgb, var(--a, var(--cyan)) 38%, transparent);
+        }
+
+        .hcard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--a, var(--cyan)), transparent);
+            opacity: .85;
+        }
+
+        .hcard::after {
+            content: '';
+            position: absolute;
+            top: -35px;
+            right: -20px;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, color-mix(in srgb, var(--a, var(--cyan)) 14%, transparent) 0%, transparent 70%);
+        }
+
+        .hlbl {
+            font-family: var(--ff-d);
+            font-size: 0.48rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--td);
+            margin-bottom: 9px;
+        }
+
+        .hval {
+            font-family: var(--ff-m);
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: var(--a, var(--cyan));
+            text-shadow: 0 0 22px color-mix(in srgb, var(--a, var(--cyan)) 55%, transparent);
+            line-height: 1;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .hsub {
+            font-size: 0.7rem;
+            color: var(--td);
+            letter-spacing: 0.02em;
+        }
+
+        /* 
+        ============================================================
+        SECTION HEADER
+        ============================================================ 
+        */
+        .sec-hd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .sec-ttl {
+            font-family: var(--ff-d);
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ts);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sec-ttl::before {
+            content: '';
+            width: 18px;
+            height: 2px;
+            background: var(--cyan);
+            box-shadow: 0 0 8px var(--cyan);
+            flex-shrink: 0;
+        }
+
+        /* 
+        ============================================================
+        TOGGLE GROUP
+        ============================================================ 
+        */
+        .tg {
+            display: flex;
+            gap: 3px;
+        }
+
+        .tbtn {
+            font-family: var(--ff-d);
+            font-size: 0.48rem;
+            letter-spacing: 0.1em;
+            padding: 6px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: transparent;
+            color: var(--td);
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .tbtn:hover {
+            color: var(--ts);
+            border-color: rgba(0, 245, 255, 0.2);
+        }
+
+        .tbtn.active {
+            background: var(--cyan-d);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        /* 
+        ============================================================
+        PANEL
+        ============================================================ 
+        */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .phd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 17px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ptitle {
+            font-family: var(--ff-d);
+            font-size: 0.56rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--cyan);
+        }
+
+        .pbody {
+            padding: 17px;
+        }
+
+        /* 
+        ============================================================
+        VIEW SECTIONS
+        ============================================================ 
+        */
+        .view {
+            display: none;
+            animation: fsi .28s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fsi {
+            from {
+                opacity: 0;
+                transform: translateY(9px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 
+        ============================================================
+        SUMMARY LAYOUT
+        ============================================================ 
+        */
+        .sum-layout {
+            display: grid;
+            grid-template-columns: 1fr 355px;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* ============================================================
+   MATCHUP
+   ============================================================ */
+        .matchup {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 14px;
+            align-items: start;
+            margin-bottom: 20px;
+        }
+
+        .mc {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 21px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color .3s, box-shadow .3s;
+        }
+
+        .mc::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cc), transparent);
+        }
+
+        .mc.local {
+            --cc: var(--amber);
+            border-color: rgba(251, 191, 36, 0.17);
+        }
+
+        .mc.front {
+            --cc: var(--violet);
+            border-color: rgba(167, 139, 250, 0.17);
+        }
+
+        .mc:hover {
+            border-color: color-mix(in srgb, var(--cc) 42%, transparent);
+            box-shadow: 0 0 35px color-mix(in srgb, var(--cc) 7%, transparent);
+        }
+
+        .mc-type {
+            font-family: var(--ff-d);
+            font-size: 0.47rem;
+            letter-spacing: 0.22em;
+            color: var(--cc);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .mc-name {
+            font-family: var(--ff-d);
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+
+        .mc-grade {
+            position: absolute;
+            top: 17px;
+            right: 17px;
+            font-family: var(--ff-d);
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--cc);
+            text-shadow: 0 0 18px var(--cc);
+        }
+
+        .metric {
+            margin-bottom: 13px;
+        }
+
+        .met-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .met-n {
+            font-size: 0.77rem;
+            color: var(--ts);
+        }
+
+        .met-v {
+            font-family: var(--ff-m);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--cc);
+        }
+
+        .sbar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .sfill {
+            height: 100%;
+            background: var(--cc);
+            box-shadow: 0 0 7px var(--cc);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 1s cubic-bezier(.16, 1, .3, 1) .35s;
+        }
+
+        .mc-foot {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 13px;
+            border-top: 1px solid rgba(255, 255, 255, 0.055);
+        }
+
+        .fstat .fl {
+            font-family: var(--ff-d);
+            font-size: 0.43rem;
+            letter-spacing: 0.14em;
+            color: var(--td);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+
+        .fstat .fv {
+            font-family: var(--ff-m);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--cc);
+        }
+
+        .vs-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 14px 0;
+            min-width: 56px;
+        }
+
+        .vs-t {
+            font-family: var(--ff-d);
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--td);
+            letter-spacing: 0.08em;
+        }
+
+        .vs-m {
+            font-family: var(--ff-m);
+            font-size: 0.56rem;
+            color: var(--td);
+            text-align: center;
+            line-height: 1.75;
+        }
+
+        /* 
+        ============================================================
+        WINNER CARDS
+        ============================================================ 
+        */
+        .winners {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 9px;
+            margin-bottom: 28px;
+        }
+
+        .wcard {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 13px 10px;
+            text-align: center;
+            transition: transform .22s, border-color .22s;
+        }
+
+        .wcard:hover {
+            transform: translateY(-4px);
+        }
+
+        .wcard.wl {
+            border-color: rgba(251, 191, 36, 0.2);
+        }
+
+        .wcard.wf {
+            border-color: rgba(167, 139, 250, 0.2);
+        }
+
+        .wc-cat {
+            font-family: var(--ff-d);
+            font-size: 0.44rem;
+            letter-spacing: 0.14em;
+            color: var(--td);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .wc-mod {
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            line-height: 1.25;
+        }
+
+        .wcard.wl .wc-mod {
+            color: var(--amber);
+        }
+
+        .wcard.wf .wc-mod {
+            color: var(--violet);
+        }
+
+        .wc-sc {
+            font-family: var(--ff-m);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .wcard.wl .wc-sc {
+            color: var(--amber);
+            text-shadow: 0 0 10px var(--amber-g);
+        }
+
+        .wcard.wf .wc-sc {
+            color: var(--violet);
+            text-shadow: 0 0 10px var(--violet-g);
+        }
+
+        .wc-exp {
+            font-size: 0.66rem;
+            color: var(--td);
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        /* 
+        ============================================================
+        HARDWARE SIDE PANEL
+        ============================================================ 
+        */
+        .hw-bar-row {
+            margin-bottom: 11px;
+        }
+
+        .hw-bl {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .hw-bl span:first-child {
+            font-size: 0.75rem;
+            color: var(--ts);
+        }
+
+        .hw-bl span:last-child {
+            font-family: var(--ff-m);
+            font-size: 0.68rem;
+        }
+
+        .hw-track {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .hw-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1.3s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .srv-box {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(52, 211, 153, 0.14);
+            border-radius: 6px;
+            margin-top: 13px;
+        }
+
+        .srv-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse-live 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        .srv-n {
+            font-family: var(--ff-m);
+            font-size: 0.67rem;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .srv-u {
+            font-family: var(--ff-m);
+            font-size: 0.57rem;
+            color: var(--td);
+        }
+
+        /* API STATS */
+        .api-g2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            margin-bottom: 13px;
+        }
+
+        .abox {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 11px;
+        }
+
+        .ab-l {
+            font-size: 0.67rem;
+            color: var(--td);
+            margin-bottom: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        .ab-v {
+            font-family: var(--ff-m);
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--violet);
+        }
+
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .cost-row:last-child {
+            border-bottom: none;
+        }
+
+        .cr-l {
+            font-size: 0.78rem;
+            color: var(--ts);
+        }
+
+        .cr-v {
+            font-family: var(--ff-m);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--violet);
+        }
+
+        .cost-row.crt .cr-l {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .cost-row.crt .cr-v {
+            color: var(--pink);
+            font-size: 0.97rem;
+        }
+
+        /* 
+        ============================================================
+        CHARTS
+        ============================================================ 
+        */
+        .chart-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 17px;
+        }
+
+        .chart-ttl {
+            font-family: var(--ff-d);
+            font-size: 0.52rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ts);
+            margin-bottom: 13px;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .g2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 17px;
+            margin-bottom: 20px;
+        }
+
+        /* 
+        ============================================================
+        SPEED VIEW STATS
+        ============================================================ 
+        */
+        .speed-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        /* 
+        ============================================================
+        PROMPT HISTORY
+        ============================================================ 
+        */
+        .plist {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .pi {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color .2s;
+        }
+
+        .pi:hover {
+            border-color: rgba(0, 245, 255, 0.22);
+        }
+
+        .pi.open {
+            border-color: rgba(0, 245, 255, 0.33);
+        }
+
+        .pi-hd {
+            display: grid;
+            grid-template-columns: 26px 1fr 72px 62px 56px;
+            align-items: center;
+            gap: 13px;
+            padding: 12px 15px;
+        }
+
+        .pi-num {
+            font-family: var(--ff-m);
+            font-size: 0.63rem;
+            color: var(--td);
+        }
+
+        .pi-txt {
+            font-size: 0.8rem;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pi-st {
+            font-family: var(--ff-m);
+            font-size: 0.58rem;
+            padding: 2px 7px;
+            border-radius: 3px;
+            text-align: center;
+            background: rgba(52, 211, 153, 0.1);
+            color: var(--green);
+            border: 1px solid rgba(52, 211, 153, 0.22);
+        }
+
+        .pi-time {
+            font-family: var(--ff-m);
+            font-size: 0.68rem;
+            color: var(--ts);
+            text-align: right;
+        }
+
+        .pi-sc {
+            font-family: var(--ff-m);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--cyan);
+            text-align: right;
+        }
+
+        .pi-body {
+            display: none;
+            padding: 14px 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.048);
+            background: rgba(0, 0, 0, 0.2);
+            animation: fsi .2s ease;
+        }
+
+        .pi.open .pi-body {
+            display: block;
+        }
+
+        .pd-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .pd-head {
+            font-family: var(--ff-d);
+            font-size: 0.44rem;
+            letter-spacing: 0.2em;
+            margin-bottom: 7px;
+            text-transform: uppercase;
+        }
+
+        .pd-stats {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 7px;
+        }
+
+        .pds-lbl {
+            font-family: var(--ff-d);
+            font-size: 0.4rem;
+            letter-spacing: 0.12em;
+            color: var(--td);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .pds-val {
+            font-family: var(--ff-m);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .pd-note {
+            font-size: 0.76rem;
+            color: var(--ts);
+            line-height: 1.55;
+        }
+
+        /* 
+        ============================================================
+        HARDWARE FULL VIEW
+        ============================================================ 
+        */
+        .hw-full {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .hw-gauges {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .gauge-box {
+            text-align: center;
+            padding: 12px 8px;
+            background: rgba(0, 0, 0, 0.18);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+        }
+
+        .g-lbl {
+            font-family: var(--ff-d);
+            font-size: 0.46rem;
+            letter-spacing: 0.15em;
+            color: var(--td);
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .g-val {
+            font-family: var(--ff-m);
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--cyan);
+            margin-top: 1px;
+        }
+
+        .srv-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            margin-top: 0;
+        }
+
+        /* 
+        ============================================================
+        PREVIOUS TESTS TABLE
+        ============================================================ 
+        */
+        .tbl-ctrl {
+            display: flex;
+            gap: 9px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 13px;
+        }
+
+        .sbox {
+            flex: 1;
+            min-width: 180px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 13px;
+            font-family: var(--ff-m);
+            font-size: 0.74rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .sbox:focus {
+            border-color: rgba(0, 245, 255, 0.35);
+        }
+
+        .sbox::placeholder {
+            color: var(--td);
+        }
+
+        .fbtn {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 6px;
+            padding: 8px 13px;
+            font-family: var(--ff-d);
+            font-size: 0.48rem;
+            letter-spacing: 0.1em;
+            color: var(--td);
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+
+        .fbtn:hover {
+            border-color: rgba(0, 245, 255, 0.24);
+            color: var(--ts);
+        }
+
+        .fbtn.active {
+            background: var(--cyan-d);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .dtbl {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .dtbl th {
+            font-family: var(--ff-d);
+            font-size: 0.48rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--td);
+            padding: 11px 13px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+            white-space: nowrap;
+            transition: color .2s;
+        }
+
+        .dtbl th:hover {
+            color: var(--ts);
+        }
+
+        .dtbl th.sorted {
+            color: var(--cyan);
+        }
+
+        .sarrow {
+            margin-left: 4px;
+            opacity: .4;
+            font-size: .72em;
+        }
+
+        .sorted .sarrow {
+            opacity: 1;
+        }
+
+        .dtbl td {
+            padding: 11px 13px;
+            font-size: 0.78rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.028);
+            white-space: nowrap;
+        }
+
+        .dtbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dtbl tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.016);
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-family: var(--ff-m);
+            font-size: 0.6rem;
+            font-weight: 500;
+        }
+
+        .cl {
+            background: rgba(251, 191, 36, .1);
+            color: var(--amber);
+            border: 1px solid rgba(251, 191, 36, .22);
+        }
+
+        .cf {
+            background: rgba(167, 139, 250, .1);
+            color: var(--violet);
+            border: 1px solid rgba(167, 139, 250, .22);
+        }
+
+        .cw {
+            background: rgba(52, 211, 153, .1);
+            color: var(--green);
+            border: 1px solid rgba(52, 211, 153, .22);
+        }
+
+        .cc {
+            background: rgba(0, 245, 255, .08);
+            color: var(--cyan);
+            border: 1px solid rgba(0, 245, 255, .2);
+            font-size: .52rem;
+            margin-left: 4px;
+        }
+
+        /* 
+        ============================================================
+        NOTES
+        ============================================================ 
+        */
+        .notes-ta {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 15px;
+            font-family: var(--ff-m);
+            font-size: 0.76rem;
+            color: var(--text);
+            line-height: 1.65;
+            resize: vertical;
+            min-height: 140px;
+            outline: none;
+            transition: border-color .22s;
+        }
+
+        .notes-ta:focus {
+            border-color: rgba(0, 245, 255, .35);
+        }
+
+        /* 
+        ============================================================
+        COST VIEW
+        ============================================================ 
+        */
+        .cost-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .cost-charts {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .cost-breakdown-big {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 6px 0;
+        }
+
+        .cbb-total-lbl {
+            font-family: var(--ff-d);
+            font-size: 0.5rem;
+            letter-spacing: 0.16em;
+            color: var(--td);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .cbb-total-val {
+            font-family: var(--ff-m);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--pink);
+            text-shadow: 0 0 22px var(--pink-g);
+            margin-bottom: 18px;
+        }
+
+        /* 
+        ============================================================
+        NEON TEXT HELPERS
+        ============================================================ 
+        */
+        .nc {
+            color: var(--cyan);
+            text-shadow: 0 0 11px var(--cyan-g);
+        }
+
+        .nv {
+            color: var(--violet);
+            text-shadow: 0 0 11px var(--violet-g);
+        }
+
+        .na {
+            color: var(--amber);
+            text-shadow: 0 0 11px var(--amber-g);
+        }
+
+        .ng {
+            color: var(--green);
+            text-shadow: 0 0 11px var(--green-g);
+        }
+
+        .np {
+            color: var(--pink);
+            text-shadow: 0 0 11px var(--pink-g);
+        }
+
+        /* 
+        ============================================================
+        SPACING
+        ============================================================ 
+        */
+        .mb8 {
+            margin-bottom: 8px
+        }
+
+        .mb12 {
+            margin-bottom: 12px
+        }
+
+        .mb16 {
+            margin-bottom: 16px
+        }
+
+        .mb20 {
+            margin-bottom: 20px
+        }
+
+        .mb26 {
+            margin-bottom: 26px
+        }
+
+        .mb30 {
+            margin-bottom: 30px
+        }
+
+        .mt12 {
+            margin-top: 12px
+        }
+
+        .mt16 {
+            margin-top: 16px
+        }
+
+        @keyframes flash-v {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            35% {
+                opacity: .25;
+                filter: brightness(1.8);
+            }
+        }
+
+        .flash {
+            animation: flash-v .45s ease;
+        }
+
+        /* 
+        ============================================================
+        SCROLLBAR
+        ============================================================ 
+        */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 245, 255, 0.17);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 245, 255, 0.35);
+        }
+
+        /* 
+        ============================================================
+        RESPONSIVE
+        ============================================================
+        */
+        @media(max-width:1280px) {
+            .sum-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .winners {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .cost-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width:960px) {
+            .hero {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .matchup {
+                grid-template-columns: 1fr;
+            }
+
+            .vs-col {
+                display: none;
+            }
+
+            .g2col {
+                grid-template-columns: 1fr;
+            }
+
+            .hw-full {
+                grid-template-columns: 1fr;
+            }
+
+            .pd-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width:640px) {
+            .winners {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .nav-tabs {
+                gap: 2px;
+            }
+
+            .ntab {
+                padding: 7px 9px;
+                font-size: 0.5rem;
+            }
+
+            .pi-hd {
+                grid-template-columns: 22px 1fr 58px 50px;
+            }
+
+            .pi-hd .pi-time {
+                display: none;
+            }
+
+            .speed-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+
+    <div class="app">
+
+        <!-- 
+        ══════════════════════════════════════════════
+       TOPBAR
+       ══════════════════════════════════════════════ 
+       -->
+        <nav class="topbar">
+            <div class="brand">⚡ AI/TEST LAB</div>
+            <div class="nav-tabs">
+                <button class="ntab active" data-tab="summary">Summary</button>
+                <button class="ntab" data-tab="speed">Speed</button>
+                <button class="ntab" data-tab="quality">Quality</button>
+                <button class="ntab" data-tab="cost">Cost</button>
+                <button class="ntab" data-tab="hardware">Hardware</button>
+            </div>
+            <div class="top-right">
+                <div class="live-badge">
+                    <div class="live-dot"></div>LIVE SESSION
+                </div>
+                <div class="sess-tag">S14 · 2025-05-28</div>
+            </div>
+        </nav>
+
+        <!-- 
+        ══════════════════════════════════════════════
+       HERO STATS
+       ══════════════════════════════════════════════ 
+       -->
+        <section class="hero">
+            <div class="hcard" style="--a:var(--cyan)">
+                <div class="hlbl">Total Tests Run</div>
+                <div class="hval" data-count="847" data-dec="0">0</div>
+                <div class="hsub">Across 14 model matchups</div>
+            </div>
+            <div class="hcard" style="--a:var(--green)">
+                <div class="hlbl">Avg Tokens / Sec</div>
+                <div class="hval" data-count="58.4" data-dec="1">0</div>
+                <div class="hsub">Local model average</div>
+            </div>
+            <div class="hcard" style="--a:var(--violet)">
+                <div class="hlbl">Top Performer</div>
+                <div class="hval" style="font-size:.88rem;padding-top:5px;letter-spacing:0;">Claude Opus 4.8</div>
+                <div class="hsub">9.6 avg quality · 14 sessions</div>
+            </div>
+            <div class="hcard" style="--a:var(--pink)">
+                <div class="hlbl">Total API Cost</div>
+                <div class="hval" data-count="284.60" data-dec="2" data-prefix="$">$0</div>
+                <div class="hsub">Claude API · all sessions</div>
+            </div>
+            <div class="hcard" style="--a:var(--amber)">
+                <div class="hlbl">Local Runtime</div>
+                <div class="hval" style="font-size:.98rem;padding-top:3px;letter-spacing:0;">847h 23m</div>
+                <div class="hsub">llama.cpp total compute</div>
+            </div>
+        </section>
+
+        <!-- 
+        ══════════════════════════════════════════════
+       VIEW: SUMMARY
+       ══════════════════════════════════════════════ 
+       -->
+        <div class="view active" id="view-summary">
+            <div class="sec-hd mb16">
+                <div class="sec-ttl">Current Matchup — Session 14</div>
+                <div class="tg">
+                    <button class="tbtn active" data-match="both">Both Models</button>
+                    <button class="tbtn" data-match="local">Local Only</button>
+                    <button class="tbtn" data-match="frontier">Frontier Only</button>
+                </div>
+            </div>
+
+            <div class="sum-layout">
+                <!-- ── LEFT: model cards + winner breakdown ── -->
+                <div>
+                    <div class="matchup mb20" id="matchup-wrap">
+
+                        <!-- Qwen3.6 27B -->
+                        <div class="mc local" id="mc-local">
+                            <div class="mc-type">◈ Local Model · RTX 3090</div>
+                            <div class="mc-name">Qwen3.6 27B</div>
+                            <div class="mc-grade">B+</div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Speed</span><span class="met-v">47.3
+                                        tok/s</span></div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="52"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Quality Score</span><span class="met-v">7.9 /
+                                        10</span></div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="79"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Coding Score</span><span class="met-v">8.3 /
+                                        10</span></div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="83"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Creativity</span><span class="met-v">7.6 /
+                                        10</span></div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="76"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Instruction Following</span><span
+                                        class="met-v">8.0 / 10</span>
+                                </div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="80"></div>
+                                </div>
+                            </div>
+                            <div class="mc-foot">
+                                <div class="fstat">
+                                    <div class="fl">Avg Time</div>
+                                    <div class="fv">4.2s</div>
+                                </div>
+                                <div class="fstat">
+                                    <div class="fl">VRAM</div>
+                                    <div class="fv">18.4 GB</div>
+                                </div>
+                                <div class="fstat">
+                                    <div class="fl">API Cost</div>
+                                    <div class="fv">$0.00</div>
+                                </div>
+                                <div class="fstat">
+                                    <div class="fl">Quant</div>
+                                    <div class="fv">Q6_K</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VS -->
+                        <div class="vs-col">
+                            <div class="vs-t">VS</div>
+                            <div class="vs-m">S14<br>8 prompts<br>May 28</div>
+                        </div>
+
+                        <!-- Claude Opus 4.8 -->
+                        <div class="mc front" id="mc-front">
+                            <div class="mc-type">◇ Frontier Model · API</div>
+                            <div class="mc-name">Claude Opus 4.8</div>
+                            <div class="mc-grade">A+</div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Speed</span><span class="met-v">89.1
+                                        tok/s</span></div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="98"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Quality Score</span><span class="met-v">9.6 /
+                                        10</span></div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="96"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Coding Score</span><span class="met-v">9.3 /
+                                        10</span></div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="93"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Creativity</span><span class="met-v">9.8 /
+                                        10</span></div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="98"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="met-row"><span class="met-n">Instruction Following</span><span
+                                        class="met-v">9.9 / 10</span>
+                                </div>
+                                <div class="sbar">
+                                    <div class="sfill" data-w="99"></div>
+                                </div>
+                            </div>
+                            <div class="mc-foot">
+                                <div class="fstat">
+                                    <div class="fl">Avg Time</div>
+                                    <div class="fv">1.8s</div>
+                                </div>
+                                <div class="fstat">
+                                    <div class="fl">VRAM</div>
+                                    <div class="fv">N/A</div>
+                                </div>
+                                <div class="fstat">
+                                    <div class="fl">API Cost</div>
+                                    <div class="fv">$3.84</div>
+                                </div>
+                                <div class="fstat">
+                                    <div class="fl">Context</div>
+                                    <div class="fv">200K</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Winner Breakdown -->
+                    <div class="sec-hd mb12">
+                        <div class="sec-ttl">Category Winners</div>
+                    </div>
+                    <div class="winners mb30">
+                        <div class="wcard wf">
+                            <div class="wc-cat">Speed</div>
+                            <div class="wc-mod">Claude Opus 4.8</div>
+                            <div class="wc-sc">89.1 tok/s</div>
+                            <div class="wc-exp">API throughput wins</div>
+                        </div>
+                        <div class="wcard wf">
+                            <div class="wc-cat">Quality</div>
+                            <div class="wc-mod">Claude Opus 4.8</div>
+                            <div class="wc-sc">9.6 / 10</div>
+                            <div class="wc-exp">+1.7 pt advantage</div>
+                        </div>
+                        <div class="wcard wf">
+                            <div class="wc-cat">Coding</div>
+                            <div class="wc-mod">Claude Opus 4.8</div>
+                            <div class="wc-sc">9.3 / 10</div>
+                            <div class="wc-exp">Closer race: 8.3 local</div>
+                        </div>
+                        <div class="wcard wf">
+                            <div class="wc-cat">Creativity</div>
+                            <div class="wc-mod">Claude Opus 4.8</div>
+                            <div class="wc-sc">9.8 / 10</div>
+                            <div class="wc-exp">Dominant on open tasks</div>
+                        </div>
+                        <div class="wcard wl">
+                            <div class="wc-cat">Cost / Value</div>
+                            <div class="wc-mod">Qwen3.6 27B 🏆</div>
+                            <div class="wc-sc">$0.00</div>
+                            <div class="wc-exp">Free vs $3.84 API</div>
+                        </div>
+                        <div class="wcard wf">
+                            <div class="wc-cat">Instructions</div>
+                            <div class="wc-mod">Claude Opus 4.8</div>
+                            <div class="wc-sc">9.9 / 10</div>
+                            <div class="wc-exp">Near-perfect following</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── RIGHT: hardware + API side panels ── -->
+                <div>
+                    <!-- Hardware Panel -->
+                    <div class="panel mb16">
+                        <div class="phd">
+                            <div class="ptitle">Hardware Monitor</div>
+                            <div class="live-badge" style="padding:3px 8px;font-size:.55rem;">
+                                <div class="live-dot"></div>RTX 3090
+                            </div>
+                        </div>
+                        <div class="pbody">
+                            <div class="hw-bar-row">
+                                <div class="hw-bl"><span>GPU Utilization</span><span id="hw-gpu-t" class="nc">94%</span>
+                                </div>
+                                <div class="hw-track">
+                                    <div class="hw-fill" id="hw-gpu-b"
+                                        style="width:94%;background:linear-gradient(90deg,#00f5ff,#00c4d4);box-shadow:0 0 7px rgba(0,245,255,.45);">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hw-bar-row">
+                                <div class="hw-bl"><span>VRAM Usage</span><span id="hw-vram-t" class="na">18.4 / 24
+                                        GB</span></div>
+                                <div class="hw-track">
+                                    <div class="hw-fill" id="hw-vram-b"
+                                        style="width:76.7%;background:linear-gradient(90deg,#fbbf24,#f59e0b);box-shadow:0 0 7px rgba(251,191,36,.45);">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hw-bar-row">
+                                <div class="hw-bl"><span>Temperature</span><span id="hw-temp-t" class="np">78°C</span>
+                                </div>
+                                <div class="hw-track">
+                                    <div class="hw-fill" id="hw-temp-b"
+                                        style="width:78%;background:linear-gradient(90deg,#fbbf24,#f472b6);box-shadow:0 0 7px rgba(244,114,182,.45);">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hw-bar-row">
+                                <div class="hw-bl"><span>Power Draw</span><span id="hw-pow-t" class="nv">342 /
+                                        350W</span></div>
+                                <div class="hw-track">
+                                    <div class="hw-fill" id="hw-pow-b"
+                                        style="width:97.7%;background:linear-gradient(90deg,#a78bfa,#f472b6);box-shadow:0 0 7px rgba(167,139,250,.45);">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hw-bar-row" style="margin-bottom:0">
+                                <div class="hw-bl"><span>Fan Speed</span><span id="hw-fan-t" class="ng">87%</span></div>
+                                <div class="hw-track">
+                                    <div class="hw-fill" id="hw-fan-b"
+                                        style="width:87%;background:linear-gradient(90deg,#34d399,#059669);box-shadow:0 0 7px rgba(52,211,153,.45);">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="srv-box">
+                                <div class="srv-dot"></div>
+                                <div>
+                                    <div class="srv-n">llama.cpp · Qwen3.6-27B-Q6_K.gguf</div>
+                                    <div class="srv-u">localhost:8080 · n_ctx:32768 · n_threads:16</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Panel -->
+                    <div class="panel">
+                        <div class="phd">
+                            <div class="ptitle">API Usage · Claude Opus 4.8</div>
+                            <div style="font-family:var(--ff-m);font-size:.6rem;color:var(--violet);">Session #14</div>
+                        </div>
+                        <div class="pbody">
+                            <div class="api-g2">
+                                <div class="abox">
+                                    <div class="ab-l">Input Tokens</div>
+                                    <div class="ab-v">23,847</div>
+                                </div>
+                                <div class="abox">
+                                    <div class="ab-l">Output Tokens</div>
+                                    <div class="ab-v">46,431</div>
+                                </div>
+                                <div class="abox">
+                                    <div class="ab-l">Input Cost</div>
+                                    <div class="ab-v">$0.36</div>
+                                </div>
+                                <div class="abox">
+                                    <div class="ab-l">Output Cost</div>
+                                    <div class="ab-v">$3.48</div>
+                                </div>
+                            </div>
+                            <div class="cost-row"><span class="cr-l">Rate — Input</span><span class="cr-v">$15.00 /
+                                    MTok</span></div>
+                            <div class="cost-row"><span class="cr-l">Rate — Output</span><span class="cr-v">$75.00 /
+                                    MTok</span></div>
+                            <div class="cost-row"><span class="cr-l">Prompts this session</span><span class="cr-v">8
+                                    prompts</span>
+                            </div>
+                            <div class="cost-row crt"><span class="cr-l">Session Total</span><span
+                                    class="cr-v">$3.84</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 
+        ══════════════════════════════════════════════
+       VIEW: SPEED
+       ══════════════════════════════════════════════ 
+       -->
+        <div class="view" id="view-speed">
+            <div class="sec-hd mb16">
+                <div class="sec-ttl">Speed Analysis</div>
+            </div>
+            <div class="g2col mb20">
+                <div class="chart-wrap">
+                    <div class="chart-ttl">Tokens Per Second — All Models</div>
+                    <canvas id="chart-tps"></canvas>
+                </div>
+                <div class="chart-wrap">
+                    <div class="chart-ttl">Avg Completion Time (seconds)</div>
+                    <canvas id="chart-ctime"></canvas>
+                </div>
+            </div>
+            <div class="speed-stats mb30">
+                <div class="hcard" style="--a:var(--amber)">
+                    <div class="hlbl">Peak Local Tok/s</div>
+                    <div class="hval" style="font-size:1.5rem;">61.2</div>
+                    <div class="hsub">Qwen3.6 27B · short prompts</div>
+                </div>
+                <div class="hcard" style="--a:var(--cyan)">
+                    <div class="hlbl">Avg Local Speed</div>
+                    <div class="hval" style="font-size:1.5rem;">47.3</div>
+                    <div class="hsub">tok/s across sessions</div>
+                </div>
+                <div class="hcard" style="--a:var(--violet)">
+                    <div class="hlbl">Fastest API (Claude)</div>
+                    <div class="hval" style="font-size:1.5rem;">89.1</div>
+                    <div class="hsub">tok/s · Opus 4.8 session</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+       VIEW: QUALITY
+       ══════════════════════════════════════════════ -->
+        <div class="view" id="view-quality">
+            <div class="sec-hd mb16">
+                <div class="sec-ttl">Quality Analysis</div>
+            </div>
+            <div class="g2col mb20">
+                <div class="chart-wrap">
+                    <div class="chart-ttl">Capability Radar — Qwen3.6 27B vs Claude Opus 4.8</div>
+                    <canvas id="chart-radar"></canvas>
+                </div>
+                <div class="chart-wrap">
+                    <div class="chart-ttl">Score Breakdown by Category</div>
+                    <canvas id="chart-qbars"></canvas>
+                </div>
+            </div>
+            <div class="sec-hd mb12">
+                <div class="sec-ttl">Prompt Test History</div>
+                <div class="tg" id="prompt-toggle">
+                    <button class="tbtn active" data-pt="both">Both</button>
+                    <button class="tbtn" data-pt="local">Local</button>
+                    <button class="tbtn" data-pt="frontier">Frontier</button>
+                </div>
+            </div>
+            <div class="plist mb30" id="prompt-list"></div>
+        </div>
+
+        <!-- 
+        ══════════════════════════════════════════════
+       VIEW: COST
+       ══════════════════════════════════════════════ 
+       -->
+        <div class="view" id="view-cost">
+            <div class="sec-hd mb16">
+                <div class="sec-ttl">Cost Analysis</div>
+            </div>
+            <div class="cost-layout">
+                <div class="cost-charts">
+                    <div class="chart-wrap">
+                        <div class="chart-ttl">API Cost Per Prompt — Session #14</div>
+                        <canvas id="chart-cost"></canvas>
+                    </div>
+                    <div class="chart-wrap">
+                        <div class="chart-ttl">Cumulative API Spend — All 14 Sessions</div>
+                        <canvas id="chart-cumcost"></canvas>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="phd">
+                        <div class="ptitle">Detailed Cost Breakdown</div>
+                    </div>
+                    <div class="pbody">
+                        <div class="cost-breakdown-big">
+                            <div class="cbb-total-lbl">Session #14 Total</div>
+                            <div class="cbb-total-val">$3.84</div>
+                        </div>
+                        <div class="cost-row"><span class="cr-l">Prompt #1 — Merge Sort</span><span
+                                class="cr-v">$0.41</span></div>
+                        <div class="cost-row"><span class="cr-l">Prompt #2 — Quantum ELI10</span><span
+                                class="cr-v">$0.38</span>
+                        </div>
+                        <div class="cost-row"><span class="cr-l">Prompt #3 — React Debug</span><span
+                                class="cr-v">$0.52</span></div>
+                        <div class="cost-row"><span class="cr-l">Prompt #4 — ML Haiku</span><span
+                                class="cr-v">$0.09</span></div>
+                        <div class="cost-row"><span class="cr-l">Prompt #5 — SQL Window Fn</span><span
+                                class="cr-v">$0.61</span>
+                        </div>
+                        <div class="cost-row"><span class="cr-l">Prompt #6 — Attention Mech.</span><span
+                                class="cr-v">$0.48</span>
+                        </div>
+                        <div class="cost-row"><span class="cr-l">Prompt #7 — Dockerfile</span><span
+                                class="cr-v">$0.44</span></div>
+                        <div class="cost-row"><span class="cr-l">Prompt #8 — Microservices</span><span
+                                class="cr-v">$0.91</span>
+                        </div>
+                        <div class="cost-row crt"><span class="cr-l">Session Total</span><span class="cr-v">$3.84</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 
+        ══════════════════════════════════════════════
+       VIEW: HARDWARE
+       ══════════════════════════════════════════════ 
+       -->
+        <div class="view" id="view-hardware">
+            <div class="sec-hd mb16">
+                <div class="sec-ttl">Hardware Monitor — NVIDIA RTX 3090</div>
+                <div class="live-badge">
+                    <div class="live-dot"></div>ACTIVE
+                </div>
+            </div>
+            <div class="hw-full mb30">
+                <!-- Left column -->
+                <div>
+                    <div class="chart-wrap mb16">
+                        <div class="chart-ttl">GPU Utilization — Last 60 Seconds</div>
+                        <canvas id="chart-gputime"></canvas>
+                    </div>
+                    <div class="panel">
+                        <div class="phd">
+                            <div class="ptitle">System Resources</div>
+                        </div>
+                        <div class="pbody">
+                            <div class="hw-bar-row">
+                                <div class="hw-bl"><span>CPU — i9-13900K</span><span id="hw2-cpu-t"
+                                        class="nc">67%</span></div>
+                                <div class="hw-track">
+                                    <div class="hw-fill" id="hw2-cpu-b"
+                                        style="width:67%;background:linear-gradient(90deg,#00f5ff,#00c4d4);box-shadow:0 0 7px rgba(0,245,255,.4);">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hw-bar-row">
+                                <div class="hw-bl"><span>RAM — DDR5 6000</span><span id="hw2-ram-t" class="na">42 / 64
+                                        GB</span></div>
+                                <div class="hw-track">
+                                    <div class="hw-fill" id="hw2-ram-b"
+                                        style="width:65.6%;background:linear-gradient(90deg,#fbbf24,#f59e0b);box-shadow:0 0 7px rgba(251,191,36,.4);">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hw-bar-row" style="margin-bottom:0">
+                                <div class="hw-bl"><span>NVMe SSD Throughput</span><span class="ng">2.8 GB/s</span>
+                                </div>
+                                <div class="hw-track">
+                                    <div class="hw-fill"
+                                        style="width:56%;background:linear-gradient(90deg,#34d399,#059669);box-shadow:0 0 7px rgba(52,211,153,.4);">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right column -->
+                <div>
+                    <div class="panel mb16">
+                        <div class="phd">
+                            <div class="ptitle">GPU Telemetry Gauges</div>
+                        </div>
+                        <div class="pbody">
+                            <div class="hw-gauges">
+                                <div class="gauge-box">
+                                    <canvas id="g-gpu" width="110" height="110"></canvas>
+                                    <div class="g-lbl">GPU UTIL</div>
+                                    <div class="g-val" id="g-gpu-v">94%</div>
+                                </div>
+                                <div class="gauge-box">
+                                    <canvas id="g-vram" width="110" height="110"></canvas>
+                                    <div class="g-lbl">VRAM</div>
+                                    <div class="g-val" id="g-vram-v">76.7%</div>
+                                </div>
+                                <div class="gauge-box">
+                                    <canvas id="g-temp" width="110" height="110"></canvas>
+                                    <div class="g-lbl">TEMP</div>
+                                    <div class="g-val" id="g-temp-v">78°C</div>
+                                </div>
+                                <div class="gauge-box">
+                                    <canvas id="g-pow" width="110" height="110"></canvas>
+                                    <div class="g-lbl">POWER</div>
+                                    <div class="g-val" id="g-pow-v">97.7%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="phd">
+                            <div class="ptitle">Inference Server Config</div>
+                        </div>
+                        <div class="pbody">
+                            <div class="srv-box mb16" style="margin-top:0;">
+                                <div class="srv-dot"></div>
+                                <div>
+                                    <div class="srv-n">llama.cpp HTTP Server v0.4.2 — RUNNING</div>
+                                    <div class="srv-u">localhost:8080 · Qwen3.6-27B-Q6_K.gguf · 43/43 GPU layers</div>
+                                </div>
+                            </div>
+                            <div class="srv-details">
+                                <div class="abox">
+                                    <div class="ab-l">Context Size</div>
+                                    <div class="ab-v" style="font-size:.82rem;">32,768 tok</div>
+                                </div>
+                                <div class="abox">
+                                    <div class="ab-l">CPU Threads</div>
+                                    <div class="ab-v" style="font-size:.82rem;">16 threads</div>
+                                </div>
+                                <div class="abox">
+                                    <div class="ab-l">GPU Layers</div>
+                                    <div class="ab-v" style="font-size:.82rem;">43 / 43 full</div>
+                                </div>
+                                <div class="abox">
+                                    <div class="ab-l">Batch Size</div>
+                                    <div class="ab-v" style="font-size:.82rem;">512 tokens</div>
+                                </div>
+                                <div class="abox">
+                                    <div class="ab-l">KV Cache</div>
+                                    <div class="ab-v" style="font-size:.82rem;">2.8 GB</div>
+                                </div>
+                                <div class="abox">
+                                    <div class="ab-l">Flash Attn.</div>
+                                    <div class="ab-v" style="font-size:.82rem;color:var(--green);">Enabled</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 
+        ══════════════════════════════════════════════
+       PREVIOUS TESTS TABLE  (always visible)
+       ══════════════════════════════════════════════ 
+       -->
+        <div class="mb30">
+            <div class="sec-hd mb12">
+                <div class="sec-ttl">Previous Model Tests</div>
+            </div>
+            <div class="tbl-ctrl">
+                <input type="text" class="sbox" id="tbl-search" placeholder="Search models, dates, results…">
+                <button class="fbtn active" data-filter="all">All Models</button>
+                <button class="fbtn" data-filter="local">Local Wins</button>
+                <button class="fbtn" data-filter="frontier">Frontier Wins</button>
+                <button class="fbtn" data-sort="local_score">Sort: Score</button>
+                <button class="fbtn" data-sort="local_speed">Sort: Speed</button>
+            </div>
+            <div class="panel">
+                <table class="dtbl" id="prev-tbl">
+                    <thead>
+                        <tr>
+                            <th data-col="session">Session <span class="sarrow">↕</span></th>
+                            <th data-col="date" class="sorted">Date <span class="sarrow">↓</span></th>
+                            <th data-col="local">Local Model <span class="sarrow">↕</span></th>
+                            <th data-col="frontier">Frontier Model <span class="sarrow">↕</span></th>
+                            <th data-col="local_score">Local Score <span class="sarrow">↕</span></th>
+                            <th data-col="frontier_score">Frontier Score <span class="sarrow">↕</span></th>
+                            <th data-col="local_speed">Tok/s <span class="sarrow">↕</span></th>
+                            <th data-col="winner">Winner <span class="sarrow">↕</span></th>
+                            <th data-col="cost">API Cost <span class="sarrow">↕</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 
+        ══════════════════════════════════════════════
+       NOTES
+       ══════════════════════════════════════════════ 
+       -->
+        <div class="mb30">
+            <div class="sec-hd mb12">
+                <div class="sec-ttl">Testing Notes</div>
+            </div>
+            <div class="panel">
+                <div class="pbody">
+                    <textarea class="notes-ta" placeholder="...">SESSION #14 NOTES — Qwen3.6 27B vs Claude Opus 4.8
+
+Key Observations:
+• Qwen3.6 27B coding performance was surprisingly competitive (8.3/10 vs 9.3/10) — gap narrowing vs earlier sessions
+• Claude Opus 4.8's instruction following is near-perfect (9.9/10) — especially evident on the SQL rolling averages prompt
+• Temperature spike to 82°C during the microservices analysis prompt — fans ramped appropriately, no throttling observed
+• Q6_K quantization appears to be the sweet spot for Qwen3.6 27B on 3090 — Q8_0 causes OOM at 27B scale
+• API latency for Opus 4.8 averaged 1.8s TTFT — acceptable for benchmarking, but Gemini Flash 2.5 was faster in S08
+
+Follow-up Tests Planned:
+• Run Qwen3.6 27B vs Claude Sonnet 4.6 for fairer cost comparison ($0 vs ~$0.40/session)
+• Test Qwen3.6 72B when Q4_K_M fits in VRAM — may need 2× 3090 NVLink setup
+• Evaluate code execution accuracy with automated unit test runner (not just LLM-judged scores)
+• Compare performance on longer-context prompts (16K+ tokens — current test: avg ~3K)
+
+Hardware Notes:
+• RTX 3090 stable at 342W with custom power limit — 8W headroom at 350W TDP
+• i9-13900K P-cores handling tensor ops, E-cores handling HTTP server I/O efficiently
+• 64GB DDR5 at 65% utilization — model loaded + OS overhead + kv cache
+• Thermals manageable with 3× 120mm case fans + custom curve targeting 80°C GPU</textarea>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /app -->
+
+    <script>
+        'use strict';
+        /* ============================================================
+           DATA
+           ============================================================ */
+        const PROMPTS = [
+            { id: 1, txt: "Write a recursive merge sort in Python with inline comments", cat: "Coding", lt: 5.8, ft: 2.1, ls: 8.7, fs: 9.1, lnote: "Correct impl with comments. Minor: missing time complexity in docstring.", fnote: "Complete O(n log n) analysis, edge cases handled, type hints included." },
+            { id: 2, txt: "Explain quantum entanglement to a 10-year-old using an analogy", cat: "Clarity", lt: 3.2, ft: 1.4, ls: 7.9, fs: 9.4, lnote: "Used sock analogy — effective but slightly technical. Missing 'spooky action' hook.", fnote: "Magic dice analogy with Einstein reference. Perfect tone calibration for audience." },
+            { id: 3, txt: "Debug this React useEffect dependency array causing infinite re-renders", cat: "Coding", lt: 6.1, ft: 2.8, ls: 8.4, fs: 9.3, lnote: "Identified missing dependency but missed the stale closure issue.", fnote: "Caught both: missing dep AND stale closure. Suggested useCallback refactor." },
+            { id: 4, txt: "Write a haiku about machine learning that includes a technical term", cat: "Creativity", lt: 1.8, ft: 0.9, ls: 7.2, fs: 9.7, lnote: "Valid haiku but generic — 'gradient descends slow / neurons fire in the dark…'", fnote: "Used 'loss plateau' as pivot — melancholic and technically precise simultaneously." },
+            { id: 5, txt: "Write SQL for a 30-day rolling average using window functions", cat: "Coding", lt: 7.3, ft: 2.9, ls: 8.6, fs: 9.2, lnote: "Correct window function. Missed ROWS vs RANGE distinction and NULL handling.", fnote: "ROWS BETWEEN 29 PRECEDING AND CURRENT ROW, NULL handling + indexing notes." },
+            { id: 6, txt: "Explain the attention mechanism in transformers (technical audience)", cat: "Clarity", lt: 4.9, ft: 2.2, ls: 8.1, fs: 9.6, lnote: "Q, K, V matrices and softmax well covered. Missed scaled dot-product rationale.", fnote: "QKV coverage + why √d_k prevents vanishing grads + multi-head intuition. Excellent." },
+            { id: 7, txt: "Write a production Dockerfile for a FastAPI app with multi-stage build", cat: "Coding", lt: 4.4, ft: 1.9, ls: 8.8, fs: 9.3, lnote: "Multi-stage with slim base. Forgot non-root user security step.", fnote: "Multi-stage + non-root user + HEALTHCHECK + .dockerignore hints + ENV best practices." },
+            { id: 8, txt: "Analyze pros and cons of microservices vs monolith for a 5-person startup", cat: "Reasoning", lt: 8.7, ft: 3.6, ls: 7.8, fs: 9, lnote: "Good coverage of op overhead but missed team cognitive load and hiring cost angles.", fnote: "Addressed Conway's Law, operational complexity at small scale, concrete migration path." },
+        ];
+
+        const PREV_TESTS = [
+            { session: 14, date: "2025-05-28", local: "Qwen3.6 27B", frontier: "Claude Opus 4.8", local_score: 8.19, frontier_score: 9.55, local_speed: 47.3, winner: "frontier", wn: "Claude Opus 4.8", cost: "$3.84" },
+            { session: 13, date: "2025-05-21", local: "Llama 3.3 70B", frontier: "GPT-4.1", local_score: 7.84, frontier_score: 9.21, local_speed: 18.2, winner: "frontier", wn: "GPT-4.1", cost: "$5.17" },
+            { session: 12, date: "2025-05-14", local: "DeepSeek-R2 32B", frontier: "Gemini 2.5 Pro", local_score: 8.47, frontier_score: 9.14, local_speed: 31.6, winner: "frontier", wn: "Gemini 2.5 Pro", cost: "$4.82" },
+            { session: 11, date: "2025-05-07", local: "Mistral Large 3", frontier: "Claude Sonnet 4.6", local_score: 8.63, frontier_score: 8.41, local_speed: 42.1, winner: "local", wn: "Mistral Large 3", cost: "$1.24" },
+            { session: 10, date: "2025-04-30", local: "Qwen3.6 27B", frontier: "GPT-4.1-mini", local_score: 8.12, frontier_score: 7.89, local_speed: 47.8, winner: "local", wn: "Qwen3.6 27B", cost: "$0.83" },
+            { session: 9, date: "2025-04-23", local: "Phi-4 14B", frontier: "Claude Haiku 4.5", local_score: 7.21, frontier_score: 8.07, local_speed: 68.4, winner: "frontier", wn: "Claude Haiku 4.5", cost: "$0.31" },
+            { session: 8, date: "2025-04-16", local: "Llama 3.2 11B", frontier: "Gemini Flash 2.5", local_score: 6.93, frontier_score: 8.44, local_speed: 89.2, winner: "frontier", wn: "Gemini Flash 2.5", cost: "$0.47" },
+            { session: 7, date: "2025-04-09", local: "Mixtral 8x22B", frontier: "GPT-4o", local_score: 8.31, frontier_score: 9.18, local_speed: 12.7, winner: "frontier", wn: "GPT-4o", cost: "$6.93" },
+            { session: 6, date: "2025-04-02", local: "Qwen2.5 72B", frontier: "Claude Opus 4.6", local_score: 8.44, frontier_score: 9.47, local_speed: 9.4, winner: "frontier", wn: "Claude Opus 4.6", cost: "$8.21" },
+            { session: 5, date: "2025-03-26", local: "DeepSeek Coder 33B", frontier: "GPT-4.1", local_score: 8.82, frontier_score: 8.94, local_speed: 28.9, winner: "frontier", wn: "GPT-4.1", cost: "$4.41" },
+            { session: 4, date: "2025-03-19", local: "Qwen3.6 27B", frontier: "Claude Sonnet 4.6", local_score: 7.96, frontier_score: 8.62, local_speed: 46.8, winner: "frontier", wn: "Claude Sonnet 4.6", cost: "$1.18" },
+            { session: 3, date: "2025-03-12", local: "Llama 3.1 70B", frontier: "GPT-4.1", local_score: 7.43, frontier_score: 8.97, local_speed: 16.8, winner: "frontier", wn: "GPT-4.1", cost: "$5.52" },
+            { session: 2, date: "2025-03-05", local: "Mistral 22B", frontier: "Gemini Pro 2.0", local_score: 7.78, frontier_score: 8.31, local_speed: 38.4, winner: "frontier", wn: "Gemini Pro 2.0", cost: "$3.29" },
+            { session: 1, date: "2025-02-26", local: "Phi-3.5 14B", frontier: "Claude Haiku 4.5", local_score: 6.91, frontier_score: 7.88, local_speed: 72.3, winner: "frontier", wn: "Claude Haiku 4.5", cost: "$0.28" },
+        ];
+
+        /* GPU timeline seed */
+        let gpuTL = Array.from({ length: 60 }, (_, i) => 72 + 18 * Math.sin(i * 0.28) + Math.random() * 6);
+
+        /* hardware live state */
+        const hw = { gpu: 94, vramPct: 76.7, tempC: 78, powerW: 342, fanPct: 87, cpuPct: 67, ramPct: 65.6 };
+
+        /* ============================================================
+           UI STATE
+           ============================================================ */
+        const S = {
+            view: 'summary',
+            tableSort: { col: 'date', dir: 'desc' },
+            tableFilter: '',
+            filterType: 'all',
+            matchToggle: 'both',
+            promptToggle: 'both',
+            drawn: {},
+        };
+
+        /* ============================================================
+           INIT
+           ============================================================ */
+        document.addEventListener('DOMContentLoaded', () => {
+            animateCounters();
+            setupTabs();
+            setupMatchToggle();
+            setupPromptToggle();
+            populatePrompts();
+            populateTable();
+            setupTableControls();
+            startScoreBars();
+            startHW();
+        });
+
+        /* ============================================================
+           COUNTERS
+           ============================================================ */
+        function animateCounters() {
+            document.querySelectorAll('[data-count]').forEach(el => {
+                const target = Number.parseFloat(el.dataset.count);
+                const dec = Number.parseInt(el.dataset.dec || 0);
+                const prefix = el.dataset.prefix || '';
+                const dur = 1600;
+                const start = performance.now();
+                function step(now) {
+                    const p = Math.min((now - start) / dur, 1);
+                    const e = 1 - Math.pow(1 - p, 3);
+                    el.textContent = prefix + (target * e).toFixed(dec);
+                    if (p < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            });
+        }
+
+        /* ============================================================
+           TABS
+           ============================================================ */
+        function setupTabs() {
+            document.querySelectorAll('.ntab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.tab;
+                    document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                    document.getElementById('view-' + tab).classList.add('active');
+                    S.view = tab;
+                    // Small delay to allow layout reflow before reading canvas sizes
+                    setTimeout(() => drawView(tab), 60);
+                });
+            });
+        }
+
+        /* ============================================================
+           MATCH TOGGLE
+           ============================================================ */
+        function setupMatchToggle() {
+            document.querySelectorAll('[data-match]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-match]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    S.matchToggle = btn.dataset.match;
+                    const ml = document.getElementById('mc-local');
+                    const mf = document.getElementById('mc-front');
+                    const vs = document.querySelector('.vs-col');
+                    ml.style.display = (S.matchToggle === 'frontier') ? 'none' : '';
+                    mf.style.display = (S.matchToggle === 'local') ? 'none' : '';
+                    if (vs) vs.style.display = (S.matchToggle === 'both') ? '' : 'none';
+                });
+            });
+        }
+
+        /* ============================================================
+           PROMPT TOGGLE
+           ============================================================ */
+        function setupPromptToggle() {
+            document.querySelectorAll('[data-pt]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-pt]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    S.promptToggle = btn.dataset.pt;
+                    populatePrompts();
+                });
+            });
+        }
+
+        /* ============================================================
+           SCORE BARS
+           ============================================================ */
+        function startScoreBars() {
+            setTimeout(() => {
+                document.querySelectorAll('.sfill[data-w]').forEach(el => {
+                    el.style.width = el.dataset.w + '%';
+                });
+            }, 400);
+        }
+
+        /* ============================================================
+           DRAW CHARTS (by view)
+           ============================================================ */
+        function drawView(v) {
+            if (S.drawn[v]) return;
+            S.drawn[v] = true;
+            if (v === 'speed') {
+                drawBarChart('chart-tps', 220,
+                    ['Qwen3.6 27B', 'Llama 3.3 70B', 'DeepSeek-R2', 'Mistral L3', 'Phi-4 14B', 'Llama 3.2 11B', 'Claude Opus 4.8', 'GPT-4.1'],
+                    [47.3, 18.2, 31.6, 42.1, 68.4, 89.2, 89.1, 76.3],
+                    ['#fbbf24', '#fbbf24', '#fbbf24', '#fbbf24', '#fbbf24', '#fbbf24', '#a78bfa', '#a78bfa']
+                );
+                drawHBarChart('chart-ctime', 220,
+                    ['Qwen3.6 27B', 'Claude Opus 4.8', 'Mistral L3', 'Phi-4 14B', 'Llama 3.3 70B', 'GPT-4.1'],
+                    [4.2, 1.8, 3.1, 1.9, 8.7, 2.4],
+                    ['#fbbf24', '#a78bfa', '#fbbf24', '#fbbf24', '#fbbf24', '#a78bfa'], 10
+                );
+            } else if (v === 'quality') {
+                drawRadarChart('chart-radar', 280);
+                drawQualBars('chart-qbars', 280);
+            } else if (v === 'cost') {
+                drawCostBars('chart-cost', 210);
+                drawCumCost('chart-cumcost', 170);
+            } else if (v === 'hardware') {
+                drawGpuTimeline();
+                drawGauge('g-gpu', 94, '#00f5ff', 100);
+                drawGauge('g-vram', 76.7, '#fbbf24', 100);
+                drawGauge('g-temp', 78, '#f472b6', 100);
+                drawGauge('g-pow', 97.7, '#a78bfa', 100);
+            }
+        }
+
+        /* ============================================================
+           CANVAS HELPER
+           ============================================================ */
+        function cInit(canvas, logH) {
+            const dpr = window.devicePixelRatio || 1;
+            const parent = canvas.parentElement;
+            let W = 0;
+            if (parent) { const r = parent.getBoundingClientRect(); W = r.width > 40 ? r.width - 36 : 0; }
+            if (!W) { W = canvas.getBoundingClientRect().width || 500; }
+            canvas.width = Math.round(W * dpr);
+            canvas.height = Math.round(logH * dpr);
+            canvas.style.width = W + 'px';
+            canvas.style.height = logH + 'px';
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            return { ctx, W, H: logH };
+        }
+
+        /* ============================================================
+           BAR CHART
+           ============================================================ */
+        function drawBarChart(id, H, labels, vals, colors) {
+            const canvas = document.getElementById(id); if (!canvas) return;
+            const { ctx, W } = cInit(canvas, H);
+            const pad = { t: 22, r: 16, b: 58, l: 50 };
+            const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+            const max = Math.max(...vals) * 1.18;
+            const bW = (cW / vals.length) * 0.62;
+            let p = 0;
+            (function frame() {
+                ctx.clearRect(0, 0, W, H);
+                p = Math.min(p + 0.035, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                // grid
+                for (let i = 0; i <= 5; i++) {
+                    const y = pad.t + cH - (i / 5) * cH;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.048)'; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+                    ctx.fillStyle = 'rgba(148,163,184,.65)';
+                    ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right';
+                    ctx.fillText((max * i / 5).toFixed(0), pad.l - 6, y + 4);
+                }
+                // bars
+                vals.forEach((v, i) => {
+                    const x = pad.l + (i + 0.5) * (cW / vals.length) - bW / 2;
+                    const bH = (v / max) * cH * e;
+                    const y = pad.t + cH - bH;
+                    const col = colors[i];
+                    ctx.save();
+                    ctx.shadowColor = col; ctx.shadowBlur = 14;
+                    const g = ctx.createLinearGradient(0, y, 0, pad.t + cH);
+                    g.addColorStop(0, col); g.addColorStop(1, col + '38');
+                    ctx.fillStyle = g; ctx.fillRect(x, y, bW, bH);
+                    ctx.restore();
+                    if (e > 0.92) {
+                        ctx.fillStyle = col; ctx.font = 'bold 9px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+                        ctx.fillText(v, x + bW / 2, y - 5);
+                    }
+                    ctx.fillStyle = 'rgba(148,163,184,.75)';
+                    ctx.font = '9px Rajdhani,sans-serif'; ctx.textAlign = 'center';
+                    const lbl = labels[i].length > 13 ? labels[i].slice(0, 12) + '…' : labels[i];
+                    ctx.fillText(lbl, x + bW / 2, H - 8);
+                });
+                // axes
+                ctx.strokeStyle = 'rgba(0,245,255,.14)'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + cH); ctx.lineTo(pad.l + cW, pad.t + cH); ctx.stroke();
+                if (p < 1) requestAnimationFrame(frame);
+            })();
+        }
+
+        /* ============================================================
+           HORIZONTAL BAR CHART
+           ============================================================ */
+        function drawHBarChart(id, H, labels, vals, colors, maxV) {
+            const canvas = document.getElementById(id); if (!canvas) return;
+            const { ctx, W } = cInit(canvas, H);
+            const pad = { t: 10, r: 72, b: 10, l: 135 };
+            const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+            const bH = (cH / vals.length) * 0.58;
+            const max = maxV || Math.max(...vals) * 1.2;
+            let p = 0;
+            (function frame() {
+                ctx.clearRect(0, 0, W, H);
+                p = Math.min(p + 0.035, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                // vert grid
+                for (let i = 0; i <= 5; i++) {
+                    const x = pad.l + (i / 5) * cW;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + cH); ctx.stroke();
+                }
+                vals.forEach((v, i) => {
+                    const y = pad.t + (i + 0.5) * (cH / vals.length) - bH / 2;
+                    const bw = (v / max) * cW * e;
+                    const col = colors[i];
+                    ctx.save();
+                    ctx.shadowColor = col; ctx.shadowBlur = 11;
+                    const g = ctx.createLinearGradient(pad.l, 0, pad.l + bw, 0);
+                    g.addColorStop(0, col); g.addColorStop(1, col + '44');
+                    ctx.fillStyle = g; ctx.fillRect(pad.l, y, bw, bH);
+                    ctx.restore();
+                    ctx.fillStyle = 'rgba(148,163,184,.8)';
+                    ctx.font = '10px Rajdhani,sans-serif'; ctx.textAlign = 'right';
+                    ctx.fillText(labels[i], pad.l - 7, y + bH / 2 + 4);
+                    if (e > 0.85) {
+                        ctx.fillStyle = col; ctx.font = 'bold 9px JetBrains Mono,monospace'; ctx.textAlign = 'left';
+                        ctx.fillText(v + 's', pad.l + bw + 5, y + bH / 2 + 4);
+                    }
+                });
+                ctx.strokeStyle = 'rgba(0,245,255,.14)'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + cH); ctx.stroke();
+                if (p < 1) requestAnimationFrame(frame);
+            })();
+        }
+
+        /* ============================================================
+           RADAR CHART
+           ============================================================ */
+        function drawRadarChart(id, H) {
+            const canvas = document.getElementById(id); if (!canvas) return;
+            const { ctx, W } = cInit(canvas, H);
+            const cx = W / 2, cy = H / 2;
+            const r = Math.min(W, H) * 0.33;
+            const labels = ['Quality', 'Coding', 'Creativity', 'Instructions', 'Speed*', 'Value'];
+            // local: speed normalized (47.3/89.1*10≈5.3), value=10 (free)
+            const local = [7.9, 8.3, 7.6, 8, 5.3, 10];
+            // frontier: high speed, low value (expensive)
+            const front = [9.6, 9.3, 9.8, 9.9, 9.8, 1.5];
+            const n = 6;
+            let p = 0;
+            (function frame() {
+                ctx.clearRect(0, 0, W, H);
+                p = Math.min(p + 0.028, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                // rings
+                for (let ring = 1; ring <= 5; ring++) {
+                    ctx.beginPath();
+                    for (let i = 0; i < n; i++) {
+                        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+                        const pr = (ring / 5) * r;
+                        const x = cx + Math.cos(a) * pr, y = cy + Math.sin(a) * pr;
+                        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.strokeStyle = 'rgba(0,245,255,0.07)'; ctx.lineWidth = 1; ctx.stroke();
+                }
+                // spokes
+                for (let i = 0; i < n; i++) {
+                    const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+                    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+                    ctx.strokeStyle = 'rgba(0,245,255,0.09)'; ctx.lineWidth = 1; ctx.stroke();
+                }
+                // polygons
+                const drawPoly = (vals, col) => {
+                    ctx.beginPath();
+                    for (let i = 0; i < n; i++) {
+                        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+                        const d = (vals[i] / 10) * r * e;
+                        const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d;
+                        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = col + '22'; ctx.fill();
+                    ctx.strokeStyle = col; ctx.lineWidth = 2;
+                    ctx.shadowColor = col; ctx.shadowBlur = 9; ctx.stroke(); ctx.shadowBlur = 0;
+                    if (e > 0.88) {
+                        for (let i = 0; i < n; i++) {
+                            const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+                            const d = (vals[i] / 10) * r;
+                            const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d;
+                            ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+                            ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 12; ctx.fill(); ctx.shadowBlur = 0;
+                        }
+                    }
+                };
+                drawPoly(local, '#fbbf24');
+                drawPoly(front, '#a78bfa');
+                // labels
+                if (e > 0.45) {
+                    ctx.font = '11px Rajdhani,sans-serif'; ctx.fillStyle = 'rgba(148,163,184,.88)';
+                    for (let i = 0; i < n; i++) {
+                        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+                        const lx = cx + Math.cos(a) * (r + 24), ly = cy + Math.sin(a) * (r + 24);
+                        ctx.textAlign = 'center'; ctx.fillText(labels[i], lx, ly + 4);
+                    }
+                }
+                // legend
+                if (e > 0.75) {
+                    const legy = H - 16;
+                    const lx = W / 2 - 80;
+                    ctx.fillStyle = '#fbbf24'; ctx.fillRect(lx, legy, 11, 11);
+                    ctx.fillStyle = 'rgba(148,163,184,.8)'; ctx.font = '10px Rajdhani,sans-serif'; ctx.textAlign = 'left';
+                    ctx.fillText('Qwen3.6 27B', lx + 14, legy + 9);
+                    ctx.fillStyle = '#a78bfa'; ctx.fillRect(lx + 100, legy, 11, 11);
+                    ctx.fillStyle = 'rgba(148,163,184,.8)'; ctx.fillText('Claude Opus 4.8', lx + 114, legy + 9);
+                }
+                if (p < 1) requestAnimationFrame(frame);
+            })();
+        }
+
+        /* ============================================================
+           QUALITY BARS CHART
+           ============================================================ */
+        function drawQualBars(id, H) {
+            const canvas = document.getElementById(id); if (!canvas) return;
+            const { ctx, W } = cInit(canvas, H);
+            const cats = ['Quality', 'Coding', 'Creativity', 'Instructions', 'Speed*'];
+            const loc = [7.9, 8.3, 7.6, 8, 4.7];
+            const fro = [9.6, 9.3, 9.8, 9.9, 8.9];
+            const n = cats.length;
+            const pad = { t: 18, r: 18, b: 42, l: 105 };
+            const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+            const gH = cH / n, bH = gH * 0.28;
+            let p = 0;
+            (function frame() {
+                ctx.clearRect(0, 0, W, H);
+                p = Math.min(p + 0.035, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                for (let i = 0; i <= 5; i++) {
+                    const x = pad.l + (i / 5) * cW;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + cH); ctx.stroke();
+                    ctx.fillStyle = 'rgba(148,163,184,.5)'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+                    ctx.fillText((i * 2).toString(), x, pad.t + cH + 14);
+                }
+                cats.forEach((cat, i) => {
+                    const bY = pad.t + i * gH + gH * 0.12;
+                    // local bar
+                    const lW = (loc[i] / 10) * cW * e;
+                    ctx.save(); ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 8;
+                    const lg = ctx.createLinearGradient(pad.l, 0, pad.l + lW, 0);
+                    lg.addColorStop(0, '#fbbf24'); lg.addColorStop(1, '#fbbf2450');
+                    ctx.fillStyle = lg; ctx.fillRect(pad.l, bY, lW, bH); ctx.restore();
+                    // frontier bar
+                    const fW = (fro[i] / 10) * cW * e;
+                    ctx.save(); ctx.shadowColor = '#a78bfa'; ctx.shadowBlur = 8;
+                    const fg = ctx.createLinearGradient(pad.l, 0, pad.l + fW, 0);
+                    fg.addColorStop(0, '#a78bfa'); fg.addColorStop(1, '#a78bfa50');
+                    ctx.fillStyle = fg; ctx.fillRect(pad.l, bY + bH + 3, fW, bH); ctx.restore();
+                    // values
+                    if (e > 0.83) {
+                        ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 9px JetBrains Mono,monospace'; ctx.textAlign = 'left';
+                        ctx.fillText(loc[i].toFixed(1), pad.l + lW + 4, bY + bH - 1);
+                        ctx.fillStyle = '#a78bfa';
+                        ctx.fillText(fro[i].toFixed(1), pad.l + fW + 4, bY + bH + 3 + bH - 1);
+                    }
+                    // cat label
+                    ctx.fillStyle = 'rgba(148,163,184,.88)'; ctx.font = '11px Rajdhani,sans-serif'; ctx.textAlign = 'right';
+                    ctx.fillText(cat, pad.l - 7, bY + bH + 3);
+                });
+                // legend
+                const ly = H - 14;
+                ctx.fillStyle = '#fbbf24'; ctx.fillRect(pad.l, ly, 10, 10);
+                ctx.fillStyle = 'rgba(148,163,184,.78)'; ctx.font = '10px Rajdhani,sans-serif'; ctx.textAlign = 'left';
+                ctx.fillText('Qwen3.6 27B', pad.l + 13, ly + 9);
+                ctx.fillStyle = '#a78bfa'; ctx.fillRect(pad.l + 96, ly, 10, 10);
+                ctx.fillStyle = 'rgba(148,163,184,.78)'; ctx.fillText('Claude Opus 4.8', pad.l + 109, ly + 9);
+                if (p < 1) requestAnimationFrame(frame);
+            })();
+        }
+
+        /* ============================================================
+           COST BAR CHART
+           ============================================================ */
+        function drawCostBars(id, H) {
+            const canvas = document.getElementById(id); if (!canvas) return;
+            const { ctx, W } = cInit(canvas, H);
+            const labels = ['#1 Sort', '#2 Quantum', '#3 React', '#4 Haiku', '#5 SQL', '#6 Attn', '#7 Docker', '#8 Micro'];
+            const costs = [0.41, 0.38, 0.52, 0.09, 0.61, 0.48, 0.44, 0.91];
+            const max = 1;
+            const pad = { t: 20, r: 14, b: 52, l: 46 };
+            const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+            const bW = (cW / costs.length) * 0.62;
+            let p = 0;
+            (function frame() {
+                ctx.clearRect(0, 0, W, H);
+                p = Math.min(p + 0.035, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                for (let i = 0; i <= 4; i++) {
+                    const y = pad.t + cH - (i / 4) * cH;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+                    ctx.fillStyle = 'rgba(148,163,184,.6)'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right';
+                    ctx.fillText('$' + (max * i / 4).toFixed(2), pad.l - 5, y + 4);
+                }
+                costs.forEach((c, i) => {
+                    const x = pad.l + (i + 0.5) * (cW / costs.length) - bW / 2;
+                    const bH = (c / max) * cH * e;
+                    const y = pad.t + cH - bH;
+                    const t = c / max;
+                    const r = Math.round(167 + (244 - 167) * t), g = Math.round(139 - (139 - 114) * t), b = Math.round(250 - (250 - 182) * t);
+                    const col = `rgb(${r},${g},${b})`;
+                    const col2 = `rgb(${r + 20},${g + 20},${b + 20})`;
+                    ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = 13;
+                    const gr = ctx.createLinearGradient(0, y, 0, pad.t + cH);
+                    gr.addColorStop(0, col); gr.addColorStop(1, col2);
+                    ctx.fillStyle = gr; ctx.fillRect(x, y, bW, bH); ctx.restore();
+                    if (e > 0.9) {
+                        ctx.fillStyle = col; ctx.font = 'bold 9px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+                        ctx.fillText('$' + c.toFixed(2), x + bW / 2, y - 5);
+                    }
+                    ctx.fillStyle = 'rgba(148,163,184,.72)'; ctx.font = '9px Rajdhani,sans-serif'; ctx.textAlign = 'center';
+                    ctx.fillText(labels[i], x + bW / 2, H - 8);
+                });
+                if (p < 1) requestAnimationFrame(frame);
+            })();
+        }
+
+        /* ============================================================
+           CUMULATIVE COST LINE CHART
+           ============================================================ */
+        function drawCumCost(id, H) {
+            const canvas = document.getElementById(id); if (!canvas) return;
+            const { ctx, W } = cInit(canvas, H);
+            // Cumulative costs for 14 sessions (sum forward)
+            const rawCosts = [0.28, 3.29, 5.52, 1.18, 4.41, 8.21, 6.93, 0.47, 0.31, 0.83, 1.24, 4.82, 5.17, 3.84];
+            const cum = rawCosts.reduce((a, v, i) => { a.push((a[i - 1] || 0) + v); return a; }, []);
+            const max = cum[cum.length - 1] * 1.08;
+            const n = cum.length;
+            const pad = { t: 14, r: 18, b: 28, l: 50 };
+            const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+            const gx = i => pad.l + (i / (n - 1)) * cW;
+            const gy = v => pad.t + cH - (v / max) * cH;
+            let p = 0;
+            (function frame() {
+                ctx.clearRect(0, 0, W, H);
+                p = Math.min(p + 0.028, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                const cnt = Math.max(1, Math.ceil(e * n));
+                for (let i = 0; i <= 3; i++) {
+                    const y = pad.t + (i / 3) * cH;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+                    ctx.fillStyle = 'rgba(148,163,184,.58)'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right';
+                    ctx.fillText('$' + (max * (1 - i / 3)).toFixed(0), pad.l - 5, y + 4);
+                }
+                // area
+                ctx.beginPath(); ctx.moveTo(gx(0), pad.t + cH);
+                for (let i = 0; i < cnt; i++)ctx.lineTo(gx(i), gy(cum[i]));
+                ctx.lineTo(gx(cnt - 1), pad.t + cH); ctx.closePath();
+                const ag = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+                ag.addColorStop(0, 'rgba(244,114,182,.28)'); ag.addColorStop(1, 'rgba(244,114,182,.02)');
+                ctx.fillStyle = ag; ctx.fill();
+                // line
+                ctx.beginPath();
+                for (let i = 0; i < cnt; i++)i === 0 ? ctx.moveTo(gx(i), gy(cum[i])) : ctx.lineTo(gx(i), gy(cum[i]));
+                ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0;
+                // dots
+                for (let i = 0; i < cnt; i++) {
+                    ctx.beginPath(); ctx.arc(gx(i), gy(cum[i]), 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#f472b6'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0;
+                }
+                // x labels
+                for (let i = 0; i < n; i += 2) {
+                    ctx.fillStyle = 'rgba(148,163,184,.55)'; ctx.font = '8px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+                    ctx.fillText('S' + (i + 1), gx(i), H - 5);
+                }
+                if (p < 1) requestAnimationFrame(frame);
+            })();
+        }
+
+        /* ============================================================
+           GPU TIMELINE
+           ============================================================ */
+        let gpuTLCtx = null, gpuTLW = 0, gpuTLH = 158;
+
+        function drawGpuTimeline() {
+            const canvas = document.getElementById('chart-gputime'); if (!canvas) return;
+            const { ctx, W } = cInit(canvas, gpuTLH);
+            gpuTLCtx = ctx; gpuTLW = W;
+            redrawGpuTL();
+        }
+
+        function redrawGpuTL() {
+            if (!gpuTLCtx) return;
+            const ctx = gpuTLCtx, W = gpuTLW, H = gpuTLH;
+            const pad = { t: 14, r: 18, b: 26, l: 44 };
+            const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+            const n = gpuTL.length;
+            const gx = i => pad.l + (i / (n - 1)) * cW;
+            const gy = v => pad.t + cH - (v / 100) * cH;
+            ctx.clearRect(0, 0, W, H);
+            for (let i = 0; i <= 4; i++) {
+                const y = pad.t + (i / 4) * cH;
+                ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+                ctx.fillStyle = 'rgba(148,163,184,.5)'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right';
+                ctx.fillText((100 - i * 25) + '%', pad.l - 5, y + 4);
+            }
+            // area
+            ctx.beginPath(); ctx.moveTo(gx(0), pad.t + cH);
+            gpuTL.forEach((v, i) => ctx.lineTo(gx(i), gy(v)));
+            ctx.lineTo(gx(n - 1), pad.t + cH); ctx.closePath();
+            const ag = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+            ag.addColorStop(0, 'rgba(0,245,255,.22)'); ag.addColorStop(1, 'rgba(0,245,255,.02)');
+            ctx.fillStyle = ag; ctx.fill();
+            // line
+            ctx.beginPath();
+            gpuTL.forEach((v, i) => i === 0 ? ctx.moveTo(gx(i), gy(v)) : ctx.lineTo(gx(i), gy(v)));
+            ctx.strokeStyle = '#00f5ff'; ctx.lineWidth = 2; ctx.shadowColor = '#00f5ff'; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0;
+            // x labels
+            [0, 15, 30, 45, 59].forEach(i => {
+                ctx.fillStyle = 'rgba(148,163,184,.5)'; ctx.font = '8px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+                ctx.fillText((60 - i) + 's', gx(i), H - 5);
+            });
+        }
+
+        /* ============================================================
+           GAUGE (arc)
+           ============================================================ */
+        function drawGauge(id, val, col, max) {
+            const canvas = document.getElementById(id); if (!canvas) return;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = 110 * dpr; canvas.height = 110 * dpr;
+            canvas.style.width = '110px'; canvas.style.height = '110px';
+            const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+            const cx = 55, cy = 58, r = 42;
+            const sa = Math.PI * 0.75, ea = Math.PI * 2.25;
+            let p = 0;
+            (function frame() {
+                ctx.clearRect(0, 0, 110, 110);
+                p = Math.min(p + 0.035, 1);
+                const e = 1 - Math.pow(1 - p, 3);
+                const pct = (val / max) * e;
+                // track
+                ctx.beginPath(); ctx.arc(cx, cy, r, sa, ea);
+                ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.stroke();
+                // fill
+                ctx.beginPath(); ctx.arc(cx, cy, r, sa, sa + (ea - sa) * pct);
+                ctx.strokeStyle = col; ctx.lineWidth = 9; ctx.lineCap = 'round';
+                ctx.shadowColor = col; ctx.shadowBlur = 14; ctx.stroke(); ctx.shadowBlur = 0;
+                if (p < 1) requestAnimationFrame(frame);
+            })();
+        }
+
+        /* ============================================================
+           PROMPTS
+           ============================================================ */
+        function populatePrompts() {
+            const list = document.getElementById('prompt-list'); if (!list) return;
+            list.innerHTML = '';
+            const pt = S.promptToggle;
+            PROMPTS.forEach(p => {
+                const avgScore = ((p.ls + p.fs) / 2).toFixed(1);
+                const dispScore = pt === 'local' ? p.ls.toFixed(1) : pt === 'frontier' ? p.fs.toFixed(1) : avgScore;
+                const dispTime = pt === 'local' ? p.lt + 's' : pt === 'frontier' ? p.ft + 's' : ((p.lt + p.ft) / 2).toFixed(1) + 's avg';
+                const el = document.createElement('div');
+                el.className = 'pi';
+                el.innerHTML = `
+      <div class="pi-hd">
+        <span class="pi-num">${String(p.id).padStart(2, '0')}</span>
+        <span class="pi-txt">${p.txt}</span>
+        <span class="pi-st">PASS</span>
+        <span class="pi-time">${dispTime}</span>
+        <span class="pi-sc">${dispScore}</span>
+      </div>
+      <div class="pi-body">
+        <div class="pd-grid">
+          <div>
+            <div class="pd-head" style="color:var(--amber)">◈ Qwen3.6 27B · Local</div>
+            <div class="pd-stats">
+              <div><div class="pds-lbl">Time</div><div class="pds-val na">${p.lt}s</div></div>
+              <div><div class="pds-lbl">Score</div><div class="pds-val na">${p.ls}/10</div></div>
+              <div><div class="pds-lbl">Category</div><div class="pds-val" style="color:var(--ts)">${p.cat}</div></div>
+            </div>
+            <div class="pd-note">${p.lnote}</div>
+          </div>
+          <div>
+            <div class="pd-head" style="color:var(--violet)">◇ Claude Opus 4.8 · API</div>
+            <div class="pd-stats">
+              <div><div class="pds-lbl">Time</div><div class="pds-val nv">${p.ft}s</div></div>
+              <div><div class="pds-lbl">Score</div><div class="pds-val nv">${p.fs}/10</div></div>
+              <div><div class="pds-lbl">Delta</div><div class="pds-val" style="color:${p.fs - p.ls > 0 ? 'var(--green)' : 'var(--amber)'}">+${(p.fs - p.ls).toFixed(1)}</div></div>
+            </div>
+            <div class="pd-note">${p.fnote}</div>
+          </div>
+        </div>
+      </div>`;
+                el.querySelector('.pi-hd').addEventListener('click', () => {
+                    const isOpen = el.classList.contains('open');
+                    document.querySelectorAll('.pi.open').forEach(e => e.classList.remove('open'));
+                    if (!isOpen) el.classList.add('open');
+                });
+                list.appendChild(el);
+            });
+        }
+
+        /* ============================================================
+           TABLE
+           ============================================================ */
+        function populateTable() { renderTable(); }
+
+        function renderTable() {
+            const tbody = document.getElementById('tbl-body'); if (!tbody) return;
+            let data = [...PREV_TESTS];
+            if (S.filterType === 'local') data = data.filter(d => d.winner === 'local');
+            if (S.filterType === 'frontier') data = data.filter(d => d.winner === 'frontier');
+            if (S.tableFilter) {
+                const q = S.tableFilter.toLowerCase();
+                data = data.filter(d =>
+                    d.local.toLowerCase().includes(q) ||
+                    d.frontier.toLowerCase().includes(q) ||
+                    d.date.includes(q) ||
+                    d.wn.toLowerCase().includes(q)
+                );
+            }
+            data.sort((a, b) => {
+                let va = a[S.tableSort.col], vb = b[S.tableSort.col];
+                if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+                if (va < vb) return S.tableSort.dir === 'asc' ? -1 : 1;
+                if (va > vb) return S.tableSort.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                const isCur = row.session === 14;
+                const winBadge = row.winner === 'local'
+                    ? `<span class="chip cw">🏆 ${row.wn}</span>`
+                    : `<span class="chip cf">${row.wn}</span>`;
+                tr.innerHTML = `
+      <td><span class="mono" style="color:${isCur ? 'var(--cyan)' : 'var(--ts)'};">S${String(row.session).padStart(2, '0')}</span>${isCur ? '<span class="chip cc">●LIVE</span>' : ''}</td>
+      <td style="color:var(--td);font-family:var(--ff-m);font-size:.75rem;">${row.date}</td>
+      <td><span class="chip cl">${row.local}</span></td>
+      <td><span class="chip cf">${row.frontier}</span></td>
+      <td class="na mono">${row.local_score.toFixed(2)}</td>
+      <td class="nv mono">${row.frontier_score.toFixed(2)}</td>
+      <td class="nc mono">${row.local_speed}</td>
+      <td>${winBadge}</td>
+      <td class="np mono">${row.cost}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        /* ============================================================
+           TABLE CONTROLS
+           ============================================================ */
+        function setupTableControls() {
+            document.getElementById('tbl-search')?.addEventListener('input', e => {
+                S.tableFilter = e.target.value;
+                renderTable();
+            });
+            document.querySelectorAll('.fbtn[data-filter]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.fbtn[data-filter]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    S.filterType = btn.dataset.filter;
+                    renderTable();
+                });
+            });
+            document.querySelectorAll('.fbtn[data-sort]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const col = btn.dataset.sort;
+                    if (S.tableSort.col === col) S.tableSort.dir = S.tableSort.dir === 'asc' ? 'desc' : 'asc';
+                    else { S.tableSort.col = col; S.tableSort.dir = 'desc'; }
+                    renderTable();
+                });
+            });
+            document.querySelectorAll('.dtbl th[data-col]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const col = th.dataset.col;
+                    if (S.tableSort.col === col) S.tableSort.dir = S.tableSort.dir === 'asc' ? 'desc' : 'asc';
+                    else { S.tableSort.col = col; S.tableSort.dir = 'desc'; }
+                    document.querySelectorAll('.dtbl th').forEach(h => h.classList.remove('sorted'));
+                    th.classList.add('sorted');
+                    renderTable();
+                });
+            });
+        }
+
+        /* ============================================================
+           LIVE HARDWARE SIMULATION
+           ============================================================ */
+        function startHW() {
+            setInterval(() => {
+                const fl = (v, r, mn, mx) => Math.min(mx, Math.max(mn, v + (Math.random() - .5) * r));
+                hw.gpu = fl(hw.gpu, 4, 62, 100);
+                hw.vramPct = fl(hw.vramPct, 0.8, 72, 82);
+                hw.tempC = fl(hw.tempC, 2.5, 72, 86);
+                hw.powerW = fl(hw.powerW, 7, 310, 350);
+                hw.fanPct = fl(hw.fanPct, 3, 72, 96);
+                hw.cpuPct = fl(hw.cpuPct, 5, 42, 90);
+
+                setBar('hw-gpu-b', hw.gpu);
+                setBar('hw-vram-b', hw.vramPct);
+                setBar('hw-temp-b', hw.tempC); // 0-100°C maps to bar %
+                setBar('hw-pow-b', (hw.powerW / 350) * 100);
+                setBar('hw-fan-b', hw.fanPct);
+
+                setFlash('hw-gpu-t', hw.gpu.toFixed(0) + '%');
+                setFlash('hw-vram-t', (hw.vramPct * 24 / 100).toFixed(1) + ' / 24 GB');
+                setFlash('hw-temp-t', hw.tempC.toFixed(0) + '°C');
+                setFlash('hw-pow-t', hw.powerW.toFixed(0) + ' / 350W');
+                setFlash('hw-fan-t', hw.fanPct.toFixed(0) + '%');
+
+                if (S.view === 'hardware') {
+                    setBar('hw2-cpu-b', hw.cpuPct);
+                    setFlash('hw2-cpu-t', hw.cpuPct.toFixed(0) + '%');
+                    gpuTL.shift(); gpuTL.push(hw.gpu);
+                    redrawGpuTL();
+                }
+            }, 2200);
+        }
+
+        function setBar(id, pct) {
+            const el = document.getElementById(id);
+            if (el) el.style.width = Math.min(100, Math.max(0, pct)).toFixed(1) + '%';
+        }
+
+        function setFlash(id, txt) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = txt;
+            el.classList.remove('flash');
+            void el.offsetWidth;
+            el.classList.add('flash');
+        }
+    </script>
+</body>
+
+</html>
