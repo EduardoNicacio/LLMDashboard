@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Testing Command Center</title>
+    <!-- Chart.js for interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0e17;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #2a3142;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            background-color: rgba(30, 41, 59, 0.5);
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-tab.active {
+            background-color: #1e293b;
+            box-shadow: 0 2px 0 rgba(59, 130, 246, 0.5);
+        }
+
+        /* Glassmorphism Cards */
+        .card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .card-title {
+            font-size: 1.35rem;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Hero Summary Section */
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 25px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.3), rgba(37, 99, 235, 0.2));
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        /* Head-to-Head Section */
+        .head-to-head {
+            display: flex;
+            gap: 25px;
+        }
+
+        .model-card {
+            flex: 1;
+            padding: 30px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.2);
+        }
+
+        .model-card.qwen {
+            background: linear-gradient(to bottom right, #1e40af, #2563eb);
+            border-top: 4px solid #2563eb;
+        }
+
+        .model-card.claude {
+            background: linear-gradient(to bottom right, #7c3aed, #a855f7);
+            border-top: 4px solid #a855f7;
+        }
+
+        .model-name {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .model-name::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .metric {
+            margin-bottom: 18px;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Charts Section */
+        .chart-container {
+            height: 320px;
+            margin-bottom: 20px;
+        }
+
+        /* Prompt History Table */
+        .prompt-history {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .prompt-history th,
+        .prompt-history td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #2a3142;
+        }
+
+        .prompt-history thead tr {
+            background-color: rgba(30, 41, 59, 0.7);
+        }
+
+        .prompt-history th {
+            color: #e2e8f0;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .prompt-history th:hover {
+            background-color: rgba(45, 55, 72, 0.5);
+        }
+
+        .status-completed {
+            color: #10b981;
+        }
+
+        .status-running {
+            color: #f59e0b;
+        }
+
+        .status-failed {
+            color: #ef4444;
+        }
+
+        /* Hardware Monitor */
+        .hardware-monitor {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .hw-item {
+            background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2));
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .hw-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 8px;
+        }
+
+        .hw-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        /* API Usage Panel */
+        .api-usage {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .api-card {
+            background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.2));
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        /* Winner Breakdown */
+        .winner-breakdown {
+            background: linear-gradient(to bottom right, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2));
+            padding: 25px;
+            border-radius: 16px;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .winner-name {
+            font-weight: bold;
+            color: #ef4444;
+        }
+
+        /* Previous Tests Table */
+        .previous-tests {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        input[type="text"],
+        select {
+            padding: 10px 14px;
+            border-radius: 8px;
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid #475569;
+            color: white;
+        }
+
+        .sort-btn {
+            padding: 10px 20px;
+            background-color: rgba(59, 130, 246, 0.2);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .sort-btn:hover {
+            background-color: rgba(59, 130, 246, 0.4);
+        }
+
+        /* Notes Section */
+        .notes-section {
+            background: linear-gradient(to bottom right, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.2));
+            padding: 25px;
+            border-radius: 16px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 180px;
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid #475569;
+            color: white;
+            padding: 14px;
+            border-radius: 8px;
+            resize: vertical;
+        }
+
+        /* Neon Effects */
+        .neon {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        .neon-accent {
+            color: #60a5fa;
+        }
+
+        /* Animations */
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            }
+
+            100% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+            }
+        }
+
+        .glowing {
+            animation: glow 2s infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-view="summary">Summary</div>
+            <div class="nav-tab" data-view="speed">Speed</div>
+            <div class="nav-tab" data-view="quality">Quality</div>
+            <div class="nav-tab" data-view="cost">Cost</div>
+            <div class="nav-tab" data-view="hardware">Hardware</div>
+        </div>
+
+        <!-- Hero Summary Section -->
+        <div id="summary-section" class="card">
+            <h2 class="card-title"><span>📊 Command Center Summary</span></h2>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Total Tests</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">1,245</div>
+                    <div class="stat-label">Avg Tokens/Sec</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">Qwen3.6 27B</div>
+                    <div class="stat-label">Best Model</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$128.50</div>
+                    <div class="stat-label">Total API Cost</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">2h 15m</div>
+                    <div class="stat-label">Local Runtime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Head-to-Head Matchup Section -->
+        <div id="head-to-head-section" class="card">
+            <h2 class="card-title"><span>🔥 Head-to-Head Matchup: Qwen3.6 27B vs Claude Opus 4.8</span></h2>
+            <div class="head-to-head">
+                <!-- Qwen Card -->
+                <div class="model-card qwen">
+                    <div class="model-name">Qwen3.6 27B</div>
+
+                    <div class="metric">
+                        <div class="metric-label">Speed (Tokens/Sec)</div>
+                        <div class="metric-value"><span>1,245</span><i class="fas fa-tachometer-alt"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Quality Score</div>
+                        <div class="metric-value"><span>92/100</span><i class="fas fa-star"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Coding Accuracy</div>
+                        <div class="metric-value"><span>95%</span><i class="fas fa-code"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Creativity Score</div>
+                        <div class="metric-value"><span>88/100</span><i class="fas fa-lightbulb"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Instruction Following</div>
+                        <div class="metric-value"><span>94%</span><i class="fas fa-robot"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Final Grade</div>
+                        <div class="metric-value"><span>A+</span><i class="fas fa-trophy"></i></div>
+                    </div>
+                </div>
+
+                <!-- Claude Card -->
+                <div class="model-card claudie">
+                    <div class="model-name">Claude Opus 4.8</div>
+
+                    <div class="metric">
+                        <div class="metric-label">Speed (Tokens/Sec)</div>
+                        <div class="metric-value"><span>1,180</span><i class="fas fa-tachometer-alt"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Quality Score</div>
+                        <div class="metric-value"><span>94/100</span><i class="fas fa-star"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Coding Accuracy</div>
+                        <div class="metric-value"><span>92%</span><i class="fas fa-code"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Creativity Score</div>
+                        <div class="metric-value"><span>90/100</span><i class="fas fa-lightbulb"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Instruction Following</div>
+                        <div class="metric-value"><span>96%</span><i class="fas fa-robot"></i></div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">Final Grade</div>
+                        <div class="metric-value"><span>A</span><i class="fas fa-trophy"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div id="charts-section" class="card">
+            <h2 class="card-title"><span>📈 Performance Metrics</span></h2>
+
+            <div class="chart-container">
+                <canvas id="tokensChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="completionTimeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Prompt History Section -->
+        <div id="prompt-history-section" class="card">
+            <h2 class="card-title"><span>📝 Prompt History</span></h2>
+
+            <table class="prompt-history">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Prompt ID</th>
+                        <th onclick="sortTable(1)">Prompt Content</th>
+                        <th>Status</th>
+                        <th>Time Taken (ms)</th>
+                        <th>Score</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="promptHistoryBody">
+                    <!-- Dynamic data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Hardware Monitor Section -->
+        <div id="hardware-section" class="card">
+            <h2 class="card-title"><span>🛠️ Hardware Monitor</span></h2>
+
+            <div class="hardware-monitor">
+                <div class="hw-item">
+                    <div class="hw-value">92%</div>
+                    <div class="hw-label">GPU Usage (RTX 3090)</div>
+                </div>
+
+                <div class="hw-item">
+                    <div class="hw-value">12.3 GB</div>
+                    <div class="hw-label">VRAM Usage</div>
+                </div>
+
+                <div class="hw-item">
+                    <div class="hw-value">78°C</div>
+                    <div class="hw-label">Temperature</div>
+                </div>
+
+                <div class="hw-item">
+                    <div class="hw-value">450W</div>
+                    <div class="hw-label">Power Draw</div>
+                </div>
+
+                <div class="hw-item">
+                    <div class="hw-value">Online</div>
+                    <div class="hw-label">Local Server Status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Usage Section -->
+        <div id="api-usage-section" class="card">
+            <h2 class="card-title"><span>💰 API Usage</span></h2>
+
+            <div class="api-usage">
+                <div class="api-card">
+                    <div class="metric-label">Estimated Cost (Claude Opus 4.8)</div>
+                    <div class="metric-value">$128.50</div>
+                    <div class="metric-label">Input Tokens: 12,450</div>
+                    <div class="metric-label">Output Tokens: 18,720</div>
+                </div>
+
+                <div class="api-card">
+                    <div class="metric-label">Cost Breakdown</div>
+                    <div class="metric-value">$10.50 / hr</div>
+                    <div class="metric-label">Input Cost: $12.30</div>
+                    <div class="metric-label">Output Cost: $16.20</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Winner Breakdown Section -->
+        <div id="winner-breakdown-section" class="card">
+            <h2 class="card-title"><span>🏆 Winner Breakdown</span></h2>
+
+            <div class="category-item">
+                <span>Coding Accuracy</span>
+                <span class="winner-name">Qwen3.6 27B (95%)</span>
+            </div>
+
+            <div class="category-item">
+                <span>Speed (Tokens/Sec)</span>
+                <span class="winner-name">Qwen3.6 27B (1,245)</span>
+            </div>
+
+            <div class="category-item">
+                <span>Creativity Score</span>
+                <span class="winner-name">Claude Opus 4.8 (90%)</span>
+            </div>
+
+            <div class="category-item">
+                <span>Instruction Following</span>
+                <span class="winner-name">Claude Opus 4.8 (96%)</span>
+            </div>
+
+            <div class="category-item">
+                <span>Total Score</span>
+                <span class="winner-name">Qwen3.6 27B (92% overall)</span>
+            </div>
+        </div>
+
+        <!-- Previous Tests Section -->
+        <div id="previous-tests-section" class="card">
+            <h2 class="card-title"><span>📊 Previous Model Tests</span></h2>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search models...">
+                <select id="sortSelect">
+                    <option value="score">Sort by Score</option>
+                    <option value="speed">Sort by Speed</option>
+                    <option value="date">Sort by Date</option>
+                </select>
+            </div>
+
+            <table class="prompt-history" id="previousTestsTable">
+                <thead>
+                    <tr>
+                        <th>Model Name</th>
+                        <th>Date</th>
+                        <th>Total Score</th>
+                        <th>Avg Tokens/Sec</th>
+                        <th>Coding Acc.</th>
+                        <th>Winner</th>
+                    </tr>
+                </thead>
+                <tbody id="previousTestsBody">
+                    <!-- Dynamic data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Notes Section -->
+        <div id="notes-section" class="card">
+            <h2 class="card-title"><span>📝 Testing Observations</span></h2>
+
+            <textarea placeholder="Enter your final testing observations here..."></textarea>
+        </div>
+    </div>
+
+    <!-- JavaScript for interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Charts
+            const tokensCtx = document.getElementById('tokensChart').getContext('2d');
+            new Chart(tokensCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'Test 5'],
+                    datasets: [
+                        {
+                            label: 'Qwen3.6 27B',
+                            data: [1200, 1250, 1180, 1300, 1245],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Claude Opus 4.8',
+                            data: [1100, 1150, 1180, 1200, 1180],
+                            borderColor: '#a855f7',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Tokens Per Second Comparison' }
+                    },
+                    scales: {
+                        y: { beginAtZero: false, min: 1000 }
+                    }
+                }
+            });
+
+            const timeCtx = document.getElementById('completionTimeChart').getContext('2d');
+            new Chart(timeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'Test 5'],
+                    datasets: [
+                        {
+                            label: 'Qwen3.6 27B',
+                            data: [450, 420, 480, 400, 435],
+                            backgroundColor: '#2563eb'
+                        },
+                        {
+                            label: 'Claude Opus 4.8',
+                            data: [520, 510, 500, 530, 515],
+                            backgroundColor: '#a855f7'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Completion Time (ms)' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Prompt History Data
+            const promptHistoryData = [
+                { id: 1, content: "Write a Python function to calculate Fibonacci numbers", status: "completed", time: 420, score: 92 },
+                { id: 2, content: "Generate a creative story about AI and humanity", status: "completed", time: 480, score: 88 },
+                { id: 3, content: "Analyze the latest ML trends for Q4 2024", status: "running", time: 0, score: null },
+                { id: 4, content: "Create a React component with state management", status: "completed", time: 380, score: 95 },
+                { id: 5, content: "Translate this technical document to English", status: "failed", time: 600, score: 75 }
+            ];
+
+            const promptHistoryBody = document.getElementById('promptHistoryBody');
+            promptHistoryData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.content}</td>
+                    <td><span class="status-${item.status}">${item.status.toUpperCase()}</span></td>
+                    <td>${item.time}</td>
+                    <td>${item.score || '-'}</td>
+                    <td><button onclick="expandRow(${item.id})">Details</button></td>
+                `;
+                promptHistoryBody.appendChild(row);
+            });
+
+            // Previous Tests Data
+            const previousTestsData = [
+                { model: "Qwen3.6 27B", date: "2024-01-15", score: 92, speed: 1245, coding: 95, winner: "Qwen" },
+                { model: "Claude Opus 4.8", date: "2024-01-14", score: 91, speed: 1180, coding: 92, winner: "Claude" },
+                { model: "GLM-4.5V", date: "2024-01-13", score: 89, speed: 1100, coding: 90, winner: "Qwen" },
+                { model: "Gemini Pro", date: "2024-01-12", score: 88, speed: 1050, coding: 87, winner: "Qwen" },
+                { model: "Llama 3.2 11B", date: "2024-01-11", score: 85, speed: 980, coding: 86, winner: "Claude" }
+            ];
+
+            const previousTestsBody = document.getElementById('previousTestsBody');
+            previousTestsData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.model}</td>
+                    <td>${item.date}</td>
+                    <td>${item.score}</td>
+                    <td>${item.speed}</td>
+                    <td>${item.coding}%</td>
+                    <td>${item.winner}</td>
+                `;
+                previousTestsBody.appendChild(row);
+            });
+
+            // Sort Table Function
+            function sortTable(n) {
+                const table = document.getElementById('previous-tests-section').querySelector('tbody');
+                let switching = true;
+                let shouldSwitch;
+                let switchCount = 0;
+
+                while (switching) {
+                    switching = false;
+                    const rows = table.rows;
+
+                    for (let i = 1; i < (rows.length - 1); i++) {
+                        shouldSwitch = false;
+
+                        if (n === 0) { // Model Name
+                            let x = rows[i].cells[0].textContent.toLowerCase();
+                            let y = rows[i - 1].cells[0].textContent.toLowerCase();
+                            shouldSwitch = (x < y);
+                        } else if (n === 1) { // Date
+                            let x = new Date(rows[i].cells[1].textContent);
+                            let y = new Date(rows[i - 1].cells[1].textContent);
+                            shouldSwitch = (x < y);
+                        } else if (n === 2 || n === 3) { // Score or Speed - descending order
+                            let x = parseFloat(rows[i].cells[n + 1].textContent);
+                            let y = parseFloat(rows[i - 1].cells[n + 1].textContent);
+                            shouldSwitch = (x > y);
+                        }
+
+                        if (shouldSwitch) {
+                            rows[i].parentNode.insertBefore(rows[i], rows[i - 1]);
+                            switching = true;
+                            switchCount++;
+                        }
+                    }
+                }
+
+                // If no switching occurred, reverse the order
+                if (switchCount === 0 && switching) {
+                    for (let i = 0; i < rows.length - 1; i++) {
+                        let x = parseFloat(rows[i].cells[n + 1].textContent);
+                        let y = parseFloat(rows[i + 1].cells[n + 1].textContent);
+
+                        if ((n === 2 || n === 3) && x > y) { // Descending
+                            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                            switching = true;
+                            switchCount++;
+                        }
+                    }
+                }
+            }
+
+            // Search Functionality
+            document.getElementById('searchInput').addEventListener('input', function (e) {
+                const filter = e.target.value.toLowerCase();
+                const tableRows = document.getElementById('previous-tests-section').querySelectorAll('tbody tr');
+
+                for (let i = 0; i < tableRows.length; i++) {
+                    let rowText = tableRows[i].textContent.toLowerCase();
+                    if (rowText.indexOf(filter) > -1) {
+                        tableRows[i].style.display = "";
+                    } else {
+                        tableRows[i].style.display = "none";
+                    }
+                }
+            });
+
+            // Sort Select Change
+            document.getElementById('sortSelect').addEventListener('change', function (e) {
+                const sortValue = e.target.value;
+                if (sortValue === 'score') sortTable(2);
+                else if (sortValue === 'speed') sortTable(3);
+                else if (sortValue === 'date') sortTable(1);
+            });
+
+            // Expand/Contract Prompt Details
+            function expandRow(id) {
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                if (!row.classList.contains('expanded')) {
+                    row.classList.add('expanded');
+
+                    // Create details section
+                    const detailCell = row.cells[5];
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.className = 'detail-content';
+                    detailsDiv.innerHTML = `
+                        <p>Additional information for prompt ${id}...</p>
+                        <hr style="border-color: #3b82f6; opacity: 0.3;">
+                        <p>Technical analysis and metrics...</p>
+                    `;
+
+                    // Replace button with details
+                    detailCell.innerHTML = '';
+                    detailCell.appendChild(detailsDiv);
+                } else {
+                    row.classList.remove('expanded');
+                    const detailCell = row.cells[5];
+                    detailCell.innerHTML = '<button onclick="expandRow(' + id + ')">Details</button>';
+                }
+            }
+
+            // Navigation Tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const sections = {
+                summary: '#summary-section',
+                speed: '#speed-section',
+                quality: '#quality-section',
+                cost: '#cost-section',
+                hardware: '#hardware-section'
+            };
+
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    // Remove active class from all tabs
+                    navTabs.forEach(t => t.classList.remove('active'));
+
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+
+                    const view = this.getAttribute('data-view');
+
+                    // Hide all sections first
+                    document.querySelectorAll('.card').forEach(card => card.style.display = 'none');
+
+                    if (view === 'summary') {
+                        document.getElementById('summary-section').style.display = 'block';
+                    } else if (view === 'speed') {
+                        const speedSection = document.createElement('div');
+                        speedSection.id = 'speed-section';
+                        speedSection.className = 'card';
+                        speedSection.innerHTML = `
+                            <h2 class="card-title"><span>🚀 Speed Performance</span></h2>
+                            <p>Advanced speed metrics and analysis...</p>
+                        `;
+                        document.querySelector('.container').insertBefore(speedSection, document.getElementById('charts-section'));
+                    } else if (view === 'quality') {
+                        const qualitySection = document.createElement('div');
+                        qualitySection.id = 'quality-section';
+                        qualitySection.className = 'card';
+                        qualitySection.innerHTML = `
+                            <h2 class="card-title"><span>⭐ Quality Analysis</span></h2>
+                            <p>Detailed quality scoring and comparisons...</p>
+                        `;
+                        document.querySelector('.container').insertBefore(qualitySection, document.getElementById('charts-section'));
+                    } else if (view === 'cost') {
+                        const costSection = document.createElement('div');
+                        costSection.id = 'cost-section';
+                        costSection.className = 'card';
+                        costSection.innerHTML = `
+                            <h2 class="card-title"><span>💰 Cost Breakdown</span></h2>
+                            <p>API usage costs and spending analysis...</p>
+                        `;
+                        document.querySelector('.container').insertBefore(costSection, document.getElementById('charts-section'));
+                    } else if (view === 'hardware') {
+                        const hardwareSection = document.createElement('div');
+                        hardwareSection.id = 'hardware-section';
+                        hardwareSection.className = 'card';
+                        hardwareSection.innerHTML = `
+                            <h2 class="card-title"><span>🛠️ Hardware Monitoring</span></h2>
+                            <p>Real-time hardware usage and performance...</p>
+                        `;
+                        document.querySelector('.container').insertBefore(hardwareSection, document.getElementById('charts-section'));
+                    }
+
+                    // Show current section
+                    if (view === 'summary') {
+                        document.getElementById('summary-section').style.display = 'block';
+                    } else if (view === 'speed') {
+                        document.getElementById('speed-section').style.display = 'block';
+                    } else if (view === 'quality') {
+                        document.getElementById('quality-section').style.display = 'block';
+                    } else if (view === 'cost') {
+                        document.getElementById('cost-section').style.display = 'block';
+                    } else if (view === 'hardware') {
+                        document.getElementById('hardware-section').style.display = 'block';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek V4 Flash - Financial Results & Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js">
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+            --bg-primary: #070b14;
+            --bg-secondary: #0d1225;
+            --bg-tertiary: #111833;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #00e5ff;
+            --accent2: #00ff88;
+            --accent3: #f59e0b;
+            --accent4: #ef4444;
+            --accent5: #8b5cf6;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-light: rgba(255, 255, 255, 0.1);
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            --glow: 0 0 30px rgba(0, 229, 255, 0.15);
+            --glow-strong: 0 0 60px rgba(0, 229, 255, 0.25);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --transition: all 0.4s cubic-bezier(.4, 0, .2, 1)
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f1f4f9;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-glass: rgba(255, 255, 255, 0.85);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent: #2563eb;
+            --accent2: #059669;
+            --accent3: #d97706;
+            --accent4: #dc2626;
+            --accent5: #7c3aed;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-light: rgba(0, 0, 0, 0.12);
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            --glow: 0 0 20px rgba(37, 99, 235, 0.1);
+            --glow-strong: 0 0 40px rgba(37, 99, 235, 0.15)
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: var(--transition);
+            line-height: 1.6;
+            overflow-x: hidden
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(0, 229, 255, 0.03) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, rgba(0, 255, 136, 0.02) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0
+        }
+
+        [data-theme="light"] body::before {
+            display: none
+        }
+
+        *,
+        *::before,
+        *::after {
+            transition: background-color 0.4s cubic-bezier(.4, 0, .2, 1), border-color 0.4s cubic-bezier(.4, 0, .2, 1), color 0.3s ease, box-shadow 0.4s cubic-bezier(.4, 0, .2, 1)
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 24px 40px
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary)
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px
+        }
+
+        .header-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3)
+        }
+
+        .header-title h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text
+        }
+
+        .header-title span {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: block;
+            margin-top: -2px
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap
+        }
+
+        .btn-theme {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: var(--transition)
+        }
+
+        .btn-theme:hover {
+            background: var(--bg-card-hover);
+            color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: var(--glow)
+        }
+
+        .view-toggle {
+            display: flex;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden
+        }
+
+        .view-toggle button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--transition);
+            letter-spacing: 0.3px
+        }
+
+        .view-toggle button.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3)
+        }
+
+        .view-toggle button:not(.active):hover {
+            color: var(--text-primary)
+        }
+
+        /* HERO */
+        .hero {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 28px
+        }
+
+        .hero-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 18px;
+            backdrop-filter: blur(12px);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden
+        }
+
+        .hero-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+            box-shadow: var(--glow)
+        }
+
+        .hero-card .label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 6px
+        }
+
+        .hero-card .value {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            font-family: var(--mono)
+        }
+
+        .hero-card .value .currency {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-family: var(--font)
+        }
+
+        .hero-card .trend {
+            font-size: 11px;
+            margin-top: 4px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .hero-card .trend.up {
+            color: var(--accent2)
+        }
+
+        .hero-card .trend.down {
+            color: var(--accent4)
+        }
+
+        .hero-card .accent-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            border-radius: 0 2px 2px 0
+        }
+
+        .hero-card .accent-bar.cyan {
+            background: var(--accent)
+        }
+
+        .hero-card .accent-bar.green {
+            background: var(--accent2)
+        }
+
+        .hero-card .accent-bar.amber {
+            background: var(--accent3)
+        }
+
+        .hero-card .accent-bar.purple {
+            background: var(--accent5)
+        }
+
+        .hero-card .accent-bar.red {
+            background: var(--accent4)
+        }
+
+        /* NAV */
+        .nav {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 5px;
+            border: 1px solid var(--border);
+            flex-wrap: wrap
+        }
+
+        .nav-btn {
+            padding: 11px 22px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--font);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            letter-spacing: 0.2px
+        }
+
+        .nav-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-card-hover)
+        }
+
+        .nav-btn.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.3)
+        }
+
+        /* FILTER BAR */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px
+        }
+
+        .filter-bar label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+            text-transform: uppercase
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 7px 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: var(--font);
+            outline: none;
+            transition: var(--transition);
+            cursor: pointer
+        }
+
+        .filter-bar select:focus,
+        .filter-bar input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1)
+        }
+
+        .filter-bar select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary)
+        }
+
+        .filter-bar .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 0 12px;
+            transition: var(--transition)
+        }
+
+        .filter-bar .search-box:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1)
+        }
+
+        .filter-bar .search-box i {
+            color: var(--text-muted);
+            font-size: 13px
+        }
+
+        .filter-bar .search-box input {
+            border: none;
+            background: transparent;
+            padding: 7px 8px;
+            min-width: 160px
+        }
+
+        .filter-bar .search-box input::placeholder {
+            color: var(--text-muted);
+            font-size: 12px
+        }
+
+        /* CONTENT */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease
+        }
+
+        .tab-content.active {
+            display: block
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+            letter-spacing: -0.3px
+        }
+
+        .section-title i {
+            color: var(--accent);
+            font-size: 16px
+        }
+
+        /* CARDS GRID */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        @media(max-width:768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .company-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0;
+            overflow: hidden;
+            transition: var(--transition);
+            backdrop-filter: blur(12px)
+        }
+
+        .company-card:hover {
+            border-color: var(--border-light);
+            box-shadow: var(--glow);
+            transform: translateY(-3px)
+        }
+
+        .company-card .card-header {
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .company-card .card-header .company-name {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.3px
+        }
+
+        .company-card .card-header .company-ticker {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 600;
+            padding: 3px 10px;
+            background: rgba(0, 229, 255, 0.1);
+            border-radius: 20px
+        }
+
+        .company-card .card-body {
+            padding: 18px 22px
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .metric-row:last-child {
+            border-bottom: none
+        }
+
+        .metric-row .metric-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500
+        }
+
+        .metric-row .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: var(--mono)
+        }
+
+        .metric-row .metric-value .sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 400
+        }
+
+        .winner-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-left: 6px
+        }
+
+        .winner-badge.aapl {
+            background: rgba(0, 229, 255, 0.15);
+            color: var(--accent)
+        }
+
+        .winner-badge.msft {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent2)
+        }
+
+        /* CHARTS */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px
+        }
+
+        @media(max-width:600px) {
+            .chart-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: var(--transition)
+        }
+
+        .chart-card:hover {
+            border-color: var(--border-light);
+            box-shadow: var(--glow)
+        }
+
+        .chart-card .chart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .chart-card .chart-title .badge {
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%
+        }
+
+        .chart-wrap canvas {
+            width: 100% !important;
+            max-height: 340px
+        }
+
+        /* TABLE */
+        .table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 24px;
+            transition: var(--transition)
+        }
+
+        .table-wrap:hover {
+            border-color: var(--border-light)
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px
+        }
+
+        .table-header h3 {
+            font-size: 15px;
+            font-weight: 700
+        }
+
+        .table-scroll {
+            overflow-x: auto
+        }
+
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px
+        }
+
+        .table-wrap thead {
+            background: var(--bg-secondary)
+        }
+
+        .table-wrap th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            position: relative;
+            transition: var(--transition)
+        }
+
+        .table-wrap th:hover {
+            color: var(--text-primary)
+        }
+
+        .table-wrap th .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.3;
+            font-size: 10px
+        }
+
+        .table-wrap th.sort-active {
+            color: var(--accent)
+        }
+
+        .table-wrap th.sort-active .sort-icon {
+            opacity: 1
+        }
+
+        .table-wrap td {
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-family: var(--mono);
+            font-size: 12px;
+            white-space: nowrap
+        }
+
+        .table-wrap tr {
+            transition: var(--transition);
+            cursor: pointer
+        }
+
+        .table-wrap tbody tr:hover {
+            background: var(--bg-card-hover)
+        }
+
+        .table-wrap tbody tr.expandable {
+            background: var(--bg-secondary)
+        }
+
+        .table-wrap tbody tr.expandable td {
+            color: var(--text-primary)
+        }
+
+        .table-wrap .expanded-detail {
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: none
+        }
+
+        .table-wrap .expanded-detail.show {
+            display: table-row
+        }
+
+        .table-wrap .expanded-detail td {
+            padding: 16px 24px
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px
+        }
+
+        .detail-item .label {
+            color: var(--text-secondary)
+        }
+
+        .detail-item .val {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: var(--mono)
+        }
+
+        /* MARKET DATA */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .status-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: var(--transition)
+        }
+
+        .status-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-light)
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .status-dot.online {
+            background: var(--accent2);
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.5)
+        }
+
+        .status-dot.offline {
+            background: var(--accent4);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.5)
+        }
+
+        .status-dot.warning {
+            background: var(--accent3);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.5)
+        }
+
+        .status-info .name {
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        .status-info .detail {
+            font-size: 11px;
+            color: var(--text-muted)
+        }
+
+        .status-meta {
+            text-align: right
+        }
+
+        .status-meta .latency {
+            font-size: 14px;
+            font-weight: 700;
+            font-family: var(--mono)
+        }
+
+        .status-meta .latency.good {
+            color: var(--accent2)
+        }
+
+        .status-meta .latency.warn {
+            color: var(--accent3)
+        }
+
+        .status-meta .updated {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px
+        }
+
+        /* API USAGE */
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .api-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 18px;
+            transition: var(--transition);
+            text-align: center
+        }
+
+        .api-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-2px)
+        }
+
+        .api-card .api-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px
+        }
+
+        .api-card .api-cost {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+            font-family: var(--mono)
+        }
+
+        .api-card .api-calls {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px
+        }
+
+        .api-card .api-bar {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 12px;
+            overflow: hidden
+        }
+
+        .api-card .api-bar .fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transition: width 0.6s ease
+        }
+
+        /* WINNER */
+        .winner-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: var(--transition)
+        }
+
+        .winner-section:hover {
+            border-color: var(--border-light)
+        }
+
+        .winner-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px
+        }
+
+        .winner-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .winner-header .overall {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 14px;
+            font-weight: 700
+        }
+
+        .winner-header .overall .score {
+            font-family: var(--mono);
+            font-size: 18px
+        }
+
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px
+        }
+
+        .winner-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: var(--transition)
+        }
+
+        .winner-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-light)
+        }
+
+        .winner-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .winner-icon.apple {
+            background: rgba(0, 229, 255, 0.12);
+            color: var(--accent)
+        }
+
+        .winner-icon.microsoft {
+            background: rgba(0, 255, 136, 0.12);
+            color: var(--accent2)
+        }
+
+        .winner-icon.tie {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--accent5)
+        }
+
+        .winner-item .content {
+            flex: 1
+        }
+
+        .winner-item .content .cat {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px
+        }
+
+        .winner-item .content .desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5
+        }
+
+        /* NOTES */
+        .notes-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-top: 12px;
+            transition: var(--transition)
+        }
+
+        .notes-section:hover {
+            border-color: var(--border-light)
+        }
+
+        .notes-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .notes-section h3 i {
+            color: var(--accent)
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+            max-height: 300px;
+            overflow-y: auto
+        }
+
+        .note-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px
+        }
+
+        .note-item .note-text {
+            flex: 1
+        }
+
+        .note-item .note-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            flex-shrink: 0
+        }
+
+        .note-item .note-del {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px;
+            font-size: 12px;
+            transition: var(--transition);
+            flex-shrink: 0
+        }
+
+        .note-item .note-del:hover {
+            color: var(--accent4)
+        }
+
+        .notes-input-group {
+            display: flex;
+            gap: 10px
+        }
+
+        .notes-input-group textarea {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 12px;
+            color: var(--text-primary);
+            font-family: var(--font);
+            font-size: 13px;
+            resize: vertical;
+            min-height: 44px;
+            outline: none;
+            transition: var(--transition)
+        }
+
+        .notes-input-group textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1)
+        }
+
+        .notes-input-group textarea::placeholder {
+            color: var(--text-muted)
+        }
+
+        .notes-input-group button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-xs);
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: var(--transition);
+            white-space: nowrap
+        }
+
+        .notes-input-group button:hover {
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+            transform: translateY(-1px)
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            padding: 24px 0 8px;
+            border-top: 1px solid var(--border);
+            margin-top: 24px;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.3px
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:1024px) {
+            .hero {
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr))
+            }
+
+            .hero-card .value {
+                font-size: 17px
+            }
+        }
+
+        @media(max-width:768px) {
+            .app {
+                padding: 0 16px 32px
+            }
+
+            .header-title h1 {
+                font-size: 18px
+            }
+
+            .nav {
+                padding: 4px;
+                gap: 2px
+            }
+
+            .nav-btn {
+                padding: 9px 14px;
+                font-size: 12px
+            }
+
+            .hero {
+                grid-template-columns: repeat(3, 1fr)
+            }
+
+            .hero-card {
+                padding: 12px
+            }
+
+            .hero-card .label {
+                font-size: 9px
+            }
+
+            .hero-card .value {
+                font-size: 15px
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr
+            }
+
+            .filter-bar .search-box input {
+                min-width: 120px
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch
+            }
+
+            .filter-bar .search-box {
+                width: 100%
+            }
+        }
+
+        @media(max-width:480px) {
+            .hero {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start
+            }
+        }
+
+        /* COUNT UP */
+        .count-up {
+            display: inline-block
+        }
+
+        /* UTILITY */
+        .glow-text {
+            text-shadow: 0 0 20px rgba(0, 229, 255, 0.3)
+        }
+
+        .text-accent {
+            color: var(--accent)
+        }
+
+        .text-accent2 {
+            color: var(--accent2)
+        }
+
+        .text-muted {
+            color: var(--text-muted)
+        }
+
+        .mono {
+            font-family: var(--mono)
+        }
+
+        .hidden {
+            display: none !important
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app" id="app">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-left">
+                <div class="header-logo"><i class="fas fa-chart-line"></i></div>
+                <div class="header-title">
+                    <h1>Financial Results & Analysis</h1>
+                    <span>Institutional-Grade Dashboard</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="view-toggle" id="viewToggle">
+                    <button class="active" data-mode="annual">Annual</button>
+                    <button data-mode="quarterly">Quarterly</button>
+                </div>
+                <button class="btn-theme" id="themeToggle" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section class="hero" id="heroMetrics"></section>
+
+        <!-- NAV -->
+        <nav class="nav" id="tabNav">
+            <button class="nav-btn active" data-tab="summary"><i class="fas fa-th-large"></i> Summary</button>
+            <button class="nav-btn" data-tab="revenue"><i class="fas fa-chart-bar"></i> Revenue</button>
+            <button class="nav-btn" data-tab="profitability"><i class="fas fa-percentage"></i> Profitability</button>
+            <button class="nav-btn" data-tab="cashflow"><i class="fas fa-coins"></i> Cash Flow</button>
+            <button class="nav-btn" data-tab="market"><i class="fas fa-chart-line"></i> Market Data</button>
+        </nav>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar" id="filterBar">
+            <label><i class="fas fa-filter"></i> Filters</label>
+            <select id="filterCompany">
+                <option value="all">All Companies</option>
+                <option value="AAPL">Apple (AAPL)</option>
+                <option value="MSFT">Microsoft (MSFT)</option>
+            </select>
+            <select id="filterYear">
+                <option value="all">All Years</option>
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+            </select>
+            <select id="filterQuarter">
+                <option value="all">All Quarters</option>
+                <option value="Q1">Q1</option>
+                <option value="Q2">Q2</option>
+                <option value="Q3">Q3</option>
+                <option value="Q4">Q4</option>
+            </select>
+            <div class="search-box"><i class="fas fa-search"></i><input type="text" id="tableSearch"
+                    placeholder="Search reports..."></div>
+        </div>
+
+        <!-- TAB: SUMMARY -->
+        <div class="tab-content active" id="tab-summary">
+            <div class="section-title"><i class="fas fa-chess"></i> Head-to-Head Comparison</div>
+            <div class="comparison-grid" id="comparisonPanel"></div>
+            <div class="section-title"><i class="fas fa-building"></i> Company Financials</div>
+            <div class="cards-grid" id="companyCards"></div>
+            <div id="winnerBreakdown"></div>
+        </div>
+
+        <!-- TAB: REVENUE -->
+        <div class="tab-content" id="tab-revenue">
+            <div class="section-title"><i class="fas fa-chart-simple"></i> Revenue vs. Net Income</div>
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Revenue & Net Income (5-Year) <span class="badge">Annual</span></div>
+                    <div class="chart-wrap"><canvas id="chartRevenue"></canvas></div>
+                </div>
+            </div>
+            <div class="section-title"><i class="fas fa-table"></i> Financial Reports</div>
+            <div class="table-wrap" id="reportsTableWrap">
+                <div class="table-header">
+                    <h3>Past Financial Reports</h3><span style="font-size:12px;color:var(--text-muted)">Click a row to
+                        expand
+                        details</span>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr id="tableHead"></tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: PROFITABILITY -->
+        <div class="tab-content" id="tab-profitability">
+            <div class="section-title"><i class="fas fa-percentage"></i> EBITDA Margin Trend</div>
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">EBITDA Margin % <span class="badge">Trend</span></div>
+                    <div class="chart-wrap"><canvas id="chartEbitda"></canvas></div>
+                </div>
+            </div>
+            <div class="section-title"><i class="fas fa-trophy"></i> Profitability Winner Breakdown</div>
+            <div id="profitabilityWinner"></div>
+        </div>
+
+        <!-- TAB: CASH FLOW -->
+        <div class="tab-content" id="tab-cashflow">
+            <div class="section-title"><i class="fas fa-coins"></i> Free Cash Flow vs. Capital Expenditures</div>
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">FCF & CapEx <span class="badge">5-Year</span></div>
+                    <div class="chart-wrap"><canvas id="chartFcf"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: MARKET DATA -->
+        <div class="tab-content" id="tab-market">
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Stock Price vs. Market Cap <span class="badge">Market</span></div>
+                    <div class="chart-wrap"><canvas id="chartStock"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Dividend Yield Comparison <span class="badge">Yield</span></div>
+                    <div class="chart-wrap"><canvas id="chartDividend"></canvas></div>
+                </div>
+            </div>
+            <div class="section-title"><i class="fas fa-satellite-dish"></i> Market Data Feeds</div>
+            <div class="market-grid" id="marketDataFeeds"></div>
+            <div class="section-title"><i class="fas fa-cloud-upload"></i> API Usage & Costs</div>
+            <div class="api-grid" id="apiUsagePanel"></div>
+        </div>
+
+        <!-- NOTES -->
+        <div class="notes-section">
+            <h3><i class="fas fa-pen"></i> Analyst Notes & Commentary</h3>
+            <div class="notes-list" id="notesList"></div>
+            <div class="notes-input-group">
+                <textarea id="noteInput" placeholder="Add your observations, commentary, or future outlook..."
+                    rows="2"></textarea>
+                <button id="noteAddBtn"><i class="fas fa-plus"></i> Add Note</button>
+            </div>
+        </div>
+
+        <div class="footer">Financial Results & Analysis Dashboard &bull; Data as of FY2024 &bull; Powered by AI</div>
+    </div>
+
+    <script>
+        // ========== DATA ==========
+        const FINANCIALS = {
+            AAPL: {
+                name: 'Apple Inc.', ticker: 'AAPL', color: '#00e5ff', color2: 'rgba(0,229,255,0.7)', colorBg: 'rgba(0,229,255,0.1)',
+                annual: {
+                    2020: { revenue: 274.5, cogs: 169.6, grossProfit: 104.9, sga: 19.9, rd: 18.8, opIncome: 66.3, netIncome: 57.4, eps: 3.28, ebitda: 80.9, fcf: 73.4, capex: 7.3, dividends: 0.82, sharesOut: 17.5, stockPrice: 99.0, stockPriceEnd: 132.69, totalAssets: 323.9, totalLiabilities: 258.5, cash: 38.0, debt: 98.7, equity: 65.4, dividendYield: 0.0062, beta: 1.20 },
+                    2021: { revenue: 365.8, cogs: 212.9, grossProfit: 152.9, sga: 21.9, rd: 21.9, opIncome: 108.9, netIncome: 94.7, eps: 5.61, ebitda: 130.5, fcf: 92.8, capex: 11.1, dividends: 0.87, sharesOut: 16.9, stockPrice: 148.0, stockPriceEnd: 177.57, totalAssets: 351.0, totalLiabilities: 287.9, cash: 34.9, debt: 119.6, equity: 63.1, dividendYield: 0.0056, beta: 1.22 },
+                    2022: { revenue: 394.3, cogs: 223.5, grossProfit: 170.8, sga: 26.1, rd: 26.3, opIncome: 119.4, netIncome: 99.8, eps: 6.11, ebitda: 142.1, fcf: 91.4, capex: 10.7, dividends: 0.92, sharesOut: 16.3, stockPrice: 157.0, stockPriceEnd: 129.93, totalAssets: 352.8, totalLiabilities: 302.1, cash: 23.6, debt: 111.8, equity: 50.7, dividendYield: 0.0059, beta: 1.25 },
+                    2023: { revenue: 383.3, cogs: 214.1, grossProfit: 169.2, sga: 23.7, rd: 28.9, opIncome: 114.5, netIncome: 97.0, eps: 6.16, ebitda: 136.9, fcf: 87.6, capex: 10.9, dividends: 0.96, sharesOut: 15.7, stockPrice: 178.0, stockPriceEnd: 192.53, totalAssets: 352.6, totalLiabilities: 290.4, cash: 29.9, debt: 105.4, equity: 62.2, dividendYield: 0.0051, beta: 1.27 },
+                    2024: { revenue: 391.0, cogs: 211.9, grossProfit: 179.1, sga: 25.4, rd: 30.2, opIncome: 122.9, netIncome: 100.9, eps: 6.59, ebitda: 143.8, fcf: 93.2, capex: 11.2, dividends: 1.00, sharesOut: 15.3, stockPrice: 198.0, stockPriceEnd: 243.04, totalAssets: 355.0, totalLiabilities: 295.0, cash: 32.5, debt: 102.0, equity: 60.0, dividendYield: 0.0051, beta: 1.27 }
+                },
+                segments: { services: { label: 'Services Revenue', 2020: 53.8, 2021: 68.4, 2022: 78.1, 2023: 85.2, 2024: 89.5 }, products: { label: 'Products Revenue', 2020: 220.7, 2021: 297.4, 2022: 316.2, 2023: 298.1, 2024: 301.5 } }
+            },
+            MSFT: {
+                name: 'Microsoft Corp.', ticker: 'MSFT', color: '#00ff88', color2: 'rgba(0,255,136,0.7)', colorBg: 'rgba(0,255,136,0.1)',
+                annual: {
+                    2020: { revenue: 143.0, cogs: 46.2, grossProfit: 96.8, sga: 22.2, rd: 19.3, opIncome: 45.6, netIncome: 44.3, eps: 5.76, ebitda: 63.5, fcf: 48.3, capex: 15.4, dividends: 2.04, sharesOut: 7.7, stockPrice: 180.0, stockPriceEnd: 222.42, totalAssets: 301.3, totalLiabilities: 183.0, cash: 14.2, debt: 59.4, equity: 118.3, dividendYield: 0.0097, beta: 0.85 },
+                    2021: { revenue: 168.1, cogs: 52.4, grossProfit: 115.7, sga: 24.1, rd: 20.7, opIncome: 59.5, netIncome: 61.3, eps: 8.12, ebitda: 78.2, fcf: 56.1, capex: 18.6, dividends: 2.24, sharesOut: 7.5, stockPrice: 285.0, stockPriceEnd: 336.32, totalAssets: 333.8, totalLiabilities: 191.2, cash: 14.2, debt: 50.1, equity: 142.6, dividendYield: 0.0080, beta: 0.87 },
+                    2022: { revenue: 198.3, cogs: 62.2, grossProfit: 136.1, sga: 26.4, rd: 24.5, opIncome: 72.7, netIncome: 72.7, eps: 9.65, ebitda: 92.5, fcf: 59.8, capex: 22.3, dividends: 2.48, sharesOut: 7.5, stockPrice: 305.0, stockPriceEnd: 239.82, totalAssets: 364.8, totalLiabilities: 198.3, cash: 13.9, debt: 47.0, equity: 166.5, dividendYield: 0.0098, beta: 0.88 },
+                    2023: { revenue: 211.9, cogs: 65.8, grossProfit: 146.1, sga: 28.9, rd: 27.2, opIncome: 78.1, netIncome: 77.0, eps: 10.37, ebitda: 98.6, fcf: 60.5, capex: 25.3, dividends: 2.72, sharesOut: 7.4, stockPrice: 345.0, stockPriceEnd: 376.04, totalAssets: 411.9, totalLiabilities: 205.8, cash: 19.5, debt: 42.4, equity: 206.1, dividendYield: 0.0076, beta: 0.89 },
+                    2024: { revenue: 227.6, cogs: 69.1, grossProfit: 158.5, sga: 31.0, rd: 30.0, opIncome: 86.0, netIncome: 81.7, eps: 11.08, ebitda: 105.3, fcf: 63.1, capex: 27.8, dividends: 3.00, sharesOut: 7.4, stockPrice: 400.0, stockPriceEnd: 421.55, totalAssets: 460.0, totalLiabilities: 215.0, cash: 18.0, debt: 38.0, equity: 245.0, dividendYield: 0.0075, beta: 0.89 }
+                },
+                segments: { intelligentCloud: { label: 'Intelligent Cloud', 2020: 48.4, 2021: 60.1, 2022: 75.3, 2023: 84.5, 2024: 96.8 }, productivity: { label: 'Productivity & Business', 2020: 46.4, 2021: 53.9, 2022: 61.6, 2023: 66.0, 2024: 71.0 }, personal: { label: 'Personal Computing', 2020: 48.2, 2021: 54.1, 2022: 61.4, 2023: 61.4, 2024: 59.8 } }
+            }
+        };
+
+        const QUARTERLY_MULT = { Q1: 0.28, Q2: 0.24, Q3: 0.23, Q4: 0.25 };
+
+        function getData(ticker, year, field) { return FINANCIALS[ticker]?.annual?.[year]?.[field] ?? 0; }
+        function getAllYears() { return [2020, 2021, 2022, 2023, 2024]; }
+        function getCompanies() { return ['AAPL', 'MSFT']; }
+        function formatB(n) { if (n >= 1000) return (n / 1000).toFixed(2) + 'T'; if (n >= 1) return n.toFixed(1) + 'B'; return (n * 1000).toFixed(1) + 'M'; }
+        function formatD(n) { return '$' + formatB(n); }
+        function formatPct(n) { return (n * 100).toFixed(2) + '%'; }
+        function formatNum(n, dec) { if (dec === undefined) dec = 2; if (Math.abs(n) >= 1000) return n.toFixed(1); return n.toFixed(dec); }
+
+        function computeMetrics(ticker, year) {
+            const d = FINANCIALS[ticker].annual[year]; if (!d) return null;
+            const revGrowth = year > 2020 ? ((d.revenue - FINANCIALS[ticker].annual[year - 1].revenue) / FINANCIALS[ticker].annual[year - 1].revenue) : 0.05;
+            const ebitdaMargin = d.ebitda / d.revenue;
+            const netMargin = d.netIncome / d.revenue;
+            const fcfYield = d.fcf / (d.stockPrice * d.sharesOut);
+            const pe = d.stockPrice / d.eps;
+            const roe = d.netIncome / d.equity;
+            const de = d.debt / d.equity;
+            const marketCap = d.stockPrice * d.sharesOut;
+            const healthScore = Math.round(
+                (netMargin * 200) * 0.25 + Math.min(roe * 1.5, 100) * 0.25 +
+                Math.max(0, 100 - de * 40) * 0.20 + Math.max(0, Math.min(100, revGrowth * 600)) * 0.10 +
+                Math.max(0, 100 - Math.abs(pe - 25) * 1.5) * 0.10 + Math.min(d.fcf / d.revenue * 500, 100) * 0.10
+            );
+            return { revGrowth, ebitdaMargin, netMargin, fcfYield, pe, roe, de, marketCap, healthScore };
+        }
+
+        function generateQuarterlyData() {
+            const qd = {};
+            for (const co of getCompanies()) {
+                qd[co] = {};
+                for (const y of getAllYears()) {
+                    const ann = FINANCIALS[co].annual[y]; if (!ann) continue;
+                    for (const q of ['Q1', 'Q2', 'Q3', 'Q4']) {
+                        const m = QUARTERLY_MULT[q] + (Math.random() - 0.5) * 0.04;
+                        const rev = ann.revenue * m;
+                        const ni = ann.netIncome * m * (0.9 + Math.random() * 0.2);
+                        qd[co][y + '-' + q] = { revenue: rev, netIncome: ni, eps: ann.eps * m * (0.9 + Math.random() * 0.2), fcf: ann.fcf * m * (0.85 + Math.random() * 0.3), ebitda: ann.ebitda * m * (0.92 + Math.random() * 0.16) };
+                    }
+                }
+            }
+            return qd;
+        }
+        const QUARTERLY = generateQuarterlyData();
+
+        function getRevenue(co, year, q) {
+            if (q && q !== 'all') return QUARTERLY[co]?.[year + '-' + q]?.revenue ?? 0;
+            return FINANCIALS[co].annual[year]?.revenue ?? 0;
+        }
+        function getNetIncome(co, year, q) {
+            if (q && q !== 'all') return QUARTERLY[co]?.[year + '-' + q]?.netIncome ?? 0;
+            return FINANCIALS[co].annual[year]?.netIncome ?? 0;
+        }
+
+        // ========== STATE ==========
+        let state = {
+            theme: 'dark',
+            activeTab: 'summary',
+            viewMode: 'annual',
+            filterCompany: 'all',
+            filterYear: 'all',
+            filterQuarter: 'all',
+            sortField: null,
+            sortDir: 'asc',
+            searchTerm: ''
+        };
+        let charts = {};
+
+        // ========== INIT ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            renderHero();
+            renderComparison();
+            renderCompanyCards();
+            renderWinnerBreakdown();
+            renderMarketFeeds();
+            renderApiUsage();
+            renderNotes();
+            initEvents();
+            renderTable();
+            // initial chart render
+            setTimeout(() => { updateCharts(); }, 100);
+        });
+
+        // ========== THEME ==========
+        function initTheme() {
+            const saved = localStorage.getItem('fin-dash-theme');
+            if (saved) state.theme = saved;
+            document.documentElement.setAttribute('data-theme', state.theme);
+            const icon = document.querySelector('#themeToggle i');
+            if (icon) icon.className = state.theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', state.theme);
+            const icon = document.querySelector('#themeToggle i');
+            if (icon) icon.className = state.theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('fin-dash-theme', state.theme);
+            // Re-render charts with new theme colors
+            updateCharts();
+        }
+
+        // ========== RENDER HERO ==========
+        function renderHero() {
+            const container = document.getElementById('heroMetrics');
+            const latest = 2024;
+            const items = [];
+            for (const co of getCompanies()) {
+                const m = computeMetrics(co, latest);
+                if (!m) continue;
+                const d = FINANCIALS[co].annual[latest];
+                const prev = FINANCIALS[co].annual[latest - 1];
+                const revGrowth = prev ? ((d.revenue - prev.revenue) / prev.revenue) : 0;
+                items.push({
+                    label: FINANCIALS[co].ticker + ' Revenue',
+                    value: formatD(d.revenue),
+                    trend: revGrowth,
+                    up: revGrowth >= 0,
+                    bar: co === 'AAPL' ? 'cyan' : 'green'
+                });
+                items.push({
+                    label: FINANCIALS[co].ticker + ' Net Income',
+                    value: formatD(d.netIncome),
+                    trend: prev ? ((d.netIncome - prev.netIncome) / prev.netIncome) : 0,
+                    up: (prev ? d.netIncome >= prev.netIncome : true),
+                    bar: co === 'AAPL' ? 'cyan' : 'green'
+                });
+            }
+            items.push({
+                label: 'AAPL P/E', value: computeMetrics('AAPL', latest)?.pe.toFixed(1) + 'x',
+                trend: null, up: true, bar: 'amber'
+            });
+            items.push({
+                label: 'MSFT P/E', value: computeMetrics('MSFT', latest)?.pe.toFixed(1) + 'x',
+                trend: null, up: true, bar: 'amber'
+            });
+            items.push({
+                label: 'AAPL ROE', value: (computeMetrics('AAPL', latest)?.roe * 100).toFixed(1) + '%',
+                trend: null, up: true, bar: 'purple'
+            });
+            items.push({
+                label: 'MSFT ROE', value: (computeMetrics('MSFT', latest)?.roe * 100).toFixed(1) + '%',
+                trend: null, up: true, bar: 'purple'
+            });
+            items.push({
+                label: 'AAPL D/E', value: computeMetrics('AAPL', latest)?.de.toFixed(2),
+                trend: null, up: true, bar: 'red'
+            });
+            items.push({
+                label: 'MSFT D/E', value: computeMetrics('MSFT', latest)?.de.toFixed(2),
+                trend: null, up: true, bar: 'red'
+            });
+            items.push({
+                label: 'AAPL Mkt Cap', value: formatD(computeMetrics('AAPL', latest)?.marketCap),
+                trend: null, up: true, bar: 'cyan'
+            });
+            items.push({
+                label: 'MSFT Mkt Cap', value: formatD(computeMetrics('MSFT', latest)?.marketCap),
+                trend: null, up: true, bar: 'green'
+            });
+
+            container.innerHTML = items.map(it => `
+    <div class="hero-card">
+      <div class="accent-bar ${it.bar}"></div>
+      <div class="label">${it.label}</div>
+      <div class="value">${it.value}</div>
+      ${it.trend !== null ? `<div class="trend ${it.up ? 'up' : 'down'}"><i class="fas fa-${it.up ? 'caret-up' : 'caret-down'}"></i> ${(Math.abs(it.trend) * 100).toFixed(1)}%</div>` : ''}
+    </div>
+  `).join('');
+        }
+
+        // ========== RENDER COMPARISON ==========
+        function renderComparison() {
+            const container = document.getElementById('comparisonPanel');
+            const y = 2024;
+            const a = computeMetrics('AAPL', y); const b = computeMetrics('MSFT', y);
+            if (!a || !b) return;
+            const cards = [
+                {
+                    co: 'AAPL', metrics: [
+                        ['Revenue Growth', formatPct(a.revGrowth), a.revGrowth > b.revGrowth ? 'aapl' : 'msft'],
+                        ['EBITDA Margin', formatPct(a.ebitdaMargin), a.ebitdaMargin > b.ebitdaMargin ? 'aapl' : 'msft'],
+                        ['FCF Yield', formatPct(a.fcfYield), a.fcfYield > b.fcfYield ? 'aapl' : 'msft'],
+                        ['Dividend Yield', formatPct(0.0051), 0.0051 > 0.0075 ? 'aapl' : 'msft'],
+                        ['Beta', '1.27', 1.27 < 0.89 ? 'aapl' : 'msft']
+                    ]
+                },
+                {
+                    co: 'MSFT', metrics: [
+                        ['Revenue Growth', formatPct(b.revGrowth), b.revGrowth > a.revGrowth ? 'msft' : 'aapl'],
+                        ['EBITDA Margin', formatPct(b.ebitdaMargin), b.ebitdaMargin > a.ebitdaMargin ? 'msft' : 'aapl'],
+                        ['FCF Yield', formatPct(b.fcfYield), b.fcfYield > a.fcfYield ? 'msft' : 'aapl'],
+                        ['Dividend Yield', formatPct(0.0075), 0.0075 > 0.0051 ? 'msft' : 'aapl'],
+                        ['Beta', '0.89', 0.89 < 1.27 ? 'msft' : 'aapl']
+                    ]
+                }
+            ];
+            container.innerHTML = cards.map(c => `
+    <div class="company-card">
+      <div class="card-header">
+        <span class="company-name">${FINANCIALS[c.co].name}</span>
+        <span class="company-ticker">${c.co}</span>
+      </div>
+      <div class="card-body">
+        ${c.metrics.map(m => `
+          <div class="metric-row">
+            <span class="metric-label">${m[0]}</span>
+            <span class="metric-value">${m[1]} <span class="winner-badge ${m[2]}">${m[2] === 'aapl' ? 'AAPL' : m[2] === 'msft' ? 'MSFT' : ''}</span></span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+        }
+
+        // ========== RENDER COMPANY CARDS ==========
+        function renderCompanyCards() {
+            const container = document.getElementById('companyCards');
+            const y = 2024;
+            container.innerHTML = getCompanies().map(co => {
+                const d = FINANCIALS[co].annual[y]; const m = computeMetrics(co, y);
+                if (!d || !m) return '';
+                return `
+    <div class="company-card">
+      <div class="card-header">
+        <span class="company-name">${FINANCIALS[co].name}</span>
+        <span class="company-ticker" style="background:${FINANCIALS[co].colorBg};color:${FINANCIALS[co].color}">${co}</span>
+      </div>
+      <div class="card-body">
+        <div class="metric-row"><span class="metric-label">Revenue</span><span class="metric-value">${formatD(d.revenue)}</span></div>
+        <div class="metric-row"><span class="metric-label">Operating Income</span><span class="metric-value">${formatD(d.opIncome)}</span></div>
+        <div class="metric-row"><span class="metric-label">Net Income</span><span class="metric-value">${formatD(d.netIncome)}</span></div>
+        <div class="metric-row"><span class="metric-label">EPS</span><span class="metric-value">$${d.eps.toFixed(2)}</span></div>
+        <div class="metric-row"><span class="metric-label">P/E Ratio</span><span class="metric-value">${m.pe.toFixed(1)}x</span></div>
+        <div class="metric-row"><span class="metric-label">ROE</span><span class="metric-value">${(m.roe * 100).toFixed(1)}%</span></div>
+        <div class="metric-row"><span class="metric-label">D/E Ratio</span><span class="metric-value">${m.de.toFixed(2)}</span></div>
+        <div class="metric-row"><span class="metric-label">Total Assets</span><span class="metric-value">${formatD(d.totalAssets)}</span></div>
+        <div class="metric-row"><span class="metric-label">Total Liabilities</span><span class="metric-value">${formatD(d.totalLiabilities)}</span></div>
+        <div class="metric-row"><span class="metric-label">Cash & Equivalents</span><span class="metric-value">${formatD(d.cash)}</span></div>
+        <div class="metric-row" style="border-bottom:none;padding-top:12px;border-top:2px solid var(--border);margin-top:4px">
+          <span class="metric-label" style="font-weight:700;font-size:14px;color:var(--text-primary)">Financial Health Score</span>
+          <span class="metric-value" style="font-size:22px;font-weight:800;color:${FINANCIALS[co].color}">${m.healthScore}<span style="font-size:13px;color:var(--text-muted);font-weight:400">/100</span></span>
+        </div>
+      </div>
+    </div>`;
+            }).join('');
+        }
+
+        // ========== RENDER WINNER BREAKDOWN ==========
+        function renderWinnerBreakdown() {
+            const container = document.getElementById('winnerBreakdown');
+            const pw = document.getElementById('profitabilityWinner');
+            const y = 2024;
+            const a = computeMetrics('AAPL', y); const b = computeMetrics('MSFT', y);
+            if (!a || !b) return;
+
+            const categories = [
+                { icon: 'fa-arrow-trend-up', cat: 'Revenue Growth', winner: a.revGrowth > b.revGrowth ? 'apple' : 'microsoft', score: a.revGrowth > b.revGrowth ? `AAPL ${formatPct(a.revGrowth)}` : `MSFT ${formatPct(b.revGrowth)}`, desc: a.revGrowth > b.revGrowth ? 'Apple posted stronger top-line growth driven by Services and iPhone resilience.' : 'Microsoft outperformed on revenue growth, fueled by Azure cloud and AI services expansion.' },
+                { icon: 'fa-sack-dollar', cat: 'Profitability', winner: a.netMargin > b.netMargin ? 'apple' : 'microsoft', score: a.netMargin > b.netMargin ? `AAPL ${formatPct(a.netMargin)}` : `MSFT ${formatPct(b.netMargin)}`, desc: a.netMargin > b.netMargin ? 'Apple maintains superior margins through premium pricing and supply chain efficiency.' : 'Microsoft\'s higher margins reflect the shift to high-margin cloud and subscription revenue.' },
+                { icon: 'fa-water', cat: 'Liquidity', winner: 'microsoft', score: `MSFT ${formatD(FINANCIALS.MSFT.annual[y].cash)}`, desc: 'Microsoft holds a stronger liquidity position with ample cash reserves and lower short-term obligations.' },
+                { icon: 'fa-scale-balanced', cat: 'Leverage', winner: 'microsoft', score: `MSFT D/E ${b.de.toFixed(2)}`, desc: 'Microsoft maintains a conservative capital structure with D/E of 0.16 vs Apple\'s 1.70, providing greater financial flexibility.' },
+                { icon: 'fa-tag', cat: 'Valuation', winner: 'apple', score: `AAPL P/E ${a.pe.toFixed(1)}x`, desc: 'Apple trades at a lower earnings multiple (30.0x vs 36.1x), offering better relative value at current prices.' }
+            ];
+            const overallWinner = 'microsoft';
+            const overallText = overallWinner === 'microsoft' ? 'Microsoft Corp.' : 'Apple Inc.';
+
+            const html = `
+    <div class="winner-section">
+      <div class="winner-header">
+        <h3><i class="fas fa-trophy" style="color:var(--accent3)"></i> Winner Breakdown - FY2024</h3>
+        <div class="overall">Overall Winner: <span style="color:${overallWinner === 'microsoft' ? 'var(--accent2)' : 'var(--accent)'}">${overallText}</span> <span class="score">${b.healthScore} vs ${a.healthScore}</span></div>
+      </div>
+      <div class="winner-grid">
+        ${categories.map(c => `
+          <div class="winner-item">
+            <div class="winner-icon ${c.winner}"><i class="fas ${c.icon}"></i></div>
+            <div class="content">
+              <div class="cat">${c.cat}</div>
+              <div class="desc"><strong>${c.score}</strong> - ${c.desc}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+            container.innerHTML = html;
+            if (pw) pw.innerHTML = html;
+        }
+
+        // ========== MARKET FEEDS ==========
+        function renderMarketFeeds() {
+            const container = document.getElementById('marketDataFeeds');
+            const feeds = [
+                { name: 'Bloomberg Terminal', status: 'online', latency: '12ms', detail: 'ICE Data Services', updated: 'Just now' },
+                { name: 'NASDAQ API', status: 'online', latency: '24ms', detail: 'Real-Time Level 2', updated: '2s ago' },
+                { name: 'Alpha Vantage', status: 'online', latency: '89ms', detail: 'REST v2.0', updated: '5s ago' },
+                { name: 'Yahoo Finance', status: 'warning', latency: '145ms', detail: 'BATS Exchange', updated: '12s ago' },
+                { name: 'Reuters Eikon', status: 'online', latency: '8ms', detail: 'Direct Feed', updated: '1s ago' },
+                { name: 'ICE Data', status: 'offline', latency: '-', detail: 'Maintenance', updated: '3m ago' }
+            ];
+            container.innerHTML = feeds.map(f => `
+    <div class="status-card">
+      <div class="status-left">
+        <div class="status-dot ${f.status}"></div>
+        <div class="status-info"><div class="name">${f.name}</div><div class="detail">${f.detail}</div></div>
+      </div>
+      <div class="status-meta">
+        <div class="latency ${f.status === 'online' ? 'good' : f.status === 'warning' ? 'warn' : ''}">${f.latency}</div>
+        <div class="updated">${f.updated}</div>
+      </div>
+    </div>
+  `).join('');
+        }
+
+        // ========== API USAGE ==========
+        function renderApiUsage() {
+            const container = document.getElementById('apiUsagePanel');
+            const apis = [
+                { name: 'Bloomberg', cost: '$0.0042', calls: '24,891', total: '$104.54', pct: 38 },
+                { name: 'Alpha Vantage', cost: '$0.0018', calls: '58,432', total: '$74.22', pct: 27 },
+                { name: 'NASDAQ Basic', cost: '$0.0009', calls: '92,155', total: '$42.10', pct: 15 },
+                { name: 'Reuters Eikon', cost: '$0.0065', calls: '12,400', total: '$80.60', pct: 29 },
+                { name: 'Polygon.io', cost: '$0.0025', calls: '31,200', total: '$78.00', pct: 28 },
+                { name: 'Intrinio', cost: '$0.0031', calls: '19,850', total: '$61.54', pct: 22 }
+            ];
+            const totalSpend = apis.reduce((s, a) => s + parseFloat(a.total.replace('$', '')), 0);
+            container.innerHTML = apis.map(a => `
+    <div class="api-card">
+      <div class="api-name">${a.name}</div>
+      <div class="api-cost">${a.cost}</div>
+      <div class="api-calls">${a.calls} calls &bull; ${a.total} total</div>
+      <div class="api-bar"><div class="fill" style="width:${Math.min(100, a.pct * 2.5)}%"></div></div>
+    </div>
+  `).join('');
+        }
+
+        // ========== NOTES ==========
+        let notes = JSON.parse(localStorage.getItem('fin-dash-notes') || '[]');
+        function renderNotes() {
+            const container = document.getElementById('notesList');
+            if (notes.length === 0) { container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px"><i class="fas fa-pen"></i> No notes yet. Add your observations above.</div>'; return; }
+            container.innerHTML = notes.map((n, i) => `
+    <div class="note-item">
+      <div class="note-text">${escapeHtml(n.text)}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="note-time">${n.time}</span>
+        <button class="note-del" data-idx="${i}"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+  `).join('');
+            container.querySelectorAll('.note-del').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    notes.splice(idx, 1);
+                    localStorage.setItem('fin-dash-notes', JSON.stringify(notes));
+                    renderNotes();
+                });
+            });
+        }
+        function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+        // ========== TABLE ==========
+        function renderTable() {
+            const head = document.getElementById('tableHead');
+            const body = document.getElementById('tableBody');
+            const columns = [
+                { key: 'co', label: 'Ticker', sortable: true },
+                { key: 'year', label: 'Fiscal Year', sortable: true },
+                { key: 'quarter', label: 'Period', sortable: true },
+                { key: 'revenue', label: 'Revenue', sortable: true },
+                { key: 'netIncome', label: 'Net Income', sortable: true },
+                { key: 'eps', label: 'EPS', sortable: true },
+                { key: 'ebitda', label: 'EBITDA', sortable: true },
+                { key: 'fcf', label: 'FCF', sortable: true },
+                { key: 'pe', label: 'P/E', sortable: true },
+                { key: 'roe', label: 'ROE', sortable: true }
+            ];
+
+            head.innerHTML = columns.map(c => `
+    <th data-sort="${c.key}" class="${state.sortField === c.key ? 'sort-active' : ''}">
+      ${c.label} <span class="sort-icon">${state.sortField === c.key ? (state.sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>
+    </th>
+  `).join('');
+
+            // Generate rows
+            let rows = [];
+            const isQuarterly = state.viewMode === 'quarterly';
+            const filterCo = state.filterCompany;
+            const filterY = state.filterYear;
+            const filterQ = state.filterQuarter;
+            const search = state.searchTerm.toLowerCase().trim();
+
+            for (const co of getCompanies()) {
+                if (filterCo !== 'all' && filterCo !== co) continue;
+                if (isQuarterly) {
+                    for (const y of getAllYears()) {
+                        if (filterY !== 'all' && parseInt(filterY) !== y) continue;
+                        for (const q of ['Q1', 'Q2', 'Q3', 'Q4']) {
+                            if (filterQ !== 'all' && filterQ !== q) continue;
+                            const qd = QUARTERLY[co]?.[y + '-' + q];
+                            if (!qd) continue;
+                            const ann = FINANCIALS[co].annual[y];
+                            const m = computeMetrics(co, y);
+                            const row = {
+                                co, year: y, quarter: q,
+                                revenue: qd.revenue, netIncome: qd.netIncome,
+                                eps: qd.eps, ebitda: qd.ebitda, fcf: qd.fcf,
+                                pe: m?.pe || 0, roe: m?.roe || 0,
+                                _detail: ann ? { rev: ann.revenue, ni: ann.netIncome, ebitda: ann.ebitda, fcf: ann.fcf, cogs: ann.cogs, sga: ann.sga, rd: ann.rd, opIncome: ann.opIncome, cash: ann.cash, debt: ann.debt, totalAssets: ann.totalAssets, totalLiabilities: ann.totalLiabilities } : null
+                            };
+                            rows.push(row);
+                        }
+                    }
+                } else {
+                    for (const y of getAllYears()) {
+                        if (filterY !== 'all' && parseInt(filterY) !== y) continue;
+                        if (filterQ !== 'all') continue;
+                        const d = FINANCIALS[co].annual[y];
+                        if (!d) continue;
+                        const m = computeMetrics(co, y);
+                        const row = {
+                            co, year: y, quarter: 'FY',
+                            revenue: d.revenue, netIncome: d.netIncome,
+                            eps: d.eps, ebitda: d.ebitda, fcf: d.fcf,
+                            pe: m?.pe || 0, roe: m?.roe || 0,
+                            _detail: { rev: d.revenue, ni: d.netIncome, ebitda: d.ebitda, fcf: d.fcf, cogs: d.cogs, sga: d.sga, rd: d.rd, opIncome: d.opIncome, cash: d.cash, debt: d.debt, totalAssets: d.totalAssets, totalLiabilities: d.totalLiabilities }
+                        };
+                        rows.push(row);
+                    }
+                }
+            }
+
+            // Filter by search
+            if (search) {
+                rows = rows.filter(r => r.co.toLowerCase().includes(search) || r.year.toString().includes(search));
+            }
+
+            // Sort
+            if (state.sortField) {
+                rows.sort((a, b) => {
+                    let va = a[state.sortField], vb = b[state.sortField];
+                    if (typeof va === 'string') va = va.toLowerCase();
+                    if (typeof vb === 'string') vb = vb.toLowerCase();
+                    if (va < vb) return state.sortDir === 'asc' ? -1 : 1;
+                    if (va > vb) return state.sortDir === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            body.innerHTML = rows.map((r, i) => `
+    <tr data-idx="${i}" class="table-row">
+      <td style="font-weight:600;color:${r.co === 'AAPL' ? 'var(--accent)' : 'var(--accent2)'}">${r.co}</td>
+      <td>${r.year}</td>
+      <td>${r.quarter}</td>
+      <td style="font-weight:600;color:var(--text-primary)">${formatB(r.revenue)}</td>
+      <td>${formatB(r.netIncome)}</td>
+      <td>$${r.eps.toFixed(2)}</td>
+      <td>${formatB(r.ebitda)}</td>
+      <td>${formatB(r.fcf)}</td>
+      <td>${r.pe.toFixed(1)}x</td>
+      <td>${(r.roe * 100).toFixed(1)}%</td>
+    </tr>
+    <tr class="expanded-detail" data-parent="${i}">
+      <td colspan="10">
+        <div class="detail-grid">
+          ${r._detail ? `
+            <div class="detail-item"><span class="label">Revenue</span><span class="val">${formatD(r._detail.rev)}</span></div>
+            <div class="detail-item"><span class="label">Cost of Revenue</span><span class="val">${formatD(r._detail.cogs)}</span></div>
+            <div class="detail-item"><span class="label">Gross Profit</span><span class="val">${formatD(r._detail.rev - r._detail.cogs)}</span></div>
+            <div class="detail-item"><span class="label">SG&A</span><span class="val">${formatD(r._detail.sga)}</span></div>
+            <div class="detail-item"><span class="label">R&D</span><span class="val">${formatD(r._detail.rd)}</span></div>
+            <div class="detail-item"><span class="label">Operating Income</span><span class="val">${formatD(r._detail.opIncome)}</span></div>
+            <div class="detail-item"><span class="label">Net Income</span><span class="val">${formatD(r._detail.ni)}</span></div>
+            <div class="detail-item"><span class="label">EBITDA</span><span class="val">${formatD(r._detail.ebitda)}</span></div>
+            <div class="detail-item"><span class="label">FCF</span><span class="val">${formatD(r._detail.fcf)}</span></div>
+            <div class="detail-item"><span class="label">Cash & Equiv</span><span class="val">${formatD(r._detail.cash)}</span></div>
+            <div class="detail-item"><span class="label">Total Debt</span><span class="val">${formatD(r._detail.debt)}</span></div>
+            <div class="detail-item"><span class="label">Total Assets</span><span class="val">${formatD(r._detail.totalAssets)}</span></div>
+            <div class="detail-item"><span class="label">Total Liabilities</span><span class="val">${formatD(r._detail.totalLiabilities)}</span></div>
+          ` : '<div style="color:var(--text-muted)">No detail data available</div>'}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+            // Row click expand
+            body.querySelectorAll('.table-row').forEach(tr => {
+                tr.addEventListener('click', () => {
+                    const idx = tr.dataset.idx;
+                    const detail = body.querySelector(`.expanded-detail[data-parent="${idx}"]`);
+                    if (detail) {
+                        const show = detail.classList.contains('show');
+                        detail.classList.toggle('show');
+                        tr.classList.toggle('expandable');
+                    }
+                });
+            });
+
+            // Sort click
+            head.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const field = th.dataset.sort;
+                    if (state.sortField === field) {
+                        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        state.sortField = field;
+                        state.sortDir = 'asc';
+                    }
+                    renderTable();
+                });
+            });
+        }
+
+        // ========== CHARTS ==========
+        function getThemeColors() {
+            const isDark = state.theme === 'dark';
+            return {
+                text: isDark ? '#94a3b8' : '#64748b',
+                grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+            };
+        }
+
+        function destroyChart(key) {
+            if (charts[key]) { charts[key].destroy(); delete charts[key]; }
+        }
+
+        function makeGradient(ctx, color1, color2) {
+            const g = ctx.createLinearGradient(0, 0, 0, 340);
+            g.addColorStop(0, color1);
+            g.addColorStop(1, color2);
+            return g;
+        }
+
+        function updateCharts() {
+            const years = getAllYears();
+            const yearsLabels = years.map(String);
+            const tc = getThemeColors();
+
+            // 1. Revenue vs Net Income
+            destroyChart('revenue');
+            const ctx1 = document.getElementById('chartRevenue')?.getContext('2d');
+            if (ctx1) {
+                const aaplRev = years.map(y => FINANCIALS.AAPL.annual[y].revenue);
+                const msftRev = years.map(y => FINANCIALS.MSFT.annual[y].revenue);
+                const aaplNi = years.map(y => FINANCIALS.AAPL.annual[y].netIncome);
+                const msftNi = years.map(y => FINANCIALS.MSFT.annual[y].netIncome);
+                charts.revenue = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: yearsLabels,
+                        datasets: [
+                            { label: 'AAPL Revenue', data: aaplRev, backgroundColor: 'rgba(0,229,255,0.7)', borderColor: '#00e5ff', borderWidth: 1, borderRadius: 4, order: 2 },
+                            { label: 'MSFT Revenue', data: msftRev, backgroundColor: 'rgba(0,255,136,0.7)', borderColor: '#00ff88', borderWidth: 1, borderRadius: 4, order: 2 },
+                            { label: 'AAPL Net Income', data: aaplNi, type: 'line', borderColor: '#00e5ff', backgroundColor: 'rgba(0,229,255,0.1)', fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#00e5ff', borderWidth: 3, order: 1 },
+                            { label: 'MSFT Net Income', data: msftNi, type: 'line', borderColor: '#00ff88', backgroundColor: 'rgba(0,255,136,0.1)', fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#00ff88', borderWidth: 3, order: 1 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: tc.text, font: { family: 'Inter', size: 11 }, usePointStyle: true, boxWidth: 8 } },
+                            tooltip: { callbacks: { label: ctx => ctx.parsed.y !== null ? '$' + ctx.parsed.y.toFixed(1) + 'B' : '' } }
+                        },
+                        scales: {
+                            x: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 } } },
+                            y: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 }, callback: v => '$' + v + 'B' } }
+                        }
+                    }
+                });
+            }
+
+            // 2. EBITDA Margin
+            destroyChart('ebitda');
+            const ctx2 = document.getElementById('chartEbitda')?.getContext('2d');
+            if (ctx2) {
+                const aaplEmb = years.map(y => FINANCIALS.AAPL.annual[y].ebitda / FINANCIALS.AAPL.annual[y].revenue * 100);
+                const msftEmb = years.map(y => FINANCIALS.MSFT.annual[y].ebitda / FINANCIALS.MSFT.annual[y].revenue * 100);
+                charts.ebitda = new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: yearsLabels,
+                        datasets: [
+                            { label: 'AAPL EBITDA Margin', data: aaplEmb, borderColor: '#00e5ff', backgroundColor: ctx => makeGradient(ctx.chart.ctx, 'rgba(0,229,255,0.3)', 'rgba(0,229,255,0.01)'), fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#00e5ff', borderWidth: 3 },
+                            { label: 'MSFT EBITDA Margin', data: msftEmb, borderColor: '#00ff88', backgroundColor: ctx => makeGradient(ctx.chart.ctx, 'rgba(0,255,136,0.3)', 'rgba(0,255,136,0.01)'), fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#00ff88', borderWidth: 3 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: tc.text, font: { family: 'Inter', size: 11 }, usePointStyle: true } }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + '%' } } },
+                        scales: {
+                            x: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 } } },
+                            y: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 }, callback: v => v + '%' }, min: 35, max: 55 }
+                        }
+                    }
+                });
+            }
+
+            // 3. FCF vs CapEx
+            destroyChart('fcf');
+            const ctx3 = document.getElementById('chartFcf')?.getContext('2d');
+            if (ctx3) {
+                const aaplFcf = years.map(y => FINANCIALS.AAPL.annual[y].fcf);
+                const msftFcf = years.map(y => FINANCIALS.MSFT.annual[y].fcf);
+                const aaplCapex = years.map(y => FINANCIALS.AAPL.annual[y].capex);
+                const msftCapex = years.map(y => FINANCIALS.MSFT.annual[y].capex);
+                charts.fcf = new Chart(ctx3, {
+                    type: 'bar',
+                    data: {
+                        labels: yearsLabels,
+                        datasets: [
+                            { label: 'AAPL FCF', data: aaplFcf, backgroundColor: 'rgba(0,229,255,0.8)', borderRadius: 4 },
+                            { label: 'MSFT FCF', data: msftFcf, backgroundColor: 'rgba(0,255,136,0.8)', borderRadius: 4 },
+                            { label: 'AAPL CapEx', data: aaplCapex, backgroundColor: 'rgba(0,229,255,0.3)', borderRadius: 4 },
+                            { label: 'MSFT CapEx', data: msftCapex, backgroundColor: 'rgba(0,255,136,0.3)', borderRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: tc.text, font: { family: 'Inter', size: 11 }, usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.y.toFixed(1) + 'B' } } },
+                        scales: {
+                            x: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 } } },
+                            y: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 }, callback: v => '$' + v + 'B' } }
+                        }
+                    }
+                });
+            }
+
+            // 4. Stock Price vs Market Cap
+            destroyChart('stock');
+            const ctx4 = document.getElementById('chartStock')?.getContext('2d');
+            if (ctx4) {
+                const aaplSp = years.map(y => FINANCIALS.AAPL.annual[y].stockPriceEnd);
+                const msftSp = years.map(y => FINANCIALS.MSFT.annual[y].stockPriceEnd);
+                const aaplMc = years.map(y => FINANCIALS.AAPL.annual[y].stockPriceEnd * FINANCIALS.AAPL.annual[y].sharesOut);
+                const msftMc = years.map(y => FINANCIALS.MSFT.annual[y].stockPriceEnd * FINANCIALS.MSFT.annual[y].sharesOut);
+                charts.stock = new Chart(ctx4, {
+                    type: 'bar',
+                    data: {
+                        labels: yearsLabels,
+                        datasets: [
+                            { label: 'AAPL Mkt Cap', data: aaplMc, backgroundColor: 'rgba(0,229,255,0.6)', borderRadius: 4, order: 2, yAxisID: 'y' },
+                            { label: 'MSFT Mkt Cap', data: msftMc, backgroundColor: 'rgba(0,255,136,0.6)', borderRadius: 4, order: 2, yAxisID: 'y' },
+                            { label: 'AAPL Stock Price', data: aaplSp, type: 'line', borderColor: '#00e5ff', backgroundColor: 'transparent', tension: 0.4, pointRadius: 5, pointBackgroundColor: '#00e5ff', borderWidth: 3, order: 1, yAxisID: 'y1' },
+                            { label: 'MSFT Stock Price', data: msftSp, type: 'line', borderColor: '#00ff88', backgroundColor: 'transparent', tension: 0.4, pointRadius: 5, pointBackgroundColor: '#00ff88', borderWidth: 3, order: 1, yAxisID: 'y1' }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: tc.text, font: { family: 'Inter', size: 11 }, usePointStyle: true } }, tooltip: { callbacks: { label: ctx => ctx.dataset.yAxisID === 'y1' ? '$' + ctx.parsed.y.toFixed(2) : '$' + ctx.parsed.y.toFixed(1) + 'B' } } },
+                        scales: {
+                            x: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 } } },
+                            y: { type: 'linear', position: 'left', grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 10 }, callback: v => '$' + v + 'B' }, title: { display: true, text: 'Market Cap', color: tc.text, font: { size: 11 } } },
+                            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: tc.text, font: { size: 10 }, callback: v => '$' + v }, title: { display: true, text: 'Stock Price', color: tc.text, font: { size: 11 } } }
+                        }
+                    }
+                });
+            }
+
+            // 5. Dividend Yield
+            destroyChart('dividend');
+            const ctx5 = document.getElementById('chartDividend')?.getContext('2d');
+            if (ctx5) {
+                const aaplDy = years.map(y => FINANCIALS.AAPL.annual[y].dividendYield * 100);
+                const msftDy = years.map(y => FINANCIALS.MSFT.annual[y].dividendYield * 100);
+                charts.dividend = new Chart(ctx5, {
+                    type: 'bar',
+                    data: {
+                        labels: yearsLabels,
+                        datasets: [
+                            { label: 'AAPL Dividend Yield', data: aaplDy, backgroundColor: 'rgba(0,229,255,0.7)', borderRadius: 6 },
+                            { label: 'MSFT Dividend Yield', data: msftDy, backgroundColor: 'rgba(0,255,136,0.7)', borderRadius: 6 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: tc.text, font: { family: 'Inter', size: 11 }, usePointStyle: true } }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '%' } } },
+                        scales: {
+                            x: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 } } },
+                            y: { grid: { color: tc.grid }, ticks: { color: tc.text, font: { size: 11 }, callback: v => v + '%' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // ========== EVENTS ==========
+        function initEvents() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // View toggle (Annual/Quarterly)
+            document.querySelectorAll('#viewToggle button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#viewToggle button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.viewMode = btn.dataset.mode;
+                    renderTable();
+                    updateCharts();
+                    const badge = document.querySelector('#tab-revenue .badge');
+                    if (badge) badge.textContent = state.viewMode === 'quarterly' ? 'Quarterly' : 'Annual';
+                });
+            });
+
+            // Tab navigation
+            document.querySelectorAll('#tabNav .nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#tabNav .nav-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                    const tabId = 'tab-' + btn.dataset.tab;
+                    const el = document.getElementById(tabId);
+                    if (el) el.classList.add('active');
+                    state.activeTab = btn.dataset.tab;
+                    // Refresh charts when tab changes to ensure rendering
+                    setTimeout(() => updateCharts(), 50);
+                });
+            });
+
+            // Filters
+            document.getElementById('filterCompany').addEventListener('change', e => {
+                state.filterCompany = e.target.value;
+                renderTable();
+            });
+            document.getElementById('filterYear').addEventListener('change', e => {
+                state.filterYear = e.target.value;
+                renderTable();
+            });
+            document.getElementById('filterQuarter').addEventListener('change', e => {
+                state.filterQuarter = e.target.value;
+                renderTable();
+            });
+            document.getElementById('tableSearch').addEventListener('input', e => {
+                state.searchTerm = e.target.value;
+                renderTable();
+            });
+
+            // Notes
+            document.getElementById('noteAddBtn').addEventListener('click', addNote);
+            document.getElementById('noteInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addNote(); }
+            });
+        }
+
+        function addNote() {
+            const input = document.getElementById('noteInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const now = new Date();
+            const timeStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            notes.unshift({ text, time: timeStr });
+            localStorage.setItem('fin-dash-notes', JSON.stringify(notes));
+            input.value = '';
+            renderNotes();
+        }
+
+        // Periodic market feed update
+        setInterval(() => {
+            document.querySelectorAll('.status-meta .updated').forEach(el => {
+                const text = el.textContent;
+                const match = text.match(/(\d+)(s|m)/);
+                if (match) {
+                    let val = parseInt(match[1]);
+                    const unit = match[2];
+                    if (unit === 's') val += 5; else if (unit === 'm') val += 1;
+                    if (unit === 's' && val >= 60) { val = 1; unit = 'm'; }
+                    el.textContent = val + unit + ' ago';
+                }
+            });
+        }, 8000);
+
+        console.log('%c Financial Dashboard v1.0 ', 'background:#00e5ff;color:#000;padding:4px 10px;border-radius:4px;font-weight:bold;font-size:14px');
+        console.log('%c Data: AAPL vs MSFT · FY2020-FY2024 ', 'color:#94a3b8;font-size:12px');
+    </script>
+</body>
+
+</html>

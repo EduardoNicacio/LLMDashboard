@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemma4 31B QAT - AI Command Center | Model Benchmarking</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0c;
+            --panel-bg: rgba(20, 20, 25, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-cyan: #00f2ff;
+            --accent-purple: #bc13fe;
+            --accent-green: #39ff14;
+            --accent-red: #ff3131;
+            --text-main: #e0e0e6;
+            --text-dim: #94a3b8;
+            --glow-cyan: 0 0 15px rgba(0, 242, 255, 0.4);
+            --glow-purple: 0 0 15px rgba(188, 19, 254, 0.4);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(188, 19, 254, 0.05) 0%, transparent 20%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- Layout --- */
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        aside {
+            background: rgba(10, 10, 12, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        .brand i {
+            color: var(--accent-cyan);
+            filter: drop-shadow(var(--glow-cyan));
+        }
+
+        .nav-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: rgba(0, 242, 255, 0.1);
+            color: var(--accent-cyan);
+            border-color: rgba(0, 242, 255, 0.3);
+            box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.1);
+        }
+
+        /* --- Main Content --- */
+        main {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- Glass Panels --- */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            margin-bottom: 2rem;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- Hero Summary --- */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 20px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* --- Head-to-Head --- */
+        .matchup-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .model-card {
+            padding: 2rem;
+            border-radius: 24px;
+            text-align: center;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .model-card.local {
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.1), rgba(0, 0, 0, 0));
+            border: 1px solid rgba(0, 242, 255, 0.3);
+        }
+
+        .model-card.frontier {
+            background: linear-gradient(135deg, rgba(188, 19, 254, 0.1), rgba(0, 0, 0, 0));
+            border: 1px solid rgba(188, 19, 254, 0.3);
+        }
+
+        .vs-badge {
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            z-index: 2;
+        }
+
+        .model-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            text-align: left;
+        }
+
+        .metric-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.75rem;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            display: block;
+        }
+
+        .metric-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .final-grade {
+            margin-top: 1.5rem;
+            font-size: 3rem;
+            font-weight: 900;
+            opacity: 0.8;
+        }
+
+        /* --- Charts Section --- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* --- Hardware Monitor --- */
+        .hw-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .hw-card {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+            transition: width 1s ease-in-out;
+        }
+
+        /* --- Table Section --- */
+        .table-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input,
+        .sort-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-pill {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: rgba(57, 255, 20, 0.2);
+            color: var(--accent-green);
+        }
+
+        .status-fail {
+            background: rgba(255, 49, 49, 0.2);
+            color: var(--accent-red);
+        }
+
+        /* --- Winner Breakdown --- */
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .winner-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border-left: 4px solid transparent;
+        }
+
+        .winner-item.local-win {
+            border-left-color: var(--accent-cyan);
+        }
+
+        .winner-item.frontier-win {
+            border-left-color: var(--accent-purple);
+        }
+
+        .winner-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Notes Section --- */
+        .notes-area {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            color: #fff;
+            padding: 1rem;
+            font-family: 'Inter', sans-serif;
+            resize: none;
+            outline: none;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 1100px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            aside {
+                display: none;
+                /* Simplified for mobile, usually would be a hamburger menu */
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .matchup-container {
+                grid-template-columns: 1fr;
+            }
+
+            .vs-badge {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <aside>
+            <div class="brand">
+                <i data-lucide="cpu"></i>
+                <span>AI COMMAND CENTER</span>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-label">Main Dashboard</div>
+                <div class="nav-item active" onclick="switchView('summary')">
+                    <i data-lucide="layout-dashboard"></i> Summary
+                </div>
+                <div class="nav-item" onclick="switchView('speed')">
+                    <i data-lucide="zap"></i> Speed Analysis
+                </div>
+                <div class="nav-item" onclick="switchView('quality')">
+                    <i data-lucide="star"></i> Quality Metrics
+                </div>
+                <div class="nav-item" onclick="switchView('cost')">
+                    <i data-lucide="credit-card"></i> Cost Tracking
+                </div>
+                <div class="nav-item" onclick="switchView('hardware')">
+                    <i data-lucide="hard-drive"></i> Hardware Monitor
+                </div>
+            </div>
+
+            <div class="nav-group" style="margin-top: auto;">
+                <div class="nav-label">System Status</div>
+                <div class="nav-item" style="color: var(--accent-green);">
+                    <i data-lucide="circle" style="width: 10px; fill: var(--accent-green);"></i>
+                    <span>Local Server Online</span>
+                </div>
+                <div class="nav-item" style="color: var(--accent-cyan);">
+                    <i data-lucide="cloud" style="width: 10px;"></i>
+                    <span>API Gateway Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <main>
+            <!-- SUMMARY VIEW -->
+            <section id="summary" class="view-section active">
+                <div class="hero-grid">
+                    <div class="stat-card">
+                        <span class="stat-label">Total Tests Run</span>
+                        <div class="stat-value">1,284</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Avg Tokens/Sec</span>
+                        <div class="stat-value" style="color: var(--accent-cyan);">42.8</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Best Performing</span>
+                        <div class="stat-value" style="color: var(--accent-purple);">Claude 4.8</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Total API Spend</span>
+                        <div class="stat-value" style="color: var(--accent-red);">$142.12</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Local Runtime</span>
+                        <div class="stat-value">18.4 hrs</div>
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i data-lucide="swords"></i> Head-to-Head Matchup</div>
+                        <div class="nav-label">Current Session</div>
+                    </div>
+
+                    <div class="matchup-container">
+                        <div class="model-card local">
+                            <div class="model-name">Qwen3.6 27B</div>
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <span class="metric-label">TPS</span>
+                                    <span class="metric-val">68.2</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Quality</span>
+                                    <span class="metric-val">8.4/10</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Coding</span>
+                                    <span class="metric-val">8.9/10</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Instruction</span>
+                                    <span class="metric-val">7.2/10</span>
+                                </div>
+                            </div>
+                            <div class="final-grade">A-</div>
+                        </div>
+
+                        <div class="vs-badge">VS</div>
+
+                        <div class="model-card frontier">
+                            <div class="model-name">Claude Opus 4.8</div>
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <span class="metric-label">TPS</span>
+                                    <span class="metric-val">31.5</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Quality</span>
+                                    <span class="metric-val">9.7/10</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Coding</span>
+                                    <span class="metric-val">9.4/10</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Instruction</span>
+                                    <span class="metric-val">9.8/10</span>
+                                </div>
+                            </div>
+                            <div class="final-grade">A+</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-header" style="margin-top: 3rem;">
+                        <div class="panel-title"><i data-lucide="trophy"></i> Winner Breakdown</div>
+                    </div>
+                    <div class="winner-grid">
+                        <div class="winner-item local-win">
+                            <div class="winner-icon"><i data-lucide="zap" style="color: var(--accent-cyan);"></i></div>
+                            <div>
+                                <strong>Inference Speed</strong><br>
+                                <span class="nav-label">Qwen3.6 is 2.1x faster</span>
+                            </div>
+                        </div>
+                        <div class="winner-item frontier-win">
+                            <div class="winner-icon"><i data-lucide="brain" style="color: var(--accent-purple);"></i>
+                            </div>
+                            <div>
+                                <strong>Reasoning Depth</strong><br>
+                                <span class="nav-label">Claude Opus wins on complex logic</span>
+                            </div>
+                        </div>
+                        <div class="winner-item local-win">
+                            <div class="winner-icon"><i data-lucide="code" style="color: var(--accent-cyan);"></i></div>
+                            <div>
+                                <strong>Python Syntax</strong><br>
+                                <span class="nav-label">Qwen3.6 showed higher accuracy in boilerplate</span>
+                            </div>
+                        </div>
+                        <div class="winner-item frontier-win">
+                            <div class="winner-icon"><i data-lucide="message-square"
+                                    style="color: var(--accent-purple);"></i></div>
+                            <div>
+                                <strong>Nuance & Tone</strong><br>
+                                <span class="nav-label">Claude Opus is significantly more natural</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SPEED VIEW -->
+            <section id="speed" class="view-section">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i data-lucide="zap"></i> Tokens Per Second (TPS) Over Time</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="speedChart"></canvas>
+                    </div>
+                </div>
+                <div class="charts-grid">
+                    <div class="glass-panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><i data-lucide="clock"></i> Completion Time (ms)</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="timeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><i data-lucide="bar-chart-3"></i> Latency Distribution</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="latencyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- QUALITY VIEW -->
+            <section id="quality" class="view-section">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i data-lucide="star"></i> Quality Score Comparison</div>
+                    </div>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="qualityChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i data-lucide="list-checks"></i> Prompt History & Scoring</div>
+                    </div>
+                    <div class="table-controls">
+                        <input type="text" class="search-input" id="promptSearch" placeholder="Search prompts..."
+                            onkeyup="filterTable()">
+                        <select class="sort-select" id="tableSort" onchange="sortTable()">
+                            <option value="score">Sort by Score</option>
+                            <option value="time">Sort by Time</option>
+                        </select>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="promptTable">
+                            <thead>
+                                <tr>
+                                    <th>Prompt</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Time (s)</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr onclick="expandRow(this)">
+                                    <td>"Write a complex Rust implementation of a B-Tree..."</td>
+                                    <td>Qwen3.6 27B</td>
+                                    <td><span class="status-pill status-success">Success</span></td>
+                                    <td>4.2s</td>
+                                    <td>9.2</td>
+                                </tr>
+                                <tr class="detail-row" style="display:none; background: rgba(0,0,0,0.2);">
+                                    <td colspan="5"
+                                        style="padding: 1.5rem; font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-dim);">
+                                        <strong>Full Response:</strong><br>
+                                        impl<T: Ord> BTree&lt;T&gt; { ... [Detailed Rust Code] ... }<br><br>
+                                            <strong>Observation:</strong> Model handled generics perfectly but missed
+                                            one edge case in node splitting.
+                                    </td>
+                                </tr>
+                                <tr onclick="expandRow(this)">
+                                    <td>"Analyze the geopolitical impact of semiconductor..."</td>
+                                    <td>Claude Opus 4.8</td>
+                                    <td><span class="status-pill status-success">Success</span></td>
+                                    <td>12.8s</td>
+                                    <td>9.8</td>
+                                </tr>
+                                <tr class="detail-row" style="display:none; background: rgba(0,0,0,0.2);">
+                                    <td colspan="5"
+                                        style="padding: 1.5rem; font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-dim);">
+                                        <strong>Full Response:</strong><br>
+                                        The semiconductor industry is the new oil... [Deep Analysis] ...<br><br>
+                                        <strong>Observation:</strong> Exceptional nuance and source synthesis.
+                                    </td>
+                                </tr>
+                                <tr onclick="expandRow(this)">
+                                    <td>"Create a CSS glassmorphism effect using only..."</td>
+                                    <td>Qwen3.6 27B</td>
+                                    <td><span class="status-pill status-success">Success</span></td>
+                                    <td>2.1s</td>
+                                    <td>8.5</td>
+                                </tr>
+                                <tr class="detail-row" style="display:none; background: rgba(0,0,0,0.2);">
+                                    <td colspan="5"
+                                        style="padding: 1.5rem; font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-dim);">
+                                        <strong>Full Response:</strong><br>
+                                        .glass { backdrop-filter: blur(10px); ... }<br><br>
+                                        <strong>Observation:</strong> Code is correct but lacked accessibility
+                                        considerations.
+                                    </td>
+                                </tr>
+                                <tr onclick="expandRow(this)">
+                                    <td>"Solve this quantum physics paradox..."</td>
+                                    <td>Claude Opus 4.8</td>
+                                    <td><span class="status-pill status-fail">Timeout</span></td>
+                                    <td>60.0s</td>
+                                    <td>0.0</td>
+                                </tr>
+                                <tr class="detail-row" style="display:none; background: rgba(0,0,0,0.2);">
+                                    <td colspan="5"
+                                        style="padding: 1.5rem; font-family: 'JetBrains Mono'; font-size: 0.8rem; color: var(--text-dim);">
+                                        <strong>Error:</strong> API Gateway Timeout after 60s.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COST VIEW -->
+            <section id="cost" class="view-section">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i data-lucide="credit-card"></i> API Usage & Cost Analysis</div>
+                    </div>
+                    <div class="hw-grid">
+                        <div class="hw-card">
+                            <span class="metric-label">Claude Opus 4.8 Total Spend</span>
+                            <div class="stat-value" style="color: var(--accent-red);">$142.12</div>
+                        </div>
+                        <div class="hw-card">
+                            <span class="metric-label">Input Tokens</span>
+                            <div class="stat-value">4.2M</div>
+                        </div>
+                        <div class="hw-card">
+                            <span class="metric-label">Output Tokens</span>
+                            <div class="stat-value">1.1M</div>
+                        </div>
+                        <div class="hw-card">
+                            <span class="metric-label">Avg Cost / 1k Tokens</span>
+                            <div class="stat-value">$0.015</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i data-lucide="trending-up"></i> Cost Projection (30 Days)</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HARDWARE VIEW -->
+            <section id="hardware" class="view-section">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i data-lucide="hard-drive"></i> Local Hardware Monitor</div>
+                    </div>
+                    <div class="hw-grid">
+                        <div class="hw-card">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span class="metric-label">RTX 3090 VRAM</span>
+                                <span class="metric-val">22.4 / 24 GB</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-fill" style="width: 93%;"></div>
+                            </div>
+                            <span class="nav-label">93% Utilization</span>
+                        </div>
+                        <div class="hw-card">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span class="metric-label">GPU Temperature</span>
+                                <span class="metric-val">74°C</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-fill"
+                                    style="width: 65%; background: var(--accent-purple); box-shadow: var(--glow-purple);">
+                                </div>
+                            </div>
+                            <span class="nav-label">Stable - Thermal Throttling: OFF</span>
+                        </div>
+                        <div class="hw-card">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span class="metric-label">Power Draw</span>
+                                <span class="metric-val">310W</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-fill"
+                                    style="width: 78%; background: var(--accent-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);">
+                                </div>
+                            </div>
+                            <span class="nav-label">Peak: 350W</span>
+                        </div>
+                        <div class="hw-card">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span class="metric-label">System RAM</span>
+                                <span class="metric-val">48 / 64 GB</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-fill" style="width: 75%;"></div>
+                            </div>
+                            <span class="nav-label">75% Utilization</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i data-lucide="file-text"></i> Testing Observations & Notes</div>
+                    </div>
+                    <textarea class="notes-area" placeholder="Enter final testing observations here..."></textarea>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // View Switching Logic
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            document.getElementById(viewId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Table Logic
+        function expandRow(row) {
+            const detailRow = row.nextElementSibling;
+            if (detailRow && detailRow.classList.contains('detail-row')) {
+                detailRow.style.display = detailRow.style.display === 'none' ? 'table-row' : 'none';
+            }
+        }
+
+        function filterTable() {
+            const input = document.getElementById('promptSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#promptTable tbody tr:not(.detail-row)');
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+                // Also hide associated detail row
+                if (row.nextElementSibling && row.nextElementSibling.classList.contains('detail-row')) {
+                    row.nextElementSibling.style.display = 'none';
+                }
+            });
+        }
+
+        function sortTable() {
+            const table = document.getElementById('promptTable');
+            const tbody = table.tBodies[0];
+            const criteria = document.getElementById('tableSort').value;
+            const rows = Array.from(tbody.querySelectorAll('tr:not(.detail-row)'));
+
+            rows.sort((a, b) => {
+                const valA = a.cells[criteria === 'score' ? 4 : 3].innerText.replace('s', '');
+                const valB = b.cells[criteria === 'score' ? 4 : 3].innerText.replace('s', '');
+                return parseFloat(valB) - parseFloat(valA);
+            });
+
+            // Re-insert sorted rows with their detail rows
+            rows.forEach(row => {
+                const detail = row.nextElementSibling;
+                tbody.appendChild(row);
+                if (detail) tbody.appendChild(detail);
+            });
+        }
+
+        // --- Charts Implementation ---
+        const chartConfig = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#94a3b8', font: { family: 'Inter' } } }
+            },
+            scales: {
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8' }
+                }
+            }
+        };
+
+        // Speed Chart
+        new Chart(document.getElementById('speedChart'), {
+            type: 'line',
+            data: {
+                labels: ['T+0s', 'T+5s', 'T+10s', 'T+15s', 'T+20s', 'T+25s', 'T+30s'],
+                datasets: [
+                    {
+                        label: 'Qwen3.6 27B',
+                        data: [65, 68, 62, 70, 66, 69, 67],
+                        borderColor: '#00f2ff',
+                        backgroundColor: 'rgba(0, 242, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Claude Opus 4.8',
+                        data: [30, 32, 28, 31, 29, 33, 31],
+                        borderColor: '#bc13fe',
+                        backgroundColor: 'rgba(188, 19, 254, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: chartConfig
+        });
+
+        // Time Chart
+        new Chart(document.getElementById('timeChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Prompt 1', 'Prompt 2', 'Prompt 3', 'Prompt 4', 'Prompt 5'],
+                datasets: [
+                    {
+                        label: 'Qwen3.6',
+                        data: [4200, 2100, 5500, 3100, 4800],
+                        backgroundColor: '#00f2ff'
+                    },
+                    {
+                        label: 'Claude 4.8',
+                        data: [12800, 11000, 14500, 13100, 12200],
+                        backgroundColor: '#bc13fe'
+                    }
+                ]
+            },
+            options: chartConfig
+        });
+
+        // Latency Chart
+        new Chart(document.getElementById('latencyChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['<100ms', '100-500ms', '500ms-1s', '>1s'],
+                datasets: [{
+                    data: [40, 30, 20, 10],
+                    backgroundColor: ['#39ff14', '#00f2ff', '#bc13fe', '#ff3131'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                ...chartConfig,
+                scales: {} // Remove scales for doughnut
+            }
+        });
+
+        // Quality Chart
+        new Chart(document.getElementById('qualityChart'), {
+            type: 'radar',
+            data: {
+                labels: ['Coding', 'Creativity', 'Logic', 'Instruction Following', 'Nuance', 'Speed'],
+                datasets: [
+                    {
+                        label: 'Qwen3.6 27B',
+                        data: [9, 7, 8, 7, 6, 10],
+                        borderColor: '#00f2ff',
+                        backgroundColor: 'rgba(0, 242, 255, 0.2)',
+                    },
+                    {
+                        label: 'Claude Opus 4.8',
+                        data: [8, 10, 10, 10, 10, 4],
+                        borderColor: '#bc13fe',
+                        backgroundColor: 'rgba(188, 19, 254, 0.2)',
+                    }
+                ]
+            },
+            options: {
+                ...chartConfig,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255,255,255,0.1)' },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        pointLabels: { color: '#94a3b8', font: { size: 12 } },
+                        ticks: { display: false }
+                    }
+                }
+            }
+        });
+
+        // Cost Chart
+        new Chart(document.getElementById('costChart'), {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Projected Spend ($)',
+                    data: [30, 80, 142, 210],
+                    borderColor: '#ff3131',
+                    backgroundColor: 'rgba(255, 49, 49, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: chartConfig
+        });
+    </script>
+</body>
+
+</html>

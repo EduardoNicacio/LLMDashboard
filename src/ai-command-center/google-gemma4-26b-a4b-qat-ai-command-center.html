@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Command Center | Pro Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #05070a;
+            --card-bg: rgba(17, 25, 40, 0.7);
+            --accent-cyan: #00f2ff;
+            --accent-purple: #bc13fe;
+            --accent-emerald: #00ff88;
+            --accent-amber: #ffaa00;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 50% 0%, rgba(188, 19, 254, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(0, 242, 255, 0.1) 0%, transparent 40%);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.9);
+        }
+
+        .neon-text-cyan {
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+            color: var(--accent-cyan);
+        }
+
+        .neon-text-purple {
+            text-shadow: 0 0 10px rgba(188, 19, 254, 0.5);
+            color: var(--accent-purple);
+        }
+
+        .neon-border-cyan {
+            border: 1px solid var(--accent-cyan);
+            box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+
+        .neon-border-purple {
+            border: 1px solid var(--accent-purple);
+            box-shadow: inset 0 0 10px rgba(188, 19, 254, 0.2);
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+
+            70% {
+                transform: scale(1.2);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .tab-active {
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .hidden-view {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <!-- Header / Navigation -->
+    <header class="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tighter flex items-center gap-3">
+                <i data-lucide="cpu" class="text-cyan-400 w-8 h-8"></i>
+                AI COMMAND CENTER <span
+                    class="text-xs font-mono bg-zinc-800 px-2 py-1 rounded text-zinc-400 ml-2">v4.2.0-PRO</span>
+            </h1>
+            <p class="text-zinc-500 text-sm mt-1">Real-time Model Benchmarking & Hardware Telemetry</p>
+        </div>
+
+        <nav class="flex bg-zinc-900/50 p-1 rounded-xl border border-white/5">
+            <button onclick="switchView('summary')" id="btn-summary"
+                class="nav-btn px-5 py-2 rounded-lg text-sm font-medium transition-all tab-active">Summary</button>
+            <button onclick="switchView('speed')" id="btn-speed"
+                class="nav-btn px-5 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400">Speed</button>
+            <button onclick="switchView('quality')" id="btn-quality"
+                class="nav-btn px-5 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400">Quality</button>
+            <button onclick="switchView('cost')" id="btn-cost"
+                class="nav-btn px-5 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400">Cost</button>
+            <button onclick="switchView('hardware')" id="btn-hardware"
+                class="nav-btn px-5 py-2 rounded-lg text-sm font-medium transition-all text-zinc-400">Hardware</button>
+        </nav>
+    </header>
+
+    <main class="max-w-7xl mx-auto space-y-6">
+
+        <!-- HERO SUMMARY SECTION -->
+        <section id="view-summary" class="view-section grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-start">
+                    <p class="text-zinc-400 text-sm font-medium uppercase tracking-wider">Total Tests</p>
+                    <i data-lucide="activity" class="text-cyan-400 w-5 h-5"></i>
+                </div>
+                <h2 class="text-4xl font-bold mt-2 mono">1,284</h2>
+                <p class="text-emerald-400 text-xs mt-2 flex items-center"><i data-lucide="trending-up"
+                        class="w-3 h-3 mr-1"></i> +12% from last session</p>
+            </div>
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-start">
+                    <p class="text-zinc-400 text-sm font-medium uppercase tracking-wider">Avg. Throughput</p>
+                    <i data-lucide="zap" class="text-amber-400 w-5 h-5"></i>
+                </div>
+                <h2 class="text-4xl font-bold mt-2 mono">42.8 <span class="text-lg text-zinc-500">t/s</span></h2>
+                <p class="text-zinc-500 text-xs mt-2">Global Average (Local + API)</p>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-l-purple-500">
+                <div class="flex justify-between items-start">
+                    <p class="text-zinc-400 text-sm font-medium uppercase tracking-wider">Best Model</p>
+                    <i data-lucide="award" class="text-purple-400 w-5 h-5"></i>
+                </div>
+                <h2 class="text-2xl font-bold mt-2 text-purple-400">Claude Opus 4.8</h2>
+                <p class="text-zinc-500 text-xs mt-2">Highest Reasoning Score</p>
+            </div>
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-start">
+                    <p class="text-zinc-400 text-sm font-medium uppercase tracking-wider">Total API Spend</p>
+                    <i data-lucide="dollar-sign" class="text-emerald-400 w-5 h-5"></i>
+                </div>
+                <h2 class="text-4xl font-bold mt-2 mono">$142.84</h2>
+                <p class="text-zinc-500 text-xs mt-2">Current Session: $12.40</p>
+            </div>
+        </section>
+
+        <!-- HEAD-TO-HEAD SECTION -->
+        <section id="view-matchup" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Matchup Card -->
+            <div class="lg:col-span-2 glass-card overflow-hidden relative">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500">
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="text-center w-1/3">
+                            <div
+                                class="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-cyan-500/50">
+                                <i data-lucide="cpu" class="text-cyan-400 w-8 h-8"></i>
+                            </div>
+                            <h3 class="font-bold text-xl">Qwen3.6 27B</h3>
+                            <span class="text-xs font-mono text-cyan-400/70">LOCAL (Llama.cpp)</span>
+                        </div>
+                        <div class="text-center w-1/3">
+                            <div class="text-4xl font-black italic text-zinc-700">VS</div>
+                        </div>
+                        <div class="text-center w-1/3">
+                            <div
+                                class="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3 border border-purple-500/50">
+                                <i data-lucide="cloud" class="text-purple-400 w-8 h-8"></i>
+                            </div>
+                            <h3 class="font-bold text-xl">Claude Opus 4.8</h3>
+                            <span class="text-xs font-mono text-purple-400/70">API (Anthropic)</span>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Bars -->
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-zinc-400">Coding Accuracy</span>
+                                <span class="mono">92% vs 98%</span>
+                            </div>
+                            <div class="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-cyan-500" style="width: 92%"></div>
+                                <div class="h-full bg-purple-500" style="width: 8%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-zinc-400">Instruction Following</span>
+                                <span class="mono">88% vs 99%</span>
+                            </div>
+                            <div class="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-cyan-500" style="width: 88%"></div>
+                                <div class="h-full bg-purple-500" style="width: 11%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-zinc-400">Inference Speed (Tokens/s)</span>
+                                <span class="mono">45 t/s vs 12 t/s</span>
+                            </div>
+                            <div class="h-2 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-cyan-500" style="width: 75%"></div>
+                                <div class="h-full bg-purple-500" style="width: 25%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Winner Breakdown -->
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="trophy" class="text-amber-400 w-5 h-5"></i>
+                    Matchup Winner
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span class="text-sm text-zinc-400">Logic & Reasoning</span>
+                        <span class="text-sm font-bold text-purple-400">Claude Opus</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span class="text-sm text-zinc-400">Raw Throughput</span>
+                        <span class="text-sm font-bold text-cyan-400">Qwen 27B</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span class="text-sm text-zinc-400">Cost Efficiency</span>
+                        <span class="text-sm font-bold text-emerald-400">Qwen 27B</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span class="text-sm text-zinc-400">Creative Nuance</span>
+                        <span class="text-sm font-bold text-purple-400">Claude Opus</span>
+                    </div>
+                </div>
+                <div class="mt-6 pt-6 border-t border-white/10">
+                    <p class="text-xs text-zinc-500 italic">"Claude maintains a significant edge in complex
+                        architectural reasoning, while Qwen dominates in rapid prototyping and local iteration speed."
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODEL CARDS GRID -->
+        <section id="view-quality" class="view-section grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Model Card 1 -->
+            <div class="glass-card p-6 border-t-4 border-t-cyan-500">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold">Qwen3.6 27B</h3>
+                    <span class="text-[10px] font-mono bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded">LOCAL</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Speed</p>
+                        <p class="text-lg font-bold mono text-cyan-400">45 t/s</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Quality</p>
+                        <p class="text-lg font-bold mono text-cyan-400">88/100</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Coding</p>
+                        <p class="text-lg font-bold mono text-cyan-400">92/100</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Creativity</p>
+                        <p class="text-lg font-bold mono text-cyan-400">75/100</p>
+                    </div>
+                </div>
+                <div class="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
+                    <div class="bg-cyan-500 h-full" style="width: 88%"></div>
+                </div>
+                <p class="text-center text-xs mt-2 text-zinc-500">Final Grade: <span
+                        class="text-cyan-400 font-bold">A-</span></p>
+            </div>
+
+            <!-- Model Card 2 -->
+            <div class="glass-card p-6 border-t-4 border-t-purple-500">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold">Claude Opus 4.8</h3>
+                    <span class="text-[10px] font-mono bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">API</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Speed</p>
+                        <p class="text-lg font-bold mono text-purple-400">12 t/s</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Quality</p>
+                        <p class="text-lg font-bold mono text-purple-400">98/100</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Coding</p>
+                        <p class="text-lg font-bold mono text-purple-400">97/100</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Creativity</p>
+                        <p class="text-lg font-bold mono text-purple-400">95/100</p>
+                    </div>
+                </div>
+                <div class="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
+                    <div class="bg-purple-500 h-full" style="width: 98%"></div>
+                </div>
+                <p class="text-center text-xs mt-2 text-zinc-500">Final Grade: <span
+                        class="text-purple-400 font-bold">S</span></p>
+            </div>
+
+            <!-- Model Card 3 -->
+            <div class="glass-card p-6 border-t-4 border-t-zinc-500">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold">Llama 3.1 70B</h3>
+                    <span class="text-[10px] font-mono bg-zinc-500/20 text-zinc-400 px-2 py-0.5 rounded">LOCAL</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Speed</p>
+                        <p class="text-lg font-bold mono text-zinc-400">28 t/s</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Quality</p>
+                        <p class="text-lg font-bold mono text-zinc-400">84/100</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Coding</p>
+                        <p class="text-lg font-bold mono text-zinc-400">81/100</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-zinc-500 uppercase">Creativity</p>
+                        <p class="text-lg font-bold mono text-zinc-400">80/100</p>
+                    </div>
+                </div>
+                <div class="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
+                    <div class="bg-zinc-500 h-full" style="width: 84%"></div>
+                </div>
+                <p class="text-center text-xs mt-2 text-zinc-500">Final Grade: <span
+                        class="text-zinc-400 font-bold">B+</span></p>
+            </div>
+        </section>
+
+        <!-- CHARTS SECTION -->
+        <section id="view-speed" class="view-section grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-card p-6">
+                <h3 class="text-sm font-bold text-zinc-400 mb-4 uppercase tracking-widest">Tokens Per Second (TPS)
+                    Comparison</h3>
+                <canvas id="chartTPS" height="200"></canvas>
+            </div>
+            <div class="glass-card p-6">
+                <h3 class="text-sm font-bold text-zinc-400 mb-4 uppercase tracking-widest">Quality Score Trend</h3>
+                <canvas id="chartQuality" height="200"></canvas>
+            </div>
+            <div class="glass-card p-6">
+                <h3 class="text-sm font-bold text-zinc-400 mb-4 uppercase tracking-widest">Completion Time (ms)</h3>
+                <canvas id="chartTime" height="200"></canvas>
+            </div>
+            <div class="glass-card p-6">
+                <h3 class="text-sm font-bold text-zinc-400 mb-4 uppercase tracking-widest">Cost vs. Performance</h3>
+                <canvas id="chartCost" height="200"></canvas>
+            </div>
+        </section>
+
+        <!-- HARDWARE & API PANEL -->
+        <section id="view-hardware" class="view-section grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Hardware Monitor -->
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <i data-lucide="monitor" class="text-emerald-400 w-5 h-5"></i>
+                        Hardware Monitor
+                    </h3>
+                    <span class="flex items-center text-xs text-emerald-400 font-mono">
+                        <span class="status-pulse bg-emerald-400"></span> SYSTEM ONLINE
+                    </span>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-zinc-400">RTX 3090 VRAM Usage</span>
+                            <span class="mono text-cyan-400">22.4 / 24.0 GB</span>
+                        </div>
+                        <div class="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+                            <div class="bg-cyan-500 h-full" style="width: 93%"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-zinc-900/50 p-4 rounded-lg border border-white/5">
+                            <p class="text-xs text-zinc-500 uppercase">GPU Temp</p>
+                            <p class="text-xl font-bold mono text-amber-400">72°C</p>
+                        </div>
+                        <div class="bg-zinc-900/50 p-4 rounded-lg border border-white/5">
+                            <p class="text-xs text-zinc-500 uppercase">Power Draw</p>
+                            <p class="text-xl font-bold mono text-emerald-400">340W</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Usage -->
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <i data-lucide="credit-card" class="text-purple-400 w-5 h-5"></i>
+                        API Usage (Claude Opus)
+                    </h3>
+                    <span class="text-xs font-mono text-zinc-500">Session: 42m</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-zinc-900/50 p-4 rounded-lg border border-white/5">
+                        <p class="text-xs text-zinc-500 uppercase">Input Tokens</p>
+                        <p class="text-xl font-bold mono">42,102</p>
+                    </div>
+                    <div class="bg-zinc-900/50 p-4 rounded-lg border border-white/5">
+                        <p class="text-xs text-zinc-500 uppercase">Output Tokens</p>
+                        <p class="text-xl font-bold mono">12,450</p>
+                    </div>
+                </div>
+                <div
+                    class="flex items-center justify-between p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                    <span class="text-sm font-bold text-purple-400">Estimated Session Cost</span>
+                    <span class="text-2xl font-bold mono text-purple-400">$12.40</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROMPT HISTORY & TABLE -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Prompt History -->
+            <div class="lg:col-span-2 glass-card flex flex-col h-[500px]">
+                <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <i data-lucide="terminal" class="text-zinc-400 w-5 h-5"></i>
+                        Prompt History
+                    </h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="tableSearch" onkeyup="filterTable()" placeholder="Search prompts..."
+                            class="bg-zinc-900 border border-white/10 text-xs rounded-lg px-3 py-1 focus:outline-none focus:border-cyan-500 w-48">
+                    </div>
+                </div>
+                <div class="overflow-y-auto custom-scrollbar flex-grow">
+                    <table class="w-full text-left text-sm" id="historyTable">
+                        <thead class="sticky top-0 bg-zinc-900 text-zinc-500 text-xs uppercase">
+                            <tr>
+                                <th class="px-6 py-3 cursor-pointer hover:text-white" onclick="sortTable(0)">Prompt <i
+                                        data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th>
+                                <th class="px-6 py-3 cursor-pointer hover:text-white" onclick="sortTable(1)">Model <i
+                                        data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th>
+                                <th class="px-6 py-3 cursor-pointer hover:text-white" onclick="sortTable(2)">Score <i
+                                        data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th>
+                                <th class="px-6 py-3 cursor-pointer hover:text-white" onclick="sortTable(3)">Time <i
+                                        data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th>
+                                <th class="px-6 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            <tr class="hover:bg-white/5 transition-colors cursor-pointer" onclick="toggleRow('row1')">
+                                <td class="px-6 py-4 max-w-xs truncate" id="p1">"Implement a lock-free queue in Rust..."
+                                </td>
+                                <td class="px-6 py-4 text-cyan-400">Qwen3.6 27B</td>
+                                <td class="px-6 py-4 mono">92%</td>
+                                <td class="px-6 py-4 mono">1.2s</td>
+                                <td class="px-6 py-4"><span
+                                        class="text-emerald-500 text-xs bg-emerald-500/10 px-2 py-1 rounded-full">Success</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition-colors cursor-pointer" onclick="toggleRow('row2')">
+                                <td class="px-6 py-4 max-w-xs truncate" id="p2">"Explain quantum entanglement to a
+                                    5yo..."</td>
+                                <td class="px-6 py-4 text-purple-400">Claude Opus 4.8</td>
+                                <td class="px-6 py-4 mono">98%</td>
+                                <td class="px-6 py-4 mono">4.5s</td>
+                                <td class="px-6 py-4"><span
+                                        class="text-emerald-500 text-xs bg-emerald-500/10 px-2 py-1 rounded-full">Success</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition-colors cursor-pointer" onclick="toggleRow('row3')">
+                                <td class="px-6 py-4 max-w-xs truncate" id="p3">"Optimize this SQL query for
+                                    Postgres..."</td>
+                                <td class="px-6 py-4 text-cyan-400">Qwen3.6 27B</td>
+                                <td class="px-6 py-4 mono">85%</td>
+                                <td class="px-6 py-4 mono">0.8s</td>
+                                <td class="px-6 py-4"><span
+                                        class="text-amber-500 text-xs bg-amber-500/10 px-2 py-1 rounded-full">Warning</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition-colors cursor-pointer" onclick="toggleRow('row4')">
+                                <td class="px-6 py-4 max-w-xs truncate" id="p4">"Write a poem about silicon chips..."
+                                </td>
+                                <td class="px-6 py-4 text-purple-400">Claude Opus 4.8</td>
+                                <td class="px-6 py-4 mono">95%</td>
+                                <td class="px-6 py-4 mono">3.2s</td>
+                                <td class="px-6 py-4"><span
+                                        class="text-emerald-500 text-xs bg-emerald-500/10 px-2 py-1 rounded-full">Success</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- Expanded Detail (Hidden by default) -->
+                    <div id="row1-detail"
+                        class="hidden-view bg-zinc-900/80 p-4 border-l-2 border-cyan-500 text-xs text-zinc-400">
+                        <p class="font-bold text-cyan-400 mb-1">Detailed Analysis:</p>
+                        <p>Code was syntactically correct. Used atomic primitives correctly. However, missed one edge
+                            case in the drop() method. Complexity: O(1).</p>
+                    </div>
+                    <div id="row2-detail"
+                        class="hidden-view bg-zinc-900/80 p-4 border-l-2 border-purple-500 text-xs text-zinc-400">
+                        <p class="font-bold text-purple-400 mb-1">Detailed Analysis:</p>
+                        <p>Exceptional use of analogies. Metaphorical depth is high. Highly engaging tone. Perfect for
+                            educational content.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="sticky-note" class="text-zinc-400 w-5 h-5"></i>
+                    Testing Notes
+                </h3>
+                <textarea
+                    class="w-full h-48 bg-zinc-900/50 border border-white/10 rounded-lg p-4 text-sm text-zinc-300 focus:outline-none focus:border-cyan-500 resize-none custom-scrollbar"
+                    placeholder="Add observations here..."></textarea>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-[10px] text-zinc-500 uppercase">Auto-saving enabled</span>
+                    <button class="text-xs bg-zinc-800 hover:bg-zinc-700 px-3 py-1 rounded transition-colors">Clear
+                        Logs</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="max-w-7xl mx-auto mt-12 pb-8 text-center text-zinc-600 text-xs">
+        <p>&copy; 2024 AI Benchmarking Labs. All telemetry data is simulated for demonstration purposes.</p>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Data for Charts
+        const chartData = {
+            tps: {
+                labels: ['Qwen', 'Claude', 'Llama 3.1', 'Mistral', 'Grok'],
+                datasets: [{
+                    label: 'Tokens/Sec',
+                    data: [45, 12, 28, 35, 22],
+                    backgroundColor: ['#00f2ff', '#bc13fe', '#71717a', '#10b981', '#f59e0b'],
+                    borderRadius: 6
+                }]
+            },
+            quality: {
+                labels: ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'Test 5'],
+                datasets: [{
+                    label: 'Quality Score',
+                    data: [85, 88, 82, 90, 87],
+                    borderColor: '#00f2ff',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(0, 242, 255, 0.1)'
+                }]
+            },
+            time: {
+                labels: ['Qwen', 'Claude', 'Llama 3.1', 'Mistral', 'Grok'],
+                datasets: [{
+                    label: 'Latency (ms)',
+                    data: [800, 4500, 1200, 1500, 2200],
+                    backgroundColor: '#bc13fe'
+                }]
+            },
+            cost: {
+                labels: ['Local', 'API'],
+                datasets: [{
+                    label: 'Cost per 1k Tokens',
+                    data: [0.001, 0.03],
+                    backgroundColor: ['#00ff88', '#ff4444']
+                }]
+            }
+        };
+
+        // Chart Instances
+        let charts = {};
+
+        function initCharts() {
+            const ctxTPS = document.getElementById('chartTPS').getContext('2d');
+            charts.tps = new Chart(ctxTPS, {
+                type: 'bar',
+                data: chartData.tps,
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#71717a' } }, x: { ticks: { color: '#71717a' } } }
+                }
+            });
+
+            const ctxQual = document.getElementById('chartQuality').getContext('2d');
+            charts.quality = new Chart(ctxQual, {
+                type: 'line',
+                data: chartData.quality,
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#71717a' } }, x: { ticks: { color: '#71717a' } } }
+                }
+            });
+
+            const ctxTime = document.getElementById('chartTime').getContext('2d');
+            charts.time = new Chart(ctxTime, {
+                type: 'bar',
+                data: chartData.time,
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#71717a' } }, x: { ticks: { color: '#71717a' } } }
+                }
+            });
+
+            const ctxCost = document.getElementById('chartCost').getContext('2d');
+            charts.cost = new Chart(ctxCost, {
+                type: 'doughnut',
+                data: chartData.cost,
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#71717a' } } }
+                }
+            });
+        }
+
+        // View Switching Logic
+        function switchView(view) {
+            // Update Buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('tab-active', 'text-cyan-400');
+                btn.classList.add('text-zinc-400');
+            });
+            document.getElementById(`btn-${view}`).classList.add('tab-active', 'text-cyan-400');
+
+            // Update Sections
+            document.querySelectorAll('.view-section').forEach(sec => {
+                sec.classList.add('hidden-view');
+            });
+
+            // Show specific view
+            const target = document.getElementById(`view-${view}`);
+            if (target) {
+                target.classList.remove('hidden-view');
+            } else {
+                // If it's the matchup/summary view that's always visible, handle it
+                if (view === 'summary') {
+                    document.getElementById('view-summary').classList.remove('hidden-view');
+                    document.getElementById('view-matchup').classList.remove('hidden-view');
+                }
+            }
+
+            // Special case: Summary view shows both Hero and Matchup
+            if (view === 'summary') {
+                document.getElementById('view-summary').classList.remove('hidden-view');
+                document.getElementById('view-matchup').classList.remove('hidden-view');
+            }
+        }
+
+        // Table Search
+        function filterTable() {
+            const input = document.getElementById('tableSearch').value.toUpperCase();
+            const table = document.getElementById('historyTable');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td')[0];
+                if (td) {
+                    const txtValue = td.textContent || td.innerText;
+                    tr[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                }
+            }
+        }
+
+        // Table Sorting
+        let sortDirection = true;
+        function sortTable(colIndex) {
+            const table = document.getElementById('historyTable');
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.rows);
+
+            sortDirection = !sortDirection;
+
+            rows.sort((a, b) => {
+                let valA = a.cells[colIndex].innerText;
+                let valB = b.cells[colIndex].innerText;
+
+                // Handle percentage and time strings
+                if (valA.includes('%')) valA = parseFloat(valA);
+                if (valA.includes('s')) valA = parseFloat(valA);
+                if (valA.includes('ms')) valA = parseFloat(valA);
+
+                if (valA < valB) return sortDirection ? -1 : 1;
+                if (valA > valB) return sortDirection ? 1 : -1;
+                return 0;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Expandable Rows
+        function toggleRow(id) {
+            const detail = document.getElementById(`${id}-detail`);
+            if (detail.classList.contains('hidden-view')) {
+                detail.classList.remove('hidden-view');
+            } else {
+                detail.classList.add('hidden-view');
+            }
+        }
+
+        // Initialize on load
+        window.onload = () => {
+            initCharts();
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.5 9B - Nexus Financial | Institutional Grade Analysis Dashboard</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js for premium visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            /* Light Theme Defaults */
+            --bg-body: #f4f6f8;
+            --bg-card: rgba(255, 255, 255, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.5);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --accent-primary: #3b82f6;
+            /* Blue */
+            --accent-glow: rgba(59, 130, 246, 0.4);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+
+            /* Glassmorphism settings */
+            --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-glow: 0 0 15px var(--accent-glow);
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Overrides */
+            --bg-body: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-glass: rgba(15, 23, 42, 0.6);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+
+            /* Darker glow */
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+            overflow-x: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        /* --- Layout & Typography --- */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* --- Sidebar Navigation --- */
+        .sidebar {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: var(--glass-border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-md);
+        }
+
+        .brand {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-primary);
+        }
+
+        .nav-group {
+            margin-bottom: 2rem;
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .nav-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* --- Main Content Area --- */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+            padding-right: 1rem;
+            /* Scrollbar space */
+        }
+
+        /* --- Header & Controls --- */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            border: var(--glass-border);
+            box-shadow: var(--shadow-md);
+        }
+
+        .theme-toggle {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        /* --- Dashboard Grid --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: var(--glass-border);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #view-summary {
+            grid-column: span 8;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* --- Hero Metrics --- */
+        .metric-grid {
+            grid-column: span 8;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .metric-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* --- Comparison Panel --- */
+        .comparison-panel {
+            grid-column: span 4;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .comp-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .comp-val {
+            font-weight: 600;
+        }
+
+        .comp-val.positive {
+            color: var(--success);
+            text-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
+        }
+
+        .comp-val.negative {
+            color: var(--danger);
+            text-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
+        }
+
+        /* --- Charts --- */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        /* --- Table Section --- */
+        .table-container {
+            grid-column: span 12;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th,
+        td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: var(--accent-primary);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* --- Status Panels (Terminal Style) --- */
+        .terminal-panel {
+            grid-column: span 6;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--success);
+        }
+
+        .api-panel {
+            grid-column: span 6;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* --- Winner Breakdown --- */
+        .winner-breakdown {
+            grid-column: span 8;
+        }
+
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .winner-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+        }
+
+        .winner-item.winner {
+            border-color: var(--success);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+
+        /* --- Notes Section --- */
+        .notes-section {
+            grid-column: span 12;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 1rem;
+            min-height: 150px;
+        }
+
+        .note-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            outline: none;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+                padding: 1rem;
+            }
+
+            .sidebar {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .nav-group {
+                display: none;
+            }
+
+            /* Simplified for mobile */
+            .metric-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .terminal-panel,
+            .api-panel {
+                grid-column: span 1;
+            }
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body data-theme="dark">
+
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-dot"></div> NEXUS FINANCIAL
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-label">Analysis Views</div>
+                <button class="nav-btn active" onclick="switchTab('summary', this)">
+                    <span>📊</span> Executive Summary
+                </button>
+                <button class="nav-btn" onclick="switchTab('revenue', this)">
+                    <span>💰</span> Revenue & Growth
+                </button>
+                <button class="nav-btn" onclick="switchTab('profitability', this)">
+                    <span>⚖️</span> Profitability
+                </button>
+                <button class="nav-btn" onclick="switchTab('market', this)">
+                    <span>📈</span> Market Data
+                </button>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-label">Data Source</div>
+                <div class="mono" style="margin-bottom: 0.5rem;">● Bloomberg API</div>
+                <div class="mono" style="margin-bottom: 0.5rem;">● Alpha Vantage</div>
+                <div class="mono">● Real-time Latency: 42ms</div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-label">API Usage (Est.)</div>
+                <div class="mono" style="display:flex; justify-content:space-between;">
+                    <span>Calls:</span> <span id="api-calls">1,240</span>
+                </div>
+                <div class="mono" style="display:flex; justify-content:space-between; margin-top:5px;">
+                    <span>Spend:</span> <span id="api-spend">$14.20</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div>
+                    <h2 style="font-size: 1.5rem;">AAPL vs MSFT</h2>
+                    <span class="mono" id="last-updated">Last Update: Just now</span>
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                    🌓
+                </button>
+            </header>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+
+                <!-- 1. Hero Metrics (Summary) -->
+                <div class="card" id="view-summary">
+                    <div class="card-header"><span class="card-title">Key Financial Metrics</span></div>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <span class="metric-label">Total Revenue (TTM)</span>
+                            <span class="metric-val" id="hero-revenue">$385.6B</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Net Income</span>
+                            <span class="metric-val" id="hero-income">$99.8B</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">EPS (TTM)</span>
+                            <span class="metric-val" id="hero-eps">$6.13</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">P/E Ratio</span>
+                            <span class="metric-val" id="hero-pe">29.4x</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">ROE</span>
+                            <span class="metric-val" id="hero-roe">147%</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Market Cap</span>
+                            <span class="metric-val" id="hero-mcap">$2.9T</span>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="peChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Head-to-Head Comparison -->
+                <div class="card comparison-panel" id="view-comparison">
+                    <div class="card-header"><span class="card-title">Head-to-Head</span></div>
+
+                    <div class="comp-row">
+                        <span>Revenue Growth (YoY)</span>
+                        <span class="comp-val positive">+4.5%</span>
+                    </div>
+                    <div class="comp-row">
+                        <span>EBITDA Margin</span>
+                        <span class="comp-val">32.1%</span>
+                    </div>
+                    <div class="comp-row">
+                        <span>Free Cash Flow Yield</span>
+                        <span class="comp-val positive">+3.8%</span>
+                    </div>
+                    <div class="comp-row">
+                        <span>Dividend Yield</span>
+                        <span class="comp-val">0.5%</span>
+                    </div>
+                    <div class="comp-row">
+                        <span>Beta (Volatility)</span>
+                        <span class="comp-val negative">1.28</span>
+                    </div>
+
+                    <!-- Winner Breakdown -->
+                    <div style="margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">Winner Breakdown</h4>
+                        <div class="winner-grid">
+                            <div class="winner-item winner">
+                                <strong>Growth</strong><br>Apple
+                            </div>
+                            <div class="winner-item">
+                                <strong>Profitability</strong><br>Tie
+                            </div>
+                            <div class="winner-item winner">
+                                <strong>Liquidity</strong><br>Microsoft
+                            </div>
+                            <div class="winner-item">
+                                <strong>Valuation</strong><br>Apple
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Company Cards / Health Score -->
+                <div class="card"
+                    style="grid-column: span 12; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                    <!-- Card 1 -->
+                    <div class="metric-card">
+                        <span class="mono">Total Assets</span>
+                        <strong style="font-size: 1.2rem;">$352B</strong>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="metric-card">
+                        <span class="mono">Total Liabilities</span>
+                        <strong style="font-size: 1.2rem;">$290B</strong>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="metric-card">
+                        <span class="mono">Cash & Equiv.</span>
+                        <strong style="font-size: 1.2rem;">$67B</strong>
+                    </div>
+                    <!-- Card 4 -->
+                    <div class="metric-card"
+                        style="border-color: var(--success); background: rgba(16, 185, 129, 0.05);">
+                        <span class="mono">Financial Health Score</span>
+                        <strong style="font-size: 1.5rem; color: var(--success);">A+</strong>
+                    </div>
+                </div>
+
+                <!-- 4. Financial Statement History (Table) -->
+                <div class="card table-container" id="view-table">
+                    <div class="card-header"><span class="card-title">Financial Statement History</span></div>
+                    <div style="padding: 0.5rem 1rem; display:flex; gap:0.5rem;">
+                        <input type="text" placeholder="Search reports..."
+                            style="flex:1; padding: 4px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main);"
+                            onkeyup="filterTable(this.value)">
+                        <select id="year-filter" onchange="sortTable('date', this.value)"
+                            style="padding: 4px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main);">
+                            <option value="desc">Year (Newest)</option>
+                            <option value="asc">Year (Oldest)</option>
+                        </select>
+                    </div>
+                    <table id="financial-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('date', 'desc')">Date</th>
+                                <th onclick="sortTable('type', 'asc')">Type</th>
+                                <th onclick="sortTable('revenue', 'desc')">Revenue</th>
+                                <th onclick="sortTable('netIncome', 'desc')">Net Income</th>
+                                <th onclick="sortTable('pe', 'desc')">P/E</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- JS will populate -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 5. Market Data Feed (Terminal) -->
+                <div class="terminal-panel" id="view-terminal">
+                    <span style="color: var(--text-muted);">// MARKET DATA FEED</span><br>
+                    <span style="margin-top: 0.5rem;">AAPL Price: $173.42 (+1.2%) | MSFT Price: $330.89
+                        (+0.8%)</span><br>
+                    <span id="feed-ticker" style="color: #fff; margin-top: 0.5rem;">Connecting to Bloomberg
+                        Terminal...</span>
+                </div>
+
+                <!-- 6. API Usage Panel -->
+                <div class="card api-panel">
+                    <div>
+                        <strong>API Cost Monitor</strong><br>
+                        <span class="mono" style="font-size: 0.7rem;">Estimated cost per call: $0.012</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="mono">Total Spend:</span><br>
+                        <strong id="api-spend-display" style="color: var(--accent-primary);">$14.20</strong>
+                    </div>
+                </div>
+
+                <!-- 7. Notes Section -->
+                <div class="notes-section card">
+                    <span class="mono">Analyst Notes & Commentary</span>
+                    <textarea class="note-input" placeholder="Add observations or future outlook here..."></textarea>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- Mock Data ---
+        const financialData = [
+            { date: '2023-Q4', type: 'Annual', revenue: 383285, netIncome: 99803, pe: 29.4, assets: 352755 },
+            { date: '2023-Q3', type: 'Quarterly', revenue: 89498, netIncome: 22956, pe: 28.1, assets: 345733 },
+            { date: '2023-Q2', type: 'Quarterly', revenue: 81797, netIncome: 19881, pe: 27.5, assets: 335030 },
+            { date: '2023-Q1', type: 'Quarterly', revenue: 94836, netIncome: 24160, pe: 26.8, assets: 332160 },
+            { date: '2022-Q4', type: 'Annual', revenue: 394328, netIncome: 99803, pe: 25.1, assets: 352755 },
+        ];
+
+        // --- Theme Logic ---
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+
+            // Update Chart Colors based on theme
+            updateChartColors(newTheme);
+        }
+
+        function updateChartColors(theme) {
+            const isDark = theme === 'dark';
+            Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+            Chart.defaults.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+
+            // Update existing chart instances so theme toggle actually applies
+            if (revenueChartInstance) {
+                const ds = revenueChartInstance.data.datasets[0];
+                ds.borderColor = isDark ? '#3b82f6' : '#1e40af';
+                ds.backgroundColor = isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(30, 64, 175, 0.1)';
+                ds.pointBackgroundColor = isDark ? '#fff' : '#333';
+                if (revenueChartInstance.options.scales?.y?.grid) {
+                    revenueChartInstance.options.scales.y.grid.color = gridColor;
+                }
+                revenueChartInstance.update();
+            }
+
+            if (peChartInstance) {
+                if (peChartInstance.options.scales?.y?.grid) {
+                    peChartInstance.options.scales.y.grid.color = gridColor;
+                }
+                peChartInstance.update();
+            }
+        }
+
+        // --- Tab Switching ---
+        function switchTab(tabName, btn) {
+            // Update sidebar buttons
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if (btn) {
+                btn.classList.add('active');
+            } else {
+                const match = Array.from(document.querySelectorAll('.nav-btn'))
+                    .find(b => (b.getAttribute('onclick') || '').includes(`'${tabName}'`));
+                if (match) match.classList.add('active');
+            }
+
+            // Clear any inline display overrides left by previous interactions
+            document.querySelectorAll('.card, .terminal-panel, .notes-section').forEach(c => {
+                c.style.display = '';
+            });
+
+            // Scroll to the relevant section for non-summary tabs
+            if (tabName === 'revenue') {
+                const el = document.getElementById('view-table');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (tabName === 'profitability') {
+                const el = document.getElementById('view-comparison');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (tabName === 'market') {
+                const el = document.getElementById('view-terminal');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (tabName === 'summary') {
+                const main = document.querySelector('.main-content');
+                if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // --- Chart Initialization ---
+        let revenueChartInstance = null;
+        let peChartInstance = null;
+
+        function initCharts() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+
+            // Revenue Chart (Line)
+            const ctxRev = document.getElementById('revenueChart').getContext('2d');
+            revenueChartInstance = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: ['2019', '2020', '2021', '2022', '2023'],
+                    datasets: [{
+                        label: 'Revenue ($B)',
+                        data: [260, 275, 365, 394, 383],
+                        borderColor: isDark ? '#3b82f6' : '#1e40af',
+                        backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(30, 64, 175, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: isDark ? '#fff' : '#333'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // P/E Chart (Bar)
+            const ctxPe = document.getElementById('peChart').getContext('2d');
+            peChartInstance = new Chart(ctxPe, {
+                type: 'bar',
+                data: {
+                    labels: ['AAPL', 'MSFT'],
+                    datasets: [{
+                        label: 'P/E Ratio',
+                        data: [29.4, 35.2],
+                        backgroundColor: ['#3b82f6', '#10b981'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: false, grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // --- Table Logic ---
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td>${row.date}</td>
+                <td><span style="padding:2px 6px; border-radius:4px; background:rgba(59,130,246,0.1); color:${isDark ? '#3b82f6' : '#1e40af'}">${row.type}</span></td>
+                <td>$${row.revenue.toLocaleString()}</td>
+                <td>$${row.netIncome.toLocaleString()}</td>
+                <td>${row.pe}x</td>
+                <td><button style="background:none; border:none; color:var(--accent-primary); cursor:pointer;">View Details</button></td>
+            `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function sortTable(key, direction) {
+            const dir = direction === 'asc' ? 1 : -1;
+            const sorted = [...financialData].sort((a, b) => {
+                const va = a[key];
+                const vb = b[key];
+                if (va == null && vb == null) return 0;
+                if (va == null) return 1;
+                if (vb == null) return -1;
+                if (typeof va === 'string' || typeof vb === 'string') {
+                    return dir * String(va).localeCompare(String(vb));
+                }
+                return dir * (va - vb);
+            });
+            renderTable(sorted);
+        }
+
+        function filterTable(query) {
+            const rows = document.querySelectorAll('#table-body tr');
+            const lowerQ = query.toLowerCase();
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(lowerQ) ? '' : 'none';
+            });
+        }
+
+        // --- Simulation Logic ---
+        function simulateMarketFeed() {
+            const feed = document.getElementById('feed-ticker');
+            const messages = [
+                "Connecting to Bloomberg Terminal...",
+                "Fetching AAPL Quote: OK",
+                "Fetching MSFT Quote: OK",
+                "Updating Market Cap Data...",
+                "Latency Check: 42ms",
+                "Data synchronized."
+            ];
+
+            let msgIndex = 0;
+            const interval = setInterval(() => {
+                if (msgIndex < messages.length) {
+                    feed.textContent = `> ${messages[msgIndex]}`;
+                    msgIndex++;
+                } else {
+                    clearInterval(interval);
+                    // Random ticker updates
+                    setInterval(() => {
+                        const randomChange = (Math.random() * 2 - 1).toFixed(2);
+                        feed.textContent = `AAPL: $173.42 (${randomChange > 0 ? '+' : ''}${randomChange}%) | MSFT: $330.89`;
+                    }, 5000);
+                }
+            }, 1500);
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable(financialData);
+            initCharts();
+            simulateMarketFeed();
+
+            // Simulate API Usage increment
+            setInterval(() => {
+                const calls = parseInt(document.getElementById('api-calls').innerText.replace(',', ''));
+                const spend = parseFloat(document.getElementById('api-spend-display').innerText.replace('$', ''));
+
+                if (Math.random() > 0.7) {
+                    const newCalls = calls + 1;
+                    const newSpend = spend + 0.012;
+                    document.getElementById('api-calls').innerText = newCalls.toLocaleString();
+                    document.getElementById('api-spend-display').innerText = '$' + newSpend.toFixed(2);
+                    const sidebarSpend = document.getElementById('api-spend');
+                    if (sidebarSpend) sidebarSpend.innerText = '$' + newSpend.toFixed(2);
+                }
+            }, 3000);
+        });
+
+    </script>
+</body>
+
+</html>

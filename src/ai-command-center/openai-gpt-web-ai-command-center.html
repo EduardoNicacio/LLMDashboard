@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenAI GPT Web - AI Model Testing Command Center</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg: #050816;
+            --panel: rgba(18, 24, 45, .65);
+            --panel-2: rgba(14, 18, 35, .85);
+            --glass: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .08);
+            --cyan: #00e5ff;
+            --purple: #9d5cff;
+            --green: #23ff8f;
+            --orange: #ffb648;
+            --red: #ff5f7a;
+            --text: #f5f7ff;
+            --muted: #9ea7c4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Inter, sans-serif;
+            background:
+                radial-gradient(circle at top left, #15204d 0%, transparent 35%),
+                radial-gradient(circle at top right, #281650 0%, transparent 35%),
+                linear-gradient(180deg, #04060f, #070d1d);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body:before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                linear-gradient(rgba(255, 255, 255, .02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, .02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .container {
+            width: min(1800px, 95%);
+            margin: auto;
+            padding: 30px 0 80px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .logo-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            box-shadow: 0 0 25px rgba(0, 229, 255, .5);
+        }
+
+        .title h1 {
+            font-size: 1.6rem;
+        }
+
+        .title p {
+            color: var(--muted);
+            font-size: .9rem;
+        }
+
+        .status {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 12px 18px;
+            border-radius: 14px;
+            backdrop-filter: blur(18px);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--green);
+        }
+
+        .glass {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .metric {
+            padding: 22px;
+            border-radius: 22px;
+            position: relative;
+            overflow: hidden;
+            transition: .25s;
+        }
+
+        .metric:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 229, 255, .25);
+        }
+
+        .metric:before {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, var(--cyan), transparent 70%);
+            opacity: .12;
+            right: -40px;
+            top: -40px;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: .8rem;
+            margin-bottom: 10px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .metric-sub {
+            margin-top: 10px;
+            color: var(--green);
+            font-size: .85rem;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid var(--border);
+            transition: .25s;
+        }
+
+        .btn:hover,
+        .btn.active {
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            box-shadow: 0 0 25px rgba(0, 229, 255, .25);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 22px;
+        }
+
+        .card {
+            border-radius: 24px;
+            padding: 22px;
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .section-title h2 {
+            font-size: 1.1rem;
+        }
+
+        .matchup {
+            margin-bottom: 22px;
+        }
+
+        .models {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .model-card {
+            padding: 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .22);
+        }
+
+        .model-card:hover {
+            border-color: rgba(0, 229, 255, .35);
+        }
+
+        .model-name {
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .grade {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .vs {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--cyan);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            color: #dce2ff;
+            font-size: .9rem;
+        }
+
+        .bar {
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .08);
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--purple));
+        }
+
+        .winner-banner {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 14px;
+            background: rgba(35, 255, 143, .08);
+            border: 1px solid rgba(35, 255, 143, .25);
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .chart-card {
+            min-height: 320px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 260px !important;
+        }
+
+        .side-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .monitor-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .monitor {
+            background: rgba(255, 255, 255, .03);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .monitor-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .monitor-value {
+            color: var(--cyan);
+            font-weight: 700;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .progress div {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green), var(--cyan));
+        }
+
+        .api-stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+        }
+
+        .prompts {
+            margin-top: 25px;
+        }
+
+        .prompt-item {
+            margin-bottom: 12px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .prompt-head {
+            padding: 15px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, .03);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .prompt-head:hover {
+            background: rgba(255, 255, 255, .05);
+        }
+
+        .prompt-body {
+            display: none;
+            padding: 15px;
+            color: #cfd6f8;
+            background: rgba(0, 0, 0, .15);
+        }
+
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .winner-box {
+            padding: 18px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .winner-box h4 {
+            margin-bottom: 8px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 25px 0;
+        }
+
+        input,
+        select {
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
+        }
+
+        th {
+            cursor: pointer;
+            color: var(--cyan);
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .notes {
+            line-height: 1.8;
+            color: #d7ddff;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .toggleWrap {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggleBtn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(255, 255, 255, .03);
+            color: white;
+            cursor: pointer;
+        }
+
+        .toggleBtn.active {
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+        }
+
+        @media(max-width:1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width:900px) {
+            .models {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="topbar">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <div class="title">
+                    <h1>AI Model Testing Command Center</h1>
+                    <p>Production Benchmark Dashboard • Local vs Frontier Models</p>
+                </div>
+            </div>
+
+            <div class="status">
+                <div class="dot"></div>
+                Local Benchmark Server Online
+            </div>
+        </div>
+
+        <div class="hero">
+
+            <div class="metric glass">
+                <div class="metric-label">Total Tests</div>
+                <div class="metric-value">428</div>
+                <div class="metric-sub">+18 today</div>
+            </div>
+
+            <div class="metric glass">
+                <div class="metric-label">Avg Tokens/sec</div>
+                <div class="metric-value">84.6</div>
+                <div class="metric-sub">Across all models</div>
+            </div>
+
+            <div class="metric glass">
+                <div class="metric-label">Best Model</div>
+                <div class="metric-value">Claude Opus 4.8</div>
+                <div class="metric-sub">96.4 Composite Score</div>
+            </div>
+
+            <div class="metric glass">
+                <div class="metric-label">API Cost</div>
+                <div class="metric-value">$438.29</div>
+                <div class="metric-sub">Benchmark Spend</div>
+            </div>
+
+            <div class="metric glass">
+                <div class="metric-label">Local Runtime</div>
+                <div class="metric-value">219 hrs</div>
+                <div class="metric-sub">GPU Benchmarks</div>
+            </div>
+
+        </div>
+
+        <div class="toolbar">
+            <button class="btn active" data-view="summary">Summary</button>
+            <button class="btn" data-view="speed">Speed</button>
+            <button class="btn" data-view="quality">Quality</button>
+            <button class="btn" data-view="cost">Cost</button>
+            <button class="btn" data-view="hardware">Hardware</button>
+        </div>
+
+        <div id="summary" class="view active">
+
+            <div class="main-grid">
+
+                <div>
+
+                    <div class="card glass matchup">
+
+                        <div class="section-title">
+                            <h2>Head-to-Head Matchup</h2>
+                            <span>Benchmark Run #428</span>
+                        </div>
+
+                        <div class="models">
+
+                            <div class="model-card">
+                                <div class="model-name">Qwen3.6 27B (Local)</div>
+                                <div class="grade">A</div>
+
+                                <div class="stat-row"><span>Speed</span><span>118 tok/s</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:94%"></div>
+                                </div>
+
+                                <div class="stat-row"><span>Quality</span><span>91.2</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:91%"></div>
+                                </div>
+
+                                <div class="stat-row"><span>Coding</span><span>93.8</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:94%"></div>
+                                </div>
+
+                                <div class="stat-row"><span>Creativity</span><span>88.4</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:88%"></div>
+                                </div>
+
+                                <div class="stat-row"><span>Instruction</span><span>90.6</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:90%"></div>
+                                </div>
+                            </div>
+
+                            <div class="vs">VS</div>
+
+                            <div class="model-card">
+                                <div class="model-name">Claude Opus 4.8 (API)</div>
+                                <div class="grade">A+</div>
+
+                                <div class="stat-row"><span>Speed</span><span>76 tok/s</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:76%"></div>
+                                </div>
+
+                                <div class="stat-row"><span>Quality</span><span>97.4</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:97%"></div>
+                                </div>
+
+                                <div class="stat-row"><span>Coding</span><span>96.7</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:97%"></div>
+                                </div>
+
+                                <div class="stat-row"><span>Creativity</span><span>98.2</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:98%"></div>
+                                </div>
+
+                                <div class="stat-row"><span>Instruction</span><span>96.9</span></div>
+                                <div class="bar">
+                                    <div class="fill" style="width:97%"></div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="winner-banner">
+                            🏆 Overall Winner: Claude Opus 4.8 (96.4 vs 92.0 Composite Score)
+                        </div>
+
+                    </div>
+
+                    <div class="chart-grid">
+
+                        <div class="card glass chart-card">
+                            <h3>Tokens / Second</h3>
+                            <canvas id="speedChart"></canvas>
+                        </div>
+
+                        <div class="card glass chart-card">
+                            <h3>Completion Time</h3>
+                            <canvas id="timeChart"></canvas>
+                        </div>
+
+                        <div class="card glass chart-card">
+                            <h3>Quality Score</h3>
+                            <canvas id="qualityChart"></canvas>
+                        </div>
+
+                        <div class="card glass chart-card">
+                            <h3>Cost Comparison</h3>
+                            <canvas id="costChart"></canvas>
+                        </div>
+
+                    </div>
+
+                    <div class="prompts">
+                        <div class="card glass">
+
+                            <div class="section-title">
+                                <h2>Prompt History</h2>
+                            </div>
+
+                            <div class="prompt-item">
+                                <div class="prompt-head">
+                                    <span>Build a multi-agent coding framework</span>
+                                    <span>97 Score • 18.4s</span>
+                                </div>
+                                <div class="prompt-body">
+                                    Passed all benchmark checks. Claude generated strongest architecture. Qwen delivered
+                                    fastest completion.
+                                </div>
+                            </div>
+
+                            <div class="prompt-item">
+                                <div class="prompt-head">
+                                    <span>Create SaaS analytics dashboard</span>
+                                    <span>94 Score • 22.1s</span>
+                                </div>
+                                <div class="prompt-body">
+                                    Both models completed successfully. Claude won design quality. Qwen won runtime.
+                                </div>
+                            </div>
+
+                            <div class="prompt-item">
+                                <div class="prompt-head">
+                                    <span>Advanced Python refactor task</span>
+                                    <span>98 Score • 16.8s</span>
+                                </div>
+                                <div class="prompt-body">
+                                    Claude achieved highest code correctness. Qwen completed 43% faster.
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="side-stack">
+
+                    <div class="card glass">
+
+                        <div class="section-title">
+                            <h2>Metrics Source</h2>
+                        </div>
+
+                        <div class="toggleWrap">
+                            <button class="toggleBtn active" id="localBtn">Local</button>
+                            <button class="toggleBtn" id="frontierBtn">Frontier</button>
+                        </div>
+
+                        <p style="margin-top:15px;color:#cfd6f8;" id="metricText">
+                            Showing RTX 3090 local benchmark metrics.
+                        </p>
+
+                    </div>
+
+                    <div class="card glass">
+                        <h2 style="margin-bottom:15px;">Hardware Monitor</h2>
+
+                        <div class="monitor-grid">
+
+                            <div class="monitor">
+                                <div class="monitor-top">
+                                    <span>RTX 3090 Usage</span>
+                                    <span class="monitor-value">92%</span>
+                                </div>
+                                <div class="progress">
+                                    <div style="width:92%"></div>
+                                </div>
+                            </div>
+
+                            <div class="monitor">
+                                <div class="monitor-top">
+                                    <span>VRAM Usage</span>
+                                    <span class="monitor-value">21.4 GB</span>
+                                </div>
+                                <div class="progress">
+                                    <div style="width:89%"></div>
+                                </div>
+                            </div>
+
+                            <div class="monitor">
+                                <div class="monitor-top">
+                                    <span>Temperature</span>
+                                    <span class="monitor-value">74°C</span>
+                                </div>
+                                <div class="progress">
+                                    <div style="width:74%"></div>
+                                </div>
+                            </div>
+
+                            <div class="monitor">
+                                <div class="monitor-top">
+                                    <span>Power Draw</span>
+                                    <span class="monitor-value">337W</span>
+                                </div>
+                                <div class="progress">
+                                    <div style="width:84%"></div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="card glass">
+                        <h2 style="margin-bottom:15px;">Claude Opus 4.8 API Usage</h2>
+
+                        <div class="api-stat"><span>Input Tokens</span><strong>12.8M</strong></div>
+                        <div class="api-stat"><span>Output Tokens</span><strong>5.4M</strong></div>
+                        <div class="api-stat"><span>Current Test Cost</span><strong>$4.92</strong></div>
+                        <div class="api-stat"><span>Total Spend</span><strong>$438.29</strong></div>
+                        <div class="api-stat"><span>Requests</span><strong>428</strong></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="card glass" style="margin-top:25px;">
+                <h2>Winner Breakdown</h2>
+
+                <div class="winner-grid">
+                    <div class="winner-box">
+                        <h4>Speed</h4>
+                        <p>Qwen3.6 27B</p>
+                    </div>
+
+                    <div class="winner-box">
+                        <h4>Quality</h4>
+                        <p>Claude Opus 4.8</p>
+                    </div>
+
+                    <div class="winner-box">
+                        <h4>Coding Accuracy</h4>
+                        <p>Claude Opus 4.8</p>
+                    </div>
+
+                    <div class="winner-box">
+                        <h4>Creativity</h4>
+                        <p>Claude Opus 4.8</p>
+                    </div>
+
+                    <div class="winner-box">
+                        <h4>Cost Efficiency</h4>
+                        <p>Qwen3.6 27B</p>
+                    </div>
+
+                    <div class="winner-box">
+                        <h4>Overall Winner</h4>
+                        <p>Claude Opus 4.8</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="Search model...">
+                <select id="sortSelect">
+                    <option value="score">Sort by Score</option>
+                    <option value="speed">Sort by Speed</option>
+                </select>
+            </div>
+
+            <div class="card glass">
+                <h2 style="margin-bottom:20px;">Previous Model Tests</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Score</th>
+                            <th>Speed</th>
+                            <th>Cost</th>
+                            <th>Winner Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card glass" style="margin-top:25px;">
+                <h2 style="margin-bottom:15px;">Testing Notes</h2>
+
+                <div class="notes">
+                    • Claude Opus 4.8 remains strongest overall model in reasoning and creative generation.<br><br>
+                    • Qwen3.6 27B demonstrates exceptional local deployment performance and outstanding coding
+                    throughput on RTX 3090 hardware.<br><br>
+                    • Local models continue to narrow the gap in instruction following while maintaining major cost
+                    advantages.<br><br>
+                    • Hybrid workflows combining local inference with selective frontier-model validation currently
+                    provide the highest performance-per-dollar ratio.
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="speed" class="view">
+            <div class="card glass">
+                <h2>Speed Analytics View</h2>
+                <p style="margin-top:15px;color:#cfd6f8;">Qwen3.6 27B leads speed benchmarks with 118 tokens/sec average
+                    output. Local inference completed benchmark suite 38% faster than API-based models.</p>
+            </div>
+        </div>
+
+        <div id="quality" class="view">
+            <div class="card glass">
+                <h2>Quality Analytics View</h2>
+                <p style="margin-top:15px;color:#cfd6f8;">Claude Opus 4.8 maintains highest reasoning, coding accuracy,
+                    and creative quality scores across benchmark categories.</p>
+            </div>
+        </div>
+
+        <div id="cost" class="view">
+            <div class="card glass">
+                <h2>Cost Analytics View</h2>
+                <p style="margin-top:15px;color:#cfd6f8;">Local models provide substantial savings over repeated
+                    benchmark runs while remaining highly competitive in quality.</p>
+            </div>
+        </div>
+
+        <div id="hardware" class="view">
+            <div class="card glass">
+                <h2>Hardware Analytics View</h2>
+                <p style="margin-top:15px;color:#cfd6f8;">RTX 3090 remained stable throughout testing with average
+                    utilization above 90% and thermal headroom maintained.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+
+        Chart.defaults.color = "#cfd6f8";
+        Chart.defaults.borderColor = "rgba(255,255,255,.08)";
+
+        new Chart(speedChart, {
+            type: "bar",
+            data: {
+                labels: ["Qwen3.6 27B", "Claude Opus 4.8", "DeepSeek R1", "GPT-4.1", "Llama 3.3 70B"],
+                datasets: [{
+                    data: [118, 76, 72, 68, 58]
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                responsive: true
+            }
+        });
+
+        new Chart(timeChart, {
+            type: "line",
+            data: {
+                labels: ["Prompt 1", "Prompt 2", "Prompt 3", "Prompt 4", "Prompt 5"],
+                datasets: [
+                    {
+                        label: "Qwen",
+                        data: [15, 19, 18, 17, 20]
+                    },
+                    {
+                        label: "Claude",
+                        data: [21, 23, 22, 20, 24]
+                    }
+                ]
+            }
+        });
+
+        new Chart(qualityChart, {
+            type: "radar",
+            data: {
+                labels: ["Reasoning", "Coding", "Creativity", "Accuracy", "Instruction"],
+                datasets: [
+                    {
+                        label: "Qwen3.6",
+                        data: [91, 94, 88, 90, 91]
+                    },
+                    {
+                        label: "Claude Opus 4.8",
+                        data: [98, 97, 98, 97, 97]
+                    }
+                ]
+            }
+        });
+
+        new Chart(costChart, {
+            type: "doughnut",
+            data: {
+                labels: ["Qwen Local", "Claude API"],
+                datasets: [{
+                    data: [35, 438]
+                }]
+            }
+        });
+
+        document.querySelectorAll(".prompt-head").forEach(item => {
+            item.addEventListener("click", () => {
+                let body = item.nextElementSibling;
+                body.style.display = body.style.display === "block" ? "none" : "block";
+            });
+        });
+
+        document.querySelectorAll(".btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+
+                document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+
+                document.getElementById(btn.dataset.view).classList.add("active");
+            });
+        });
+
+        const tableData = [
+            ["Claude Opus 4.8", 96.4, 76, "$4.92", "82%"],
+            ["Qwen3.6 27B", 92.0, 118, "$0.08", "71%"],
+            ["GPT-4.1", 91.2, 68, "$5.61", "68%"],
+            ["DeepSeek R1", 90.1, 72, "$0.15", "64%"],
+            ["Llama 3.3 70B", 88.7, 58, "$0.04", "58%"],
+            ["Gemini 2.5 Pro", 93.4, 63, "$3.84", "72%"]
+        ];
+
+        function renderTable() {
+            let search = document.getElementById("searchInput").value.toLowerCase();
+            let sort = document.getElementById("sortSelect").value;
+
+            let rows = [...tableData];
+
+            rows = rows.filter(r => r[0].toLowerCase().includes(search));
+
+            if (sort === "score") {
+                rows.sort((a, b) => b[1] - a[1]);
+            } else {
+                rows.sort((a, b) => b[2] - a[2]);
+            }
+
+            tableBody.innerHTML = rows.map(r => `
+<tr>
+<td>${r[0]}</td>
+<td>${r[1]}</td>
+<td>${r[2]} tok/s</td>
+<td>${r[3]}</td>
+<td>${r[4]}</td>
+</tr>
+`).join("");
+        }
+
+        renderTable();
+
+        searchInput.addEventListener("input", renderTable);
+        sortSelect.addEventListener("change", renderTable);
+
+        const localBtn = document.getElementById("localBtn");
+        const frontierBtn = document.getElementById("frontierBtn");
+        const metricText = document.getElementById("metricText");
+
+        localBtn.onclick = () => {
+            localBtn.classList.add("active");
+            frontierBtn.classList.remove("active");
+            metricText.textContent = "Showing RTX 3090 local benchmark metrics.";
+        };
+
+        frontierBtn.onclick = () => {
+            frontierBtn.classList.add("active");
+            localBtn.classList.remove("active");
+            metricText.textContent = "Showing Claude Opus 4.8 frontier API metrics.";
+        };
+
+    </script>
+
+</body>
+
+</html>

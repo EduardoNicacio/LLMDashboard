@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemma 4 31B - SkyGlass | Premium Weather Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background 1s ease-in-out;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Dynamic Backgrounds */
+        .bg-clear { background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%); }
+        .bg-clouds { background: linear-gradient(to bottom, #bdc3c7, #2c3e50); }
+        .bg-rain { background: linear-gradient(to bottom, #4b6cb7, #182848); }
+        .bg-snow { background: linear-gradient(to bottom, #e6e9f0, #eef1f5); color: #333; }
+        .bg-storm { background: linear-gradient(to bottom, #1f1c2c, #928dab); }
+        .bg-night { background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+
+        .loader {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hidden-element { display: none !important; }
+    </style>
+</head>
+<body class="bg-clear min-h-screen text-white p-4 md:p-8">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md hidden-element">
+        <div class="flex flex-col items-center gap-4">
+            <div class="loader"></div>
+            <p class="text-lg font-medium">Fetching Atmosphere...</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Header / Search Section -->
+        <header class="flex flex-col md:flex-row gap-4 justify-between items-center glass p-4 rounded-3xl animate-fade-in">
+            <div class="flex items-center gap-2">
+                <i data-lucide="cloud-sun" class="w-8 h-8 text-blue-300"></i>
+                <h1 class="text-2xl font-bold tracking-tight">SkyGlass</h1>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <div class="relative flex-grow md:flex-grow-0">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60"></i>
+                    <input id="cityInput" type="text" placeholder="Search city..." 
+                        class="bg-white/20 border border-white/30 rounded-full py-2 pl-10 pr-4 outline-none focus:ring-2 ring-white/50 transition-all w-full">
+                </div>
+                <button id="btnLocation" class="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors" title="Current Location">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </button>
+                <div class="flex items-center glass-dark rounded-full p-1">
+                    <button id="unitC" class="px-3 py-1 rounded-full text-xs font-bold transition-all bg-white text-blue-600">°C</button>
+                    <button id="unitF" class="px-3 py-1 rounded-full text-xs font-bold transition-all hover:bg-white/20">°F</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Current Weather & Comparison -->
+            <div class="lg:col-span-4 space-y-6 animate-fade-in" style="animation-delay: 0.1s">
+                <!-- Main Card -->
+                <section id="currentWeatherCard" class="glass p-8 rounded-[2rem] text-center relative overflow-hidden">
+                    <div id="weatherIconContainer" class="flex justify-center mb-4">
+                        <!-- Icon injected by JS -->
+                    </div>
+                    <h2 id="cityName" class="text-3xl font-bold mb-1">Loading...</h2>
+                    <p id="currentDate" class="text-white/70 text-sm mb-6">--</p>
+                    <div class="flex justify-center items-start gap-2 mb-6">
+                        <span id="mainTemp" class="text-8xl font-extrabold tracking-tighter">--</span>
+                        <span id="tempUnitLabel" class="text-3xl font-light mt-4">°C</span>
+                    </div>
+                    <p id="weatherDesc" class="text-xl capitalize font-medium mb-8 text-white/90">--</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-sm border-t border-white/20 pt-6">
+                        <div class="flex items-center justify-center gap-2">
+                            <i data-lucide="thermometer" class="w-4 h-4 opacity-70"></i>
+                            <span>Feels <b id="feelsLike">--</b></span>
+                        </div>
+                        <div class="flex items-center justify-center gap-2">
+                            <i data-lucide="droplets" class="w-4 h-4 opacity-70"></i>
+                            <span>Humid <b id="humidity">--</b>%</span>
+                        </div>
+                    </div>
+
+                    <!-- Favorite Toggle -->
+                    <button id="btnFavorite" class="absolute top-4 right-4 p-2 rounded-full hover:bg-white/20 transition-colors">
+                        <i data-lucide="star" class="w-5 h-5 text-yellow-400"></i>
+                    </button>
+                </section>
+
+                <!-- Comparison Mode Trigger -->
+                <div id="comparisonTrigger" class="glass p-6 rounded-[2rem] cursor-pointer hover:bg-white/20 transition-all group border-dashed border-2 border-white/40">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">Compare Cities</span>
+                        <i data-lucide="git-compare" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+
+                <!-- Favorites List -->
+                <section id="favoritesSection" class="glass p-6 rounded-[2rem]">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="heart" class="w-5 h-5 text-red-400"></i> Favorites
+                    </h3>
+                    <div id="favoritesList" class="space-y-3">
+                        <!-- Favs injected by JS -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Detailed Data & Charts -->
+            <div class="lg:col-span-8 space-y-6 animate-fade-in" style="animation-delay: 0.2s">
+                
+                <!-- Top Row Metrics -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass p-4 rounded-3xl flex flex-col items-center justify-center text-center">
+                        <i data-lucide="wind" class="w-6 h-6 mb-2 opacity-70"></i>
+                        <span class="text-xs uppercase opacity-60 font-bold">Wind</span>
+                        <span id="windSpeed" class="text-lg font-semibold">--</span>
+                    </div>
+                    <div class="glass p-4 rounded-3xl flex flex-col items-center justify-center text-center">
+                        <i data-lucide="gauge" class="w-6 h-6 mb-2 opacity-70"></i>
+                        <span class="text-xs uppercase opacity-60 font-bold">Pressure</span>
+                        <span id="pressure" class="text-lg font-semibold">--</span>
+                    </div>
+                    <div class="glass p-4 rounded-3xl flex flex-col items-center justify-center text-center">
+                        <i data-lucide="sun" class="w-6 h-6 mb-2 opacity-70"></i>
+                        <span class="text-xs uppercase opacity-60 font-bold">UV Index</span>
+                        <span id="uvIndex" class="text-lg font-semibold">--</span>
+                    </div>
+                    <div class="glass p-4 rounded-3xl flex flex-col items-center justify-center text-center">
+                        <i data-lucide="eye" class="w-6 h-6 mb-2 opacity-70"></i>
+                        <span class="text-xs uppercase opacity-60 font-bold">Visibility</span>
+                        <span id="visibility" class="text-lg font-semibold">--</span>
+                    </div>
+                </div>
+
+                <!-- Forecast Chart -->
+                <section class="glass p-6 rounded-[2rem]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <i data-lucide="trending-up" class="w-5 h-5 text-green-400"></i> 24h Forecast
+                        </h3>
+                        <div id="chartToggle" class="flex bg-black/20 rounded-lg p-1 text-xs font-bold">
+                            <button data-type="temp" class="px-3 py-1 rounded-md bg-white text-blue-600 transition-all">Temp</button>
+                            <button data-type="rain" class="px-3 py-1 rounded-md hover:bg-white/20 transition-all">Rain</button>
+                        </div>
+                    </div>
+                    <div class="h-[300px] w-full">
+                        <canvas id="weatherChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- 7 Day Forecast -->
+                <section class="glass p-6 rounded-[2rem]">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-orange-400"></i> 7-Day Outlook
+                    </h3>
+                    <div id="dailyForecast" class="grid grid-cols-1 md:grid-cols-7 gap-3">
+                        <!-- Daily items injected by JS -->
+                    </div>
+                </section>
+
+                <!-- Alerts Section -->
+                <div id="alertBox" class="hidden-element bg-red-500/40 backdrop-blur-md border border-red-400 p-4 rounded-3xl flex items-center gap-4 animate-bounce">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-200"></i>
+                    <p id="alertText" class="text-sm font-medium"></p>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="flex justify-between items-center py-4 text-white/50 text-xs px-2">
+            <p>&copy; 2023 SkyGlass Weather. All rights reserved.</p>
+            <p class="font-medium italic">Powered by <span class="text-white/80">Claude 3.5 Sonnet</span></p>
+        </footer>
+    </div>
+
+    <!-- Comparison Modal -->
+    <div id="compareModal" class="fixed inset-0 z-40 flex items-center justify-center p-4 hidden-element">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCompare()"></div>
+        <div class="glass w-full max-w-4xl rounded-[3rem] p-8 relative z-10 animate-fade-in">
+            <button onclick="closeCompare()" class="absolute top-6 right-6 hover:rotate-90 transition-transform">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h2 class="text-3xl font-bold mb-8 text-center">City Comparison</h2>
+            <div id="compareGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Compare cards injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /** 
+         * API CONFIGURATION
+         * Get your free key at https://openweathermap.org/api
+         */
+        const API_CONFIG = {
+            API_KEY: 'YOUR_API_KEY_HERE', // <--- REPLACE THIS WITH YOUR KEY
+            BASE_URL: 'https://api.openweathermap.org/data/2.5/',
+            GEO_URL: 'http://api.openweathermap.org/geo/1.0/direct'
+        };
+
+        // App State
+        const state = {
+            currentCity: '',
+            units: 'metric', // 'metric' for Celsius, 'imperial' for Fahrenheit
+            favorites: JSON.parse(localStorage.getItem('skyglass_favs')) || [],
+            chartInstance: null,
+            activeChartType: 'temp'
+        };
+
+        // DOM Elements
+        const elements = {
+            cityInput: document.getElementById('cityInput'),
+            btnLocation: document.getElementById('btnLocation'),
+            unitC: document.getElementById('unitC'),
+            unitF: document.getElementById('unitF'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            mainTemp: document.getElementById('mainTemp'),
+            cityName: document.getElementById('cityName'),
+            weatherDesc: document.getElementById('weatherDesc'),
+            feelsLike: document.getElementById('feelsLike'),
+            humidity: document.getElementById('humidity'),
+            windSpeed: document.getElementById('windSpeed'),
+            pressure: document.getElementById('pressure'),
+            uvIndex: document.getElementById('uvIndex'),
+            visibility: document.getElementById('visibility'),
+            currentDate: document.getElementById('currentDate'),
+            dailyForecast: document.getElementById('dailyForecast'),
+            favoritesList: document.getElementById('favoritesList'),
+            btnFavorite: document.getElementById('btnFavorite'),
+            weatherIconContainer: document.getElementById('weatherIconContainer'),
+            alertBox: document.getElementById('alertBox'),
+            alertText: document.getElementById('alertText'),
+            compareModal: document.getElementById('compareModal'),
+            compareGrid: document.getElementById('compareGrid')
+        };
+
+        // Initialize Lucide Icons
+        function initIcons() {
+            lucide.createIcons();
+        }
+
+        // --- API Logic ---
+
+        async function fetchWeather(city) {
+            if (API_CONFIG.API_KEY === 'YOUR_API_KEY_HERE') {
+                alert('Please provide a valid OpenWeatherMap API Key in the script section of the HTML file!');
+                return null;
+            }
+
+            showLoading(true);
+            try {
+                const unitParam = state.units === 'metric' ? 'metric' : 'imperial';
+                
+                // 1. Current Weather
+                const currentRes = await fetch(`${API_CONFIG.BASE_URL}weather?q=${city}&units=${unitParam}&appid=${API_CONFIG.API_KEY}`);
+                if (!currentRes.ok) throw new Error('City not found');
+                const currentData = await currentRes.json();
+
+                // 2. Forecast (5 day / 3 hour)
+                const forecastRes = await fetch(`${API_CONFIG.BASE_URL}forecast?q=${city}&units=${unitParam}&appid=${API_CONFIG.API_KEY}`);
+                const forecastData = await forecastRes.json();
+
+                return { current: currentData, forecast: forecastData };
+            } catch (err) {
+                alert(err.message);
+                return null;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function fetchByCoords(lat, lon) {
+            showLoading(true);
+            try {
+                const unitParam = state.units === 'metric' ? 'metric' : 'imperial';
+                const currentRes = await fetch(`${API_CONFIG.BASE_URL}weather?lat=${lat}&lon=${lon}&units=${unitParam}&appid=${API_CONFIG.API_KEY}`);
+                const currentData = await currentRes.json();
+
+                const forecastRes = await fetch(`${API_CONFIG.BASE_URL}forecast?lat=${lat}&lon=${lon}&units=${unitParam}&appid=${API_CONFIG.API_KEY}`);
+                const forecastData = await forecastRes.json();
+
+                return { current: currentData, forecast: forecastData };
+            } catch (err) {
+                alert('Error fetching location weather. ' + err.message);
+                return null;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // --- UI Updates ---
+
+        function updateUI(data) {
+            const { current, forecast } = data;
+            state.currentCity = current.name;
+
+            // Basic Info
+            elements.cityName.innerText = `${current.name}, ${current.sys.country}`;
+            elements.mainTemp.innerText = Math.round(current.main.temp);
+            elements.weatherDesc.innerText = current.weather[0].description;
+            elements.feelsLike.innerText = Math.round(current.main.feels_like);
+            elements.humidity.innerText = current.main.humidity;
+            elements.windSpeed.innerText = `${current.wind.speed} ${state.units === 'metric' ? 'm/s' : 'mph'}`;
+            elements.pressure.innerText = `${current.main.pressure} hPa`;
+            elements.visibility.innerText = `${(current.visibility / 1000).toFixed(1)} km`;
+            elements.uvIndex.innerText = 'N/A'; // Free API doesn't provide UV in standard call, requires OneCall
+
+            elements.currentDate.innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('tempUnitLabel').innerText = state.units === 'metric' ? '°C' : '°F';
+
+            // Weather Icon & Background
+            updateVisuals(current.weather[0].id, current.weather[0].main);
+
+            // Forecast Chart
+            renderChart(forecast);
+
+            // 7 Day (Simulated from 5-day/3-hour API)
+            renderDailyForecast(forecast);
+
+            // Alerts (Mocked as free API alerts are limited)
+            if (current.weather[0].main === 'Thunderstorm') {
+                showAlert(`Severe weather warning for ${current.name}: Thunderstorms expected.`);
+            } else {
+                elements.alertBox.classList.add('hidden-element');
+            }
+
+            updateFavoritesUI();
+        }
+
+        function updateVisuals(id, main) {
+            let bgClass = 'bg-clear';
+            let icon = 'sun';
+
+            if (id >= 200 && id < 600) {
+                bgClass = 'bg-rain';
+                icon = 'cloud-rain';
+            } else if (id >= 600 && id < 700) {
+                bgClass = 'bg-snow';
+                icon = 'snowflake';
+            } else if (id >= 700 && id < 800) {
+                bgClass = 'bg-clouds';
+                icon = 'cloud';
+            } else if (main === 'Clear') {
+                bgClass = 'bg-clear';
+                icon = 'sun';
+            }
+
+            // Time of day check
+            const hour = new Date().getHours();
+            if (hour < 6 || hour > 18) bgClass = 'bg-night';
+
+            document.body.className = `${bgClass} min-h-screen text-white p-4 md:p-8`;
+            elements.weatherIconContainer.innerHTML = `<i data-lucide="${icon}" class="w-20 h-20 text-yellow-300"></i>`;
+            initIcons();
+        }
+
+        function renderDailyForecast(forecast) {
+            elements.dailyForecast.innerHTML = '';
+            // The 5-day API gives data every 3 hours. We pick one per day.
+            const dailyData = forecast.list.filter((item, index) => index % 8 === 0).slice(0, 7);
+
+            dailyData.forEach(day => {
+                const date = new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
+                const temp = Math.round(day.main.temp);
+                const iconCode = day.weather[0].icon;
+                const iconUrl = `https://openweathermap.org/img/wn/${iconCode}.png`;
+
+                elements.dailyForecast.innerHTML += `
+                    <div class="glass p-4 rounded-3xl flex flex-col items-center justify-center transition-transform hover:scale-105">
+                        <span class="text-xs font-bold opacity-70">${date}</span>
+                        <img src="${iconUrl}" alt="weather" class="w-12 h-12">
+                        <span class="text-lg font-bold">${temp}°</span>
+                    </div>
+                `;
+            });
+        }
+
+        function renderChart(forecast) {
+            const ctx = document.getElementById('weatherChart').getContext('2d');
+            const labels = forecast.list.slice(0, 8).map(i => new Date(i.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            const tempData = forecast.list.slice(0, 8).map(i => i.main.temp);
+            const rainData = forecast.list.slice(0, 8).map(i => i.pop * 100 || 0);
+
+            if (state.chartInstance) state.chartInstance.destroy();
+
+            const dataset = state.activeChartType === 'temp' ? tempData : rainData;
+            const label = state.activeChartType === 'temp' ? 'Temperature' : 'Rain Chance (%)';
+            const color = state.activeChartType === 'temp' ? '#60a5fa' : '#34d399';
+
+            state.chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: dataset,
+                        borderColor: color,
+                        backgroundColor: color + '33',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
+                        x: { grid: { display: false }, ticks: { color: '#fff' } }
+                    }
+                }
+            });
+        }
+
+        // --- Helpers & Features ---
+
+        function showLoading(show) {
+            elements.loadingOverlay.classList.toggle('hidden-element', !show);
+        }
+
+        function showAlert(msg) {
+            elements.alertText.innerText = msg;
+            elements.alertBox.classList.remove('hidden-element');
+        }
+
+        // Favorites Logic
+        function toggleFavorite() {
+            if (!state.currentCity) return;
+            const index = state.favorites.indexOf(state.currentCity);
+            if (index === -1) {
+                state.favorites.push(state.currentCity);
+            } else {
+                state.favorites.splice(index, 1);
+            }
+            localStorage.setItem('skyglass_favs', JSON.stringify(state.favorites));
+            updateFavoritesUI();
+        }
+
+        function updateFavoritesUI() {
+            elements.favoritesList.innerHTML = '';
+            state.favorites.forEach(city => {
+                elements.favoritesList.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-white/10 rounded-2xl hover:bg-white/20 cursor-pointer transition-all group" onclick="loadCity('${city}')">
+                        <span class="font-medium">${city}</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                `;
+            });
+            initIcons();
+        }
+
+        async function loadCity(city) {
+            const data = await fetchWeather(city);
+            if (data) updateUI(data);
+        }
+
+        // Comparison Mode
+        async function openCompare() {
+            if (!state.currentCity) return alert('Search for a city first!');
+            elements.compareModal.classList.remove('hidden-element');
+            
+            const secondCity = prompt("Enter another city to compare with " + state.currentCity);
+            if (!secondCity) return;
+
+            elements.compareGrid.innerHTML = '<p class="text-center col-span-2">Fetching data...</p>';
+            
+            const data1 = await fetchWeather(state.currentCity);
+            const data2 = await fetchWeather(secondCity);
+
+            if (data1 && data2) {
+                elements.compareGrid.innerHTML = '';
+                [data1, data2].forEach(d => {
+                    elements.compareGrid.innerHTML += `
+                        <div class="glass p-6 rounded-3xl text-center">
+                            <h4 class="text-2xl font-bold mb-4">${d.current.name}</h4>
+                            <p class="text-5xl font-black mb-4">${Math.round(d.current.main.temp)}°</p>
+                            <p class="capitalize opacity-80">${d.current.weather[0].description}</p>
+                            <div class="mt-6 grid grid-cols-2 gap-2 text-sm">
+                                <div class="bg-white/10 p-2 rounded-lg">Hum: ${d.current.main.humidity}%</div>
+                                <div class="bg-white/10 p-2 rounded-lg">Wind: ${d.current.wind.speed}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                elements.compareGrid.innerHTML = '<p class="text-center col-span-2 text-red-400">Could not fetch one of the cities.</p>';
+            }
+        }
+
+        function closeCompare() {
+            elements.compareModal.classList.add('hidden-element');
+        }
+
+        // --- Event Listeners ---
+
+        elements.cityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadCity(elements.cityInput.value);
+        });
+
+        elements.btnLocation.addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const data = await fetchByCoords(pos.coords.latitude, pos.coords.longitude);
+                    if (data) updateUI(data);
+                }, () => alert('Location access denied'));
+            }
+        });
+
+        elements.unitC.addEventListener('click', () => {
+            state.units = 'metric';
+            elements.unitC.className = 'px-3 py-1 rounded-full text-xs font-bold transition-all bg-white text-blue-600';
+            elements.unitF.className = 'px-3 py-1 rounded-full text-xs font-bold transition-all hover:bg-white/20';
+            if (state.currentCity) loadCity(state.currentCity);
+        });
+
+        elements.unitF.addEventListener('click', () => {
+            state.units = 'imperial';
+            elements.unitF.className = 'px-3 py-1 rounded-full text-xs font-bold transition-all bg-white text-blue-600';
+            elements.unitC.className = 'px-3 py-1 rounded-full text-xs font-bold transition-all hover:bg-white/20';
+            if (state.currentCity) loadCity(state.currentCity);
+        });
+
+        elements.btnFavorite.addEventListener('click', toggleFavorite);
+        document.getElementById('comparisonTrigger').addEventListener('click', openCompare);
+
+        document.getElementById('chartToggle').addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                state.activeChartType = e.target.dataset.type;
+                document.querySelectorAll('#chartToggle button').forEach(btn => {
+                    btn.className = 'px-3 py-1 rounded-md hover:bg-white/20 transition-all';
+                });
+                e.target.className = 'px-3 py-1 rounded-md bg-white text-blue-600 transition-all';
+                if (state.currentCity) {
+                    // Re-fetch or use cached forecast to refresh chart
+                    loadCity(state.currentCity); 
+                }
+            }
+        });
+
+        // Initial Load
+        window.onload = () => {
+            initIcons();
+            updateFavoritesUI();
+            loadCity('New York'); // Default city
+        };
+
+    </script>
+</body>
+</html>

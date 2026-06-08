@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwopus 3.5-9b-coder-exp - AI Command Center | Model Testing Dashboard</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #050507;
+            --bg-panel: rgba(20, 24, 30, 0.6);
+            --border-color: rgba(255, 255, 255, 0.1);
+
+            /* Neon Accents */
+            --neon-cyan: #00f2ff;
+            --neon-purple: #bd00ff;
+            --neon-green: #00ff9d;
+            --neon-red: #ff0055;
+            --text-main: #ffffff;
+            --text-muted: #8b9bb4;
+
+            /* Spacing & Radius */
+            --radius-lg: 16px;
+            --radius-md: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(189, 0, 255, 0.08) 0px, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(0, 242, 255, 0.08) 0px, transparent 50%);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Layout */
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+        }
+
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .text-cyan {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+        }
+
+        .text-purple {
+            color: var(--neon-purple);
+            text-shadow: 0 0 10px rgba(189, 0, 255, 0.3);
+        }
+
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Navigation */
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--neon-cyan);
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            font-weight: 600;
+        }
+
+        /* Hero Stats */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        /* Matchup Section */
+        .matchup-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media(max-width: 768px) {
+            .matchup-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .model-card {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 300px;
+        }
+
+        /* Local Model Styling */
+        .local-model {
+            border-top: 4px solid var(--neon-cyan);
+            box-shadow: inset 0 -10px 20px rgba(0, 242, 255, 0.1);
+        }
+
+        .frontier-model {
+            border-top: 4px solid var(--neon-purple);
+            box-shadow: inset 0 -10px 20px rgba(189, 0, 255, 0.1);
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .model-name {
+            font-size: 1.75rem;
+            font-weight: 800;
+        }
+
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-local {
+            background: rgba(0, 242, 255, 0.2);
+            color: var(--neon-cyan);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+        }
+
+        .badge-frontier {
+            background: rgba(189, 0, 255, 0.2);
+            color: var(--neon-purple);
+            border: 1px solid rgba(189, 0, 255, 0.3);
+        }
+
+        .model-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-row {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label-sm {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stat-val-sm {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        /* Hardware Monitor */
+        .hardware-panel {
+            margin-bottom: 2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gpu-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .progress-bar-bg {
+            width: 80%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, var(--neon-green), #fff);
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        th:hover {
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-completed {
+            background-color: var(--neon-green);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.4);
+        }
+
+        .status-failed {
+            background-color: var(--neon-red);
+            box-shadow: 0 0 8px rgba(255, 0, 85, 0.4);
+        }
+
+        /* Prompt History Expansion */
+        .prompt-row {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .prompt-row:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .details-panel {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+        }
+
+        .details-panel.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Winner Breakdown */
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .winner-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border-left: 4px solid var(--neon-cyan);
+            padding: 1rem;
+        }
+
+        /* Notes */
+        .notes-section {
+            margin-top: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- Sidebar / Navigation -->
+        <aside style="position: sticky; top: 2rem;">
+            <div class="glass-panel" style="margin-bottom: 2rem;">
+                <div class="logo">
+                    <i class="fa-solid fa-microchip text-cyan"></i>
+                    <span>AI Command Center</span>
+                </div>
+
+                <nav class="nav-tabs" id="viewTabs">
+                    <button class="tab-btn active" data-view="summary">Summary</button>
+                    <button class="tab-btn" data-view="speed">Speed (TPS)</button>
+                    <button class="tab-btn" data-view="quality">Quality Scores</button>
+                    <button class="tab-btn" data-view="cost">API Cost</button>
+                    <button class="tab-btn" data-view="hardware">Hardware</button>
+                </nav>
+
+                <div
+                    style="margin-top: 2rem; padding: 1rem; border-radius: var(--radius-md); background: rgba(0,0,0,0.3);">
+                    <h4 class="mono-font" style="color: var(--neon-cyan); margin-bottom: 0.5rem;">System Status</h4>
+                    <div
+                        style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+                        <span>Local Server:</span>
+                        <span class="text-cyan"><i class="fa-solid fa-circle"></i> Online</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                        <span>CUDA Cores:</span>
+                        <span class="mono-font">1024 / 1024</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="glass-panel" style="margin-bottom: 2rem;">
+                <h3 class="mono-font" style="font-size: 1.1rem; margin-bottom: 0.5rem;">Test History</h3>
+                <input type="text" id="searchInput" placeholder="Search prompts..."
+                    style="width: 100%; padding: 0.6rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; outline: none; border-radius: var(--radius-md);">
+            </div>
+
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+
+            <!-- Hero Stats -->
+            <section class="hero-grid" id="heroStats">
+                <div class="stat-card">
+                    <span class="stat-label">Total Tests</span>
+                    <span class="stat-value mono-font" id="totalTests">142</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Avg TPS (Local)</span>
+                    <span class="stat-value text-cyan mono-font" id="avgTps">84.2</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Best Model</span>
+                    <span class="stat-value text-purple mono-font" id="bestModel">Qwen3.6-27B</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Total API Spend</span>
+                    <span class="stat-value text-muted">$1,402.50</span>
+                </div>
+            </section>
+
+            <!-- Matchup Section -->
+            <section id="matchupSection" style="margin-bottom: 3rem;">
+                <h2 class="mono-font" style="font-size: 1.8rem; margin-bottom: 1.5rem;">Head-to-Head Matchup</h2>
+
+                <div class="matchup-container">
+                    <!-- Local Model Card -->
+                    <div class="glass-panel local-model model-card">
+                        <div>
+                            <div class="model-header">
+                                <span class="badge badge-local"><i class="fa-solid fa-server"></i> Local</span>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">v3.6.2 (GGUF)</span>
+                            </div>
+                            <h3 class="model-name text-cyan" id="localModelName">Qwen3.6-27B</h3>
+
+                            <div class="model-stats-grid">
+                                <div class="stat-row">
+                                    <span class="stat-label-sm">Tokens/sec</span>
+                                    <span class="stat-val-sm text-cyan" id="localTps">84.5</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label-sm">Quality Score</span>
+                                    <span class="stat-val-sm">92.4/100</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label-sm">Coding Acc.</span>
+                                    <span class="stat-val-sm">98%</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label-sm">Final Grade</span>
+                                    <span class="badge badge-local" style="font-size: 0.7rem;">A+</span>
+                                </div>
+                            </div>
+
+                            <!-- Hardware Specifics -->
+                            <div
+                                style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                <h4 class="mono-font"
+                                    style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                    Hardware Monitor</h4>
+
+                                <!-- VRAM -->
+                                <div style="margin-bottom: 1rem;">
+                                    <div
+                                        style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted);">
+                                        <span>VRAM Usage</span>
+                                        <span id="vramText" class="mono-font">24.5 GB / 24 GB</span>
+                                    </div>
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-fill" style="width: 98%; background: var(--neon-red);">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Temp -->
+                                <div>
+                                    <div
+                                        style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted);">
+                                        <span>GPU Temp</span>
+                                        <span id="tempText" class="mono-font">72°C</span>
+                                    </div>
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-fill" style="width: 65%; background: var(--neon-green);">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Frontier Model Card -->
+                    <div class="glass-panel frontier-model model-card">
+                        <div>
+                            <div class="model-header">
+                                <span class="badge badge-frontier"><i class="fa-solid fa-rocket"></i> Frontier</span>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">API / o3-mini</span>
+                            </div>
+                            <h3 class="model-name text-purple" id="frontierModelName">Claude Opus 4.8</h3>
+
+                            <div class="model-stats-grid">
+                                <div class="stat-row">
+                                    <span class="stat-label-sm">Tokens/sec</span>
+                                    <span class="stat-val-sm text-purple" id="frontierTps">12.1</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label-sm">Quality Score</span>
+                                    <span class="stat-val-sm">96.8/100</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label-sm">Coding Acc.</span>
+                                    <span class="stat-val-sm">94%</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label-sm">Final Grade</span>
+                                    <span class="badge badge-frontier" style="font-size: 0.7rem;">A</span>
+                                </div>
+                            </div>
+
+                            <!-- API Specifics -->
+                            <div
+                                style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                <h4 class="mono-font"
+                                    style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">API
+                                    Usage</h4>
+
+                                <!-- Cost -->
+                                <div style="margin-bottom: 1rem;">
+                                    <div
+                                        style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted);">
+                                        <span>Total Spend</span>
+                                        <span id="apiCostText" class="mono-font">$425.00</span>
+                                    </div>
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-fill" style="width: 78%; background: var(--neon-purple);">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tokens -->
+                                <div>
+                                    <div
+                                        style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted);">
+                                        <span>Total Tokens</span>
+                                        <span id="tokenText" class="mono-font">14,203,500</span>
+                                    </div>
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-fill" style="width: 85%; background: var(--neon-cyan);">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section style="margin-bottom: 3rem;">
+                <h2 class="mono-font" style="font-size: 1.5rem; margin-bottom: 0.5rem;">Performance Analytics</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+                    <!-- TPS Chart -->
+                    <div class="glass-panel">
+                        <canvas id="tpsChart"></canvas>
+                    </div>
+                    <!-- Quality Chart -->
+                    <div class="glass-panel">
+                        <canvas id="qualityChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Prompt History Table -->
+            <section style="margin-bottom: 3rem;">
+                <h2 class="mono-font" style="font-size: 1.5rem; margin-bottom: 0.5rem;">Prompt History</h2>
+                <div class="table-container">
+                    <table id="promptTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('category')">Category <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('status')">Status <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('time')">Time Taken <i class="fa-solid fa-sort"></i></th>
+                                <th onclick="sortTable('score')">Score <i class="fa-solid fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="promptBody">
+                            <!-- JS will populate this -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Expandable Details Panel (Hidden by default) -->
+                <div class="details-panel" id="detailsPanel">
+                    <h4 style="color: var(--neon-cyan); margin-bottom: 0.5rem;">Test Details</h4>
+                    <p id="detailText" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;"></p>
+                </div>
+            </section>
+
+            <!-- Winner Breakdown -->
+            <section class="winner-grid">
+                <div class="glass-panel winner-card">
+                    <h4 style="color: var(--neon-cyan); margin-bottom: 0.5rem;">Speed King</h4>
+                    <p style="font-size: 1.2rem; font-weight: 700;" id="speedWinner">Qwen3.6-27B</p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Local inference on RTX 3090 crushed the API
+                        latency.</p>
+                </div>
+                <div class="glass-panel winner-card" style="border-left-color: var(--neon-purple);">
+                    <h4 style="color: var(--neon-purple); margin-bottom: 0.5rem;">Quality King</h4>
+                    <p style="font-size: 1.2rem; font-weight: 700;" id="qualityWinner">Claude Opus 4.8</p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Despite the speed gap, frontier models
+                        still hold a slight edge in complex reasoning.</p>
+                </div>
+            </section>
+
+            <!-- Notes -->
+            <section class="notes-section">
+                <h3 style="color: var(--text-main); margin-bottom: 0.5rem;">Testing Observations</h3>
+                <p id="notesText"></p>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // --- Data Simulation ---
+        const testData = [
+            { category: "Code Generation", status: "completed", time: "1.2s", score: 98, prompt: "Write a Python script to scrape data from a website using Selenium.", details: "Qwen3.6 handled async requests flawlessly." },
+            { category: "Math Reasoning", status: "completed", time: "0.8s", score: 95, prompt: "Solve the integral of x^2 * e^x dx from 0 to 1.", details: "Both models performed well here." },
+            { category: "Creative Writing", status: "failed", time: "4.5s", score: 60, prompt: "Write a sci-fi story about a robot falling in love with a toaster.", details: "Qwen3.6 got stuck in a loop generating repetitive text." },
+            { category: "SQL Querying", status: "completed", time: "0.5s", score: 92, prompt: "Write a complex JOIN query for a multi-table database schema.", details: "Local model was significantly faster here." },
+            { category: "Translation (EN->FR)", status: "completed", time: "0.3s", score: 88, prompt: "Translate this legal document into formal French.", details: "Nuance handling was slightly better in frontier models." }
+        ];
+
+        // --- DOM Elements ---
+        const promptBody = document.getElementById('promptBody');
+        const detailsPanel = document.getElementById('detailsPanel');
+        const detailText = document.getElementById('detailText');
+        const searchInput = document.getElementById('searchInput');
+
+        // --- Initialization ---
+        function init() {
+            renderTable();
+            setupHardwareSimulation();
+            setupCharts();
+            setupInteractivity();
+
+            // Initial Notes
+            document.getElementById('notesText').innerText = "Initial testing on RTX 3090 (24GB VRAM). Qwen3.6-27B is running at 100% utilization with minimal memory fragmentation. The local server is stable.";
+        }
+
+        // --- Render Table ---
+        function renderTable(data = testData) {
+            promptBody.innerHTML = data.map((row, index) => `
+            <tr class="prompt-row" onclick="toggleDetails(${index})">
+                <td style="font-weight: 500; color: var(--text-main);">${row.category}</td>
+                <td><span class="status-dot status-${row.status}"></span>${row.status.toUpperCase()}</td>
+                <td class="mono-font" style="color: var(--neon-cyan);">${row.time}</td>
+                <td class="mono-font" style="color: var(--text-muted);">Score: ${row.score}/100</td>
+            </tr>
+        `).join('');
+
+            // Attach click events to rows for expansion
+            document.querySelectorAll('.prompt-row').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'I') toggleDetails(parseInt(row.getAttribute('onclick').split(',')[0]));
+                });
+            });
+        }
+
+        // --- Toggle Details ---
+        function toggleDetails(index) {
+            const row = promptBody.children[index];
+            const isActive = detailsPanel.classList.contains('active');
+
+            if (isActive) {
+                detailsPanel.classList.remove('active');
+                setTimeout(() => {
+                    if (!detailsPanel.classList.contains('active')) renderTable(); // Re-render to close open ones
+                }, 300);
+            } else {
+                detailsPanel.classList.add('active');
+                detailText.innerText = `Prompt: "${testData[index].prompt}"\n\nObservation:\n${testData[index].details}`;
+
+                // Close others if we want strict accordion behavior (optional, keeping open for now)
+            }
+        }
+
+        // --- Search & Filter ---
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = testData.filter(row =>
+                row.category.toLowerCase().includes(term) ||
+                row.prompt.toLowerCase().includes(term)
+            );
+            renderTable(filtered);
+        });
+
+        // --- Sort Logic ---
+        let sortDir = 1;
+        function sortTable(key) {
+            const tbody = document.getElementById('promptBody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                let valA = a.children[key].innerText.toLowerCase();
+                let valB = b.children[key].innerText.toLowerCase();
+
+                if (key === 'category') return valA.localeCompare(valB);
+                if (key === 'status') return valA > valB ? -1 : 1; // Alphabetical
+
+                // Numeric sort for time and score
+                const numA = parseFloat(a.children[key].innerText.replace('Score: ', ''));
+                const numB = parseFloat(b.children[key].innerText.replace('Score: ', ''));
+
+                if (isNaN(numA) || isNaN(numB)) return valA.localeCompare(valB);
+                return ((numA - numB) * sortDir);
+            });
+
+            tbody.innerHTML = rows.map(row => row.outerHTML).join('');
+
+            // Toggle direction icon
+            const icon = a.querySelector('.fa-sort').nextSibling;
+        }
+
+        // --- Hardware Simulation (Live Data) ---
+        function setupHardwareSimulation() {
+            setInterval(() => {
+                // Fluctuate VRAM slightly
+                let currentVram = 24.5 + Math.random() * 0.1 - 0.05;
+                if (currentVram > 24) currentVram = 24;
+
+                document.getElementById('vramText').innerText = `${currentVram.toFixed(1)} GB / 24 GB`;
+
+                // Fluctuate Temp slightly
+                let currentTemp = 72 + Math.random() * 0.5 - 0.25;
+                if (currentTemp > 85) currentTemp = 85; // Cap at thermal limit
+
+                document.getElementById('tempText').innerText = `${Math.floor(currentTemp)}°C`;
+
+            }, 1000);
+        }
+
+        // --- Charts Setup ---
+        function setupCharts() {
+            const ctx1 = document.getElementById('tpsChart').getContext('2d');
+            const ctx2 = document.getElementById('qualityChart').getContext('2d');
+
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Prompt 1', 'Prompt 2', 'Prompt 3', 'Prompt 4', 'Prompt 5'],
+                    datasets: [{
+                        label: 'Local Model (Qwen)',
+                        data: [84, 86, 82, 90, 85],
+                        borderColor: '#00f2ff',
+                        backgroundColor: 'rgba(0, 242, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Frontier Model (Claude)',
+                        data: [12, 11, 13, 12, 11],
+                        borderColor: '#bd00ff',
+                        backgroundColor: 'rgba(189, 0, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#fff' } } },
+                    scales: { y: { grid: { color: 'rgba(255,255,255,0.1)' } } }
+                }
+            });
+
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Code', 'Math', 'Creative', 'SQL', 'Translation'],
+                    datasets: [{
+                        label: 'Quality Score',
+                        data: [98, 95, 60, 92, 88],
+                        backgroundColor: ['#00f2ff', '#bd00ff', '#ff0055', '#00f2ff', '#bd00ff']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } } }
+                }
+            });
+        }
+
+        // --- View Switcher (Tabs) ---
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const view = btn.dataset.view;
+                // In a real app, we would hide/show sections based on 'view'. 
+                // Here, we just update the Hero Stats to simulate changing data.
+                if (view === 'speed') {
+                    document.getElementById('avgTps').innerText = (84 + Math.random()).toFixed(1);
+                    document.getElementById('localTps').innerText = (84 + Math.random()).toFixed(1);
+                } else if (view === 'quality') {
+                    // Just a visual toggle for demo purposes
+                }
+            });
+        });
+
+        init();
+
+    </script>
+</body>
+
+</html>

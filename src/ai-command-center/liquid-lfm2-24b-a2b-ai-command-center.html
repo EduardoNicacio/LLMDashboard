@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Testing Command Center</title>
+    <style>
+        :root {
+            --bg: #0f0f1a;
+            --card: #1e1e2d;
+            --accent: #00ffe7;
+            --text: #e0e0e0;
+            --primary: #00ffe7;
+            --light: #2a2a3a;
+            --shadow: 0 0 20px rgba(0, 255, 247, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Glassmorphism panel */
+        .panel {
+            background: rgba(15, 15, 35, 0.7);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 1rem auto;
+            width: 95vw;
+            max-width: 1200px;
+            box-shadow: var(--shadow);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .title h1 {
+            font-size: 2.3rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .metric span {
+            font-weight: 600;
+        }
+
+        /* Hero Summary */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .summary-card {
+            background: rgba(15, 15, 35, 0.6);
+            border-radius: 14px;
+            padding: 1.4rem;
+            text-align: center;
+            transition: transform 0.18s, box-shadow 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow) 0 8px 32px rgba(0, 255, 247, 0.07);
+        }
+
+        .summary-value {
+            font-size: 1.7rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+        }
+
+        /* Header for views */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: rgba(30, 30, 45, 0.7);
+            border-radius: 12px;
+            padding: 0.8rem 1.4rem;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.18s, box-shadow 0.15s;
+        }
+
+        .btn:hover {
+            background: #00d4ff;
+            box-shadow: 0 0 16px rgba(0, 255, 247, 0.2);
+        }
+
+        /* Chart container */
+        .chart-container {
+            height: 300px;
+            background: rgba(20, 20, 40, 0.5);
+            border-radius: 10px;
+            margin-bottom: 1.4rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chart {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.4rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .chart.hidden {
+            opacity: 0;
+        }
+
+        /* Prompt history table */
+        .table-container {
+            background: rgba(16, 16, 30, 0.65);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        .prompt-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .prompt-table th,
+        .prompt-table td {
+            padding: 0.8rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .prompt-table th {
+            background: #111;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        /* Hardware monitor panel */
+        .hardware-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            background: rgba(18, 18, 34, 0.7);
+            border-radius: 12px;
+            padding: 1.3rem;
+        }
+
+        .hardware-panel div {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .hardware-panel h3 {
+            font-size: 1rem;
+            color: #66f;
+            margin-bottom: 0.2rem;
+        }
+
+        .value {
+            font-size: 1.1rem;
+        }
+
+        /* API usage panel */
+        .api-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            background: rgba(16, 16, 30, 0.7);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .api-panel div {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .api-panel h3 {
+            font-size: 1rem;
+            color: #66f;
+            margin-bottom: 0.2rem;
+        }
+
+        .api-value {
+            font-weight: 600;
+        }
+
+        /* Winner breakdown */
+        .winner-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .winner-card {
+            background: rgba(20, 40, 80, 0.6);
+            border-radius: 10px;
+            padding: 1.2rem;
+            text-align: center;
+            transition: transform 0.15s;
+        }
+
+        .winner-card:hover {
+            transform: translateY(-4px);
+        }
+
+        /* Notes section */
+        .notes {
+            background: rgba(18, 18, 30, 0.7);
+            border-radius: 10px;
+            padding: 1.2rem;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+
+        .note-block {
+            margin-bottom: 1.3rem;
+            padding: 0.8rem;
+            background: rgba(30, 30, 45, 0.6);
+            border-radius: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hardware-panel,
+            .api-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadein 0.3s ease-out;
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="panel">
+        <div class="header">
+            <h1>AI Model Testing Command Center</h1>
+            <div class="controls">
+                <span>View: <span id="current-view">Summary</span></span>
+                <button class="btn" onclick="switchView('summary')">Summary</button>
+                <button class="btn" onclick="switchView('speed')">Speed</button>
+                <button class="btn" onclick="switchView('quality')">Quality</button>
+                <button class="btn" onclick="switchView('cost')">Cost</button>
+                <button class="btn" onclick="switchView('hardware')">Hardware</button>
+            </div>
+        </div>
+
+        <!-- Hero Summary -->
+        <div id="summary-grid" class="summary-grid">
+            <div class="summary-card">
+                <span class="metric"><b>Total Tests:</b> 1200</span>
+                <span class="metric"><b>Avg Tokens/sec:</b> 1,540</span>
+                <span class="metric"><b>Best Model:</b> Qwen3.6 27B</span>
+                <span class="metric"><b>API Cost:</b> $48.75</span>
+                <span class="metric"><b>Local Runtime:</b> 1,300s</span>
+            </div>
+            <div class="summary-card">
+                <span class="metric"><b>Avg Quality:</b> 94.3%</span>
+                <span class="metric"><b>Avg Speed:</span> 1,120 tokens/sec
+                <span class="metric"><b>Avg Coding:</b> 92.6%
+                    <span class="metric"><b>Avg Creativity:</b> 89.2%
+            </div>
+        </div>
+
+        <!-- Header for views -->
+        <div id="content" class="panel">
+            <!-- Speed View -->
+            <div id="speed-view" class="summary-grid" style="display:none;" id="speed-table">
+                <h2>Speed Comparison</h2>
+                <div class="chart-container">
+                    <div class="chart" id="tokens-bar">Qwen3.6 27B: 1,420</div>
+                    <div class="chart" id="cpu-bar">Claude Opus 4.8: 1,280</div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart" id="time-bar">Qwen3.6: 1,100s</div>
+                    <div class="chart" id="time2-bar">Claude Opus: 1,250s</div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart" id="quality-bar">Qwen3.6: 96%</div>
+                    <div class="chart" id="quality2-bar">Claude Opus: 93%</div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart" id="coding-bar">Qwen3.6: 95%</div>
+                    <div class="chart" id="coding2-bar">Claude Opus: 91%</div>
+                </div>
+            </div>
+
+            <!-- Quality View -->
+            <div id="quality-view" class="summary-grid" style="display:none;" id="quality-table">
+                <h2>Quality Score Comparison</h2>
+                <div class="chart-container">
+                    <div class="chart" id="q1-bar">Qwen3.6: 96.4%</div>
+                    <div class="chart" id="q2-bar">Claude Opus: 93.8%</div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart" id="coding1-bar">Qwen3.6: 95.1%</div>
+                    <div class="chart" id="coding2-bar">Claude Opus: 91.7%</div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart" id="crebar-bar">Qwen3.6: 89.5%</div>
+                    <div class="chart" id="crebar2-bar">Claude Opus: 87.9%</div>
+                </div>
+            </div>
+
+            <!-- Cost View -->
+            <div id="cost-view" class="summary-grid" style="display:none;" id="cost-table">
+                <h2>API Cost Comparison</h2>
+                <div class="chart-container">
+                    <div class="chart" id="q1-bar">Qwen3.6 27B: $42.00</div>
+                    <div class="chart" id="q2-bar">Claude Opus 4.8: $48.75</div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart" id="tokens1-bar">Qwen3.6: 1,420</div>
+                    <div class="chart" id="tokens2-bar">Claude Opus: 1,280</div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart" id="cost1-bar">Qwen3.6: $0.035/tok</div>
+                    <div class="chart" id="cost2-bar">Claude Opus: $0.038/tok</div>
+                </div>
+            </div>
+
+            <!-- Hardware View -->
+            <div id="hardware-view" class="summary-grid" style="display:none;" id="hardware-table">
+                <h2>Hardware Monitor</h2>
+                <div class="hardware-panel">
+                    <div><span>RTX 3090 VRAM:</span> <span class="value">87%</span></div>
+                    <div><span>Temp:</span> <span class="value">78°C</span></div>
+                    <div><span>Power Draw:</span> <span class="value">320W</span></div>
+                    <div><span>Server:</span> <span class="value">Online</span></div>
+                </div>
+                <div class="hardware-panel">
+                    <div><span>Local CPU:</span> <span class="value">85%</span></div>
+                    <div><span>GPU Load:</span> <span class="value">87%</span></div>
+                    <div><span>RAM Usage:</span> <span class="value">78%</span></div>
+                </div>
+            </div>
+
+            <!-- API usage panel -->
+            <div id="api-view" class="summary-grid" style="display:none;" id="api-table">
+                <h2>API Usage Forecast</h2>
+                <div class="api-panel">
+                    <div><span>Qwen3.6 (1,200 tests): $48.75</span></div>
+                    <div><span>Claude Opus (1,200): $58.20</span></div>
+                </div>
+                <div class="api-panel">
+                    <div><span>Input Tokens:</span> 1,400,000</div>
+                    <div><span>Output Tokens:</span> 1,600,000</div>
+                </div>
+                <div class="api-value"><b>Total Spend Forecast:</b> $58.20</div>
+            </div>
+
+            <!-- Winner breakdown -->
+            <div id="winners" class="panel">
+                <h2>Winner Breakdown</h2>
+                <div class="winner-box">
+                    <div class="winner-card"><b>Speed:</b> Qwen3.6 27B</div>
+                    <div class="winner-card"><b>Quality:</b> Qwen3.6 27B</div>
+                    <div class="winner-card"><b>Coding:</b> Qwen3.6 27B</div>
+                    <div class="winner-card"><b>Creativity:</b> Qwen3.6 27B</div>
+                </div>
+                <div class="winner-box">
+                    <div class="winner-card"><b>Cost:</b> Claude Opus 4.8</div>
+                    <div class="winner-card"><b>Avg Runtime:</b> Qwen3.6 27B</div>
+                </div>
+            </div>
+
+            <!-- Prompt history -->
+            <div id="history" class="panel">
+                <h2>Prompt History</h2>
+                <div class="prompt-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Prompt</th>
+                                <th>Status</th>
+                                <th>Time (s)</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Explain quantum computing in simple terms.</td>
+                                <td>Done</td>
+                                <td>12.4</td>
+                                <td>96.2%</td>
+                            </tr>
+                            <tr>
+                                <td>Write a haiku about AI.</td>
+                                <td>Pending</td>
+                                <td>8.6</td>
+                                <td>88.3%</td>
+                            </tr>
+                            <tr>
+                                <td>What is the capital of France?</td>
+                                <td>Done</td>
+                                <td>1.2</td>
+                                <td>99.4%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div id="notes" class="notes">
+                <h2>Notes & Observations</h2>
+                <div class="note-block">
+                    <p><strong>Observation:</strong> Claude Opus 4.8 showed higher consistency in coding tasks, but
+                        Qwen3.6 led in speed and quality. Costs are close; Qwen3.6 is more efficient for large-scale
+                        runs.</p>
+                </div>
+                <div class="note-block">
+                    <p><strong>Recommend:</strong> Use Qwen3.6 for high-throughput, cost-sensitive jobs; Claude Opus 4.8
+                        for critical quality tasks and enterprise-grade outputs.</p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // State
+            let currentView = 'summary';
+            const panels = {
+                summary: document.getElementById('summary-grid'),
+                speed: document.getElementById('speed-view'),
+                quality: document.getElementById('quality-view'),
+                cost: document.getElementById('cost-table'),
+                hardware: document.getElementById('hardware-view'),
+                api: document.getElementById('api-table')
+            };
+
+            function switchView(view) {
+                currentView = view;
+                // Hide all panels
+                Object.values(panels).forEach(panel => panel.style.display = 'none');
+                // Show selected
+                if (panels[view]) panels[view].style.display = 'block';
+                document.getElementById('current-view').textContent = view.charAt(0).toUpperCase() + view.slice(1);
+            }
+
+            // Simulate prompt history click expansion
+            document.querySelectorAll('.prompt-table tbody tr').forEach(row => {
+                row.addEventListener('click', () => {
+                    const td = row.cells[2] || row.cells[3];
+                    td.style.background = '#2a2a3a';
+                    td.style.padding = '0.5rem';
+                    td.style.marginTop = '0.6rem';
+                });
+            });
+
+            // Demo data
+            function randomScore(min, max) { return (Math.random() * (max - min) + min).toFixed(1); }
+            function randomTime(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
+
+            // Populate summary with sample data
+            document.querySelector('.summary-card:nth-child(1) .metric:first-child').textContent = "1200";
+            document.querySelector('.summary-card:nth-child(2) .metric:first-child').textContent = randomTime(800, 1600);
+            document.querySelector('.summary-card:nth-child(3) .metric:first-child').textContent = randomScore(90, 99.9);
+            document.querySelector('.summary-card:nth-child(4) .metric:first-child').textContent = randomScore(92, 99.5);
+            document.querySelector('.summary-card:nth-child(5) .metric:first-child').textContent = randomScore(88, 96.6);
+
+            // Demo charts
+            document.getElementById('tokens-bar').innerText = "Qwen3.6: " + (1400 + Math.floor(Math.random() * 200)) + " tokens/s";
+            document.getElementById('tokens2-bar').innerText = "Claude Opus 4.8: " + (1100 + Math.floor(Math.random() * 150)) + " tokens/s";
+            document.getElementById('q1-bar').innerText = "96.2%";
+            document.getElementById('q2-bar').innerText = "93.7%";
+            document.getElementById('coding1-bar').innerText = "95.4%";
+            document.getElementById('coding2-bar').innerText = "91.8%";
+            document.getElementById('crebar-bar').innerText = "89.6%";
+            document.getElementById('crebar2-bar').innerText = "87.7%";
+            document.getElementById('q1-bar').innerText = randomScore(94, 99.9);
+            document.getElementById('q2-bar').innerText = randomScore(93, 99.5);
+            document.getElementById('tokens1-bar').innerText = Math.floor(1300 + Math.random() * 120);
+            document.getElementById('tokens2-bar').innerText = Math.floor(1150 + Math.random() * 100);
+
+            // Simulate API cost
+            document.getElementById('q1-bar').innerText = "$42.00";
+            document.getElementById('q2-bar').innerText = "$48.75";
+            document.getElementById('cost1-bar').innerText = "$0.034/tok";
+            document.getElementById('cost2-bar').innerText = "$0.038/tok";
+
+            // Prompt history click demo
+            document.querySelectorAll('.prompt-table tbody tr')[0].click();
+
+            // Demo hardware
+            document.getElementById('q1-bar').innerText = "87%";
+            document.getElementById('q2-bar').innerText = "78%";
+
+            // Demo API panel
+            document.getElementById('q1-bar').innerText = "$42.00";
+            document.getElementById('tokens1-bar').innerText = "1,420";
+        </script>
+</body>
+
+</html>

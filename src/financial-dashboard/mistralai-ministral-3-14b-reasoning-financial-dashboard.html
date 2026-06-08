@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Analysis Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff7675;
+            --background-dark: #121212;
+            --background-light: #f5f5f5;
+            --card-bg-dark: rgba(28, 28, 30, 0.8);
+            --glass-effect: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --neon-accent: #ff4757;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Light theme variables */
+        .light-theme {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff7675;
+            --background-dark: #ffffff;
+            --background-light: #f5f5f5;
+            --card-bg-dark: rgba(255, 255, 255, 0.8);
+            --glass-effect: rgba(0, 0, 0, 0.1);
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --neon-accent: #ff4757;
+        }
+
+        /* Dark theme is the default */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+            transition: all 0.5s ease;
+        }
+
+        .light-theme body {
+            background-color: var(--background-light);
+        }
+
+        /* Header styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, var(--primary-color), #6a5acd);
+            box-shadow: var(--box-shadow);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo::before {
+            content: "";
+            width: 30px;
+            height: 30px;
+            background-color: var(--neon-accent);
+            border-radius: 50%;
+            margin-right: 10px;
+            position: relative;
+        }
+
+        .logo::after {
+            content: "Financial Analysis Dashboard";
+            margin-left: 10px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-toggle::before {
+            content: "☀️";
+            margin-right: 8px;
+        }
+
+        /* Main container */
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* Sidebar */
+        aside.sidebar {
+            background-color: var(--card-bg-dark);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+            color: var(--neon-accent);
+            font-size: 18px;
+        }
+
+        .nav-tabs {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .nav-tabs li {
+            margin-bottom: 10px;
+        }
+
+        .nav-tabs a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Filters section */
+        .filters {
+            margin-top: 20px;
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        select,
+        button {
+            width: 100%;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus,
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(74, 107, 255, 0.5);
+        }
+
+        /* Main content */
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section {
+            background-color: var(--card-bg-dark);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            backdrop-filter: blur(10px);
+            background-clip: padding-box;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .light-theme .section {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background-clip: padding-box;
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title h2 {
+            color: var(--neon-accent);
+            font-size: 24px;
+            margin: 0;
+        }
+
+        /* Hero summary section */
+        .hero-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-card {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-card h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .metric-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* Head-to-head comparison */
+        .comparison-panel {
+            display: grid;
+            grid-template-columns: 1fr 20px 1fr;
+            gap: 20px;
+        }
+
+        .company-card {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .company-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--neon-accent));
+        }
+
+        .company-card h3 {
+            margin-top: 10px;
+            font-size: 20px;
+            color: white;
+        }
+
+        /* Company cards grid */
+        .company-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* Charts section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Financial statement history */
+        .statement-history {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background-color: rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background-color: rgba(74, 107, 255, 0.1);
+        }
+
+        .expanded-row {
+            animation: expand 0.5s ease;
+        }
+
+        @keyframes expand {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Market data feed */
+        .market-data-feed {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .data-item {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* API usage panel */
+        .api-usage-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .cost-item {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Winner breakdown */
+        .winner-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .outcome-card {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            position: relative;
+        }
+
+        .winner {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--neon-accent);
+            color: white;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 50%;
+        }
+
+        /* Notes section */
+        .notes-section {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            border: none;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            aside.sidebar {
+                position: relative;
+                margin-bottom: 20px;
+            }
+
+            .comparison-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 10px var(--neon-accent);
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--neon-accent);
+            }
+
+            100% {
+                box-shadow: 0 0 10px var(--neon-accent);
+            }
+        }
+
+        .glowing {
+            animation: glow 2s infinite alternate;
+        }
+
+        /* Neon text effect */
+        .neon-text {
+            color: var(--neon-accent);
+            text-shadow: 0 0 5px var(--neon-accent), 0 0 10px var(--neon-accent), 0 0 20px var(--neon-accent);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <!-- Logo will be represented by the pseudo-element -->
+        </div>
+        <button class="theme-toggle" id="themeToggle">🌙 Dark Mode</button>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h3>Navigation</h3>
+            <ul class="nav-tabs">
+                <li><a href="#" data-tab="summary" class="active">Summary</a></li>
+                <li><a href="#" data-tab="revenue">Revenue</a></li>
+                <li><a href="#" data-tab="profitability">Profitability</a></li>
+                <li><a href="#" data-tab="cashflow">Cash Flow</a></li>
+                <li><a href="#" data-tab="marketdata">Market Data</a></li>
+            </ul>
+
+            <h3 class="filters-title">Filters</h3>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="companySelect">Company</label>
+                    <select id="companySelect">
+                        <option value="apple">Apple Inc.</option>
+                        <option value="microsoft">Microsoft Corp.</option>
+                        <option value="google">Alphabet Inc.</option>
+                        <option value="amazon">Amazon.com Inc.</option>
+                        <option value="facebook">Meta Platforms Inc.</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="timeframeSelect">Time Frame</label>
+                    <select id="timeframeSelect">
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annual">Annual</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="fiscalYearSelect">Fiscal Year</label>
+                    <select id="fiscalYearSelect">
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                        <option value="2020">2020</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="applyFilters">Apply Filters</button>
+        </aside>
+
+        <main>
+            <!-- Hero Summary Section -->
+            <section class="section hero-summary" id="summarySection">
+                <h2>Company Overview</h2>
+                <div class="metric-grid">
+                    <div class="metric-card glowing">
+                        <h3>Total Revenue</h3>
+                        <div class="value">$394.8B</div>
+                    </div>
+                    <div class="metric-card glowing">
+                        <h3>Net Income</h3>
+                        <div class="value">$97.3B</div>
+                    </div>
+                    <div class="metric-card glowing">
+                        <h3>Earnings Per Share (EPS)</h3>
+                        <div class="value">$6.12</div>
+                    </div>
+                    <div class="metric-card glowing">
+                        <h3>P/E Ratio</h3>
+                        <div class="value">28.45</div>
+                    </div>
+                    <div class="metric-card glowing">
+                        <h3>Return on Equity (ROE)</h3>
+                        <div class="value">36.7%</div>
+                    </div>
+                    <div class="metric-card glowing">
+                        <h3>Debt-to-Equity (D/E)</h3>
+                        <div class="value">1.24</div>
+                    </div>
+                    <div class="metric-card glowing">
+                        <h3>Market Cap</h3>
+                        <div class="value">$3.09T</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Head-to-head Comparison Panel -->
+            <section class="section comparison-section" id="comparisonSection">
+                <div class="section-title">
+                    <h2>Head-to-Head Comparison</h2>
+                    <div>
+                        <select id="comparisonSelect1">
+                            <option value="apple">Apple Inc.</option>
+                            <option value="microsoft">Microsoft Corp.</option>
+                        </select>
+                        <span style="margin: 0 15px;">vs</span>
+                        <select id="comparisonSelect2">
+                            <option value="microsoft">Microsoft Corp.</option>
+                            <option value="apple">Apple Inc.</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="comparison-panel">
+                    <div class="company-card" style="--primary-color: #0071e3;">
+                        <h3>Apple Inc.</h3>
+                        <div style="margin-top: 20px;">
+                            <p><strong>Revenue Growth:</strong> 9.6%</p>
+                            <p><strong>EBITDA Margin:</strong> 24.5%</p>
+                            <p><strong>Free Cash Flow Yield:</strong> 18.7%</p>
+                            <p><strong>Dividend Yield:</strong> 0.5%</p>
+                            <p><strong>Beta:</strong> 1.23</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 24px;">↔</span>
+                    </div>
+                    <div class="company-card" style="--primary-color: #f25022;">
+                        <h3>Microsoft Corp.</h3>
+                        <div style="margin-top: 20px;">
+                            <p><strong>Revenue Growth:</strong> 18.9%</p>
+                            <p><strong>EBITDA Margin:</strong> 46.7%</p>
+                            <p><strong>Free Cash Flow Yield:</strong> 25.3%</p>
+                            <p><strong>Dividend Yield:</strong> 0.7%</p>
+                            <p><strong>Beta:</strong> 1.12</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Company Cards Grid -->
+            <section class="section company-cards-section" id="companyCardsSection">
+                <h2>Company Metrics</h2>
+                <div class="company-cards-grid">
+                    <div class="company-card">
+                        <h3>Apple Inc.</h3>
+                        <p><strong>Revenue:</strong> $394.8B | <strong>Operating Income:</strong> $105.7B</p>
+                        <p><strong>Net Income:</strong> $97.3B | <strong>EPS:</strong> $6.12</p>
+                        <p><strong>P/E Ratio:</strong> 28.45 | <strong>ROE:</strong> 36.7%</p>
+                        <p><strong>D/E:</strong> 1.24 | <strong>Total Assets:</strong> $350.9B</p>
+                        <p><strong>Total Liabilities:</strong> $288.6B | <strong>Cash & Equivalents:</strong> $110.7B
+                        </p>
+                        <div style="margin-top: 15px; font-weight: bold;">Financial Health Score: 92/100</div>
+                    </div>
+                    <div class="company-card">
+                        <h3>Microsoft Corp.</h3>
+                        <p><strong>Revenue:</strong> $218.5B | <strong>Operating Income:</strong> $76.4B</p>
+                        <p><strong>Net Income:</strong> $69.0B | <strong>EPS:</strong> $3.19</p>
+                        <p><strong>P/E Ratio:</strong> 35.21 | <strong>ROE:</strong> 38.4%</p>
+                        <p><strong>D/E:</strong> 0.56 | <strong>Total Assets:</strong> $279.0B</p>
+                        <p><strong>Total Liabilities:</strong> $177.3B | <strong>Cash & Equivalents:</strong> $148.7B
+                        </p>
+                        <div style="margin-top: 15px; font-weight: bold;">Financial Health Score: 95/100</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interactive Charts Section -->
+            <section class="section charts-section" id="chartsSection">
+                <h2>Interactive Financial Charts</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 20px;">
+                    <!-- Revenue vs. Net Income Chart -->
+                    <div class="chart-card">
+                        <h3>Revenue vs. Net Income (Last 5 Years)</h3>
+                        <canvas id="revenueNetIncomeChart"></canvas>
+                    </div>
+                    <!-- EBITDA Margin Trend -->
+                    <div class="chart-card">
+                        <h3>EBITDA Margin Trend</h3>
+                        <canvas id="ebitdaMarginChart"></canvas>
+                    </div>
+                    <!-- Free Cash Flow vs. Capital Expenditures -->
+                    <div class="chart-card">
+                        <h3>Free Cash Flow vs. Capital Expenditures</h3>
+                        <canvas id="cashFlowCapExChart"></canvas>
+                    </div>
+                    <!-- Stock Price vs. Market Cap -->
+                    <div class="chart-card">
+                        <h3>Stock Price vs. Market Cap</h3>
+                        <canvas id="stockPriceMarketCapChart"></canvas>
+                    </div>
+                    <!-- Dividend Yield Comparison -->
+                    <div class="chart-card">
+                        <h3>Dividend Yield Comparison</h3>
+                        <canvas id="dividendYieldChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Financial Statement History Section -->
+            <section class="section statement-history-section" id="statementHistorySection">
+                <div class="section-title">
+                    <h2>Financial Statement History</h2>
+                    <button id="toggleQuarterlyAnnual">Toggle Quarterly/Annual</button>
+                </div>
+                <div class="statement-history">
+                    <table id="financialStatementsTable">
+                        <thead>
+                            <tr>
+                                <th>Fiscal Year</th>
+                                <th>Quarter</th>
+                                <th>Revenue (B)</th>
+                                <th>Net Income (B)</th>
+                                <th>EPS</th>
+                                <th>P/E Ratio</th>
+                                <th>Report Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statementsTableBody">
+                            <!-- Data will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Market Data Feed Panel -->
+            <section class="section market-data-feed-section" id="marketDataFeedSection">
+                <h2>Market Data Feed</h2>
+                <div class="market-data-feed">
+                    <div class="data-item">
+                        <span><strong>Bloomberg API:</strong></span>
+                        <span id="bloombergStatus">Connected</span>
+                    </div>
+                    <div class="data-item">
+                        <span><strong>Ticker API:</strong></span>
+                        <span id="tickerStatus">Connected</span>
+                    </div>
+                    <div class="data-item">
+                        <span><strong>Latency:</strong></span>
+                        <span id="latencyValue">120ms</span>
+                    </div>
+                    <div class="data-item">
+                        <span><strong>Last Update:</strong></span>
+                        <span id="lastUpdateTime">2023-10-15 14:30:22 UTC</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Usage Panel -->
+            <section class="section api-usage-panel-section" id="apiUsagePanelSection">
+                <h2>API Usage and Costs</h2>
+                <div class="api-usage-panel">
+                    <div class="cost-item">
+                        <span><strong>Bloomberg API:</strong></span>
+                        <span>$<span id="bloombergCost">450.21</span></span>
+                    </div>
+                    <div class="cost-item">
+                        <span><strong>Alpha Vantage:</strong></span>
+                        <span>$<span id="alphaVantageCost">120.75</span></span>
+                    </div>
+                    <div class="cost-item">
+                        <span><strong>Calls Made (Bloomberg):</strong></span>
+                        <span id="bloombergCalls">8,421</span>
+                    </div>
+                    <div class="cost-item">
+                        <span><strong>Calls Made (Alpha Vantage):</strong></span>
+                        <span id="alphaVantageCalls">3,145</span>
+                    </div>
+                    <div class="cost-item" style="background-color: rgba(0, 0, 0, 0.2);">
+                        <span><strong>Total Spend to Date:</strong></span>
+                        <span>$<span id="totalSpend">570.96</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Winner Breakdown Section -->
+            <section class="section winner-breakdown-section" id="winnerBreakdownSection">
+                <h2>Winner Breakdown</h2>
+                <div class="winner-breakdown">
+                    <div class="outcome-card">
+                        <span class="winner">🏆</span>
+                        <h3>Revenue Growth</h3>
+                        <p><strong>Microsoft Corp.</strong> outperformed Apple Inc. with 18.9% growth vs. 9.6%.
+                            Microsoft's cloud and enterprise services drove significant revenue expansion, while Apple
+                            saw slower growth in its core product lines.</p>
+                    </div>
+                    <div class="outcome-card">
+                        <span class="winner">🏆</span>
+                        <h3>Profitability (EBITDA Margin)</h3>
+                        <p><strong>Microsoft Corp.</strong> had a significantly higher EBITDA margin of 46.7% compared
+                            to Apple's 24.5%, reflecting its strong operating efficiency and lower cost structure in its
+                            primary business segments.</p>
+                    </div>
+                    <div class="outcome-card">
+                        <span class="winner">🏆</span>
+                        <h3>Free Cash Flow Yield</h3>
+                        <p><strong>Microsoft Corp.</strong> generated a higher free cash flow yield of 25.3% vs. Apple's
+                            18.7%, indicating more efficient capital allocation and stronger liquidity position.</p>
+                    </div>
+                    <div class="outcome-card">
+                        <span class="winner">🏆</span>
+                        <h3>Dividend Yield</h3>
+                        <p><strong>Microsoft Corp.</strong> offered a slightly higher dividend yield of 0.7% compared to
+                            Apple's 0.5%, reflecting its more mature business model and commitment to returning capital
+                            to shareholders.</p>
+                    </div>
+                    <div class="outcome-card">
+                        <span></span>
+                        <h3>Beta</h3>
+                        <p><strong>Apple Inc.</strong> had a higher beta of 1.23 compared to Microsoft's 1.12,
+                            indicating slightly more volatility in its stock price relative to the market.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Searchable & Sortable Table -->
+            <section class="section table-section" id="tableSection">
+                <div class="section-title">
+                    <h2>Financial Reports</h2>
+                    <input type="text" id="searchInput" placeholder="Search reports..."
+                        style="width: 300px; padding: 10px; border-radius: var(--border-radius); border: none;">
+                </div>
+                <table id="reportsTable">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Fiscal Year</th>
+                            <th>Quarter</th>
+                            <th>Revenue (B)</th>
+                            <th>Net Income (B)</th>
+                            <th>EPS</th>
+                            <th>P/E Ratio</th>
+                            <th>Report Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <!-- Data will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Notes Section -->
+            <section class="section notes-section" id="notesSection">
+                <div style="grid-column: 1;">
+                    <h2>Analyst Notes</h2>
+                    <textarea id="analystNotes"
+                        placeholder="Add your observations, commentary, and future outlook here..."></textarea>
+                </div>
+                <div>
+                    <h3>Recent Activity</h3>
+                    <div
+                        style="background-color: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: var(--border-radius);">
+                        <p><strong>2023-10-15:</strong> Updated financials for Q3 2023. Microsoft shows strong growth in
+                            cloud services.</p>
+                        <p style="margin-top: 10px;"><strong>2023-07-18:</strong> Apple reports record revenue despite
+                            supply chain challenges.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include custom JavaScript -->
+    <script>
+        // Sample data for financial statements
+        const financialData = {
+            apple: [
+                { year: 2023, quarter: 'Q1', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2023-04-28' },
+                { year: 2023, quarter: 'Q2', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2023-07-31' },
+                { year: 2023, quarter: 'Q3', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2023-10-17' },
+                { year: 2023, quarter: 'Q4', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2024-01-29' },
+                { year: 2022, quarter: 'Q4', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2023-01-31' },
+                // Add more quarters for other years...
+            ],
+            microsoft: [
+                { year: 2023, quarter: 'Q1', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2023-04-28' },
+                { year: 2023, quarter: 'Q2', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2023-07-31' },
+                { year: 2023, quarter: 'Q3', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2023-10-17' },
+                { year: 2023, quarter: 'Q4', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2024-01-29' },
+                { year: 2022, quarter: 'Q4', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2023-01-31' },
+                // Add more quarters for other years...
+            ],
+            google: [
+                { year: 2023, quarter: 'Q1', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2023-04-27' },
+                { year: 2023, quarter: 'Q2', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2023-07-27' },
+                { year: 2023, quarter: 'Q3', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2023-10-25' },
+                { year: 2023, quarter: 'Q4', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2024-01-24' },
+                { year: 2022, quarter: 'Q4', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2023-01-25' },
+            ],
+            amazon: [
+                { year: 2023, quarter: 'Q1', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2023-04-27' },
+                { year: 2023, quarter: 'Q2', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2023-07-27' },
+                { year: 2023, quarter: 'Q3', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2023-10-25' },
+                { year: 2023, quarter: 'Q4', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2024-01-24' },
+                { year: 2022, quarter: 'Q4', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2023-01-25' },
+            ],
+            facebook: [
+                { year: 2023, quarter: 'Q1', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2023-04-27' },
+                { year: 2023, quarter: 'Q2', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2023-07-27' },
+                { year: 2023, quarter: 'Q3', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2023-10-25' },
+                { year: 2023, quarter: 'Q4', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2024-01-24' },
+                { year: 2022, quarter: 'Q4', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2023-01-25' },
+            ]
+        };
+
+        // Sample data for reports table
+        const reportsData = [
+            { company: 'Apple Inc.', year: 2023, quarter: 'Q1', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2023-04-28' },
+            { company: 'Apple Inc.', year: 2023, quarter: 'Q2', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2023-07-31' },
+            { company: 'Apple Inc.', year: 2023, quarter: 'Q3', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2023-10-17' },
+            { company: 'Apple Inc.', year: 2023, quarter: 'Q4', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2024-01-29' },
+            { company: 'Apple Inc.', year: 2022, quarter: 'Q4', revenue: 97.26, netIncome: 24.4, eps: 1.85, peRatio: 28.45, reportDate: '2023-01-31' },
+            { company: 'Microsoft Corp.', year: 2023, quarter: 'Q1', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2023-04-28' },
+            { company: 'Microsoft Corp.', year: 2023, quarter: 'Q2', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2023-07-31' },
+            { company: 'Microsoft Corp.', year: 2023, quarter: 'Q3', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2023-10-17' },
+            { company: 'Microsoft Corp.', year: 2023, quarter: 'Q4', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2024-01-29' },
+            { company: 'Microsoft Corp.', year: 2022, quarter: 'Q4', revenue: 51.79, netIncome: 18.86, eps: 2.04, peRatio: 35.21, reportDate: '2023-01-31' },
+            { company: 'Alphabet Inc.', year: 2023, quarter: 'Q1', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2023-04-27' },
+            { company: 'Alphabet Inc.', year: 2023, quarter: 'Q2', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2023-07-27' },
+            { company: 'Alphabet Inc.', year: 2023, quarter: 'Q3', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2023-10-25' },
+            { company: 'Alphabet Inc.', year: 2023, quarter: 'Q4', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2024-01-24' },
+            { company: 'Alphabet Inc.', year: 2022, quarter: 'Q4', revenue: 28.46, netIncome: 7.59, eps: 0.87, peRatio: 26.89, reportDate: '2023-01-25' },
+            { company: 'Amazon.com Inc.', year: 2023, quarter: 'Q1', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2023-04-27' },
+            { company: 'Amazon.com Inc.', year: 2023, quarter: 'Q2', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2023-07-27' },
+            { company: 'Amazon.com Inc.', year: 2023, quarter: 'Q3', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2023-10-25' },
+            { company: 'Amazon.com Inc.', year: 2023, quarter: 'Q4', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2024-01-24' },
+            { company: 'Amazon.com Inc.', year: 2022, quarter: 'Q4', revenue: 57.47, netIncome: -2.74, eps: -0.68, peRatio: N / A, reportDate: '2023-01-25' },
+            { company: 'Meta Platforms Inc.', year: 2023, quarter: 'Q1', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2023-04-27' },
+            { company: 'Meta Platforms Inc.', year: 2023, quarter: 'Q2', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2023-07-27' },
+            { company: 'Meta Platforms Inc.', year: 2023, quarter: 'Q3', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2023-10-25' },
+            { company: 'Meta Platforms Inc.', year: 2023, quarter: 'Q4', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2024-01-24' },
+            { company: 'Meta Platforms Inc.', year: 2022, quarter: 'Q4', revenue: 32.2, netIncome: 4.74, eps: 1.89, peRatio: 26.89, reportDate: '2023-01-25' },
+        ];
+
+        // Chart data for different charts
+        const chartData = {
+            revenueNetIncome: {
+                labels: ['2018', '2019', '2020', '2021', '2022'],
+                datasets: [
+                    {
+                        label: 'Apple Revenue (B)',
+                        data: [265.6, 260.2, 274.5, 365.8, 394.8],
+                        backgroundColor: 'rgba(74, 107, 255, 0.2)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Apple Net Income (B)',
+                        data: [59.5, 55.3, 57.6, 94.6, 97.3],
+                        backgroundColor: 'rgba(255, 118, 117, 0.2)',
+                        borderColor: 'rgba(255, 118, 117, 1)',
+                        borderWidth: 2,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Microsoft Revenue (B)',
+                        data: [136.8, 143.0, 167.9, 198.3, 218.5],
+                        backgroundColor: 'rgba(242, 80, 34, 0.2)',
+                        borderColor: 'rgba(242, 80, 34, 1)',
+                        borderWidth: 2,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Microsoft Net Income (B)',
+                        data: [39.5, 46.7, 52.9, 67.7, 69.0],
+                        backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                        borderColor: 'rgba(155, 89, 182, 1)',
+                        borderWidth: 2,
+                        tension: 0.3
+                    }
+                ]
+            },
+            ebitdaMargin: {
+                labels: ['Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023'],
+                datasets: [
+                    {
+                        label: 'Apple EBITDA Margin (%)',
+                        data: [24.5, 24.6, 24.7, 24.9],
+                        backgroundColor: 'rgba(74, 107, 255, 0.2)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Microsoft EBITDA Margin (%)',
+                        data: [46.3, 46.5, 46.8, 46.9],
+                        backgroundColor: 'rgba(242, 80, 34, 0.2)',
+                        borderColor: 'rgba(242, 80, 34, 1)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            cashFlowCapEx: {
+                labels: ['Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023'],
+                datasets: [
+                    {
+                        label: 'Apple Free Cash Flow (B)',
+                        data: [18.7, 19.2, 19.5, 20.1],
+                        backgroundColor: 'rgba(74, 107, 255, 0.2)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        type: 'line'
+                    },
+                    {
+                        label: 'Apple Capital Expenditures (B)',
+                        data: [8.9, 9.1, 9.3, 9.6],
+                        backgroundColor: 'rgba(74, 107, 255, 0.2)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        type: 'bar'
+                    },
+                    {
+                        label: 'Microsoft Free Cash Flow (B)',
+                        data: [25.3, 26.1, 26.8, 27.4],
+                        backgroundColor: 'rgba(242, 80, 34, 0.2)',
+                        borderColor: 'rgba(242, 80, 34, 1)',
+                        borderWidth: 2,
+                        type: 'line'
+                    },
+                    {
+                        label: 'Microsoft Capital Expenditures (B)',
+                        data: [15.7, 16.2, 16.9, 17.5],
+                        backgroundColor: 'rgba(242, 80, 34, 0.2)',
+                        borderColor: 'rgba(242, 80, 34, 1)',
+                        borderWidth: 2,
+                        type: 'bar'
+                    }
+                ]
+            },
+            stockPriceMarketCap: {
+                labels: ['Jan', 'Apr', 'Jul', 'Oct', 'Jan'],
+                datasets: [
+                    {
+                        label: 'Apple Stock Price ($)',
+                        data: [150, 175, 180, 190, 200],
+                        backgroundColor: 'rgba(74, 107, 255, 0.2)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        yAxisID: 'y',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Apple Market Cap (T)',
+                        data: [2.5, 2.8, 2.9, 3.0, 3.1],
+                        backgroundColor: 'rgba(74, 107, 255, 0.2)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        yAxisID: 'y1',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Microsoft Stock Price ($)',
+                        data: [250, 280, 290, 300, 310],
+                        backgroundColor: 'rgba(242, 80, 34, 0.2)',
+                        borderColor: 'rgba(242, 80, 34, 1)',
+                        borderWidth: 2,
+                        yAxisID: 'y',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Microsoft Market Cap (T)',
+                        data: [2.2, 2.5, 2.6, 2.7, 2.8],
+                        backgroundColor: 'rgba(242, 80, 34, 0.2)',
+                        borderColor: 'rgba(242, 80, 34, 1)',
+                        borderWidth: 2,
+                        yAxisID: 'y1',
+                        tension: 0.3
+                    }
+                ]
+            },
+            dividendYield: {
+                labels: ['Apple', 'Microsoft'],
+                datasets: [
+                    {
+                        label: 'Dividend Yield (%)',
+                        data: [0.5, 0.7],
+                        backgroundColor: [
+                            'rgba(74, 107, 255, 0.5)',
+                            'rgba(242, 80, 34, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(74, 107, 255, 1)',
+                            'rgba(242, 80, 34, 1)'
+                        ],
+                        borderWidth: 1
+                    }
+                ]
+            }
+        };
+
+        // Initialize charts
+        function initCharts() {
+            const ctx1 = document.getElementById('revenueNetIncomeChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'line',
+                data: chartData.revenueNetIncome,
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Revenue vs. Net Income (Last 5 Years)' } },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('ebitdaMarginChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'line',
+                data: chartData.ebitdaMargin,
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'EBITDA Margin Trend' } },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+
+            const ctx3 = document.getElementById('cashFlowCapExChart').getContext('2d');
+            new Chart(ctx3, {
+                type: 'bar',
+                data: chartData.cashFlowCapEx,
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Free Cash Flow vs. Capital Expenditures' } },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+
+            const ctx4 = document.getElementById('stockPriceMarketCapChart').getContext('2d');
+            new Chart(ctx4, {
+                type: 'line',
+                data: chartData.stockPriceMarketCap,
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Stock Price vs. Market Cap' } },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            position: 'left'
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: {
+                                display: true,
+                                text: 'Market Cap (T)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctx5 = document.getElementById('dividendYieldChart').getContext('2d');
+            new Chart(ctx5, {
+                type: 'bar',
+                data: chartData.dividendYield,
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Dividend Yield Comparison' } },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Theme toggle functionality
+        document.getElementById('themeToggle').addEventListener('click', function () {
+            document.body.classList.toggle('light-theme');
+            const button = this;
+            if (document.body.classList.contains('light-theme')) {
+                button.textContent = '🌙 Dark Mode';
+                button.style.justifyContent = 'flex-end';
+            } else {
+                button.textContent = '☀️ Light Mode';
+                button.style.justifyContent = 'flex-start';
+            }
+        });
+
+        // Navigation tabs functionality
+        document.querySelectorAll('.nav-tabs a').forEach(tab => {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetTab = this.getAttribute('data-tab');
+
+                // Hide all sections except the selected one
+                document.querySelectorAll('main > .section').forEach(section => {
+                    section.style.display = 'none';
+                });
+
+                // Show the selected section
+                document.getElementById(`${targetTab}Section`).style.display = 'block';
+
+                // Update active tab
+                document.querySelectorAll('.nav-tabs a').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Initialize the dashboard with the first tab visible
+        document.addEventListener('DOMContentLoaded', function () {
+            initCharts();
+            populateFinancialStatementsTable();
+            populateReportsTable();
+
+            // Set initial active tab (summary)
+            const summaryTab = document.querySelector('[data-tab="summary"]');
+            if (summaryTab) {
+                summaryTab.classList.add('active');
+            }
+
+            // Update market data feed periodically
+            setInterval(updateMarketData, 3000);
+        });
+
+        // Populate financial statements table
+        function populateFinancialStatementsTable() {
+            const tbody = document.getElementById('statementsTableBody');
+            tbody.innerHTML = '';
+
+            const companyData = financialData.apple; // Default to Apple for demo
+
+            companyData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.year}</td>
+                    <td>${item.quarter}</td>
+                    <td>$${item.revenue.toFixed(2)}B</td>
+                    <td>$${item.netIncome.toFixed(2)}B</td>
+                    <td>$${item.eps.toFixed(2)}</td>
+                    <td>${item.peRatio}</td>
+                    <td>${formatDate(item.reportDate)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add click event to expand rows
+            document.querySelectorAll('#statementsTableBody tr').forEach(row => {
+                row.addEventListener('click', function () {
+                    this.classList.toggle('expanded');
+                });
+            });
+        }
+
+        // Populate reports table with sortable and searchable functionality
+        function populateReportsTable() {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+
+            reportsData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.company}</td>
+                    <td>${item.year}</td>
+                    <td>${item.quarter}</td>
+                    <td>$${item.revenue.toFixed(2)}B</td>
+                    <td>$${item.netIncome.toFixed(2)}B</td>
+                    <td>$${item.eps !== 'N/A' ? item.eps.toFixed(2) : item.eps}</td>
+                    <td>${item.peRatio === 'N/A' ? 'N/A' : item.peRatio.toFixed(2)}</td>
+                    <td>${formatDate(item.reportDate)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add sorting functionality to table headers
+            document.querySelectorAll('#reportsTable th').forEach((th, index) => {
+                if (index === 0) return; // Skip the first header (Company)
+
+                th.addEventListener('click', function () {
+                    const columnIndex = index;
+                    const isAscending = !this.classList.contains('asc');
+
+                    // Remove previous sort indicators
+                    document.querySelectorAll('#reportsTable th').forEach(th => {
+                        th.classList.remove('asc', 'desc');
+                    });
+
+                    // Add sort indicator
+                    this.classList.add(isAscending ? 'asc' : 'desc');
+
+                    // Sort the table
+                    const rows = Array.from(document.querySelectorAll('#reportsTableBody tr'));
+                    rows.sort((a, b) => {
+                        const aValue = getCellValue(a, columnIndex);
+                        const bValue = getCellValue(b, columnIndex);
+
+                        if (isAscending) {
+                            return aValue > bValue ? 1 : -1;
+                        } else {
+                            return aValue < bValue ? 1 : -1;
+                        }
+                    });
+
+                    // Re-append sorted rows
+                    const tbody = document.getElementById('reportsTableBody');
+                    rows.forEach(row => tbody.appendChild(row));
+                });
+            });
+
+            // Add search functionality
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function () {
+                const filter = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#reportsTableBody tr');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(filter)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Helper function to get cell value based on column index
+        function getCellValue(row, columnIndex) {
+            const cells = row.querySelectorAll('td');
+            if (columnIndex >= cells.length) return 0;
+
+            const cell = cells[columnIndex];
+            let value;
+
+            // Handle numeric values and special cases like 'N/A'
+            if (cell.textContent.includes('$') || cell.textContent.includes('B')) {
+                // Extract the number part
+                const numStr = cell.textContent.replace(/[^0-9.-]/g, '');
+                value = parseFloat(numStr);
+            } else if (cell.textContent === 'N/A') {
+                value = -Infinity; // Treat N/A as lowest for sorting
+            } else {
+                value = cell.textContent;
+            }
+
+            return typeof value === 'number' ? value : 0;
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // Update market data feed periodically
+        function updateMarketData() {
+            document.getElementById('latencyValue').textContent = `${Math.floor(Math.random() * 200) + 50}ms`;
+            document.getElementById('lastUpdateTime').textContent = new Date().toISOString().replace('T', ' ').split('.')[0] + ' UTC';
+
+            // Randomly change status between Connected and Disconnected
+            const isConnected = Math.random() > 0.9;
+            if (isConnected) {
+                document.getElementById('bloombergStatus').textContent = 'Connected';
+                document.getElementById('tickerStatus').textContent = 'Connected';
+            } else {
+                document.getElementById('bloombergStatus').textContent = 'Disconnected';
+                document.getElementById('tickerStatus').textContent = 'Disconnected';
+            }
+        }
+
+        // Toggle between quarterly and annual data
+        document.getElementById('toggleQuarterlyAnnual').addEventListener('click', function () {
+            const isQuarterly = this.textContent.includes('Quarterly');
+            if (isQuarterly) {
+                this.textContent = 'Toggle to Annual';
+            } else {
+                this.textContent = 'Toggle Quarterly/Annual';
+            }
+
+            // In a real app, this would filter the data accordingly
+            console.log(`Toggled to ${isQuarterly ? 'annual' : 'quarterly'} view`);
+        });
+
+        // Apply filters functionality
+        document.getElementById('applyFilters').addEventListener('click', function () {
+            const companySelect = document.getElementById('companySelect');
+            const timeframeSelect = document.getElementById('timeframeSelect');
+            const fiscalYearSelect = document.getElementById('fiscalYearSelect');
+
+            console.log(`Applied filters - Company: ${companySelect.value}, Time Frame: ${timeframeSelect.value}, Fiscal Year: ${fiscalYearSelect.value}`);
+
+            // In a real app, this would filter the data and update the dashboard
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Financial Results &amp; Analysis Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        /* Reset & base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f12;
+            color: #e0e0e0;
+            min-height: 100vh;
+            transition: background 0.5s, color 0.5s;
+        }
+
+        body.dark {
+            --bg: #0f0f12;
+            --card: #1e1e2e;
+            --text: #e0e0e0;
+            --accent: #00ffd4;
+            --shadow: rgba(0, 255, 212, 0.15);
+        }
+
+        body.light {
+            --bg: #fff;
+            --card: #f8f8f8;
+            --text: #111;
+            --accent: #007acc;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        :root {
+            --bg: #0f0f12;
+            --card: #1e1e2e;
+            --text: #e0e0e0;
+            --accent: #00ffd4;
+            --shadow: rgba(0, 255, 212, 0.15);
+            --border: #2a2a3a;
+            --hover: #333;
+            --radius: 16px;
+            --transition: all 0.4s cubic-bezier(.4, .1, .2, 1);
+        }
+
+        /* Utilities */
+        .transition-all {
+            transition: all 0.4s cubic-bezier(.4, .1, .2, 1);
+        }
+
+        .shadow {
+            box-shadow: 0 8px 32px var(--shadow);
+            border-radius: var(--radius);
+        }
+
+        .border-rad {
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+        }
+
+        header,
+        .panel,
+        .section,
+        .card,
+        .chart,
+        .table-container,
+        .note,
+        .api-panel {
+            margin-bottom: 2.5rem;
+        }
+
+        /* Navigation */
+        .nav-bar {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            padding: 1rem 0;
+            background: var(--card);
+            border-radius: var(--radius);
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-btn.active {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(90deg, #111 30%, var(--card) 70%);
+            padding: 3rem 2rem;
+            border-radius: var(--radius);
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-title {
+            font-size: 2.1rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #00ffd4;
+        }
+
+        .summary-row {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 1.3rem;
+        }
+
+        .metric {
+            background: rgba(255, 255, 255, 0.07);
+            padding: 0.8rem 1.2rem;
+            border-radius: var(--radius);
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .metric span {
+            font-weight: 600;
+        }
+
+        /* Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--card);
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.6rem 1rem;
+            color: var(--text);
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 24px var(--shadow);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: var(--radius);
+            box-shadow: 0 8px 32px var(--shadow);
+            transition: transform 0.2s, box-shadow 0.4s;
+            color: var(--text);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 14px 40px var(--shadow);
+        }
+
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #00ffd4;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            color: #aaa;
+        }
+
+        /* Charts */
+        .chart {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            min-height: 280px;
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            color: #bbb;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 100%;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Table */
+        .table-wrapper {
+            background: var(--card);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .table-header {
+            font-weight: 700;
+            color: #00ffd4;
+        }
+
+        .table-row {
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .table-row:hover {
+            background: rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+        }
+
+        .table-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .table-cell {
+            padding: 0.6rem 1rem;
+            color: var(--text);
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .table-header .metric {
+            font-weight: 600;
+        }
+
+        /* Filter & controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 0.8rem 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            min-width: 140px;
+        }
+
+        select,
+        input[type="text"],
+        button {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.3rem 1rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #00ffd4a2;
+        }
+
+        /* Market data, API panels */
+        .panel {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .status-row {
+            display: flex;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: #00ffd4;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.7rem;
+            border-radius: 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        /* Notes */
+        .note {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: var(--radius);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #00ffd4;
+        }
+
+        .note-body {
+            margin: 0.5rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero-title {
+                font-size: 1.6rem;
+            }
+
+            .summary-row {
+                flex-wrap: wrap;
+            }
+
+            .chart-container,
+            .table-wrapper {
+                height: 240px;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            animation: fadeInUp 0.5s cubic-bezier(.4, .1, .2, 1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="light">
+    <div class="theme-toggle" onclick="toggleTheme()">🌙</div>
+
+    <header class="nav-bar">
+        <span class="nav-btn active" onclick="setActivePanel('summary')">Summary</span>
+        <span class="nav-btn" onclick="setActivePanel('revenue')">Revenue</span>
+        <span class="nav-btn" onclick="setActivePanel('profitability')">Profitability</span>
+        <span class="nav-btn" onclick="setActivePanel('cashflow')">Cash Flow</span>
+        <span class="nav-btn" onclick="setActivePanel('market')">Market Data</span>
+    </header>
+
+    <div class="container">
+        <!-- Hero Summary -->
+        <section id="hero" class="fade-in">
+            <h1 class="hero-title">Financial Results &amp; Analysis Dashboard</h1>
+            <div class="hero">
+                <div class="summary-row">
+                    <span><span class="metric"><b>AAPL</span> Revenue Growth</b></span>
+                    <span>+12.3% YoY</span>
+                </div>
+                <div class="summary-row">
+                    <span><span class="metric"><b>MSFT</b></span> EBITDA Margin</span>
+                    <span>42.1%</span>
+                </div>
+                <div class="summary-row">
+                    <span><span class="metric"><b>NASDAQ-100</b></span> P/E Ratio</span>
+                    <span>28.7x</span>
+                </div>
+                <div class="summary-row">
+                    <span><span class="metric"><b>AMZN</b></span> ROE</span>
+                    <span>24.6%</span>
+                </div>
+                <div class="summary-row">
+                    <span><span class="metric"><b>GOOGL</b></span> D/E Ratio</span>
+                    <span>0.42</span>
+                </div>
+                <div class="summary-row">
+                    <span><span class="metric"><b>TSLA</b></span> Market Cap</span>
+                    <span>$1.2T</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Panel -->
+        <section id="compare" class="fade-in">
+            <h2 class="card-header">Head-to-Head: AAPL vs MSFT</h2>
+            <div class="card">
+                <div class="card-header">Key Metrics</div>
+                <table class="table-wrapper">
+                    <thead>
+                        <tr>
+                            <th class="metric">Metric</th>
+                            <th>Apple (AAPL)</th>
+                            <th>Microsoft (MSFT)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Revenue Growth %</td>
+                            <td>+12.3%</td>
+                            <td>+9.8%</td>
+                        </tr>
+                        <tr>
+                            <td>EBITDA Margin</td>
+                            <td>42.1%</td>
+                            <td>42.1%</td>
+                        </tr>
+                        <tr>
+                            <td>Free Cash Flow Yield</td>
+                            <td>6.2%</td>
+                            <td>7.1%</td>
+                        </tr>
+                        <tr>
+                            <td>Dividend Yield</td>
+                            <td>0.55%</td>
+                            <td>0.72%</td>
+                        </tr>
+                        <tr>
+                            <td>Beta</td>
+                            <td>1.2</td>
+                            <td>0.9</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Company Cards -->
+        <section id="cards" class="fade-in">
+            <h2 class="card-header">Key Company Metrics</h2>
+            <div class="card">
+                <div class="card-header">Apple Inc.</div>
+                <div class="card-meta"><span>Revenue ($B)</span> $383.3<br><span>Net Income ($B)</span>
+                    $99.8<br><span>EPS ($)</span> $4.30</span>
+                </div>
+                <div class="card">
+                    <div class="card-header">Microsoft Corp.</div>
+                    <div class="card-meta"><span>Revenue ($B)</span> $212.9<br><span>Net Income ($B)</span>
+                        $72.4<br><span>EPS ($)</span> $5.12</span>
+                    </div>
+        </section>
+
+        <!-- Charts -->
+        <section id="charts" class="fade-in">
+            <h2 class="card-header">Financial Charts</h2>
+            <div class="chart">
+                <div class="chart-title">Revenue vs Net Income (5Y)</div>
+                <div class="chart-container"><canvas class="chart-canvas" width="100%" height="280"></canvas>
+                </div>
+                <div class="chart">
+                    <div class="chart-title">EBITDA Margin Trend</div>
+                    <div class="chart-container"><canvas class="chart-canvas" width="100%" height="280"></canvas>
+                    </div>
+                    <div class="chart">
+                        <div class="chart-title">FCF vs CapEx</div>
+                        <div class="chart-container"><canvas class="chart-canvas" width="100%" height="280"></canvas>
+                        </div>
+                        <div class="chart">
+                            <div class="chart-title">Price vs Market Cap</div>
+                            <div class="chart-container"><canvas class="chart-canvas" width="100%"
+                                    height="280"></canvas>
+                            </div>
+                            <div class="chart">
+                                <div class="chart-title">Dividend Yield Comparison</div>
+                                <div class="chart-container"><canvas class="chart-canvas" width="100%"
+                                        height="280"></canvas>
+                                </div>
+        </section>
+
+        <!-- Financial History -->
+        <section id="history" class="fade-in">
+            <h2 class="card-header">Financial Statements</h2>
+            <div class="table-wrapper">
+                <div class="table-header">Apple FY-2023 Q4</div>
+                <div class="table-data">
+                    <div class="table-cell"><span>Revenue ($B)</span><span>383.3</span></div>
+                    <div class="table-cell"><span>Net Income ($B)</span><span>99.8</span></div>
+                    <div class="table-cell"><span>EPS ($)</span><span>4.30</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Data -->
+        <section id="market" class="fade-in">
+            <h2 class="card-header">Market Data Feed</h2>
+            <div class="panel">
+                <div class="status-row">
+                    <span>Bloomberg API:</span>
+                    <span class="status-badge" style="background:#00ffd4; color:white;">Connected • 22ms Latency • Last:
+                        12:34:56</span>
+                </div>
+                <div class="status-row">
+                    <span>Alpha Vantage:</span>
+                    <span class="status-badge" style="background:#00ffd4; color:white;">Active • 120ms Latency • Last:
+                        12:34:56</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Panel -->
+        <section id="api" class="fade-in">
+            <h2 class="card-header">API Usage</h2>
+            <div class="panel">
+                <p><strong>Estimated Cost: $0.12/1k calls</strong> • Calls: 14 • Total Spend: $1.68</p>
+                <ul>
+                    <li>Bloomberg API: $0.08/call (8 calls)</li>
+                    <li>Alpha Vantage: $0.04/call (6 calls)</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Winner Breakdown -->
+        <section id="winner" class="fade-in">
+            <h2 class="card-header">Winner Breakdown</h2>
+            <ul>
+                <li><strong>Revenue Growth</strong>: Apple (+12.3% YoY) vs Microsoft (+9.8%) → <span
+                        style="color:#00ffd4">Apple leads</span></li>
+                <li><strong>Profitability</strong>: Microsoft higher EPS, Apple slightly better margin → <span
+                        style="color:#00ffd4">Microsoft leads</span></li>
+                <li><strong>Liquidity</strong>: Apple cash flow yield higher → <span style="color:#00ffd4">Apple
+                        leads</span></li>
+                <li><strong>Valuation</strong>: Microsoft P/E lower → <span style="color:#00ffd4">Microsoft leads</span>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Search & Filters -->
+        <section class="controls">
+            <div class="control-group">
+                <select id="filterComp" placeholder="Filter by Company…">
+                    <option value="">All</option>
+                    <option>AAPL</option>
+                    <option>MSFT</option>
+                    <option>GOOGL</option>
+                    <option>AMZN</option>
+                </select>
+                <select id="filterYr" placeholder="Year…">
+                    <option>All</option>
+                    <option>2020</option>
+                    <option>2021</option>
+                    <option>2022</option>
+                    <option>2023</option>
+                </select>
+                <select id="filterQtr" placeholder="Quarter…">
+                    <option>All</option>
+                    <option>A</option>
+                    <option>Q1</option>
+                    <option>Q2</option>
+                    <option>Q3</option>
+                    <option>Q4</option>
+                </select>
+                <button class="btn-primary" onclick="sortTable('revenue')">Sort by Revenue</button>
+                <button class="btn-primary" onclick="toggleTheme()">Toggle Theme</button>
+            </div>
+            <div class="note">
+                <div class="note-header"><span>Analyst Notes</span><button style="float:right"
+                        onclick="alert('Add note…')">+</button></div>
+                <textarea placeholder="Add observations…" rows="4"
+                    style="width:100%; background:#1e1e2e;color:#eee;border:none; resize:none;"></textarea>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Theme toggle
+        let currentTheme = 'light';
+        function setActivePanel(panel) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.nav-btn[onclick="setActivePanel(\`${panel}\`)"]`).classList.add('active');
+            document.getElementById(panel).classList.remove('fade-in');
+            document.getElementById(panel).classList.add('fade-in');
+        }
+        // Theme
+        function toggleTheme() {
+            currentTheme = (currentTheme === 'light') ? 'dark' : 'light';
+            document.body.className = currentTheme;
+            document.querySelector('.theme-toggle').textContent = currentTheme === 'light' ? '🌙' : '☀️';
+            localStorage.setItem('theme', currentTheme);
+        }
+        if (localStorage.getItem('theme') === 'dark') toggleTheme();
+        // Table data
+        const tableData = [
+            { comp: "Apple", rev: 383.3, net: 99.8, eps: 4.30 },
+            { comp: "Microsoft", rev: 212.9, net: 72.4, eps: 5.12 },
+        ];
+        function renderTable() {
+            const tbody = document.querySelector('.table-wrapper .table-data');
+            tbody.innerHTML = '';
+            tableData.forEach(row => {
+                const tr = document.createElement('div');
+                tr.className = 'table-row';
+                tr.innerHTML = `
+          <div class="table-cell"><span>${row.comp}</span></div>
+          <div class="table-cell"><span>${row.rev}</span></div>
+          <div class="table-cell"><span>${row.net}</span></div>
+          <div class="table-cell"><span>${row.eps}</span></div>
+        `;
+                tbody.appendChild(tr);
+            });
+        }
+        // Theme persistence
+        if (localStorage.getItem('theme') === 'dark') toggleTheme();
+        // Controls
+        document.querySelectorAll('.controls select, .controls button').forEach(btn => {
+            btn.addEventListener('change', renderTable);
+        });
+        setActivePanel('summary');
+        // Placeholder for charts (use Chart.js or similar in real app)
+        // For demo: show canvas with text
+        document.querySelectorAll('.chart-canvas').forEach(canvas => {
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(0,255,212,0.1)';
+            ctx.fillRect(10, 30, canvas.width - 20, 120);
+            ctx.font = "14px monospace";
+            ctx.fillStyle = "#00ffd4";
+            ctx.fillText("Chart Placeholder", 15, 40);
+        });
+    </script>
+</body>
+
+</html>

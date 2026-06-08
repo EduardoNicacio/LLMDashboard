@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemma 4 31B QAT - QuantVantage | Institutional Financial Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#00f2ff',
+                            secondary: '#7000ff',
+                            accent: '#ff007a',
+                            success: '#00ffaa',
+                            warning: '#ffcc00',
+                            danger: '#ff4d4d',
+                        },
+                        dark: {
+                            bg: '#0a0b10',
+                            card: 'rgba(23, 25, 35, 0.8)',
+                            border: 'rgba(255, 255, 255, 0.1)',
+                            text: '#e2e8f0'
+                        },
+                        light: {
+                            bg: '#f8fafc',
+                            card: 'rgba(255, 255, 255, 0.8)',
+                            border: 'rgba(0, 0, 0, 0.1)',
+                            text: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            transition: background-color 0.4s ease, color 0.4s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .dark .glass {
+            --glass-border: rgba(255, 255, 255, 0.1);
+            background: rgba(23, 25, 35, 0.7);
+        }
+
+        .light .glass {
+            --glass-border: rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .neon-glow-blue {
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+        }
+
+        .neon-glow-purple {
+            box-shadow: 0 0 15px rgba(112, 0, 255, 0.3);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+
+        .light .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #00f2ff;
+            color: #00f2ff;
+        }
+
+        .expandable-row {
+            transition: all 0.3s ease-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .expandable-row.open {
+            max-height: 500px;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-dark-bg light:bg-light-bg text-dark-text light:text-light-text min-h-screen transition-colors duration-300">
+
+    <!-- Sidebar Navigation -->
+    <aside class="fixed left-0 top-0 h-full w-20 lg:w-64 glass z-50 flex flex-col transition-all duration-300 border-r">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center neon-glow-blue">
+                <i data-lucide="trending-up" class="text-dark-bg w-5 h-5"></i>
+            </div>
+            <span class="hidden lg:block font-bold text-xl tracking-tight">Quant<span
+                    class="text-brand-primary">Vantage</span></span>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 mt-6">
+            <button onclick="switchView('summary')"
+                class="nav-item w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-brand-primary/10 group"
+                data-view="summary">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 text-slate-400 group-hover:text-brand-primary"></i>
+                <span class="hidden lg:block font-medium">Summary</span>
+            </button>
+            <button onclick="switchView('revenue')"
+                class="nav-item w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-brand-primary/10 group"
+                data-view="revenue">
+                <i data-lucide="bar-chart-3" class="w-5 h-5 text-slate-400 group-hover:text-brand-primary"></i>
+                <span class="hidden lg:block font-medium">Revenue Analysis</span>
+            </button>
+            <button onclick="switchView('profitability')"
+                class="nav-item w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-brand-primary/10 group"
+                data-view="profitability">
+                <i data-lucide="pie-chart" class="w-5 h-5 text-slate-400 group-hover:text-brand-primary"></i>
+                <span class="hidden lg:block font-medium">Profitability</span>
+            </button>
+            <button onclick="switchView('cashflow')"
+                class="nav-item w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-brand-primary/10 group"
+                data-view="cashflow">
+                <i data-lucide="wallet" class="w-5 h-5 text-slate-400 group-hover:text-brand-primary"></i>
+                <span class="hidden lg:block font-medium">Cash Flow</span>
+            </button>
+            <button onclick="switchView('market')"
+                class="nav-item w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-brand-primary/10 group"
+                data-view="market">
+                <i data-lucide="globe" class="w-5 h-5 text-slate-400 group-hover:text-brand-primary"></i>
+                <span class="hidden lg:block font-medium">Market Data</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-dark-border light:border-light-border">
+            <button onclick="toggleTheme()"
+                class="w-full flex items-center justify-center gap-3 p-3 rounded-xl bg-slate-800/50 light:bg-slate-200/50 transition-all hover:scale-95">
+                <i data-lucide="sun" id="theme-icon" class="w-5 h-5 text-brand-primary"></i>
+                <span class="hidden lg:block text-sm font-medium">Toggle Theme</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 p-4 lg:p-8 transition-all duration-300">
+
+        <!-- Header Controls -->
+        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">Financial Performance Analysis</h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1">Institutional grade comparison of flagship equities
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 glass p-2 rounded-2xl">
+                <div
+                    class="flex items-center gap-2 px-3 py-1 bg-slate-800/50 light:bg-slate-100 rounded-lg border border-dark-border light:border-light-border">
+                    <i data-lucide="filter" class="w-4 h-4 text-brand-primary"></i>
+                    <select id="company-filter" class="bg-transparent text-sm font-medium outline-none cursor-pointer"
+                        onchange="updateDashboard()">
+                        <option value="AAPL vs MSFT">Apple Inc. vs Microsoft Corp.</option>
+                        <option value="GOOGL vs AMZN">Alphabet Inc. vs Amazon.com</option>
+                        <option value="TSLA vs NVDA">Tesla Inc. vs NVIDIA Corp.</option>
+                    </select>
+                </div>
+                <div
+                    class="flex items-center gap-1 p-1 bg-slate-800/50 light:bg-slate-100 rounded-lg border border-dark-border light:border-light-border">
+                    <button onclick="setTimeframe('quarterly')" id="btn-quarterly"
+                        class="px-3 py-1 text-xs font-bold rounded-md transition-all duration-200">Quarterly</button>
+                    <button onclick="setTimeframe('annual')" id="btn-annual"
+                        class="px-3 py-1 text-xs font-bold rounded-md transition-all duration-200 bg-brand-primary text-dark-bg">Annual</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- View: Summary -->
+        <div id="view-summary" class="view-content space-y-8">
+
+            <!-- Hero Summary Section -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                <div class="hero-card glass p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="dollar-sign" class="w-4 h-4 text-brand-primary"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Revenue</p>
+                    <h3 class="text-2xl font-bold mt-1" id="hero-revenue">$383.2B</h3>
+                    <div class="flex items-center gap-1 text-xs mt-2 text-brand-success">
+                        <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+                        <span>+8.4% YoY</span>
+                    </div>
+                </div>
+                <div class="hero-card glass p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-brand-primary"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Net Income</p>
+                    <h3 class="text-2xl font-bold mt-1" id="hero-netincome">$96.8B</h3>
+                    <div class="flex items-center gap-1 text-xs mt-2 text-brand-success">
+                        <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+                        <span>+12.1% YoY</span>
+                    </div>
+                </div>
+                <div class="hero-card glass p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="coins" class="w-4 h-4 text-brand-primary"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">EPS</p>
+                    <h3 class="text-2xl font-bold mt-1" id="hero-eps">$6.13</h3>
+                    <div class="flex items-center gap-1 text-xs mt-2 text-brand-danger">
+                        <i data-lucide="arrow-down-right" class="w-3 h-3"></i>
+                        <span>-2.3% YoY</span>
+                    </div>
+                </div>
+                <div class="hero-card glass p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="activity" class="w-4 h-4 text-brand-primary"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">P/E Ratio</p>
+                    <h3 class="text-2xl font-bold mt-1" id="hero-pe">28.4x</h3>
+                    <div class="flex items-center gap-1 text-xs mt-2 text-slate-400">
+                        <span>Industry Avg: 24.1x</span>
+                    </div>
+                </div>
+                <div class="hero-card glass p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-brand-primary"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">ROE</p>
+                    <h3 class="text-2xl font-bold mt-1" id="hero-roe">158%</h3>
+                    <div class="flex items-center gap-1 text-xs mt-2 text-brand-success">
+                        <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+                        <span>+4.2% YoY</span>
+                    </div>
+                </div>
+                <div class="hero-card glass p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-brand-primary"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">D/E Ratio</p>
+                    <h3 class="text-2xl font-bold mt-1" id="hero-de">1.42</h3>
+                    <div class="flex items-center gap-1 text-xs mt-2 text-brand-success">
+                        <i data-lucide="arrow-down-right" class="w-3 h-3"></i>
+                        <span>-0.12 YoY</span>
+                    </div>
+                </div>
+                <div class="hero-card glass p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="layers" class="w-4 h-4 text-brand-primary"></i>
+                    </div>
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Market Cap</p>
+                    <h3 class="text-2xl font-bold mt-1" id="hero-mcap">$2.9T</h3>
+                    <div class="flex items-center gap-1 text-xs mt-2 text-brand-success">
+                        <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+                        <span>+1.2% WoW</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Head-to-Head Comparison -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass p-6 rounded-3xl relative overflow-hidden group neon-glow-blue">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-black">
+                                A</div>
+                            <h2 class="text-xl font-bold" id="comp-1-name">Apple Inc.</h2>
+                        </div>
+                        <span
+                            class="px-3 py-1 bg-brand-primary/20 text-brand-primary text-xs font-bold rounded-full">FLAGSHIP
+                            A</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-slate-800/30 rounded-2xl">
+                            <p class="text-xs text-slate-400">Revenue Growth</p>
+                            <p class="text-xl font-bold" id="comp-1-growth">8.4%</p>
+                        </div>
+                        <div class="p-4 bg-slate-800/30 rounded-2xl">
+                            <p class="text-xs text-slate-400">EBITDA Margin</p>
+                            <p class="text-xl font-bold" id="comp-1-ebitda">32.1%</p>
+                        </div>
+                        <div class="p-4 bg-slate-800/30 rounded-2xl">
+                            <p class="text-xs text-slate-400">FCF Yield</p>
+                            <p class="text-xl font-bold" id="comp-1-fcf">3.1%</p>
+                        </div>
+                        <div class="p-4 bg-slate-800/30 rounded-2xl">
+                            <p class="text-xs text-slate-400">Div Yield</p>
+                            <p class="text-xl font-bold" id="comp-1-div">0.5%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-4 bg-brand-primary/10 rounded-2xl flex justify-between items-center">
+                        <span class="text-sm font-medium">Beta (Volatility)</span>
+                        <span class="font-bold" id="comp-1-beta">1.12</span>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-3xl relative overflow-hidden group neon-glow-purple">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-black">
+                                M</div>
+                            <h2 class="text-xl font-bold" id="comp-2-name">Microsoft Corp.</h2>
+                        </div>
+                        <span
+                            class="px-3 py-1 bg-brand-secondary/20 text-brand-secondary text-xs font-bold rounded-full">FLAGSHIP
+                            B</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-slate-800/30 rounded-2xl">
+                            <p class="text-xs text-slate-400">Revenue Growth</p>
+                            <p class="text-xl font-bold" id="comp-2-growth">13.2%</p>
+                        </div>
+                        <div class="p-4 bg-slate-800/30 rounded-2xl">
+                            <p class="text-xs text-slate-400">EBITDA Margin</p>
+                            <p class="text-xl font-bold" id="comp-2-ebitda">41.5%</p>
+                        </div>
+                        <div class="p-4 bg-slate-800/30 rounded-2xl">
+                            <p class="text-xs text-slate-400">FCF Yield</p>
+                            <p class="text-xl font-bold" id="comp-2-fcf">2.8%</p>
+                        </div>
+                        <div class="p-4 bg-slate-800/30 rounded-2xl">
+                            <p class="text-xs text-slate-400">Div Yield</p>
+                            <p class="text-xl font-bold" id="comp-2-div">0.7%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-4 bg-brand-secondary/10 rounded-2xl flex justify-between items-center">
+                        <span class="text-sm font-medium">Beta (Volatility)</span>
+                        <span class="font-bold" id="comp-2-beta">0.91</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Detailed Company Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass p-6 rounded-3xl" id="card-1">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="info" class="w-5 h-5 text-brand-primary"></i>
+                            Detailed Metrics: <span class="company-label">Apple Inc.</span>
+                        </h3>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 uppercase">Health Score</p>
+                            <p class="text-2xl font-black text-brand-success" id="score-1">94/100</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Revenue</span>
+                            <span class="font-bold" id="det-1-rev">$383.2B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Op. Income</span>
+                            <span class="font-bold" id="det-1-op">$114.3B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Net Income</span>
+                            <span class="font-bold" id="det-1-net">$96.8B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">EPS</span>
+                            <span class="font-bold" id="det-1-eps">$6.13</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">P/E Ratio</span>
+                            <span class="font-bold" id="det-1-pe">28.4x</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">ROE</span>
+                            <span class="font-bold" id="det-1-roe">158%</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">D/E Ratio</span>
+                            <span class="font-bold" id="det-1-de">1.42</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Total Assets</span>
+                            <span class="font-bold" id="det-1-assets">$352.6B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Liabilities</span>
+                            <span class="font-bold" id="det-1-liab">$290.4B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Cash & Equiv.</span>
+                            <span class="font-bold" id="det-1-cash">$160.5B</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-3xl" id="card-2">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="info" class="w-5 h-5 text-brand-secondary"></i>
+                            Detailed Metrics: <span class="company-label">Microsoft Corp.</span>
+                        </h3>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 uppercase">Health Score</p>
+                            <p class="text-2xl font-black text-brand-success" id="score-2">97/100</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Revenue</span>
+                            <span class="font-bold" id="det-2-rev">$211.9B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Op. Income</span>
+                            <span class="font-bold" id="det-2-op">$88.5B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Net Income</span>
+                            <span class="font-bold" id="det-2-net">$72.4B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">EPS</span>
+                            <span class="font-bold" id="det-2-eps">$9.58</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">P/E Ratio</span>
+                            <span class="font-bold" id="det-2-pe">34.1x</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">ROE</span>
+                            <span class="font-bold" id="det-2-roe">38.5%</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">D/E Ratio</span>
+                            <span class="font-bold" id="det-2-de">0.22</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Total Assets</span>
+                            <span class="font-bold" id="det-2-assets">$411.9B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Liabilities</span>
+                            <span class="font-bold" id="det-2-liab">$205.7B</span>
+                        </div>
+                        <div class="flex flex-col p-3 bg-slate-800/20 rounded-xl">
+                            <span class="text-slate-500">Cash & Equiv.</span>
+                            <span class="font-bold" id="det-2-cash">$110.8B</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Grid -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">Revenue vs Net Income
+                        (5Y)</h4>
+                    <div class="h-64">
+                        <canvas id="chart-rev-net"></canvas>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">EBITDA Margin Trend (%)
+                    </h4>
+                    <div class="h-64">
+                        <canvas id="chart-ebitda"></canvas>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">FCF vs CapEx (Billion $)
+                    </h4>
+                    <div class="h-64">
+                        <canvas id="chart-fcf"></canvas>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">Stock Price vs Market
+                        Cap (Relative)</h4>
+                    <div class="h-64">
+                        <canvas id="chart-price"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Winner Breakdown -->
+            <section class="glass p-8 rounded-3xl">
+                <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                    <i data-lucide="trophy" class="text-yellow-500"></i>
+                    Performance Winner Breakdown
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="p-4 rounded-2xl border border-dark-border light:border-light-border text-center">
+                        <p class="text-xs text-slate-500 mb-2">Revenue Growth</p>
+                        <p class="font-bold text-brand-primary" id="win-growth">Microsoft</p>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-dark-border light:border-light-border text-center">
+                        <p class="text-xs text-slate-500 mb-2">Profitability</p>
+                        <p class="font-bold text-brand-primary" id="win-profit">Microsoft</p>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-dark-border light:border-light-border text-center">
+                        <p class="text-xs text-slate-500 mb-2">Liquidity</p>
+                        <p class="font-bold text-brand-primary" id="win-liq">Apple</p>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-dark-border light:border-light-border text-center">
+                        <p class="text-xs text-slate-500 mb-2">Leverage</p>
+                        <p class="font-bold text-brand-primary" id="win-lev">Microsoft</p>
+                    </div>
+                    <div class="p-4 rounded-2xl border border-dark-border light:border-light-border text-center">
+                        <p class="text-xs text-slate-500 mb-2">Valuation</p>
+                        <p class="font-bold text-brand-primary" id="win-val">Apple</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Financial Statement History -->
+            <section class="glass p-6 rounded-3xl overflow-hidden">
+                <h3 class="text-xl font-bold mb-6">Financial Statement History</h3>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="text-xs font-bold text-slate-500 uppercase border-b border-dark-border light:border-light-border">
+                                <th class="pb-4 px-4">Period</th>
+                                <th class="pb-4 px-4">Revenue</th>
+                                <th class="pb-4 px-4">Net Income</th>
+                                <th class="pb-4 px-4">EPS</th>
+                                <th class="pb-4 px-4">ROE</th>
+                                <th class="pb-4 px-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statement-body">
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Searchable Table -->
+            <section class="glass p-6 rounded-3xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <h3 class="text-xl font-bold">Historical Report Archive</h3>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <input type="text" id="table-search" placeholder="Search reports..."
+                            class="bg-slate-800/50 light:bg-slate-100 border border-dark-border light:border-light-border px-4 py-2 rounded-lg text-sm outline-none focus:ring-2 ring-brand-primary"
+                            oninput="filterTable()">
+                        <select id="table-sort"
+                            class="bg-slate-800/50 light:bg-slate-100 border border-dark-border light:border-light-border px-4 py-2 rounded-lg text-sm outline-none"
+                            onchange="sortTable()">
+                            <option value="year-desc">Year (Newest)</option>
+                            <option value="year-asc">Year (Oldest)</option>
+                            <option value="rev-desc">Revenue (High)</option>
+                            <option value="rev-asc">Revenue (Low)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse" id="archive-table">
+                        <thead>
+                            <tr
+                                class="text-xs font-bold text-slate-500 uppercase border-b border-dark-border light:border-light-border">
+                                <th class="pb-4 px-4">Company</th>
+                                <th class="pb-4 px-4">Fiscal Year</th>
+                                <th class="pb-4 px-4">Quarter</th>
+                                <th class="pb-4 px-4">Revenue</th>
+                                <th class="pb-4 px-4">Net Income</th>
+                                <th class="pb-4 px-4">P/E Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archive-body" class="text-sm">
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Notes Section -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="file-text" class="text-brand-primary"></i>
+                        Analyst Observations
+                    </h3>
+                    <textarea
+                        class="w-full h-48 bg-slate-800/30 light:bg-slate-100 border border-dark-border light:border-light-border rounded-2xl p-4 outline-none focus:ring-2 ring-brand-primary transition-all custom-scrollbar"
+                        placeholder="Enter your analysis, future outlook, and risk assessments here..."></textarea>
+                    <div class="flex justify-end mt-4">
+                        <button
+                            class="px-6 py-2 bg-brand-primary text-dark-bg font-bold rounded-xl hover:scale-105 transition-transform">Save
+                            Analysis</button>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <!-- Market Data Feed -->
+                    <div class="glass p-6 rounded-3xl">
+                        <h4
+                            class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center justify-between">
+                            Market Feed
+                            <span class="flex h-2 w-2 rounded-full bg-brand-success animate-pulse"></span>
+                        </h4>
+                        <div class="space-y-3 font-mono text-xs">
+                            <div class="flex justify-between p-2 bg-slate-800/30 rounded-lg">
+                                <span class="text-slate-400">Bloomberg API</span>
+                                <span class="text-brand-success">Connected</span>
+                            </div>
+                            <div class="flex justify-between p-2 bg-slate-800/30 rounded-lg">
+                                <span class="text-slate-400">Latency</span>
+                                <span class="text-brand-primary">14ms</span>
+                            </div>
+                            <div class="flex justify-between p-2 bg-slate-800/30 rounded-lg">
+                                <span class="text-slate-400">Last Update</span>
+                                <span class="text-slate-300">12:04:22 UTC</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- API Usage -->
+                    <div class="glass p-6 rounded-3xl">
+                        <h4 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">API Consumption</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span>Monthly Budget</span>
+                                    <span>65%</span>
+                                </div>
+                                <div class="w-full bg-slate-800/50 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-brand-primary h-full w-[65%]"></div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-center">
+                                <div class="p-2 bg-slate-800/30 rounded-lg">
+                                    <p class="text-[10px] text-slate-500">Total Calls</p>
+                                    <p class="text-sm font-bold">12,402</p>
+                                </div>
+                                <div class="p-2 bg-slate-800/30 rounded-lg">
+                                    <p class="text-[10px] text-slate-500">Total Spend</p>
+                                    <p class="text-sm font-bold">$412.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Other Views (Hidden by default) -->
+        <div id="view-revenue" class="view-content hidden space-y-8">
+            <div class="glass p-12 rounded-3xl text-center">
+                <i data-lucide="bar-chart-3" class="w-16 h-16 text-brand-primary mx-auto mb-4"></i>
+                <h2 class="text-3xl font-bold mb-2">Revenue Deep Dive</h2>
+                <p class="text-slate-500">Detailed segment breakdown and regional revenue analysis is loading...</p>
+            </div>
+        </div>
+        <div id="view-profitability" class="view-content hidden space-y-8">
+            <div class="glass p-12 rounded-3xl text-center">
+                <i data-lucide="pie-chart" class="w-16 h-16 text-brand-secondary mx-auto mb-4"></i>
+                <h2 class="text-3xl font-bold mb-2">Profitability Analysis</h2>
+                <p class="text-slate-500">Analyzing EBITDA, Net Margins, and Operating Efficiency...</p>
+            </div>
+        </div>
+        <div id="view-cashflow" class="view-content hidden space-y-8">
+            <div class="glass p-12 rounded-3xl text-center">
+                <i data-lucide="wallet" class="w-16 h-16 text-brand-accent mx-auto mb-4"></i>
+                <h2 class="text-3xl font-bold mb-2">Cash Flow Dynamics</h2>
+                <p class="text-slate-500">Evaluating Free Cash Flow, CapEx, and Dividend Sustainability...</p>
+            </div>
+        </div>
+        <div id="view-market" class="view-content hidden space-y-8">
+            <div class="glass p-12 rounded-3xl text-center">
+                <i data-lucide="globe" class="w-16 h-16 text-brand-success mx-auto mb-4"></i>
+                <h2 class="text-3xl font-bold mb-2">Market Sentiment</h2>
+                <p class="text-slate-500">Real-time ticker data and institutional ownership trends...</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- MOCK DATA ---
+        const mockData = {
+            'AAPL vs MSFT': {
+                comp1: {
+                    name: 'Apple Inc.',
+                    rev: '$383.2B', net: '$96.8B', eps: '$6.13', pe: '28.4x', roe: '158%', de: '1.42',
+                    assets: '$352.6B', liab: '$290.4B', cash: '$160.5B', score: '94/100',
+                    growth: '8.4%', ebitda: '32.1%', fcf: '3.1%', div: '0.5%', beta: '1.12',
+                    opIncome: '$114.3B'
+                },
+                comp2: {
+                    name: 'Microsoft Corp.',
+                    rev: '$211.9B', net: '$72.4B', eps: '$9.58', pe: '34.1x', roe: '38.5%', de: '0.22',
+                    assets: '$411.9B', liab: '$205.7B', cash: '$110.8B', score: '97/100',
+                    growth: '13.2%', ebitda: '41.5%', fcf: '2.8%', div: '0.7%', beta: '0.91',
+                    opIncome: '$88.5B'
+                },
+                winners: { growth: 'Microsoft', profit: 'Microsoft', liq: 'Apple', lev: 'Microsoft', val: 'Apple' },
+                history: [
+                    { period: 'FY 2023', rev: '$383.2B', net: '$96.8B', eps: '$6.13', roe: '158%', details: { seg1: 'iPhone: $200B', seg2: 'Services: $85B', sga: '$45B', int: '$3B' } },
+                    { period: 'FY 2022', rev: '$394.3B', net: '$99.8B', eps: '$6.11', roe: '175%', details: { seg1: 'iPhone: $205B', seg2: 'Services: $78B', sga: '$42B', int: '$3B' } },
+                    { period: 'FY 2021', rev: '$365.8B', net: '$94.6B', eps: '$5.61', roe: '147%', details: { seg1: 'iPhone: $190B', seg2: 'Services: ' + '$70B', sga: '$38B', int: '$3B' } },
+                ]
+            },
+            'GOOGL vs AMZN': {
+                comp1: {
+                    name: 'Alphabet Inc.',
+                    rev: '$282.8B', net: '$73.7B', eps: '$5.80', pe: '22.1x', roe: '27.3%', de: '0.11',
+                    assets: '$363.1B', liab: '$109.1B', cash: '$110.9B', score: '91/100',
+                    growth: '8.7%', ebitda: '31.2%', fcf: '4.2%', div: '0%', beta: '1.05',
+                    opIncome: '$84.9B'
+                },
+                comp2: {
+                    name: 'Amazon.com Inc.',
+                    rev: '$514.0B', net: '$30.4B', eps: '$2.90', pe: '58.2x', roe: '15.1%', de: '0.85',
+                    assets: '$527.8B', liab: '$312.1B', cash: '$52.1B', score: '88/100',
+                    growth: '12.5%', ebitda: '14.8%', fcf: '2.1%', div: '0%', beta: '1.18',
+                    opIncome: '$37.6B'
+                },
+                winners: { growth: 'Amazon', profit: 'Alphabet', liq: 'Alphabet', lev: 'Alphabet', val: 'Alphabet' },
+                history: [
+                    { period: 'FY 2023', rev: '$282.8B', net: '$73.7B', eps: '$5.80', roe: '27.3%', details: { seg1: 'Search: $160B', seg2: 'Cloud: $26B', sga: '$30B', int: '$1B' } },
+                    { period: 'FY 2022', rev: '$282.8B', net: '$59.9B', eps: '$4.56', roe: '22.1%', details: { seg1: 'Search: $155B', seg2: 'Cloud: $22B', sga: '$28B', int: '$1B' } },
+                ]
+            },
+            'TSLA vs NVDA': {
+                comp1: {
+                    name: 'Tesla Inc.',
+                    rev: '$81.5B', net: '$15.0B', eps: '$4.30', pe: '62.1x', roe: '28.4%', de: '0.05',
+                    assets: '$106.6B', liab: '$36.3B', cash: '$29.6B', score: '85/100',
+                    growth: '18.8%', ebitda: '17.5%', fcf: '1.8%', div: '0%', beta: '1.55',
+                    opIncome: '$8.7B'
+                },
+                comp2: {
+                    name: 'NVIDIA Corp.',
+                    rev: '$26.9B', net: '$29.7B', eps: '$11.93', pe: '74.2x', roe: '95.1%', de: '0.18',
+                    assets: '$65.7B', liab: '$19.1B', cash: '$26.0B', score: '98/100',
+                    growth: '125.9%', ebitda: '54.2%', fcf: '6.1%', div: '0.02%', beta: '1.72',
+                    opIncome: '$32.9B'
+                },
+                winners: { growth: 'NVIDIA', profit: 'NVIDIA', liq: 'Tesla', lev: 'Tesla', val: 'Tesla' },
+                history: [
+                    { period: 'FY 2023', rev: '$81.5B', net: '$15.0B', eps: '$4.30', roe: '28.4%', details: { seg1: 'Auto: $75B', seg2: 'Energy: $6B', sga: '$5B', int: '$0.1B' } },
+                ]
+            }
+        };
+
+        const archiveData = [
+            { company: 'Apple Inc.', year: 2023, quarter: 'Q4', rev: '$89.5B', net: '$23.0B', pe: '29.1x' },
+            { company: 'Apple Inc.', year: 2023, quarter: 'Q3', rev: '$81.8B', net: '$19.9B', pe: '27.5x' },
+            { company: 'Microsoft Corp.', year: 2023, quarter: 'Q4', rev: '$56.2B', net: '$22.3B', pe: '33.8x' },
+            { company: 'Microsoft Corp.', year: 2023, quarter: 'Q3', rev: '$52.9B', net: '$18.3B', pe: '31.2x' },
+            { company: 'Alphabet Inc.', year: 2023, quarter: 'Q4', rev: '$86.3B', net: '$20.7B', pe: '21.5x' },
+            { company: 'Amazon.com Inc.', year: 2023, quarter: 'Q4', rev: '$149.1B', net: '$10.6B', pe: '55.1x' },
+            { company: 'NVIDIA Corp.', year: 2023, quarter: 'Q4', rev: '$22.1B', net: '$12.3B', pe: '71.2x' },
+            { company: 'Tesla Inc.', year: 2023, quarter: 'Q4', rev: '$25.2B', net: '$7.9B', pe: '60.5x' },
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentTheme = 'dark';
+        let currentView = 'summary';
+        let currentTimeframe = 'annual';
+        let charts = {};
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            lucide.createIcons();
+            initCharts();
+            updateDashboard();
+            renderArchiveTable();
+            renderStatementHistory();
+        };
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                currentTheme = 'light';
+                icon.setAttribute('data-lucide', 'moon');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                currentTheme = 'dark';
+                icon.setAttribute('data-lucide', 'sun');
+            }
+            lucide.createIcons();
+            updateChartColors();
+        }
+
+        function switchView(viewId) {
+            currentView = viewId;
+            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('bg-brand-primary/10', 'text-brand-primary');
+                if (item.getAttribute('data-view') === viewId) {
+                    item.classList.add('bg-brand-primary/10', 'text-brand-primary');
+                }
+            });
+        }
+
+        function setTimeframe(tf) {
+            currentTimeframe = tf;
+            const qBtn = document.getElementById('btn-quarterly');
+            const aBtn = document.getElementById('btn-annual');
+
+            if (tf === 'quarterly') {
+                qBtn.classList.add('bg-brand-primary', 'text-dark-bg');
+                aBtn.classList.remove('bg-brand-primary', 'text-dark-bg');
+            } else {
+                aBtn.classList.add('bg-brand-primary', 'text-dark-bg');
+                qBtn.classList.remove('bg-brand-primary', 'text-dark-bg');
+            }
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const selection = document.getElementById('company-filter').value;
+            const data = mockData[selection];
+
+            // Hero Summary
+            document.getElementById('hero-revenue').innerText = data.comp1.rev;
+            document.getElementById('hero-netincome').innerText = data.comp1.net;
+            document.getElementById('hero-eps').innerText = data.comp1.eps;
+            document.getElementById('hero-pe').innerText = data.comp1.pe;
+            document.getElementById('hero-roe').innerText = data.comp1.roe;
+            document.getElementById('hero-de').innerText = data.comp1.de;
+            document.getElementById('hero-mcap').innerText = '$2.9T';
+
+            // Head to Head
+            document.getElementById('comp-1-name').innerText = data.comp1.name;
+            document.getElementById('comp-1-growth').innerText = data.comp1.growth;
+            document.getElementById('comp-1-ebitda').innerText = data.comp1.ebitda;
+            document.getElementById('comp-1-fcf').innerText = data.comp1.fcf;
+            document.getElementById('comp-1-div').innerText = data.comp1.div;
+            document.getElementById('comp-1-beta').innerText = data.comp1.beta;
+
+            document.getElementById('comp-2-name').innerText = data.comp2.name;
+            document.getElementById('comp-2-growth').innerText = data.comp2.growth;
+            document.getElementById('comp-2-ebitda').innerText = data.comp2.ebitda;
+            document.getElementById('comp-2-fcf').innerText = data.comp2.fcf;
+            document.getElementById('comp-2-div').innerText = data.comp2.div;
+            document.getElementById('comp-2-beta').innerText = data.comp2.beta;
+
+            // Detailed Cards
+            document.querySelectorAll('.company-label').forEach((el, idx) => {
+                el.innerText = idx === 0 ? data.comp1.name : data.comp2.name;
+            });
+
+            document.getElementById('score-1').innerText = data.comp1.score;
+            document.getElementById('score-2').innerText = data.comp2.score;
+
+            document.getElementById('det-1-rev').innerText = data.comp1.rev;
+            document.getElementById('det-1-op').innerText = data.comp1.opIncome;
+            document.getElementById('det-1-net').innerText = data.comp1.net;
+            document.getElementById('det-1-eps').innerText = data.comp1.eps;
+            document.getElementById('det-1-pe').innerText = data.comp1.pe;
+            document.getElementById('det-1-roe').innerText = data.comp1.roe;
+            document.getElementById('det-1-de').innerText = data.comp1.de;
+            document.getElementById('det-1-assets').innerText = data.comp1.assets;
+            document.getElementById('det-1-liab').innerText = data.comp1.liab;
+            document.getElementById('det-1-cash').innerText = data.comp1.cash;
+
+            document.getElementById('det-2-rev').innerText = data.comp2.rev;
+            document.getElementById('det-2-op').innerText = data.comp2.opIncome;
+            document.getElementById('det-2-net').innerText = data.comp2.net;
+            document.getElementById('det-2-eps').innerText = data.comp2.eps;
+            document.getElementById('det-2-pe').innerText = data.comp2.pe;
+            document.getElementById('det-2-roe').innerText = data.comp2.roe;
+            document.getElementById('det-2-de').innerText = data.comp2.de;
+            document.getElementById('det-2-assets').innerText = data.comp2.assets;
+            document.getElementById('det-2-liab').innerText = data.comp2.liab;
+            document.getElementById('det-2-cash').innerText = data.comp2.cash;
+
+            // Winners
+            document.getElementById('win-growth').innerText = data.winners.growth;
+            document.getElementById('win-profit').innerText = data.winners.profit;
+            document.getElementById('win-liq').innerText = data.winners.liq;
+            document.getElementById('win-lev').innerText = data.winners.lev;
+            document.getElementById('win-val').innerText = data.winners.val;
+
+            updateChartData(data);
+            renderStatementHistory();
+        }
+
+        function initCharts() {
+            const chartConfig = (type, labels, datasets) => ({
+                type: type,
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                            ticks: { color: currentTheme === 'dark' ? '#94a3b8' : '#64748b' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: currentTheme === 'dark' ? '#94a3b8' : '#64748b' }
+                        }
+                    }
+                }
+            });
+
+            charts.revNet = new Chart(document.getElementById('chart-rev-net'), chartConfig('bar', ['2019', '2020', '2021', '2022', '2023'], [
+                { label: 'Revenue', data: [300, 320, 365, 394, 383], backgroundColor: '#00f2ff' },
+                { label: 'Net Income', data: [50, 55, 94, 99, 96], backgroundColor: '#7000ff' }
+            ]));
+
+            charts.ebitda = new Chart(document.getElementById('chart-ebitda'), chartConfig('line', ['2019', '2020', '2021', '2022', '2023'], [
+                { data: [28, 30, 31, 33, 32], borderColor: '#00f2ff', tension: 0.4, fill: true, backgroundColor: 'rgba(0, 242, 255, 0.1)' },
+                { data: [35, 38, 39, 42, 41], borderColor: '#7000ff', tension: 0.4, fill: true, backgroundColor: 'rgba(112, 0, 255, 0.1)' }
+            ]));
+
+            charts.fcf = new Chart(document.getElementById('chart-fcf'), chartConfig('bar', ['2019', '2020', '2021', '2022', '2023'], [
+                { label: 'FCF', data: [60, 70, 90, 110, 100], backgroundColor: '#00ffaa' },
+                { label: 'CapEx', data: [10, 12, 15, 18, 16], backgroundColor: '#ff4d4d' }
+            ]));
+
+            charts.price = new Chart(document.getElementById('chart-price'), chartConfig('line', ['2019', '2020', '2021', '2022', '2023'], [
+                { data: [100, 150, 200, 180, 220], borderColor: '#ff007a', tension: 0.4 },
+                { data: [120, 180, 250, 210, 280], borderColor: '#00f2ff', tension: 0.4 }
+            ]));
+        }
+
+        function updateChartData(data) {
+            // In a real app, we'd map the mockData to the charts here.
+            // For this demo, we'll simulate a data shift.
+            const multiplier = Math.random() * 0.2 + 0.9;
+            charts.revNet.data.datasets[0].data = charts.revNet.data.datasets[0].data.map(v => v * multiplier);
+            charts.revNet.update();
+        }
+
+        function updateChartColors() {
+            const gridColor = currentTheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            const textColor = currentTheme === 'dark' ? '#94a3b8' : '#64748b';
+
+            Object.values(charts).forEach(chart => {
+                chart.options.scales.y.grid.color = gridColor;
+                chart.options.scales.y.ticks.color = textColor;
+                chart.options.scales.x.ticks.color = textColor;
+                chart.update();
+            });
+        }
+
+        function renderStatementHistory() {
+            const selection = document.getElementById('company-filter').value;
+            const data = mockData[selection];
+            const body = document.getElementById('statement-body');
+            body.innerHTML = '';
+
+            data.history.forEach((item, idx) => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-dark-border light:border-light-border cursor-pointer hover:bg-slate-800/20 transition-colors';
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-medium">${item.period}</td>
+                    <td class="py-4 px-4">${item.rev}</td>
+                    <td class="py-4 px-4">${item.net}</td>
+                    <td class="py-4 px-4">${item.eps}</td>
+                    <td class="py-4 px-4">${item.roe}</td>
+                    <td class="py-4 px-4 text-right">
+                        <button onclick="toggleRow(${idx})" class="text-brand-primary hover:underline text-xs font-bold">Details</button>
+                    </td>
+                `;
+                body.appendChild(row);
+
+                const detailRow = document.createElement('tr');
+                detailRow.id = `detail-${idx}`;
+                detailRow.className = 'expandable-row bg-slate-800/10';
+                detailRow.innerHTML = `
+                    <td colspan="6" class="px-4 py-0">
+                        <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
+                            <div class="p-3 bg-slate-800/30 rounded-lg">
+                                <span class="text-slate-500 block mb-1">Segment 1</span>
+                                <span class="text-brand-primary">${item.details.seg1}</span>
+                            </div>
+                            <div class="p-3 bg-slate-800/30 rounded-lg">
+                                <span class="text-slate-500 block mb-1">Segment 2</span>
+                                <span class="text-brand-primary">${item.details.seg2}</span>
+                            </div>
+                            <div class="p-3 bg-slate-800/30 rounded-lg">
+                                <span class="text-slate-500 block mb-1">SG&A Expenses</span>
+                                <span class="text-brand-danger">${item.details.sga}</span>
+                            </div>
+                            <div class="p-3 bg-slate-800/30 rounded-lg">
+                                <span class="text-slate-500 block mb-1">Interest Expense</span>
+                                <span class="text-brand-warning">${item.details.int}</span>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(detailRow);
+            });
+        }
+
+        function toggleRow(idx) {
+            const row = document.getElementById(`detail-${idx}`);
+            row.classList.toggle('open');
+        }
+
+        function renderArchiveTable() {
+            const body = document.getElementById('archive-body');
+            body.innerHTML = '';
+            archiveData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-dark-border light:border-light-border hover:bg-slate-800/10 transition-colors';
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-medium">${item.company}</td>
+                    <td class="py-4 px-4">${item.year}</td>
+                    <td class="py-4 px-4">${item.quarter}</td>
+                    <td class="py-4 px-4">${item.rev}</td>
+                    <td class="py-4 px-4">${item.net}</td>
+                    <td class="py-4 px-4">${item.pe}</td>
+                `;
+                body.appendChild(row);
+            });
+        }
+
+        function filterTable() {
+            const query = document.getElementById('table-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#archive-body tr');
+            rows.forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+            });
+        }
+
+        function sortTable() {
+            const sortVal = document.getElementById('table-sort').value;
+            let sortedData = [...archiveData];
+
+            if (sortVal === 'year-desc') sortedData.sort((a, b) => b.year - a.year);
+            if (sortVal === 'year-asc') sortedData.sort((a, b) => a.year - b.year);
+            if (sortVal === 'rev-desc') sortedData.sort((a, b) => parseFloat(b.rev.replace(/[^0-9.]/g, '')) - parseFloat(a.rev.replace(/[^0-9.]/g, '')));
+            if (sortVal === 'rev-asc') sortedData.sort((a, b) => parseFloat(a.rev.replace(/[^0-9.]/g, '')) - parseFloat(b.rev.replace(/[^0-9.]/g, '')));
+
+            const body = document.getElementById('archive-body');
+            body.innerHTML = '';
+            sortedData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-dark-border light:border-light-border hover:bg-slate-800/10 transition-colors';
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-medium">${item.company}</td>
+                    <td class="py-4 px-4">${item.year}</td>
+                    <td class="py-4 px-4">${item.quarter}</td>
+                    <td class="py-4 px-4">${item.rev}</td>
+                    <td class="py-4 px-4">${item.net}</td>
+                    <td class="py-4 px-4">${item.pe}</td>
+                `;
+                body.appendChild(row);
+            });
+        }
+    </script>
+</body>
+
+</html>

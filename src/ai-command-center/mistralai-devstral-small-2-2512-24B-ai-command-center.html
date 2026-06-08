@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devstral Small 2 2512 24B - AI Model Testing Command Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark-bg: #0a0c17;
+            --darker-bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.8);
+            --border-color: rgba(156, 163, 175, 0.2);
+            --text-primary: #f8fafc;
+            --text-secondary: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at center, var(--dark-bg) 0%, #0a0c17 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            background: rgba(30, 41, 59, 0.6);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .hero-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .model-comparison {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-comparison::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .comparison-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .model-card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .model-avatar {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .model-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .chart-container {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .prompt-history {
+            margin-top: 2rem;
+        }
+
+        .prompt-item {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .prompt-item:hover {
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prompt-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .status-pending {
+            background: rgba(37, 99, 235, 0.2);
+            color: var(--primary);
+        }
+
+        .prompt-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .prompt-details.active {
+            display: block;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: rgba(30, 41, 59, 0.6);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        tr:hover {
+            background: rgba(30, 41, 59, 0.4);
+        }
+
+        .search-bar {
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(30, 41, 59, 0.6);
+            color: var(--text-primary);
+        }
+
+        .hardware-monitor {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .hardware-item {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .hardware-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .api-usage {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .winner-breakdown {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .winner-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .winner-label {
+            font-weight: 500;
+        }
+
+        .winner-model {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .notes-section {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(30, 41, 59, 0.6);
+            color: var(--text-primary);
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(30, 41, 59, 0.6);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-header {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">◈</div>
+                <h1>AI Model Testing Command Center</h1>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="summary">Summary</button>
+                <button class="nav-tab" data-tab="speed">Speed</button>
+                <button class="nav-tab" data-tab="quality">Quality</button>
+                <button class="nav-tab" data-tab="cost">Cost</button>
+                <button class="nav-tab" data-tab="hardware">Hardware</button>
+            </div>
+        </div>
+
+        <div id="summary-view">
+            <div class="grid">
+                <div class="card">
+                    <h2 class="card-title">Hero Summary</h2>
+                    <div class="hero-summary">
+                        <div class="metric">
+                            <span class="metric-value">147</span>
+                            <span class="metric-label">Total Tests</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">8,245</span>
+                            <span class="metric-label">Avg Tokens/Sec</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">Qwen3.6 27B</span>
+                            <span class="metric-label">Best Model</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">$184.50</span>
+                            <span class="metric-label">Total API Cost</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">24h 37m</span>
+                            <span class="metric-label">Local Runtime</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-comparison">
+                    <h2 class="card-title" style="text-align: center; margin-bottom: 1rem;">Head-to-Head Matchup</h2>
+                    <div class="comparison-header">
+                        <div class="model-card">
+                            <div class="model-avatar">Q3</div>
+                            <div class="model-name">Qwen3.6 27B</div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value">9,854</div>
+                                    <div class="stat-label">Tokens/Sec</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">92</div>
+                                    <div class="stat-label">Quality</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">88</div>
+                                    <div class="stat-label">Coding</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="model-card">
+                            <div class="model-avatar">CO</div>
+                            <div class="model-name">Claude Opus 4.8</div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value">6,631</div>
+                                    <div class="stat-label">Tokens/Sec</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">95</div>
+                                    <div class="stat-label">Quality</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">92</div>
+                                    <div class="stat-label">Coding</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="speedChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Winner Breakdown</h2>
+                    <div class="winner-breakdown">
+                        <div class="winner-item">
+                            <span class="winner-label">Speed</span>
+                            <span class="winner-model">Qwen3.6 27B</span>
+                        </div>
+                        <div class="winner-item">
+                            <span class="winner-label">Quality</span>
+                            <span class="winner-model">Claude Opus 4.8</span>
+                        </div>
+                        <div class="winner-item">
+                            <span class="winner-label">Coding Accuracy</span>
+                            <span class="winner-model">Claude Opus 4.8</span>
+                        </div>
+                        <div class="winner-item">
+                            <span class="winner-label">Creativity</span>
+                            <span class="winner-model">Qwen3.6 27B</span>
+                        </div>
+                        <div class="winner-item">
+                            <span class="winner-label">Instruction Following</span>
+                            <span class="winner-model">Claude Opus 4.8</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card prompt-history">
+                    <h2 class="card-title">Prompt History (Last 10)</h2>
+                    <input type="text" placeholder="Search prompts..." class="search-bar">
+
+                    <div class="prompt-item">
+                        <div class="prompt-header">
+                            <span>Write a Python function to calculate Fibonacci sequence</span>
+                            <span class="prompt-status status-completed">Completed</span>
+                        </div>
+                        <div class="prompt-details active">
+                            <p><strong>Time Taken:</strong> 1.2s | <strong>Score:</strong> 95/100</p>
+                            <p><strong>Notes:</strong> Both models performed well, but Qwen had slightly better code
+                                structure.</p>
+                        </div>
+                    </div>
+
+                    <div class="prompt-item">
+                        <div class="prompt-header">
+                            <span>Explain quantum computing to a 5-year-old</span>
+                            <span class="prompt-status status-completed">Completed</span>
+                        </div>
+                        <div class="prompt-details">
+                            <p><strong>Time Taken:</strong> 2.1s | <strong>Score:</strong> 88/100</p>
+                            <p><strong>Notes:</strong> Claude's explanation was more engaging and age-appropriate.</p>
+                        </div>
+                    </div>
+
+                    <div class="prompt-item">
+                        <div class="prompt-header">
+                            <span>Debug this JavaScript code for memory leaks</span>
+                            <span class="prompt-status status-completed">Completed</span>
+                        </div>
+                        <div class="prompt-details">
+                            <p><strong>Time Taken:</strong> 1.8s | <strong>Score:</strong> 92/100</p>
+                            <p><strong>Notes:</strong> Both models identified the issue, but Claude provided more
+                                comprehensive solutions.</p>
+                        </div>
+                    </div>
+
+                    <div class="prompt-item">
+                        <div class="prompt-header">
+                            <span>Generate a creative story about AI robots</span>
+                            <span class="prompt-status status-completed">Completed</span>
+                        </div>
+                        <div class="prompt-details">
+                            <p><strong>Time Taken:</strong> 3.4s | <strong>Score:</strong> 90/100</p>
+                            <p><strong>Notes:</strong> Qwen's story was more imaginative and had better world-building.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="prompt-item">
+                        <div class="prompt-header">
+                            <span>Translate this complex legal document from German to English</span>
+                            <span class="prompt-status status-completed">Completed</span>
+                        </div>
+                        <div class="prompt-details">
+                            <p><strong>Time Taken:</strong> 4.2s | <strong>Score:</strong> 85/100</p>
+                            <p><strong>Notes:</strong> Claude maintained better legal terminology accuracy.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Previous Model Tests</h2>
+                    <input type="text" placeholder="Search models..." class="search-bar">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model Name</th>
+                                    <th>Type</th>
+                                    <th>Speed (Tok/Sec)</th>
+                                    <th>Quality Score</th>
+                                    <th>Coding Score</th>
+                                    <th>Test Date</th>
+                                    <th>Winner?</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Qwen3.6 27B</td>
+                                    <td>Local</td>
+                                    <td>9,854</td>
+                                    <td>92</td>
+                                    <td>88</td>
+                                    <td>2024-05-15</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Claude Opus 4.8</td>
+                                    <td>API</td>
+                                    <td>6,631</td>
+                                    <td>95</td>
+                                    <td>92</td>
+                                    <td>2024-05-15</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>GPT-4 Turbo</td>
+                                    <td>API</td>
+                                    <td>7,210</td>
+                                    <td>93</td>
+                                    <td>89</td>
+                                    <td>2024-05-10</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Llama 3.1 70B</td>
+                                    <td>Local</td>
+                                    <td>8,562</td>
+                                    <td>90</td>
+                                    <td>85</td>
+                                    <td>2024-05-05</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Gemini 1.5 Pro</td>
+                                    <td>API</td>
+                                    <td>6,987</td>
+                                    <td>94</td>
+                                    <td>90</td>
+                                    <td>2024-05-03</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Hardware Monitor</h2>
+                    <div class="hardware-monitor">
+                        <div class="hardware-item">
+                            <div class="hardware-value">68%</div>
+                            <div>RTX 3090 Usage</div>
+                        </div>
+                        <div class="hardware-item">
+                            <div class="hardware-value">11.2GB / 24GB</div>
+                            <div>VRAM Usage</div>
+                        </div>
+                        <div class="hardware-item">
+                            <div class="hardware-value">72°C</div>
+                            <div>GPU Temperature</div>
+                        </div>
+                        <div class="hardware-item">
+                            <div class="hardware-value">280W</div>
+                            <div>Power Draw</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <strong>Local Server Status:</strong>
+                        <span
+                            style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.25rem 0.75rem; border-radius: 4px; margin-left: 0.5rem;">Online</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">API Usage</h2>
+                    <div class="api-usage">
+                        <div class="hardware-item">
+                            <div class="hardware-value">$184.50</div>
+                            <div>Estimated Cost</div>
+                        </div>
+                        <div class="hardware-item">
+                            <div class="hardware-value">2,456,789</div>
+                            <div>Input Tokens</div>
+                        </div>
+                        <div class="hardware-item">
+                            <div class="hardware-value">1,345,678</div>
+                            <div>Output Tokens</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn-secondary" onclick="exportData()">Export Cost Report</button>
+                    </div>
+                </div>
+
+                <div class="card notes-section">
+                    <h2 class="card-title">Testing Observations</h2>
+                    <textarea placeholder="Add your final observations about this model comparison..."></textarea>
+                    <button class="btn btn-primary" style="margin-top: 1rem;">Save Notes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other views would be similar but with different content -->
+        <div id="speed-view" style="display: none;">
+            <h2>Speed Analysis View</h2>
+            <p>Detailed speed metrics and performance analysis would appear here.</p>
+        </div>
+
+        <div id="quality-view" style="display: none;">
+            <h2>Quality Metrics View</h2>
+            <p>Comprehensive quality scoring and comparison charts.</p>
+        </div>
+
+        <div id="cost-view" style="display: none;">
+            <h2>Cost Analysis View</h2>
+            <p>Detailed cost breakdown and optimization suggestions.</p>
+        </div>
+
+        <div id="hardware-view" style="display: none;">
+            <h2>Hardware Monitoring View</h2>
+            <p>Real-time hardware metrics and performance graphs.</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        const speedChart = new Chart(document.getElementById('speedChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Speed (Tokens/Sec)', 'Quality Score', 'Coding Accuracy'],
+                datasets: [
+                    {
+                        label: 'Qwen3.6 27B',
+                        data: [9854, 92, 88],
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Claude Opus 4.8',
+                        data: [6631, 95, 92],
+                        backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Model Comparison Metrics'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Tab switching functionality
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and views
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('[id$="-view"]').forEach(v => v.style.display = 'none');
+
+                // Add active class to clicked tab
+                tab.classList.add('active');
+
+                // Show corresponding view
+                const viewId = tab.dataset.tab + '-view';
+                document.getElementById(viewId).style.display = 'block';
+            });
+        });
+
+        // Prompt item expansion
+        document.querySelectorAll('.prompt-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const details = item.querySelector('.prompt-details');
+                details.classList.toggle('active');
+            });
+        });
+
+        // Export function (placeholder)
+        function exportData() {
+            alert('Export functionality would be implemented here');
+        }
+
+        // Search functionality (basic implementation)
+        document.querySelectorAll('.search-bar').forEach(input => {
+            input.addEventListener('input', () => {
+                const searchTerm = input.value.toLowerCase();
+                const parentCard = input.closest('.card');
+
+                if (parentCard.classList.contains('prompt-history')) {
+                    // Search in prompt history
+                    const prompts = parentCard.querySelectorAll('.prompt-item');
+                    prompts.forEach(prompt => {
+                        const text = prompt.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            prompt.style.display = 'block';
+                        } else {
+                            prompt.style.display = 'none';
+                        }
+                    });
+                } else {
+                    // Search in model table
+                    const rows = parentCard.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        });
+
+        // Table sorting functionality
+        document.querySelectorAll('th').forEach(header => {
+            header.addEventListener('click', () => {
+                const table = header.closest('table');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                const isAscending = header.classList.toggle('sorted-asc');
+
+                rows.sort((a, b) => {
+                    const aValue = a.children[header.cellIndex].textContent;
+                    const bValue = b.children[header.cellIndex].textContent;
+
+                    // Try to parse as number first
+                    const aNum = parseFloat(aValue);
+                    const bNum = parseFloat(bValue);
+
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        return isAscending ? aNum - bNum : bNum - aNum;
+                    }
+
+                    // Fall back to string comparison
+                    return isAscending
+                        ? aValue.localeCompare(bValue)
+                        : bValue.localeCompare(aValue);
+                });
+
+                // Remove all rows and re-add them in sorted order
+                while (tbody.firstChild) {
+                    tbody.removeChild(tbody.lastChild);
+                }
+
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+    </script>
+</body>
+
+</html>

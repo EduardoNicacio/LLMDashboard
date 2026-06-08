@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ministral-3-14b-reasoning - AI Model Testing Command Center</title>
+    <style>
+        /* Base styles */
+        :root {
+            --bg-color: #121212;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --neon-cyan: #0ff0fc;
+            --neon-blue: #00f2ff;
+            --neon-purple: #bf0ca8;
+            --glass-effect: rgba(30, 41, 59, 0.5);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header styles */
+        .dashboard-header {
+            background-color: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(100, 100, 100, 0.2);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .dashboard-header h1 {
+            margin: 0;
+            color: var(--neon-cyan);
+            font-size: 1.8rem;
+        }
+
+        /* View tabs */
+        .view-tabs {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .view-tabs button {
+            padding: 8px 15px;
+            background-color: rgba(30, 41, 59, 0.5);
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .view-tabs button.active {
+            background-color: rgba(15, 20, 30, 0.7);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        /* Main content layout */
+        .dashboard-main {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            padding-top: 20px;
+        }
+
+        .side-panels {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Hero summary section */
+        .hero-summary {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: rgba(30, 41, 59, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 242, 255, 0.2);
+        }
+
+        .card-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 1.5rem;
+            color: var(--neon-cyan);
+            margin-bottom: 5px;
+        }
+
+        /* Matchup section */
+        .matchup-section {
+            margin-top: 30px;
+        }
+
+        .model-cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .model-card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Charts container */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .chart {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Prompt history section */
+        .prompt-history {
+            margin-top: 30px;
+        }
+
+        .search-sort-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-sort-controls input {
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(100, 100, 100, 0.3);
+            background-color: var(--glass-effect);
+            color: var(--text-primary);
+        }
+
+        .search-sort-controls button {
+            padding: 8px 15px;
+            background-color: var(--card-bg);
+            border: none;
+            color: var(--neon-cyan);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-sort-controls button:hover {
+            background-color: rgba(15, 20, 30, 0.7);
+        }
+
+        .prompt-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: var(--card-bg);
+        }
+
+        .prompt-table th {
+            padding: 12px 15px;
+            text-align: left;
+            background-color: rgba(30, 41, 59, 0.7);
+            color: var(--text-primary);
+        }
+
+        .prompt-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(100, 100, 100, 0.2);
+        }
+
+        .prompt-table tr:hover {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+
+        .status-complete {
+            color: var(--neon-cyan);
+        }
+
+        /* Winner breakdown section */
+        .winner-breakdown {
+            margin-top: 30px;
+        }
+
+        .breakdown-categories {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .breakdown-item {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        /* Previous tests table */
+        .previous-tests {
+            margin-top: 30px;
+        }
+
+        .tests-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: var(--card-bg);
+        }
+
+        .tests-table th,
+        .tests-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(100, 100, 100, 0.2);
+        }
+
+        .tests-table th {
+            background-color: rgba(30, 41, 59, 0.7);
+            color: var(--text-primary);
+        }
+
+        /* Notes section */
+        .notes-section {
+            margin-top: 30px;
+        }
+
+        .notes-section textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border: none;
+            resize: vertical;
+        }
+
+        /* Hardware monitor panel */
+        .hardware-monitor,
+        .api-usage {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .monitor-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-main {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-cards,
+            .model-cards-container,
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations and transitions */
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 5px var(--neon-cyan);
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--neon-cyan);
+            }
+
+            100% {
+                box-shadow: 0 0 5px var(--neon-cyan);
+            }
+        }
+
+        .glow-effect {
+            animation: glow 1.5s infinite alternate;
+        }
+
+        /* Neon accent elements */
+        .neon-accent {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 5px var(--neon-cyan);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header with title and navigation tabs -->
+    <header class="dashboard-header">
+        <div class="container">
+            <h1>AI Model Testing Command Center</h1>
+            <nav class="view-tabs">
+                <button class="active" data-view="summary">Summary</button>
+                <button data-view="speed">Speed</button>
+                <button data-view="quality">Quality</button>
+                <button data-view="cost">Cost</button>
+                <button data-view="hardware">Hardware</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Hero summary section (visible by default) -->
+            <section id="summary-view" class="view active">
+                <div class="hero-summary">
+                    <h2>Test Summary</h2>
+                    <div class="summary-cards">
+                        <div class="card">
+                            <div class="card-icon">📊</div>
+                            <div class="card-value">1,245</div>
+                            <div class="card-label">Total Tests</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">⚡</div>
+                            <div class="card-value">120.4k</div>
+                            <div class="card-label">Avg Tokens/sec</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">🏆</div>
+                            <div class="card-value">Qwen3.6 27B (Local)</div>
+                            <div class="card-label">Best Model</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">💰</div>
+                            <div class="card-value">$1,450.89</div>
+                            <div class="card-label">Total API Cost</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon">⏱️</div>
+                            <div class="card-value">456h 32m</div>
+                            <div class="card-label">Local Runtime</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Head-to-head matchup section -->
+                <section class="matchup-section">
+                    <h2>Qwen3.6 27B (Local) vs Claude Opus 4.8 (API)</h2>
+                    <div class="model-cards-container" id="model-cards-container">
+                        <!-- Model cards will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Interactive charts for speed, quality, etc. -->
+                    <div class="charts-container">
+                        <div class="chart" id="speed-chart"></div>
+                        <div class="chart" id="quality-chart"></div>
+                        <div class="chart" id="cost-chart"></div>
+                    </div>
+                </section>
+
+                <!-- Prompt history section -->
+                <section class="prompt-history">
+                    <h2>Prompt History</h2>
+                    <div class="search-sort-controls">
+                        <input type="text" placeholder="Search prompts...">
+                        <button>Sort by Score ▼</button>
+                    </div>
+                    <table class="prompt-table">
+                        <thead>
+                            <tr>
+                                <th>Prompt ID</th>
+                                <th>Status</th>
+                                <th>Time Taken</th>
+                                <th>Score</th>
+                                <th>Model</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prompt-table-body">
+                            <!-- Table rows will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- Winner breakdown section -->
+                <section class="winner-breakdown">
+                    <h2>Winner Breakdown</h2>
+                    <div class="breakdown-categories" id="breakdown-categories">
+                        <!-- Categories will be listed here with winners -->
+                    </div>
+                </section>
+            </section>
+
+            <!-- Other views (Speed, Quality, Cost, Hardware) would go here in a full implementation -->
+
+            <!-- Side panels for hardware and API usage (always visible) -->
+            <aside class="side-panels">
+                <div class="hardware-monitor">
+                    <h3>Hardware Monitor</h3>
+                    <div class="monitor-item">
+                        <span class="label">RTX 3090 Usage:</span>
+                        <span class="value" id="gpu-usage">78%</span>
+                    </div>
+                    <div class="monitor-item">
+                        <span class="label">VRAM Usage:</span>
+                        <span class="value" id="vram-usage">12GB</span>
+                    </div>
+                    <div class="monitor-item">
+                        <span class="label">Temperature:</span>
+                        <span class="value" id="gpu-temperature">62°C</span>
+                    </div>
+                    <div class="monitor-item">
+                        <span class="label">Power Draw:</span>
+                        <span class="value" id="power-draw">340W</span>
+                    </div>
+                    <div class="monitor-item">
+                        <span class="label">Local Server Status:</span>
+                        <span class="value" id="server-status">Running</span>
+                    </div>
+                </div>
+                <div class="api-usage">
+                    <h3>API Usage (Claude Opus 4.8)</h3>
+                    <div class="monitor-item">
+                        <span class="label">Estimated Cost:</span>
+                        <span class="value" id="estimated-cost">$0.45</span>
+                    </div>
+                    <div class="monitor-item">
+                        <span class="label">Input Tokens:</span>
+                        <span class="value" id="input-tokens">1,245</span>
+                    </div>
+                    <div class="monitor-item">
+                        <span class="label">Output Tokens:</span>
+                        <span class="value" id="output-tokens">996</span>
+                    </div>
+                    <div class="monitor-item">
+                        <span class="label">Total Spend:</span>
+                        <span class="value" id="total-spend">$1,450.89</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Previous tests table (visible in all views or specific view) -->
+            <section class="previous-tests">
+                <h2>Previous Model Tests</h2>
+                <div class="search-sort-controls">
+                    <input type="text" placeholder="Search models...">
+                    <button>Sort by Speed ▼</button>
+                </div>
+                <table class="tests-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Speed (t/s)</th>
+                            <th>Quality Score</th>
+                            <th>Test Date</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tests-table-body">
+                        <!-- Table will be populated dynamically -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Notes section -->
+            <section class="notes-section">
+                <h2>Testing Observations</h2>
+                <textarea placeholder="Add your notes here..."></textarea>
+            </section>
+        </div>
+    </main>
+
+    <!-- JavaScript functionality -->
+    <script>
+        // Sample data for Qwen3.6 27B vs Claude Opus 4.8 test
+        const currentTestData = {
+            models: [
+                {
+                    name: "Qwen3.6 27B (Local)",
+                    type: "local",
+                    speed: 120400, // tokens per second
+                    qualityScore: 92,
+                    codingScore: 88,
+                    creativityScore: 85,
+                    instructionFollowing: 95,
+                    finalGrade: 91,
+                    completionTime: 4.2, // seconds
+                    costPerToken: 0, // local models have no API cost
+                    totalTokensProcessed: 1245000,
+                },
+                {
+                    name: "Claude Opus 4.8 (API)",
+                    type: "frontier",
+                    speed: 98700, // tokens per second
+                    qualityScore: 95,
+                    codingScore: 90,
+                    creativityScore: 92,
+                    instructionFollowing: 97,
+                    finalGrade: 94,
+                    completionTime: 6.1, // seconds
+                    costPerToken: 0.00002,
+                    totalTokensProcessed: 1245000,
+                }
+            ],
+            totalTests: 1245,
+            averageTokensPerSecond: 120400,
+            bestModel: "Qwen3.6 27B (Local)",
+            totalAPICost: 1450.89, // in dollars
+            totalLocalRuntime: 456 * 3600 + 32 * 60, // in seconds (456h 32m)
+        };
+
+        // Sample prompt history data
+        const promptHistory = [
+            {
+                id: "P001",
+                status: "Complete",
+                timeTaken: 4.2,
+                score: 92,
+                model: "Qwen3.6 27B (Local)",
+                details: {
+                    prompt: "Explain quantum computing with analogies.",
+                    completion: "Quantum computing is like a supercharged version of classical computing, but instead of using bits (which are either 0 or 1), it uses quantum bits or qubits. Qubits can exist in multiple states at once thanks to quantum superposition...",
+                    modelResponseTime: 4.2,
+                    tokensGenerated: 500,
+                }
+            },
+            {
+                id: "P002",
+                status: "Complete",
+                timeTaken: 6.1,
+                score: 95,
+                model: "Claude Opus 4.8 (API)",
+                details: {
+                    prompt: "Explain quantum computing with analogies.",
+                    completion: "Imagine if you could flip a coin, and instead of getting heads or tails, it could be both at the same time until you look at it. That's essentially what a qubit does...",
+                    modelResponseTime: 6.1,
+                    tokensGenerated: 480,
+                }
+            },
+            {
+                id: "P003",
+                status: "Complete",
+                timeTaken: 5.7,
+                score: 89,
+                model: "Qwen3.6 27B (Local)",
+                details: {
+                    prompt: "Write a Python function to sort a list of dictionaries by multiple keys.",
+                    completion: "def sort_dicts(data, key1, key2):\n    return sorted(data, key=lambda x: (x[key1], x[key2]))",
+                    modelResponseTime: 5.7,
+                    tokensGenerated: 300,
+                }
+            },
+            {
+                id: "P004",
+                status: "Complete",
+                timeTaken: 8.9,
+                score: 93,
+                model: "Claude Opus 4.8 (API)",
+                details: {
+                    prompt: "Write a Python function to sort a list of dictionaries by multiple keys.",
+                    completion: "Here's a Python function that sorts a list of dictionaries by multiple keys:\n\ndef sort_dicts(data, *keys):\n    return sorted(data, key=lambda x: tuple(x[k] for k in keys))",
+                    modelResponseTime: 8.9,
+                    tokensGenerated: 320,
+                }
+            },
+            {
+                id: "P005",
+                status: "Complete",
+                timeTaken: 3.1,
+                score: 96,
+                model: "Qwen3.6 27B (Local)",
+                details: {
+                    prompt: "What is the capital of France?",
+                    completion: "The capital of France is Paris.",
+                    modelResponseTime: 3.1,
+                    tokensGenerated: 8,
+                }
+            },
+            {
+                id: "P006",
+                status: "Complete",
+                timeTaken: 4.5,
+                score: 97,
+                model: "Claude Opus 4.8 (API)",
+                details: {
+                    prompt: "What is the capital of France?",
+                    completion: "The capital city of France is Paris.",
+                    modelResponseTime: 4.5,
+                    tokensGenerated: 10,
+                }
+            },
+        ];
+
+        // Sample previous tests data
+        const previousTests = [
+            {
+                id: "T001",
+                model: "Qwen3.6 27B (Local)",
+                speed: 120400,
+                qualityScore: 92,
+                testDate: "2024-05-15",
+                notes: "First comprehensive test with new evaluation metrics."
+            },
+            {
+                id: "T002",
+                model: "Claude Opus 4.8 (API)",
+                speed: 98700,
+                qualityScore: 95,
+                testDate: "2024-05-10",
+                notes: "Baseline comparison for API models."
+            },
+            {
+                id: "T003",
+                model: "Llama 3.1 70B (Local)",
+                speed: 85200,
+                qualityScore: 89,
+                testDate: "2024-05-05",
+                notes: "Previous generation local model."
+            },
+            {
+                id: "T004",
+                model: "GPT-4 Turbo (API)",
+                speed: 75300,
+                qualityScore: 96,
+                testDate: "2024-05-01",
+                notes: "Previous frontier model benchmark."
+            },
+            {
+                id: "T005",
+                model: "Qwen2.5 14B (Local)",
+                speed: 98700,
+                qualityScore: 90,
+                testDate: "2024-04-20",
+                notes: "Previous version of Qwen, good for comparison."
+            },
+            {
+                id: "T006",
+                model: "Claude 3.5 Sonnet (API)",
+                speed: 89100,
+                qualityScore: 94,
+                testDate: "2024-04-10",
+                notes: "Previous generation Claude model."
+            },
+        ];
+
+        // Hardware monitor simulation data
+        let hardwareData = {
+            gpuUsage: 78,
+            vramUsage: 12,
+            temperature: 62, // Celsius
+            powerDraw: 340, // Watts
+            status: "Running"
+        };
+
+        // API usage simulation data
+        let apiUsageData = {
+            estimatedCost: 0.45, // dollars
+            inputTokens: 1245,
+            outputTokens: 996, // assuming 80% output tokens for this test
+            totalSpend: 1450.89
+        };
+
+        // DOM Elements
+        const viewTabs = document.querySelectorAll('.view-tabs button');
+        const views = document.querySelectorAll('.view');
+        const promptTableBody = document.getElementById('prompt-table-body');
+        const testsTableBody = document.getElementById('tests-table-body');
+        const searchInputPrompt = document.querySelector('.prompt-history input');
+        const searchInputTests = document.querySelector('.previous-tests input');
+        const sortButtonPrompt = document.querySelector('.prompt-history button');
+        const sortButtonTests = document.querySelector('.previous-tests button');
+        const modelCardsContainer = document.getElementById('model-cards-container');
+        const breakdownCategories = document.getElementById('breakdown-categories');
+
+        // Initialize the dashboard
+        function initDashboard() {
+            // Set up view tabs
+            setupViewTabs();
+
+            // Populate hero summary
+            populateHeroSummary();
+
+            // Populate model cards in matchup section
+            populateModelCards();
+
+            // Populate charts (simplified for now)
+            populateCharts();
+
+            // Populate prompt history table
+            populatePromptHistory();
+
+            // Populate previous tests table
+            populatePreviousTests();
+
+            // Set up event listeners
+            setupEventListeners();
+
+            // Start hardware monitor simulation
+            startHardwareMonitor();
+        }
+
+        // Set up view tabs functionality
+        function setupViewTabs() {
+            viewTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetView = document.getElementById(tab.dataset.view);
+
+                    if (targetView) {
+                        // Remove active class from all views and tabs
+                        views.forEach(view => view.classList.remove('active'));
+                        viewTabs.forEach(t => t.classList.remove('active'));
+
+                        // Add active class to the clicked tab and corresponding view
+                        tab.classList.add('active');
+                        targetView.classList.add('active');
+
+                        // Update URL or highlight active state (optional)
+                    }
+                });
+            });
+        }
+
+        // Populate hero summary with data
+        function populateHeroSummary() {
+            const totalTestsCard = document.querySelector('.card-value:first-child');
+            const avgTokensCard = document.querySelectorAll('.card-value')[1];
+            const bestModelCard = document.querySelectorAll('.card-value')[2];
+            const apiCostCard = document.querySelectorAll('.card-value')[3];
+            const localRuntimeCard = document.querySelectorAll('.card-value')[4];
+
+            // Format local runtime (456h 32m)
+            const totalSeconds = currentTestData.totalLocalRuntime;
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+            if (totalTestsCard) totalTestsCard.textContent = currentTestData.totalTests.toLocaleString();
+            if (avgTokensCard) avgTokensCard.textContent = currentTestData.averageTokensPerSecond.toLocaleString();
+            if (bestModelCard) bestModelCard.textContent = currentTestData.bestModel;
+            if (apiCostCard) apiCostCard.textContent = `$${currentTestData.totalAPICost.toFixed(2)}`;
+            if (localRuntimeCard) localRuntimeCard.textContent = `${hours}h ${minutes}m`;
+        }
+
+        // Populate model cards in matchup section
+        function populateModelCards() {
+            if (!modelCardsContainer) return;
+
+            modelCardsContainer.innerHTML = '';
+
+            currentTestData.models.forEach((model, index) => {
+                const modelCard = document.createElement('div');
+                modelCard.className = 'model-card';
+
+                const h3 = document.createElement('h3');
+                h3.textContent = model.name;
+                if (model.type === 'local') {
+                    h3.style.color = '#0ff0fc';
+                } else {
+                    h3.style.color = '#bf0ca8';
+                }
+
+                // Create metrics grid
+                const metricsGrid = document.createElement('div');
+                metricsGrid.className = 'metrics-grid';
+
+                const metrics = [
+                    { label: 'Speed (tokens/sec)', value: model.speed.toLocaleString(), unit: 't/s' },
+                    { label: 'Quality Score', value: model.qualityScore, unit: '/100' },
+                    { label: 'Coding Score', value: model.codingScore, unit: '/100' },
+                    { label: 'Creativity Score', value: model.creativityScore, unit: '/100' },
+                    { label: 'Instruction Following', value: model.instructionFollowing, unit: '/100' },
+                    { label: 'Final Grade', value: model.finalGrade, unit: '/100' }
+                ];
+
+                metrics.forEach(metric => {
+                    const metricItem = document.createElement('div');
+                    metricItem.className = 'metric-item';
+
+                    const labelSpan = document.createElement('span');
+                    labelSpan.className = 'metric-label';
+                    labelSpan.textContent = metric.label;
+
+                    const valueSpan = document.createElement('span');
+                    valueSpan.className = 'metric-value';
+                    valueSpan.textContent = `${metric.value} ${metric.unit}`;
+
+                    if (model.type === 'local') {
+                        valueSpan.style.color = '#0ff0fc'; // neon cyan for local
+                    } else {
+                        valueSpan.style.color = '#bf0ca8'; // neon purple for API
+                    }
+
+                    metricItem.appendChild(labelSpan);
+                    metricItem.appendChild(valueSpan);
+                    metricsGrid.appendChild(metricItem);
+                });
+
+                modelCard.appendChild(h3);
+                modelCard.appendChild(metricsGrid);
+
+                // Add a glow effect based on type
+                if (model.type === 'local') {
+                    modelCard.classList.add('glow-effect');
+                }
+
+                modelCardsContainer.appendChild(modelCard);
+            });
+        }
+
+        // Simplified chart population (using SVG)
+        function populateCharts() {
+            const speedChart = document.getElementById('speed-chart');
+            const qualityChart = document.getElementById('quality-chart');
+            const costChart = document.getElementById('cost-chart');
+
+            if (!speedChart || !qualityChart || !costChart) return;
+
+            // Speed chart (bar chart)
+            speedChart.innerHTML = `
+        <h3>Tokens per Second</h3>
+        <div class="chart-container">
+            <svg width="100%" height="200" viewBox="0 0 400 200">
+                <!-- Axes -->
+                <line x1="50" y1="50" x2="350" y2="50" stroke="#a0a0a0" stroke-width="1"/>
+                <line x1="50" y1="50" x2="50" y2="180" stroke="#a0a0a0" stroke-width="1"/>
+
+                <!-- Labels -->
+                <text x="370" y="40" text-anchor="end">Tokens per second</text>
+                <text x="40" y="195" text-anchor="middle" transform="rotate(-90 40 195)">Speed (t/s)</text>
+
+                <!-- Bars -->
+                <rect x="80" y="160" width="60" height="20" fill="#0ff0fc" rx="3"/>
+                <text x="110" y="145" text-anchor="middle">Qwen 120k</text>
+
+                <rect x="170" y="180" width="60" height="0" fill="#bf0ca8" rx="3"/>
+                <text x="200" y="195" text-anchor="middle">Claude 98k</text>
+            </svg>
+        </div>
+    `;
+
+            // Quality chart (bar chart)
+            qualityChart.innerHTML = `
+        <h3>Quality Scores</h3>
+        <div class="chart-container">
+            <svg width="100%" height="200" viewBox="0 0 400 200">
+                <!-- Axes -->
+                <line x1="50" y1="50" x2="350" y2="50" stroke="#a0a0a0" stroke-width="1"/>
+                <line x1="50" y1="50" x2="50" y2="180" stroke="#a0a0a0" stroke-width="1"/>
+
+                <!-- Labels -->
+                <text x="370" y="40" text-anchor="end">Quality Score</text>
+                <text x="40" y="195" text-anchor="middle" transform="rotate(-90 40 195)">Score (/100)</text>
+
+                <!-- Bars -->
+                <rect x="80" y="170" width="60" height="10" fill="#0ff0fc" rx="3"/>
+                <text x="110" y="165" text-anchor="middle">Qwen 92</text>
+
+                <rect x="170" y="160" width="60" height="20" fill="#bf0ca8" rx="3"/>
+                <text x="200" y="155" text-anchor="middle">Claude 95</text>
+            </svg>
+        </div>
+    `;
+
+            // Cost chart (bar chart)
+            costChart.innerHTML = `
+        <h3>Cost Comparison</h3>
+        <div class="chart-container">
+            <svg width="100%" height="200" viewBox="0 0 400 200">
+                <!-- Axes -->
+                <line x1="50" y1="50" x2="350" y2="50" stroke="#a0a0a0" stroke-width="1"/>
+                <line x1="50" y1="50" x2="50" y2="180" stroke="#a0a0a0" stroke-width="1"/>
+
+                <!-- Labels -->
+                <text x="370" y="40" text-anchor="end">Estimated Cost</text>
+                <text x="40" y="195" text-anchor="middle" transform="rotate(-90 40 195)">Cost (USD)</text>
+
+                <!-- Bars -->
+                <rect x="80" y="180" width="60" height="0" fill="#0ff0fc" rx="3"/>
+                <text x="110" y="195" text-anchor="middle">Local $0</text>
+
+                <rect x="170" y="140" width="60" height="40" fill="#bf0ca8" rx="3"/>
+                <text x="200" y="135" text-anchor="middle">API $0.45</text>
+            </svg>
+        </div>
+    `;
+        }
+
+        // Populate prompt history table
+        function populatePromptHistory() {
+            if (!promptTableBody) return;
+
+            promptTableBody.innerHTML = '';
+
+            promptHistory.forEach(prompt => {
+                const row = document.createElement('tr');
+
+                // Prompt ID
+                const idCell = document.createElement('td');
+                idCell.textContent = prompt.id;
+                row.appendChild(idCell);
+
+                // Status with color coding
+                const statusCell = document.createElement('td');
+                const statusSpan = document.createElement('span');
+                if (prompt.status === 'Complete') {
+                    statusSpan.className = 'status-complete';
+                } else {
+                    statusSpan.className = 'status-pending';
+                }
+                statusSpan.textContent = prompt.status;
+                statusCell.appendChild(statusSpan);
+                row.appendChild(statusCell);
+
+                // Time taken
+                const timeCell = document.createElement('td');
+                timeCell.textContent = `${prompt.timeTaken}s`;
+                row.appendChild(timeCell);
+
+                // Score
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = `${prompt.score}/100`;
+                if (prompt.score >= 90) {
+                    scoreCell.style.color = '#0ff0fc';
+                } else if (prompt.score >= 80) {
+                    scoreCell.style.color = '#a0ff00';
+                } else {
+                    scoreCell.style.color = '#ff5555';
+                }
+                row.appendChild(scoreCell);
+
+                // Model
+                const modelCell = document.createElement('td');
+                modelCell.textContent = prompt.model;
+                if (prompt.model.includes('Local')) {
+                    modelCell.style.color = '#0ff0fc';
+                } else {
+                    modelCell.style.color = '#bf0ca8';
+                }
+                row.appendChild(modelCell);
+
+                // Add click event to expand details
+                row.addEventListener('click', () => {
+                    const details = prompt.details;
+                    if (details) {
+                        alert(`Prompt Details:\n\nPrompt: ${details.prompt}\n\nCompletion: ${details.completion.substring(0, 100)}...\n\nTime: ${details.modelResponseTime}s\nTokens: ${details.tokensGenerated}`);
+                    }
+                });
+
+                promptTableBody.appendChild(row);
+            });
+        }
+
+        // Populate previous tests table
+        function populatePreviousTests() {
+            if (!testsTableBody) return;
+
+            testsTableBody.innerHTML = '';
+
+            previousTests.forEach(test => {
+                const row = document.createElement('tr');
+
+                // Model name
+                const modelCell = document.createElement('td');
+                modelCell.textContent = test.model;
+                if (test.model.includes('Local')) {
+                    modelCell.style.color = '#0ff0fc';
+                } else {
+                    modelCell.style.color = '#bf0ca8';
+                }
+                row.appendChild(modelCell);
+
+                // Speed
+                const speedCell = document.createElement('td');
+                speedCell.textContent = test.speed.toLocaleString();
+                row.appendChild(speedCell);
+
+                // Quality Score
+                const qualityCell = document.createElement('td');
+                qualityCell.textContent = `${test.qualityScore}/100`;
+                if (test.qualityScore >= 90) {
+                    qualityCell.style.color = '#0ff0fc';
+                } else if (test.qualityScore >= 80) {
+                    qualityCell.style.color = '#a0ff00';
+                } else {
+                    qualityCell.style.color = '#ff5555';
+                }
+                row.appendChild(qualityCell);
+
+                // Test Date
+                const dateCell = document.createElement('td');
+                dateCell.textContent = test.testDate;
+                row.appendChild(dateCell);
+
+                // Notes (ellipsis if too long)
+                const notesCell = document.createElement('td');
+                const notesSpan = document.createElement('span');
+                if (test.notes.length > 50) {
+                    notesSpan.textContent = `${test.notes.substring(0, 50)}...`;
+                } else {
+                    notesSpan.textContent = test.notes;
+                }
+                notesCell.appendChild(notesSpan);
+                row.appendChild(notesCell);
+
+                testsTableBody.appendChild(row);
+            });
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Search and sort for prompt history
+            if (searchInputPrompt) {
+                searchInputPrompt.addEventListener('input', () => {
+                    const searchTerm = searchInputPrompt.value.toLowerCase();
+                    const rows = promptTableBody.querySelectorAll('tr');
+
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            if (sortButtonPrompt) {
+                sortButtonPrompt.addEventListener('click', () => {
+                    // Toggle sort direction or type
+                    const isAscending = !sortButtonPrompt.classList.contains('asc');
+                    sortButtonPrompt.classList.toggle('asc');
+
+                    const rows = Array.from(promptTableBody.querySelectorAll('tr')).slice(1); // skip header if present
+
+                    rows.sort((a, b) => {
+                        const scoreA = parseFloat(a.querySelector('td:nth-child(4)').textContent.replace('/100', ''));
+                        const scoreB = parseFloat(b.querySelector('td:nth-child(4)').textContent.replace('/100', ''));
+
+                        if (isAscending) {
+                            return scoreA - scoreB;
+                        } else {
+                            return scoreB - scoreA;
+                        }
+                    });
+
+                    // Re-append sorted rows
+                    promptTableBody.innerHTML = '';
+                    rows.forEach(row => promptTableBody.appendChild(row));
+                });
+            }
+
+            // Similar for previous tests table (if needed)
+        }
+
+        // Simulate hardware monitor data updates
+        function startHardwareMonitor() {
+            setInterval(() => {
+                // Randomly fluctuate values slightly to simulate real-time monitoring
+                hardwareData.gpuUsage = Math.max(10, Math.min(95, hardwareData.gpuUsage + (Math.random() - 0.5) * 5));
+                hardwareData.vramUsage = Math.max(2, Math.min(16, hardwareData.vramUsage + (Math.random() - 0.5) * 1));
+                hardwareData.temperature = Math.max(40, Math.min(80, hardwareData.temperature + (Math.random() - 0.5) * 2));
+                hardwareData.powerDraw = Math.max(200, Math.min(400, hardwareData.powerDraw + (Math.random() - 0.5) * 10));
+
+                // Update DOM
+                updateHardwareMonitor();
+            }, 2000); // Update every 2 seconds for demo purposes
+
+            // Initial update
+            updateHardwareMonitor();
+        }
+
+        function updateHardwareMonitor() {
+            if (document.getElementById('gpu-usage')) document.getElementById('gpu-usage').textContent = `${hardwareData.gpuUsage}%`;
+            if (document.getElementById('vram-usage')) document.getElementById('vram-usage').textContent = `${hardwareData.vramUsage}GB`;
+            if (document.getElementById('gpu-temperature')) document.getElementById('gpu-temperature').textContent = `${hardwareData.temperature}°C`;
+            if (document.getElementById('power-draw')) document.getElementById('power-draw').textContent = `${hardwareData.powerDraw}W`;
+            if (document.getElementById('server-status')) document.getElementById('server-status').textContent = hardwareData.status;
+
+            // Add color coding based on values
+            const gpuUsageElement = document.getElementById('gpu-usage');
+            if (gpuUsageElement && hardwareData.gpuUsage > 90) {
+                gpuUsageElement.style.color = '#ff5555';
+            } else if (gpuUsageElement && hardwareData.gpuUsage > 70) {
+                gpuUsageElement.style.color = '#a0ff00';
+            }
+
+            const tempElement = document.getElementById('gpu-temperature');
+            if (tempElement && hardwareData.temperature > 75) {
+                tempElement.style.color = '#ff5555';
+            } else if (tempElement && hardwareData.temperature > 65) {
+                tempElement.style.color = '#a0ff00';
+            }
+        }
+
+        // Initialize the dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+
+</html>

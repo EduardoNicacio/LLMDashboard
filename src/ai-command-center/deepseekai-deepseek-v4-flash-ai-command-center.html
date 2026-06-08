@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek V4 Flash - AI Model Testing Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg-primary: #06060e;
+            --bg-secondary: #0a0a18;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(0, 240, 255, 0.15);
+            --text-primary: #f0f0f8;
+            --text-secondary: rgba(240, 240, 248, 0.7);
+            --text-muted: rgba(240, 240, 248, 0.4);
+            --cyan: #00f0ff;
+            --cyan-dim: rgba(0, 240, 255, 0.15);
+            --purple: #8b5cf6;
+            --purple-dim: rgba(139, 92, 246, 0.15);
+            --green: #00ff88;
+            --green-dim: rgba(0, 255, 136, 0.15);
+            --pink: #ff0080;
+            --pink-dim: rgba(255, 0, 128, 0.15);
+            --orange: #ff8c00;
+            --orange-dim: rgba(255, 140, 0, 0.15);
+            --yellow: #ffd700;
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 20%, rgba(0, 240, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--cyan-dim);
+            border-radius: 3px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--cyan)
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 20px 24px 40px
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px
+        }
+
+        .logo span {
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            flex-wrap: wrap
+        }
+
+        .nav-tab {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            background: transparent;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05)
+        }
+
+        .nav-tab.active {
+            color: var(--cyan);
+            background: var(--cyan-dim);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1)
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap
+        }
+
+        .model-select {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .model-select:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.2)
+        }
+
+        .model-select option {
+            background: #0a0a18;
+            color: var(--text-primary)
+        }
+
+        .toggle-group {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+            gap: 2px
+        }
+
+        .toggle-btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            background: transparent;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .toggle-btn:hover {
+            color: var(--text-secondary)
+        }
+
+        .toggle-btn.active {
+            background: var(--purple-dim);
+            color: var(--purple);
+            box-shadow: 0 0 16px rgba(139, 92, 246, 0.15)
+        }
+
+        /* HERO */
+        .hero {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .stat-card {
+            padding: 20px 24px;
+            border-radius: var(--radius);
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: var(--transition);
+            cursor: default;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-glow);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3)
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            border-radius: var(--radius) var(--radius) 0 0
+        }
+
+        .stat-card:nth-child(1)::before {
+            background: linear-gradient(90deg, var(--cyan), var(--purple))
+        }
+
+        .stat-card:nth-child(2)::before {
+            background: linear-gradient(90deg, var(--green), var(--cyan))
+        }
+
+        .stat-card:nth-child(3)::before {
+            background: linear-gradient(90deg, var(--purple), var(--pink))
+        }
+
+        .stat-card:nth-child(4)::before {
+            background: linear-gradient(90deg, var(--orange), var(--pink))
+        }
+
+        .stat-card:nth-child(5)::before {
+            background: linear-gradient(90deg, var(--yellow), var(--orange))
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 2px
+        }
+
+        .stat-card:nth-child(1) .stat-value {
+            color: var(--cyan)
+        }
+
+        .stat-card:nth-child(2) .stat-value {
+            color: var(--green)
+        }
+
+        .stat-card:nth-child(3) .stat-value {
+            color: var(--purple)
+        }
+
+        .stat-card:nth-child(4) .stat-value {
+            color: var(--orange)
+        }
+
+        .stat-card:nth-child(5) .stat-value {
+            color: var(--yellow)
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px
+        }
+
+        .stat-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px
+        }
+
+        /* SECTION */
+        .section {
+            margin-bottom: 24px;
+            display: none
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.4s ease
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.3px
+        }
+
+        .section-title span {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 14px
+        }
+
+        /* H2H MATCHUP */
+        .h2h-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: start
+        }
+
+        .h2h-card {
+            padding: 24px;
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .h2h-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-glow);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3)
+        }
+
+        .h2h-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px
+        }
+
+        .h2h-card.local::before {
+            background: linear-gradient(90deg, var(--cyan), var(--green))
+        }
+
+        .h2h-card.frontier::before {
+            background: linear-gradient(90deg, var(--purple), var(--pink))
+        }
+
+        .h2h-vs {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 8px
+        }
+
+        .h2h-vs span {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1
+        }
+
+        .h2h-vs small {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px
+        }
+
+        .h2h-model-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 2px
+        }
+
+        .h2h-model-type {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px
+        }
+
+        .h2h-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .h2h-stat {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.04)
+        }
+
+        .h2h-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 2px
+        }
+
+        .h2h-stat-value {
+            font-size: 16px;
+            font-weight: 600
+        }
+
+        .h2h-stat-value.win {
+            position: relative
+        }
+
+        .h2h-stat-value.win::after {
+            content: '👑';
+            font-size: 12px;
+            margin-left: 4px
+        }
+
+        .h2h-grade {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 12px;
+        }
+
+        .h2h-card.local .h2h-grade {
+            background: var(--cyan-dim);
+            color: var(--cyan)
+        }
+
+        .h2h-card.frontier .h2h-grade {
+            background: var(--purple-dim);
+            color: var(--purple)
+        }
+
+        /* MODEL CARDS */
+        .model-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px
+        }
+
+        .model-card {
+            padding: 20px;
+            border-radius: var(--radius);
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: var(--transition);
+            cursor: default;
+        }
+
+        .model-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-glow);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3)
+        }
+
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px
+        }
+
+        .model-card.local::before {
+            background: linear-gradient(90deg, var(--cyan), var(--green))
+        }
+
+        .model-card.frontier::before {
+            background: linear-gradient(90deg, var(--purple), var(--pink))
+        }
+
+        .model-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px
+        }
+
+        .model-card-name {
+            font-size: 15px;
+            font-weight: 600
+        }
+
+        .model-card-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px
+        }
+
+        .model-card-badge.local {
+            background: var(--cyan-dim);
+            color: var(--cyan)
+        }
+
+        .model-card-badge.frontier {
+            background: var(--purple-dim);
+            color: var(--purple)
+        }
+
+        .model-card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px
+        }
+
+        .model-card-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 13px
+        }
+
+        .model-card-stat-label {
+            color: var(--text-secondary)
+        }
+
+        .model-card-stat-value {
+            font-weight: 600
+        }
+
+        .model-card-grade {
+            text-align: center;
+            padding: 8px;
+            margin-top: 12px;
+            border-radius: var(--radius-sm);
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px
+        }
+
+        .model-card.local .model-card-grade {
+            background: linear-gradient(135deg, var(--cyan-dim), var(--green-dim));
+            color: var(--green)
+        }
+
+        .model-card.frontier .model-card-grade {
+            background: linear-gradient(135deg, var(--purple-dim), var(--pink-dim));
+            color: var(--pink)
+        }
+
+        /* CHARTS */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 16px;
+            grid-auto-rows: minmax(260px, auto)
+        }
+
+        .chart-card {
+            padding: 20px;
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card:hover {
+            border-color: var(--border-glow)
+        }
+
+        .chart-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0
+        }
+
+        .chart-card-title .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block
+        }
+
+        .chart-area {
+            flex: 1;
+            min-height: 0;
+            position: relative
+        }
+
+        .chart-area canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%
+        }
+
+        /* PROMPT HISTORY */
+        .prompt-table-wrap {
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px)
+        }
+
+        .prompt-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px
+        }
+
+        .prompt-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .prompt-table th:hover {
+            color: var(--text-secondary)
+        }
+
+        .prompt-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            transition: var(--transition)
+        }
+
+        .prompt-table tr {
+            transition: var(--transition);
+            cursor: pointer
+        }
+
+        .prompt-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03)
+        }
+
+        .prompt-table tbody tr.expanded {
+            background: rgba(0, 240, 255, 0.03)
+        }
+
+        .prompt-table .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status.completed {
+            background: var(--green-dim);
+            color: var(--green)
+        }
+
+        .status.failed {
+            background: var(--pink-dim);
+            color: var(--pink)
+        }
+
+        .status.running {
+            background: var(--cyan-dim);
+            color: var(--cyan)
+        }
+
+        .expand-detail {
+            display: none;
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color)
+        }
+
+        .expand-detail.show {
+            display: table-row;
+            animation: fadeIn 0.3s ease
+        }
+
+        .expand-detail td {
+            padding: 0
+        }
+
+        .expand-detail-inner {
+            padding: 16px 20px
+        }
+
+        .expand-detail-inner p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            line-height: 1.6
+        }
+
+        .expand-detail-inner .detail-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px
+        }
+
+        .expand-detail-inner .detail-tags span {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted)
+        }
+
+        /* WINNER BREAKDOWN */
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px
+        }
+
+        .winner-card {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: var(--transition);
+        }
+
+        .winner-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-glow)
+        }
+
+        .winner-card .category {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px
+        }
+
+        .winner-card .winner {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .winner-card .score-detail {
+            font-size: 12px;
+            color: var(--text-secondary)
+        }
+
+        .winner-card .trophy {
+            font-size: 20px;
+            margin-bottom: 6px
+        }
+
+        .winner-card.win-local .winner {
+            color: var(--cyan)
+        }
+
+        .winner-card.win-frontier .winner {
+            color: var(--purple)
+        }
+
+        .winner-card.win-tie .winner {
+            color: var(--yellow)
+        }
+
+        /* HARDWARE */
+        .hardware-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            align-items: stretch
+        }
+
+        .hw-panel {
+            padding: 24px;
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: var(--transition);
+        }
+
+        .hw-panel:hover {
+            border-color: var(--border-glow)
+        }
+
+        .hw-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .hw-bar-group {
+            margin-bottom: 14px
+        }
+
+        .hw-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 4px
+        }
+
+        .hw-bar-label span:first-child {
+            color: var(--text-secondary)
+        }
+
+        .hw-bar-label span:last-child {
+            font-weight: 600
+        }
+
+        .hw-bar-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden
+        }
+
+        .hw-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+            position: relative
+        }
+
+        .hw-bar-fill.cyan {
+            background: linear-gradient(90deg, var(--cyan), var(--green))
+        }
+
+        .hw-bar-fill.purple {
+            background: linear-gradient(90deg, var(--purple), var(--pink))
+        }
+
+        .hw-bar-fill.orange {
+            background: linear-gradient(90deg, var(--orange), var(--yellow))
+        }
+
+        .hw-bar-fill.pink {
+            background: linear-gradient(90deg, var(--pink), var(--purple))
+        }
+
+        .hw-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: 500
+        }
+
+        .hw-status.online {
+            background: var(--green-dim);
+            color: var(--green)
+        }
+
+        .hw-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+        }
+
+        .api-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px
+        }
+
+        .api-stat {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.04)
+        }
+
+        .api-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 2px
+        }
+
+        .api-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--purple)
+        }
+
+        .api-total {
+            text-align: center;
+            padding: 14px;
+            margin-top: 12px;
+            border-radius: var(--radius-sm);
+            background: var(--purple-dim);
+            border: 1px solid rgba(139, 92, 246, 0.2)
+        }
+
+        .api-total .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px
+        }
+
+        .api-total .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--purple)
+        }
+
+        /* PREVIOUS TESTS TABLE */
+        .test-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap
+        }
+
+        .test-search {
+            padding: 9px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            transition: var(--transition);
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .test-search:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.15)
+        }
+
+        .test-table-wrap {
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px)
+        }
+
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px
+        }
+
+        .test-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .test-table th:hover {
+            color: var(--text-secondary)
+        }
+
+        .test-table th .sort-arrow {
+            margin-left: 4px;
+            font-size: 10px;
+            opacity: 0.4
+        }
+
+        .test-table th.sort-asc .sort-arrow,
+        .test-table th.sort-desc .sort-arrow {
+            opacity: 1;
+            color: var(--cyan)
+        }
+
+        .test-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary)
+        }
+
+        .test-table tr {
+            transition: var(--transition)
+        }
+
+        .test-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03)
+        }
+
+        /* NOTES */
+        .notes-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .notes-area:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.1)
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:1024px) {
+            .h2h-grid {
+                grid-template-columns: 1fr;
+                gap: 12px
+            }
+
+            .h2h-vs {
+                flex-direction: row;
+                padding: 8px;
+                gap: 8px
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch
+            }
+
+            .header-controls {
+                justify-content: center
+            }
+        }
+
+        @media(max-width:768px) {
+            .app {
+                padding: 12px
+            }
+
+            .hero {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr
+            }
+
+            .model-cards-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .winner-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .stat-value {
+                font-size: 24px
+            }
+
+            .nav-tabs {
+                justify-content: center
+            }
+
+            .api-stats {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:480px) {
+            .hero {
+                grid-template-columns: 1fr
+            }
+
+            .model-cards-grid {
+                grid-template-columns: 1fr
+            }
+
+            .winner-grid {
+                grid-template-columns: 1fr
+            }
+
+            .h2h-stats {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- HEADER -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">◈</div>
+                <span>AI TEST COMMAND CENTER</span>
+            </div>
+            <div class="nav-tabs" id="viewTabs">
+                <button class="nav-tab active" data-view="summary">Summary</button>
+                <button class="nav-tab" data-view="speed">Speed</button>
+                <button class="nav-tab" data-view="quality">Quality</button>
+                <button class="nav-tab" data-view="cost">Cost</button>
+                <button class="nav-tab" data-view="hardware">Hardware</button>
+            </div>
+            <div class="header-controls">
+                <select class="model-select" id="modelFilter">
+                    <option value="all">All Models</option>
+                    <option value="Qwen3.6 27B">Qwen3.6 27B</option>
+                    <option value="Claude Opus 4.8">Claude Opus 4.8</option>
+                    <option value="Mistral 7B">Mistral 7B</option>
+                    <option value="Llama 3.1 8B">Llama 3.1 8B</option>
+                    <option value="GPT-4o">GPT-4o</option>
+                    <option value="DeepSeek Coder V2">DeepSeek Coder V2</option>
+                    <option value="Gemma 2 9B">Gemma 2 9B</option>
+                    <option value="Mixtral 8x7B">Mixtral 8x7B</option>
+                </select>
+                <div class="toggle-group" id="typeToggle">
+                    <button class="toggle-btn active" data-type="all">All</button>
+                    <button class="toggle-btn" data-type="local">Local</button>
+                    <button class="toggle-btn" data-type="frontier">Frontier</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section class="hero" id="heroSection">
+            <div class="stat-card">
+                <div class="stat-value" data-count="32" data-suffix="">0</div>
+                <div class="stat-label">Total Tests</div>
+                <div class="stat-sub">Across 8 models</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" data-count="32.4" data-suffix="">0</div>
+                <div class="stat-label">Avg Tokens / s</div>
+                <div class="stat-sub">Peak: 45.2 t/s</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">Claude Opus 4.8</div>
+                <div class="stat-label">Best Model</div>
+                <div class="stat-sub">Grade: A+ (97.2 quality)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" data-count="142.38" data-prefix="$">$0</div>
+                <div class="stat-label">Total API Cost</div>
+                <div class="stat-sub">Claude Opus 4.8 + GPT-4o</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">47.2h</div>
+                <div class="stat-label">Total Local Runtime</div>
+                <div class="stat-sub">Across 6 local models</div>
+            </div>
+        </section>
+
+        <!-- VIEW: SUMMARY -->
+        <div class="section active" id="view-summary">
+
+            <!-- H2H MATCHUP -->
+            <div class="section-header">
+                <div class="section-title">Head-to-Head Matchup <span>Qwen3.6 27B vs Claude Opus 4.8</span></div>
+            </div>
+            <div class="h2h-grid" id="h2hGrid">
+                <div class="h2h-card local" data-model="Qwen3.6 27B">
+                    <div class="h2h-model-name">Qwen3.6 27B</div>
+                    <div class="h2h-model-type">Local Model · 27B Parameters</div>
+                    <div class="h2h-stats">
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Speed</div>
+                            <div class="h2h-stat-value win">45.2 t/s</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Quality Score</div>
+                            <div class="h2h-stat-value">92.5</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Coding Accuracy</div>
+                            <div class="h2h-stat-value">94%</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Creativity</div>
+                            <div class="h2h-stat-value">88</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Instruction Following</div>
+                            <div class="h2h-stat-value">93%</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Cost per Request</div>
+                            <div class="h2h-stat-value win">$0.00</div>
+                        </div>
+                    </div>
+                    <div class="h2h-grade">A-</div>
+                </div>
+                <div class="h2h-vs"><span>VS</span><small>5 Categories</small></div>
+                <div class="h2h-card frontier" data-model="Claude Opus 4.8">
+                    <div class="h2h-model-name">Claude Opus 4.8</div>
+                    <div class="h2h-model-type">Frontier Model · API</div>
+                    <div class="h2h-stats">
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Speed</div>
+                            <div class="h2h-stat-value">12.1 t/s</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Quality Score</div>
+                            <div class="h2h-stat-value win">97.2</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Coding Accuracy</div>
+                            <div class="h2h-stat-value win">98%</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Creativity</div>
+                            <div class="h2h-stat-value win">92</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Instruction Following</div>
+                            <div class="h2h-stat-value win">97%</div>
+                        </div>
+                        <div class="h2h-stat">
+                            <div class="h2h-stat-label">Cost per Request</div>
+                            <div class="h2h-stat-value">$0.42</div>
+                        </div>
+                    </div>
+                    <div class="h2h-grade">A+</div>
+                </div>
+            </div>
+
+            <!-- MODEL CARDS -->
+            <div class="section-header" style="margin-top:24px">
+                <div class="section-title">All Model Results</div>
+            </div>
+            <div class="model-cards-grid" id="modelCardsGrid"></div>
+
+            <!-- CHARTS -->
+            <div class="section-header" style="margin-top:24px">
+                <div class="section-title">Performance Charts</div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--cyan)"></span>Tokens Per
+                        Second</div>
+                    <div class="chart-area"><canvas id="chartSpeed"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--green)"></span>Completion
+                        Time</div>
+                    <div class="chart-area"><canvas id="chartTime"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--purple)"></span>Quality
+                        Score</div>
+                    <div class="chart-area"><canvas id="chartQuality"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--orange)"></span>Cost
+                        Comparison</div>
+                    <div class="chart-area"><canvas id="chartCost"></canvas></div>
+                </div>
+            </div>
+
+            <!-- WINNER BREAKDOWN -->
+            <div class="section-header" style="margin-top:24px">
+                <div class="section-title">Winner Breakdown</div>
+            </div>
+            <div class="winner-grid" id="winnerGrid"></div>
+
+        </div>
+
+        <!-- VIEW: SPEED -->
+        <div class="section" id="view-speed">
+            <div class="section-header">
+                <div class="section-title">Speed Analysis</div>
+            </div>
+            <div class="charts-grid" style="grid-template-columns:1fr 1fr">
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--cyan)"></span>Tokens Per
+                        Second (All
+                        Models)</div>
+                    <div class="chart-area"><canvas id="chartSpeedFull"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--green)"></span>Average
+                        Completion Time
+                    </div>
+                    <div class="chart-area"><canvas id="chartTimeFull"></canvas></div>
+                </div>
+            </div>
+            <div class="section-header" style="margin-top:24px">
+                <div class="section-title">Speed Rankings</div>
+            </div>
+            <div class="test-table-wrap">
+                <table class="test-table" id="speedRankingTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Model</th>
+                            <th>Tokens/s</th>
+                            <th>Avg Time</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="speedRankingBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VIEW: QUALITY -->
+        <div class="section" id="view-quality">
+            <div class="section-header">
+                <div class="section-title">Quality Assessment</div>
+            </div>
+            <div class="charts-grid" style="grid-template-columns:1fr 1fr">
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--purple)"></span>Quality &
+                        Coding
+                        Scores</div>
+                    <div class="chart-area"><canvas id="chartQualityFull"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--pink)"></span>Creativity &
+                        Instruction
+                        Following</div>
+                    <div class="chart-area"><canvas id="chartCreativeFull"></canvas></div>
+                </div>
+            </div>
+            <div class="section-header" style="margin-top:24px">
+                <div class="section-title">Model Cards</div>
+            </div>
+            <div class="model-cards-grid" id="qualityModelCards"></div>
+        </div>
+
+        <!-- VIEW: COST -->
+        <div class="section" id="view-cost">
+            <div class="section-header">
+                <div class="section-title">Cost Analysis</div>
+            </div>
+            <div class="hardware-grid">
+                <div class="chart-card">
+                    <div class="chart-card-title"><span class="dot" style="background:var(--orange)"></span>API Cost per
+                        1K
+                        Requests</div>
+                    <div class="chart-area"><canvas id="chartCostFull"></canvas></div>
+                </div>
+                <div class="hw-panel">
+                    <div class="hw-title">💰 Claude Opus 4.8 Usage</div>
+                    <div class="api-stats">
+                        <div class="api-stat">
+                            <div class="api-stat-label">Input Tokens</div>
+                            <div class="api-stat-value" style="color:var(--cyan)">847,293</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-label">Output Tokens</div>
+                            <div class="api-stat-value" style="color:var(--green)">124,567</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-label">Total Requests</div>
+                            <div class="api-stat-value" style="color:var(--yellow)">342</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-label">Avg Cost / Request</div>
+                            <div class="api-stat-value" style="color:var(--orange)">$0.42</div>
+                        </div>
+                    </div>
+                    <div class="api-total">
+                        <div class="label">Total API Spend</div>
+                        <div class="value">$142.38</div>
+                    </div>
+                    <div class="api-stats" style="margin-top:12px">
+                        <div class="api-stat">
+                            <div class="api-stat-label">GPT-4o Input</div>
+                            <div class="api-stat-value">312,450</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-label">GPT-4o Output</div>
+                            <div class="api-stat-value">89,210</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: HARDWARE -->
+        <div class="section" id="view-hardware">
+            <div class="section-header">
+                <div class="section-title">Hardware Monitor</div>
+            </div>
+            <div class="hardware-grid">
+                <div class="hw-panel">
+                    <div class="hw-title">🖥️ Local Server Status</div>
+                    <div class="hw-bar-group">
+                        <div class="hw-bar-label"><span>RTX 3090</span><span>78%</span></div>
+                        <div class="hw-bar-track">
+                            <div class="hw-bar-fill cyan" style="width:78%"></div>
+                        </div>
+                    </div>
+                    <div class="hw-bar-group">
+                        <div class="hw-bar-label"><span>VRAM Usage</span><span>18.4 / 24 GB</span></div>
+                        <div class="hw-bar-track">
+                            <div class="hw-bar-fill purple" style="width:76.7%"></div>
+                        </div>
+                    </div>
+                    <div class="hw-bar-group">
+                        <div class="hw-bar-label"><span>Temperature</span><span>72°C</span></div>
+                        <div class="hw-bar-track">
+                            <div class="hw-bar-fill orange" style="width:72%"></div>
+                        </div>
+                    </div>
+                    <div class="hw-bar-group">
+                        <div class="hw-bar-label"><span>Power Draw</span><span>285W</span></div>
+                        <div class="hw-bar-track">
+                            <div class="hw-bar-fill pink" style="width:71.3%"></div>
+                        </div>
+                    </div>
+                    <div class="hw-status online"><span class="dot"></span> Local Server Online · ollama serving at
+                        localhost:11434</div>
+                </div>
+                <div class="hw-panel">
+                    <div class="hw-title">📊 System Metrics</div>
+                    <div class="hw-bar-group">
+                        <div class="hw-bar-label"><span>CPU Usage</span><span>34%</span></div>
+                        <div class="hw-bar-track">
+                            <div class="hw-bar-fill cyan" style="width:34%"></div>
+                        </div>
+                    </div>
+                    <div class="hw-bar-group">
+                        <div class="hw-bar-label"><span>RAM Usage</span><span>22.8 / 32 GB</span></div>
+                        <div class="hw-bar-track">
+                            <div class="hw-bar-fill purple" style="width:71.3%"></div>
+                        </div>
+                    </div>
+                    <div class="hw-bar-group">
+                        <div class="hw-bar-label"><span>Disk I/O</span><span>142 MB/s</span></div>
+                        <div class="hw-bar-track">
+                            <div class="hw-bar-fill orange" style="width:45%"></div>
+                        </div>
+                    </div>
+                    <div class="hw-bar-group">
+                        <div class="hw-bar-label"><span>Network</span><span>28 Mbps</span></div>
+                        <div class="hw-bar-track">
+                            <div class="hw-bar-fill pink" style="width:28%"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+                        <span
+                            style="padding:6px 12px;border-radius:8px;font-size:11px;background:var(--cyan-dim);color:var(--cyan)">ollama
+                            v0.6.1</span>
+                        <span
+                            style="padding:6px 12px;border-radius:8px;font-size:11px;background:var(--green-dim);color:var(--green)">CUDA
+                            12.4</span>
+                        <span
+                            style="padding:6px 12px;border-radius:8px;font-size:11px;background:var(--purple-dim);color:var(--purple)">Ubuntu
+                            24.04</span>
+                    </div>
+                </div>
+            </div>
+            <div class="section-header" style="margin-top:24px">
+                <div class="section-title">Recent Hardware Log</div>
+            </div>
+            <div class="test-table-wrap">
+                <table class="test-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event</th>
+                            <th>GPU %</th>
+                            <th>VRAM</th>
+                            <th>Temp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hwLogBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PROMPT HISTORY -->
+        <div class="section-header" style="margin-top:8px">
+            <div class="section-title">Prompt History</div>
+        </div>
+        <div class="prompt-table-wrap">
+            <table class="prompt-table" id="promptTable">
+                <thead>
+                    <tr>
+                        <th data-sort="id">#</th>
+                        <th data-sort="prompt">Prompt</th>
+                        <th data-sort="model">Model</th>
+                        <th data-sort="status">Status</th>
+                        <th data-sort="time">Time</th>
+                        <th data-sort="score">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="promptBody"></tbody>
+            </table>
+        </div>
+
+        <!-- PREVIOUS TESTS -->
+        <div class="section-header" style="margin-top:24px">
+            <div class="section-title">Previous AI Model Tests</div>
+        </div>
+        <div class="test-controls">
+            <input class="test-search" id="testSearch" type="text"
+                placeholder="Search by model, test name, or score...">
+            <select class="model-select" id="testModelFilter" style="min-width:140px">
+                <option value="all">All Models</option>
+                <option value="Qwen3.6 27B">Qwen3.6 27B</option>
+                <option value="Claude Opus 4.8">Claude Opus 4.8</option>
+                <option value="Mistral 7B">Mistral 7B</option>
+                <option value="Llama 3.1 8B">Llama 3.1 8B</option>
+                <option value="GPT-4o">GPT-4o</option>
+                <option value="DeepSeek Coder V2">DeepSeek Coder V2</option>
+                <option value="Gemma 2 9B">Gemma 2 9B</option>
+                <option value="Mixtral 8x7B">Mixtral 8x7B</option>
+            </select>
+        </div>
+        <div class="test-table-wrap">
+            <table class="test-table" id="testTable">
+                <thead>
+                    <tr>
+                        <th data-sort="model" class="sort-asc">Model <span class="sort-arrow">▲</span></th>
+                        <th data-sort="test">Test</th>
+                        <th data-sort="score">Score <span class="sort-arrow">▲</span></th>
+                        <th data-sort="speed">Speed (t/s) <span class="sort-arrow">▲</span></th>
+                        <th data-sort="time">Time</th>
+                        <th data-sort="cost">Cost</th>
+                        <th data-sort="date">Date</th>
+                    </tr>
+                </thead>
+                <tbody id="testBody"></tbody>
+            </table>
+        </div>
+
+        <!-- NOTES -->
+        <div class="section-header" style="margin-top:24px">
+            <div class="section-title">Testing Notes</div>
+        </div>
+        <textarea class="notes-area" placeholder="Add your testing observations here...">Qwen3.6 27B impresses at 45.2 t/s locally on RTX 3090 - nearly 4x faster than Claude Opus 4.8. However, Claude wins on quality, coding accuracy, and instruction following. For rapid prototyping and iteration, Qwen is the clear choice. For production-grade outputs, Claude justifies its cost.
+
+Key takeaway: Local models are now competitive for 80% of coding tasks. Only complex system design and nuanced creative work requires frontier models.
+
+Next steps: Test Qwen3.6 27B against Claude Opus 4.8 on multi-turn conversations and tool-use scenarios.</textarea>
+
+    </div>
+
+    <script>
+        // ===== DATA =====
+        const models = {
+            'Qwen3.6 27B': { type: 'local', speed: 45.2, quality: 92.5, coding: 94, creativity: 88, instruction: 93, cost: 0, grade: 'A-', params: '27B' },
+            'Claude Opus 4.8': { type: 'frontier', speed: 12.1, quality: 97.2, coding: 98, creativity: 92, instruction: 97, cost: 0.42, grade: 'A+', params: 'API' },
+            'Mistral 7B': { type: 'local', speed: 38.5, quality: 82, coding: 78, creativity: 80, instruction: 79, cost: 0, grade: 'B', params: '7B' },
+            'Llama 3.1 8B': { type: 'local', speed: 42.1, quality: 78, coding: 75, creativity: 82, instruction: 76, cost: 0, grade: 'B-', params: '8B' },
+            'GPT-4o': { type: 'frontier', speed: 15.3, quality: 92, coding: 88, creativity: 90, instruction: 91, cost: 0.35, grade: 'A', params: 'API' },
+            'DeepSeek Coder V2': { type: 'local', speed: 35.7, quality: 94, coding: 96, creativity: 76, instruction: 89, cost: 0, grade: 'A-', params: '21B' },
+            'Gemma 2 9B': { type: 'local', speed: 40.2, quality: 80, coding: 74, creativity: 78, instruction: 75, cost: 0, grade: 'B-', params: '9B' },
+            'Mixtral 8x7B': { type: 'local', speed: 28.4, quality: 88, coding: 85, creativity: 84, instruction: 86, cost: 0, grade: 'B+', params: '46.7B' }
+        };
+
+        const promptHistory = [
+            { id: 1, prompt: 'Write a Python merge sort implementation', model: 'Qwen3.6 27B', status: 'completed', time: '2.3s', score: 95, tokens: 423, detail: 'Generated complete merge sort with O(n log n) complexity analysis. Included test cases.' },
+            { id: 2, prompt: 'Explain quantum computing in simple terms', model: 'Claude Opus 4.8', status: 'completed', time: '8.7s', score: 98, tokens: 891, detail: 'Clear explanation with analogies. Covered superposition, entanglement, and quantum gates.' },
+            { id: 3, prompt: 'Create a React hook for localStorage sync', model: 'Qwen3.6 27B', status: 'completed', time: '1.8s', score: 93, tokens: 356, detail: 'Custom useLocalStorage hook with SSR safety, event listeners for cross-tab sync.' },
+            { id: 4, prompt: 'Debug this SQL query with JOIN issues', model: 'Claude Opus 4.8', status: 'completed', time: '6.2s', score: 96, tokens: 567, detail: 'Identified missing index and ambiguous column. Provided optimized query.' },
+            { id: 5, prompt: 'Write a recursive Fibonacci with memoization', model: 'Mistral 7B', status: 'completed', time: '3.1s', score: 82, tokens: 234, detail: 'Basic implementation correct but missing edge case for negative numbers.' },
+            { id: 6, prompt: 'Design a rate limiting algorithm', model: 'Claude Opus 4.8', status: 'completed', time: '9.1s', score: 97, tokens: 1023, detail: 'Sliding window + token bucket hybrid. Included distributed system considerations.' },
+            { id: 7, prompt: 'Generate unit tests for API endpoint', model: 'DeepSeek Coder V2', status: 'completed', time: '3.5s', score: 94, tokens: 445, detail: 'Comprehensive test suite with mocking, edge cases, and async handling.' },
+            { id: 8, prompt: 'Write a bash script for log rotation', model: 'Llama 3.1 8B', status: 'completed', time: '2.8s', score: 78, tokens: 198, detail: 'Functional but missing compression and error handling.' },
+            { id: 9, prompt: 'Create a poem about artificial intelligence', model: 'GPT-4o', status: 'completed', time: '6.9s', score: 92, tokens: 312, detail: 'Creative sonnet with tech metaphors. Good rhythm and structure.' },
+            { id: 10, prompt: 'Implement a binary search tree in Rust', model: 'Qwen3.6 27B', status: 'completed', time: '2.6s', score: 96, tokens: 512, detail: 'Safe Rust implementation with ownership, borrowing, and comprehensive tests.' },
+            { id: 11, prompt: 'Translate this to Japanese: "Hello world"', model: 'Gemma 2 9B', status: 'completed', time: '2.0s', score: 80, tokens: 89, detail: 'Correct translation but formality level was inconsistent.' },
+            { id: 12, prompt: 'Optimize this Python data pipeline', model: 'Claude Opus 4.8', status: 'completed', time: '8.3s', score: 97, tokens: 756, detail: 'Reduced memory usage by 60%. Suggested async processing and batch operations.' },
+            { id: 13, prompt: 'Solve: What is the time complexity?', model: 'Mixtral 8x7B', status: 'completed', time: '4.2s', score: 88, tokens: 267, detail: 'Correctly identified O(n²) and suggested optimization to O(n log n).' },
+            { id: 14, prompt: 'Generate OpenAPI 3.0 spec for a CRUD API', model: 'DeepSeek Coder V2', status: 'completed', time: '4.0s', score: 95, tokens: 678, detail: 'Complete spec with all endpoints, schemas, and security definitions.' },
+            { id: 15, prompt: 'Write a Docker multistage build file', model: 'Qwen3.6 27B', status: 'completed', time: '1.9s', score: 91, tokens: 312, detail: 'Efficient multi-stage build with caching optimization.' },
+            { id: 16, prompt: 'Explain the CAP theorem with examples', model: 'GPT-4o', status: 'completed', time: '5.4s', score: 90, tokens: 534, detail: 'Good explanation with real-world database examples for each trade-off.' },
+            { id: 17, prompt: 'Create a CSS animation for loading spinner', model: 'Qwen3.6 27B', status: 'completed', time: '1.5s', score: 90, tokens: 156, detail: 'Smooth CSS-only spinner with custom keyframes and gradient.' },
+            { id: 18, prompt: 'Review this code for security vulnerabilities', model: 'Claude Opus 4.8', status: 'completed', time: '7.8s', score: 98, tokens: 890, detail: 'Found SQL injection, XSS, and CSRF vulnerabilities. Provided fixes for each.' },
+            { id: 19, prompt: 'Write a Go concurrent worker pool', model: 'Mistral 7B', status: 'completed', time: '3.8s', score: 78, tokens: 389, detail: 'Basic worker pool but missing graceful shutdown and error handling.' },
+            { id: 20, prompt: 'Design a REST API for a chat application', model: 'Claude Opus 4.8', status: 'running', time: '--', score: '--', tokens: 0, detail: 'In progress...' }
+        ];
+
+        const previousTests = [
+            { model: 'Qwen3.6 27B', test: 'Code Generation - Merge Sort', score: 95, speed: 45.2, time: '2.3s', cost: '$0.00', date: '2026-05-28' },
+            { model: 'Claude Opus 4.8', test: 'Code Generation - Merge Sort', score: 98, speed: 12.1, time: '8.7s', cost: '$0.42', date: '2026-05-28' },
+            { model: 'Qwen3.6 27B', test: 'React Hook - localStorage Sync', score: 93, speed: 44.5, time: '1.8s', cost: '$0.00', date: '2026-05-27' },
+            { model: 'Claude Opus 4.8', test: 'Quantum Computing Explanation', score: 98, speed: 11.8, time: '8.7s', cost: '$0.38', date: '2026-05-27' },
+            { model: 'Mistral 7B', test: 'Fibonacci with Memoization', score: 82, speed: 38.5, time: '3.1s', cost: '$0.00', date: '2026-05-26' },
+            { model: 'Llama 3.1 8B', test: 'Bash Log Rotation Script', score: 78, speed: 42.1, time: '2.8s', cost: '$0.00', date: '2026-05-26' },
+            { model: 'GPT-4o', test: 'AI Poetry Generation', score: 92, speed: 15.3, time: '6.9s', cost: '$0.28', date: '2026-05-25' },
+            { model: 'DeepSeek Coder V2', test: 'Rust Binary Search Tree', score: 96, speed: 35.7, time: '3.5s', cost: '$0.00', date: '2026-05-25' },
+            { model: 'Qwen3.6 27B', test: 'Rust Binary Search Tree', score: 96, speed: 44.8, time: '2.6s', cost: '$0.00', date: '2026-05-24' },
+            { model: 'Claude Opus 4.8', test: 'Python Data Pipeline Optimization', score: 97, speed: 12.8, time: '8.3s', cost: '$0.45', date: '2026-05-24' },
+            { model: 'Gemma 2 9B', test: 'Japanese Translation Task', score: 80, speed: 40.2, time: '2.0s', cost: '$0.00', date: '2026-05-23' },
+            { model: 'Mixtral 8x7B', test: 'Time Complexity Analysis', score: 88, speed: 28.4, time: '4.2s', cost: '$0.00', date: '2026-05-23' },
+            { model: 'DeepSeek Coder V2', test: 'OpenAPI 3.0 Spec Generation', score: 95, speed: 36.1, time: '4.0s', cost: '$0.00', date: '2026-05-22' },
+            { model: 'Qwen3.6 27B', test: 'Docker Multistage Build', score: 91, speed: 43.2, time: '1.9s', cost: '$0.00', date: '2026-05-22' },
+            { model: 'Claude Opus 4.8', test: 'Security Code Review', score: 98, speed: 11.5, time: '7.8s', cost: '$0.40', date: '2026-05-21' },
+            { model: 'GPT-4o', test: 'CAP Theorem Explanation', score: 90, speed: 14.8, time: '5.4s', cost: '$0.32', date: '2026-05-21' },
+            { model: 'Qwen3.6 27B', test: 'CSS Loading Spinner Animation', score: 90, speed: 46.1, time: '1.5s', cost: '$0.00', date: '2026-05-20' },
+            { model: 'Claude Opus 4.8', test: 'Rate Limiting Algorithm Design', score: 97, speed: 12.3, time: '9.1s', cost: '$0.48', date: '2026-05-20' },
+            { model: 'Mistral 7B', test: 'Go Concurrent Worker Pool', score: 78, speed: 37.2, time: '3.8s', cost: '$0.00', date: '2026-05-19' },
+            { model: 'Claude Opus 4.8', test: 'SQL Debugging - JOIN Issues', score: 96, speed: 13.1, time: '6.2s', cost: '$0.36', date: '2026-05-19' }
+        ];
+
+        const winnerData = [
+            { category: 'Coding Accuracy', winner: 'Claude Opus 4.8', score: '98 vs 94', type: 'frontier' },
+            { category: 'Speed', winner: 'Qwen3.6 27B', score: '45.2 vs 12.1 t/s', type: 'local' },
+            { category: 'Cost Efficiency', winner: 'Qwen3.6 27B', score: '$0.00 vs $0.42/req', type: 'local' },
+            { category: 'Creativity', winner: 'Claude Opus 4.8', score: '92 vs 88', type: 'frontier' },
+            { category: 'Instruction Following', winner: 'Claude Opus 4.8', score: '97% vs 93%', type: 'frontier' },
+            { category: 'Overall Quality', winner: 'Claude Opus 4.8', score: '97.2 vs 92.5', type: 'frontier' }
+        ];
+
+        const hwLog = [
+            { time: '14:32:18', event: 'Inference started - Qwen3.6 27B', gpu: '82', vram: '19.2 GB', temp: '74°C' },
+            { time: '14:34:41', event: 'Inference completed - 2.3s', gpu: '76', vram: '17.8 GB', temp: '71°C' },
+            { time: '14:36:05', event: 'Model loaded - Claude Opus 4.8 (API)', gpu: '12', vram: '4.2 GB', temp: '65°C' },
+            { time: '14:38:22', event: 'API response received - 8.7s', gpu: '8', vram: '3.1 GB', temp: '63°C' },
+            { time: '14:41:10', event: 'Inference started - DeepSeek Coder V2', gpu: '88', vram: '20.1 GB', temp: '76°C' },
+            { time: '14:44:55', event: 'Batch test completed - 5 tests', gpu: '65', vram: '14.8 GB', temp: '69°C' }
+        ];
+
+        // ===== STATE =====
+        let currentView = 'summary';
+        let currentModelFilter = 'all';
+        let currentTypeFilter = 'all';
+        let promptSortKey = null;
+        let promptSortAsc = true;
+        let testSortKey = null;
+        let testSortAsc = true;
+        let testSearchTerm = '';
+        let testModelFilter = 'all';
+        let chartInstances = {};
+
+        // ===== UTILITY =====
+        function getFilteredModels() {
+            return Object.entries(models).filter(([name, m]) => {
+                if (currentModelFilter !== 'all' && name !== currentModelFilter) return false;
+                if (currentTypeFilter !== 'all' && m.type !== currentTypeFilter) return false;
+                return true;
+            });
+        }
+
+        function getFilteredTests() {
+            return previousTests.filter(t => {
+                if (testModelFilter !== 'all' && t.model !== testModelFilter) return false;
+                if (testSearchTerm) {
+                    const term = testSearchTerm.toLowerCase();
+                    return t.model.toLowerCase().includes(term) || t.test.toLowerCase().includes(term) || String(t.score).includes(term);
+                }
+                return true;
+            });
+        }
+
+        // ===== RENDER =====
+        function renderModelCards(containerId, sourceModels) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const entries = sourceModels || getFilteredModels();
+            container.innerHTML = entries.map(([name, m]) => `
+    <div class="model-card ${m.type}">
+      <div class="model-card-header">
+        <div class="model-card-name">${name}</div>
+        <span class="model-card-badge ${m.type}">${m.type}</span>
+      </div>
+      <div class="model-card-stats">
+        <div class="model-card-stat"><span class="model-card-stat-label">Speed</span><span class="model-card-stat-value">${m.speed} t/s</span></div>
+        <div class="model-card-stat"><span class="model-card-stat-label">Quality</span><span class="model-card-stat-value">${m.quality}</span></div>
+        <div class="model-card-stat"><span class="model-card-stat-label">Coding</span><span class="model-card-stat-value">${m.coding}%</span></div>
+        <div class="model-card-stat"><span class="model-card-stat-label">Creativity</span><span class="model-card-stat-value">${m.creativity}</span></div>
+        <div class="model-card-stat"><span class="model-card-stat-label">Instruction</span><span class="model-card-stat-value">${m.instruction}%</span></div>
+        <div class="model-card-stat"><span class="model-card-stat-label">Cost/Req</span><span class="model-card-stat-value">${m.cost === 0 ? '$0.00' : '$' + m.cost.toFixed(2)}</span></div>
+      </div>
+      <div class="model-card-grade">${m.grade}</div>
+    </div>
+  `).join('');
+        }
+
+        function renderPromptHistory() {
+            const body = document.getElementById('promptBody');
+            if (!body) return;
+
+            let items = [...promptHistory];
+            if (currentModelFilter !== 'all') {
+                items = items.filter(p => p.model === currentModelFilter);
+            }
+
+            if (promptSortKey) {
+                items.sort((a, b) => {
+                    let va = a[promptSortKey], vb = b[promptSortKey];
+                    if (typeof va === 'string') va = va.toLowerCase();
+                    if (typeof vb === 'string') vb = vb.toLowerCase();
+                    if (va < vb) return promptSortAsc ? -1 : 1;
+                    if (va > vb) return promptSortAsc ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            body.innerHTML = items.map((p, idx) => `
+    <tr class="prompt-row" data-idx="${idx}" data-id="${p.id}">
+      <td>${p.id}</td>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.prompt}</td>
+      <td>${p.model}</td>
+      <td><span class="status ${p.status}">${p.status === 'completed' ? '✓' : p.status === 'running' ? '⟳' : '✗'} ${p.status}</span></td>
+      <td>${p.time}</td>
+      <td>${p.score}</td>
+    </tr>
+    <tr class="expand-detail" id="detail-${p.id}">
+      <td colspan="6">
+        <div class="expand-detail-inner">
+          <p>${p.detail || 'No additional details available.'}</p>
+          <div class="detail-tags">
+            <span>Model: ${p.model}</span>
+            <span>Tokens: ${p.tokens || 'N/A'}</span>
+            <span>Score: ${p.score}</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+            document.querySelectorAll('.prompt-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const id = row.dataset.id;
+                    const detail = document.getElementById(`detail-${id}`);
+                    const expanded = row.classList.contains('expanded');
+                    document.querySelectorAll('.prompt-row.expanded').forEach(r => r.classList.remove('expanded'));
+                    document.querySelectorAll('.expand-detail.show').forEach(d => d.classList.remove('show'));
+                    if (!expanded) {
+                        row.classList.add('expanded');
+                        detail.classList.add('show');
+                    }
+                });
+            });
+        }
+
+        function renderTestTable() {
+            const body = document.getElementById('testBody');
+            if (!body) return;
+            let items = getFilteredTests();
+
+            if (testSortKey) {
+                items.sort((a, b) => {
+                    let va = a[testSortKey], vb = b[testSortKey];
+                    if (typeof va === 'string') va = va.toLowerCase();
+                    if (typeof vb === 'string') vb = vb.toLowerCase();
+                    if (va < vb) return testSortAsc ? -1 : 1;
+                    if (va > vb) return testSortAsc ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            body.innerHTML = items.map(t => `
+    <tr>
+      <td>${t.model}</td>
+      <td>${t.test}</td>
+      <td style="font-weight:600;color:${t.score >= 95 ? 'var(--green)' : t.score >= 85 ? 'var(--cyan)' : t.score >= 75 ? 'var(--yellow)' : 'var(--pink)'}">${t.score}</td>
+      <td>${t.speed}</td>
+      <td>${t.time}</td>
+      <td>${t.cost}</td>
+      <td style="color:var(--text-muted);font-size:12px">${t.date}</td>
+    </tr>
+  `).join('');
+        }
+
+        function renderSpeedRankings() {
+            const body = document.getElementById('speedRankingBody');
+            if (!body) return;
+            const sorted = Object.entries(models).sort((a, b) => b[1].speed - a[1].speed);
+            body.innerHTML = sorted.map(([name, m], i) => `
+    <tr>
+      <td style="font-weight:600;color:${i === 0 ? 'var(--green)' : i === 1 ? 'var(--cyan)' : i === 2 ? 'var(--yellow)' : 'var(--text-secondary)'}">#${i + 1}</td>
+      <td>${name}</td>
+      <td style="font-weight:600;color:var(--cyan)">${m.speed} t/s</td>
+      <td>${(1 / m.speed * 100).toFixed(1)}s</td>
+      <td><span style="padding:2px 8px;border-radius:8px;font-size:11px;background:${m.type === 'local' ? 'var(--cyan-dim)' : 'var(--purple-dim)'};color:${m.type === 'local' ? 'var(--cyan)' : 'var(--purple)'}">${m.type}</span></td>
+    </tr>
+  `).join('');
+        }
+
+        function renderWinnerBreakdown() {
+            const grid = document.getElementById('winnerGrid');
+            if (!grid) return;
+            grid.innerHTML = winnerData.map(w => `
+    <div class="winner-card win-${w.type}">
+      <div class="trophy">${w.type === 'tie' ? '🤝' : '🏆'}</div>
+      <div class="category">${w.category}</div>
+      <div class="winner">${w.winner}</div>
+      <div class="score-detail">${w.score}</div>
+    </div>
+  `).join('');
+        }
+
+        function renderHwLog() {
+            const body = document.getElementById('hwLogBody');
+            if (!body) return;
+            body.innerHTML = hwLog.map(e => `
+    <tr>
+      <td style="color:var(--text-muted);font-size:12px">${e.time}</td>
+      <td>${e.event}</td>
+      <td style="color:var(--cyan);font-weight:600">${e.gpu}%</td>
+      <td>${e.vram}</td>
+      <td style="color:${parseInt(e.temp) > 75 ? 'var(--orange)' : 'var(--text-secondary)'}">${e.temp}</td>
+    </tr>
+  `).join('');
+        }
+
+        // ===== CHARTS =====
+        function destroyChart(key) {
+            if (chartInstances[key]) {
+                chartInstances[key].destroy();
+                delete chartInstances[key];
+            }
+        }
+
+        function getChartColors() {
+            return {
+                local: ['rgba(0,240,255,0.85)', 'rgba(0,240,255,0.2)'],
+                frontier: ['rgba(139,92,246,0.85)', 'rgba(139,92,246,0.2)'],
+                cyan: ['rgba(0,240,255,0.85)', 'rgba(0,240,255,0.2)'],
+                green: ['rgba(0,255,136,0.85)', 'rgba(0,255,136,0.2)'],
+                orange: ['rgba(255,140,0,0.85)', 'rgba(255,140,0,0.2)'],
+                pink: ['rgba(255,0,128,0.85)', 'rgba(255,0,128,0.2)'],
+                yellow: ['rgba(255,215,0,0.85)', 'rgba(255,215,0,0.2)'],
+                purple: ['rgba(139,92,246,0.85)', 'rgba(139,92,246,0.2)']
+            };
+        }
+
+        function createBarChart(canvasId, labels, datasets, options = {}) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+            destroyChart(canvasId);
+            if (typeof Chart === 'undefined') return null;
+            try {
+                const ctx = canvas.getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: 'rgba(240,240,248,0.7)', font: { size: 11 }, boxWidth: 12, padding: 12 } },
+                            tooltip: { backgroundColor: 'rgba(10,10,24,0.95)', titleColor: '#f0f0f8', bodyColor: 'rgba(240,240,248,0.8)', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 10, cornerRadius: 8 }
+                        },
+                        scales: {
+                            x: { ticks: { color: 'rgba(240,240,248,0.5)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                            y: { beginAtZero: true, ticks: { color: 'rgba(240,240,248,0.5)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                        },
+                        ...options
+                    }
+                });
+                chartInstances[canvasId] = chart;
+                return chart;
+            } catch (e) { return null; }
+        }
+
+        function buildChartConfig(view) {
+            const C = getChartColors();
+            const filtered = getFilteredModels();
+            const labels = filtered.map(([n]) => n);
+            if (!labels.length) return [];
+
+            const makeBg = (m) => m.type === 'local' ? C.local[0] : C.frontier[0];
+            const charts = [];
+
+            if (view === 'summary') {
+                charts.push(
+                    { id: 'chartSpeed', labels, datasets: [{ label: 'Tokens/s', data: filtered.map(([, m]) => m.speed), backgroundColor: filtered.map(makeBg), borderColor: filtered.map(makeBg), borderWidth: 1, borderRadius: 4 }] },
+                    { id: 'chartTime', labels, datasets: [{ label: 'Seconds', data: filtered.map(([, m]) => +(1 / m.speed * 100).toFixed(1)), backgroundColor: labels.map(() => C.green[0]), borderColor: labels.map(() => C.green[0]), borderWidth: 1, borderRadius: 4 }] },
+                    {
+                        id: 'chartQuality', labels, datasets: [
+                            { label: 'Quality', data: filtered.map(([, m]) => m.quality), backgroundColor: C.purple[0], borderColor: C.purple[0], borderWidth: 1, borderRadius: 4 },
+                            { label: 'Coding', data: filtered.map(([, m]) => m.coding), backgroundColor: C.pink[0], borderColor: C.pink[0], borderWidth: 1, borderRadius: 4 }
+                        ]
+                    }
+                );
+                const costLbl = filtered.filter(([, m]) => m.cost > 0).map(([n]) => n);
+                const costDat = filtered.filter(([, m]) => m.cost > 0).map(([, m]) => m.cost);
+                charts.push({ id: 'chartCost', labels: costLbl.length ? costLbl : ['No API costs'], datasets: [{ label: 'Cost per Request ($)', data: costLbl.length ? costDat : [0], backgroundColor: C.orange[0], borderColor: C.orange[0], borderWidth: 1, borderRadius: 4 }] });
+            }
+
+            if (view === 'speed') {
+                charts.push(
+                    { id: 'chartSpeedFull', labels, datasets: [{ label: 'Tokens/s', data: filtered.map(([, m]) => m.speed), backgroundColor: filtered.map(makeBg), borderColor: filtered.map(makeBg), borderWidth: 1, borderRadius: 4 }] },
+                    { id: 'chartTimeFull', labels, datasets: [{ label: 'Seconds', data: filtered.map(([, m]) => +(1 / m.speed * 100).toFixed(1)), backgroundColor: labels.map(() => C.green[0]), borderColor: labels.map(() => C.green[0]), borderWidth: 1, borderRadius: 4 }] }
+                );
+            }
+
+            if (view === 'quality') {
+                charts.push(
+                    {
+                        id: 'chartQualityFull', labels, datasets: [
+                            { label: 'Quality Score', data: filtered.map(([, m]) => m.quality), backgroundColor: C.purple[0], borderColor: C.purple[0], borderWidth: 1, borderRadius: 4 },
+                            { label: 'Coding Accuracy', data: filtered.map(([, m]) => m.coding), backgroundColor: C.cyan[0], borderColor: C.cyan[0], borderWidth: 1, borderRadius: 4 }
+                        ]
+                    },
+                    {
+                        id: 'chartCreativeFull', labels, datasets: [
+                            { label: 'Creativity', data: filtered.map(([, m]) => m.creativity), backgroundColor: C.pink[0], borderColor: C.pink[0], borderWidth: 1, borderRadius: 4 },
+                            { label: 'Instruction Following', data: filtered.map(([, m]) => m.instruction), backgroundColor: C.yellow[0], borderColor: C.yellow[0], borderWidth: 1, borderRadius: 4 }
+                        ]
+                    }
+                );
+            }
+
+            if (view === 'cost') {
+                const costLbl = filtered.filter(([, m]) => m.cost > 0).map(([n]) => n);
+                const costDat = filtered.filter(([, m]) => m.cost > 0).map(([, m]) => m.cost);
+                charts.push({ id: 'chartCostFull', labels: costLbl.length ? costLbl : ['No API costs'], datasets: [{ label: 'Cost per 1K Requests ($)', data: costLbl.length ? costDat.map(c => +(c * 1000).toFixed(0)) : [0], backgroundColor: C.orange[0], borderColor: C.orange[0], borderWidth: 1, borderRadius: 4 }] });
+            }
+
+            return charts;
+        }
+
+        function renderCurrentViewCharts() {
+            if (typeof Chart === 'undefined') return;
+            try {
+                Object.keys(chartInstances).forEach(k => destroyChart(k));
+                const configs = buildChartConfig(currentView);
+                configs.forEach(c => createBarChart(c.id, c.labels, c.datasets));
+            } catch (e) { }
+        }
+
+        // ===== VIEW SWITCHING =====
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            const target = document.getElementById(`view-${view}`);
+            if (target) target.classList.add('active');
+            const tab = document.querySelector(`.nav-tab[data-view="${view}"]`);
+            if (tab) tab.classList.add('active');
+            requestAnimationFrame(() => { requestAnimationFrame(renderCurrentViewCharts); });
+        }
+
+        // ===== ANIMATED COUNTERS =====
+        function animateCounters() {
+            document.querySelectorAll('[data-count]').forEach(el => {
+                const target = parseFloat(el.dataset.count);
+                const prefix = el.dataset.prefix || '';
+                const suffix = el.dataset.suffix || '';
+                const duration = 1200;
+                const start = performance.now();
+                function update(now) {
+                    const elapsed = now - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    const current = eased * target;
+                    if (Number.isInteger(target)) {
+                        el.textContent = prefix + Math.round(current) + suffix;
+                    } else {
+                        el.textContent = prefix + current.toFixed(1) + suffix;
+                    }
+                    if (progress < 1) requestAnimationFrame(update);
+                }
+                requestAnimationFrame(update);
+            });
+        }
+
+        // ===== EVENT BINDING =====
+        document.addEventListener('DOMContentLoaded', () => {
+            // ===== RENDER STATIC CONTENT (safe, no dependencies) =====
+            renderModelCards('modelCardsGrid');
+            renderModelCards('qualityModelCards');
+            renderPromptHistory();
+            renderTestTable();
+            renderSpeedRankings();
+            renderWinnerBreakdown();
+            renderHwLog();
+
+            // ===== ANIMATED COUNTERS (critical, runs before charts) =====
+            animateCounters();
+
+            // ===== EVENT BINDINGS =====
+            // View tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchView(tab.dataset.view));
+            });
+            // Model filter
+            const modelFilterEl = document.getElementById('modelFilter');
+            if (modelFilterEl) {
+                modelFilterEl.addEventListener('change', e => {
+                    try {
+                        currentModelFilter = e.target.value;
+                        const entries = getFilteredModels();
+                        renderModelCards('modelCardsGrid', entries);
+                        renderModelCards('qualityModelCards', entries);
+                        renderPromptHistory();
+                        renderCurrentViewCharts();
+                    } catch (ex) { }
+                });
+            }
+            // Type toggle (Local / Frontier / All)
+            const typeToggleEls = document.querySelectorAll('#typeToggle .toggle-btn');
+            typeToggleEls.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    try {
+                        typeToggleEls.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        currentTypeFilter = btn.dataset.type;
+                        const entries = getFilteredModels();
+                        renderModelCards('modelCardsGrid', entries);
+                        renderModelCards('qualityModelCards', entries);
+                        renderPromptHistory();
+                        renderSpeedRankings();
+                        renderCurrentViewCharts();
+                    } catch (ex) { }
+                });
+            });
+            // Prompt table sorting
+            document.querySelectorAll('#promptTable th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.dataset.sort;
+                    if (promptSortKey === key) { promptSortAsc = !promptSortAsc; }
+                    else { promptSortKey = key; promptSortAsc = true; }
+                    renderPromptHistory();
+                });
+            });
+            // Test table sorting
+            document.querySelectorAll('#testTable th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.dataset.sort;
+                    if (testSortKey === key) { testSortAsc = !testSortAsc; }
+                    else { testSortKey = key; testSortAsc = true; }
+                    document.querySelectorAll('#testTable th').forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+                    th.classList.add(testSortAsc ? 'sort-asc' : 'sort-desc');
+                    renderTestTable();
+                });
+            });
+            // Test search
+            const testSearchEl = document.getElementById('testSearch');
+            if (testSearchEl) {
+                testSearchEl.addEventListener('input', e => {
+                    testSearchTerm = e.target.value;
+                    renderTestTable();
+                });
+            }
+            // Test model filter
+            const testModelFilterEl = document.getElementById('testModelFilter');
+            if (testModelFilterEl) {
+                testModelFilterEl.addEventListener('change', e => {
+                    testModelFilter = e.target.value;
+                    renderTestTable();
+                });
+            }
+
+            // ===== CHARTS =====
+            requestAnimationFrame(() => { requestAnimationFrame(renderCurrentViewCharts); });
+
+            // Window resize - reflow charts
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(renderCurrentViewCharts, 200);
+            });
+        });
+    </script>
+</body>
+
+</html>

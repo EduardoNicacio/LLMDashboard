@@ -1,0 +1,2580 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIMO V2.5 - AI Model Testing Command Center</title>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-glass: rgba(17, 24, 39, 0.6);
+            --bg-glass-light: rgba(30, 41, 59, 0.4);
+            --border-glass: rgba(99, 102, 241, 0.15);
+            --border-glow: rgba(99, 102, 241, 0.4);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-indigo: #818cf8;
+            --accent-cyan: #22d3ee;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --accent-violet: #a78bfa;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            --gradient-3: linear-gradient(135deg, #34d399 0%, #06b6d4 100%);
+            --gradient-win: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse 800px 600px at 20% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 600px 500px at 80% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 500px 400px at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-glass);
+            backdrop-filter: blur(20px);
+            background: rgba(10, 14, 23, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            color: var(--accent-indigo);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(17, 24, 39, 0.5);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .nav-tab.active {
+            color: white;
+            background: var(--gradient-1);
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-glass);
+            background: var(--bg-glass);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+        }
+
+        main {
+            padding: 24px 0 60px;
+        }
+
+        .section {
+            display: none;
+            margin-top: 1.5em;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px rgba(99, 102, 241, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-card);
+        }
+
+        .glass:hover {
+            border-color: var(--border-glow);
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .hero-stat {
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.4s ease backwards;
+        }
+
+        .hero-stat:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .hero-stat:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .hero-stat:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .hero-stat:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .hero-stat:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .hero-stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        .hero-stat:nth-child(1)::before {
+            background: var(--gradient-1);
+        }
+
+        .hero-stat:nth-child(2)::before {
+            background: var(--gradient-2);
+        }
+
+        .hero-stat:nth-child(3)::before {
+            background: var(--gradient-3);
+        }
+
+        .hero-stat:nth-child(4)::before {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        .hero-stat:nth-child(5)::before {
+            background: linear-gradient(135deg, #fb7185, #e11d48);
+        }
+
+        .hero-stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .hero-stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .hero-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .matchup-section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .icon {
+            font-size: 20px;
+        }
+
+        .matchup-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .model-card {
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .model-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .model-card.winner {
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .model-card.winner::after {
+            content: '🏆 WINNER';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            background: var(--gradient-win);
+            border-radius: 20px;
+            color: #1a1a2e;
+            letter-spacing: 0.5px;
+        }
+
+        .model-name {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .model-type {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .model-type.local {
+            color: var(--accent-emerald);
+        }
+
+        .model-type.frontier {
+            color: var(--accent-cyan);
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .score-item {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-xs);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .score-item-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .score-item-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .score-item-value.excellent {
+            color: var(--accent-emerald);
+        }
+
+        .score-item-value.good {
+            color: var(--accent-cyan);
+        }
+
+        .score-item-value.average {
+            color: var(--accent-amber);
+        }
+
+        .score-item-value.poor {
+            color: var(--accent-rose);
+        }
+
+        .score-bar {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.8s ease;
+        }
+
+        .score-bar-fill.green {
+            background: var(--gradient-3);
+        }
+
+        .score-bar-fill.blue {
+            background: var(--gradient-2);
+        }
+
+        .score-bar-fill.amber {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+
+        .score-bar-fill.rose {
+            background: linear-gradient(90deg, #fb7185, #e11d48);
+        }
+
+        .vs-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .vs-badge {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--gradient-1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+            color: white;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.4);
+            z-index: 1;
+            animation: glow 3s ease infinite;
+        }
+
+        .vs-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(180deg, transparent, var(--border-glow), transparent);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            padding: 20px;
+            animation: slideUp 0.4s ease backwards;
+        }
+
+        .chart-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .chart-card:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .chart-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .chart-card:nth-child(4) {
+            animation-delay: 0.25s;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .chart-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 200px !important;
+        }
+
+        .prompt-history {
+            margin-bottom: 24px;
+        }
+
+        .prompt-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .prompt-item {
+            padding: 14px 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+        }
+
+        .prompt-item:hover {
+            border-color: var(--border-glow);
+            transform: translateX(4px);
+        }
+
+        .prompt-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .prompt-text {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 500;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .prompt-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .prompt-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .badge-pass {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-emerald);
+        }
+
+        .badge-fail {
+            background: rgba(251, 113, 133, 0.15);
+            color: var(--accent-rose);
+        }
+
+        .badge-partial {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-amber);
+        }
+
+        .prompt-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .prompt-score {
+            font-size: 13px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .prompt-details {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .prompt-item.expanded .prompt-details {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .prompt-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .prompt-detail-label {
+            color: var(--text-muted);
+        }
+
+        .panels-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .panel {
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .panel-stat {
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-xs);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .panel-stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .panel-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .panel-stat-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: var(--accent-emerald);
+            box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+        }
+
+        .status-dot.offline {
+            background: var(--accent-rose);
+        }
+
+        .progress-ring {
+            width: 48px;
+            height: 48px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.05);
+            stroke-width: 4;
+        }
+
+        .progress-ring-fill {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .progress-ring-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .winner-card {
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .winner-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .winner-card.local-wins::before {
+            background: var(--gradient-3);
+        }
+
+        .winner-card.frontier-wins::before {
+            background: var(--gradient-2);
+        }
+
+        .winner-card.tied::before {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+        }
+
+        .winner-category {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .winner-name {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .winner-name.local {
+            color: var(--accent-emerald);
+        }
+
+        .winner-name.frontier {
+            color: var(--accent-cyan);
+        }
+
+        .winner-name.tie {
+            color: var(--text-secondary);
+        }
+
+        .winner-detail {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border-glass);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-indigo);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .filter-select {
+            padding: 10px 14px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border-glass);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .filter-select option {
+            background: var(--bg-secondary);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-glass);
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+
+        .data-table th:hover {
+            color: var(--accent-indigo);
+        }
+
+        .data-table th.sorted {
+            color: var(--accent-indigo);
+        }
+
+        .data-table th .sort-arrow {
+            margin-left: 4px;
+            font-size: 10px;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+        }
+
+        .notes-area {
+            margin-bottom: 24px;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 160px;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            line-height: 1.7;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .notes-textarea:focus {
+            border-color: var(--accent-indigo);
+        }
+
+        .notes-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .metric-toggle {
+            display: flex;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .metric-toggle-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .metric-toggle-btn.active {
+            color: white;
+            background: var(--gradient-1);
+        }
+
+        .grade-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .grade-a {
+            background: rgba(52, 211, 153, 0.2);
+            color: var(--accent-emerald);
+        }
+
+        .grade-b {
+            background: rgba(34, 211, 238, 0.2);
+            color: var(--accent-cyan);
+        }
+
+        .grade-c {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--accent-amber);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tag-local {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-emerald);
+        }
+
+        .tag-frontier {
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--accent-cyan);
+        }
+
+        .glow-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+            margin: 24px 0;
+        }
+
+        @media (max-width: 900px) {
+            .matchup-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .vs-divider {
+                padding: 16px 0;
+            }
+
+            .vs-line {
+                display: none;
+            }
+
+            .panels-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-stats {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 0 12px;
+            }
+
+            .header-inner {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hero-stat-value {
+                font-size: 22px;
+            }
+
+            .model-name {
+                font-size: 16px;
+            }
+
+            .score-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <header>
+            <div class="container header-inner">
+                <div class="logo">
+                    <div class="logo-icon">M</div>
+                    <div>
+                        <div class="logo-text">AI Model Testing Command Center</div>
+                    </div>
+                    <span class="logo-badge">v2.4</span>
+                </div>
+                <nav class="nav-tabs" id="navTabs">
+                    <button class="nav-tab active" data-section="summary">Summary</button>
+                    <button class="nav-tab" data-section="speed">Speed</button>
+                    <button class="nav-tab" data-section="quality">Quality</button>
+                    <button class="nav-tab" data-section="cost">Cost</button>
+                    <button class="nav-tab" data-section="hardware">Hardware</button>
+                </nav>
+                <div class="header-actions">
+                    <div class="metric-toggle">
+                        <button class="metric-toggle-btn active" data-metric="all">All</button>
+                        <button class="metric-toggle-btn" data-metric="local">Local</button>
+                        <button class="metric-toggle-btn" data-metric="frontier">Frontier</button>
+                    </div>
+                    <button class="btn" onclick="exportData()">Export</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- SUMMARY SECTION -->
+            <section class="section active" id="section-summary">
+                <div class="hero-stats" id="heroStats"></div>
+
+                <div class="matchup-section">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">⚔️</span> Head-to-Head Matchup</div>
+                        <span class="tag tag-local">Latest Test</span>
+                    </div>
+                    <div class="matchup-grid" id="matchupGrid"></div>
+                </div>
+
+                <div class="charts-grid" id="chartsGrid"></div>
+
+                <div class="prompt-history">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">📝</span> Prompt History</div>
+                        <span style="font-size:12px;color:var(--text-muted)">Click to expand details</span>
+                    </div>
+                    <div class="prompt-list" id="promptList"></div>
+                </div>
+
+                <div class="panels-grid">
+                    <div class="panel glass" id="hardwarePanel"></div>
+                    <div class="panel glass" id="apiPanel"></div>
+                </div>
+
+                <div class="winner-grid" id="winnerGrid"></div>
+
+                <div class="previous-tests-area">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">📊</span> Previous Model Tests</div>
+                    </div>
+                    <div class="table-controls">
+                        <input class="search-input" type="text" id="tableSearch"
+                            placeholder="Search models, prompts, results...">
+                        <select class="filter-select" id="modelFilter">
+                            <option value="all">All Models</option>
+                            <option value="Qwen3.6 27B">Qwen3.6 27B</option>
+                            <option value="Claude Opus 4.8">Claude Opus 4.8</option>
+                            <option value="Llama 4 Scout">Llama 4 Scout</option>
+                            <option value="GPT-4o">GPT-4o</option>
+                            <option value="DeepSeek R1">DeepSeek R1</option>
+                            <option value="Gemma 3 27B">Gemma 3 27B</option>
+                            <option value="Mistral Large 3">Mistral Large 3</option>
+                            <option value="Nemotron Ultra 253B">Nemotron Ultra 253B</option>
+                        </select>
+                        <select class="filter-select" id="sortFilter">
+                            <option value="date">Sort by Date</option>
+                            <option value="score">Sort by Score</option>
+                            <option value="speed">Sort by Speed</option>
+                            <option value="cost">Sort by Cost</option>
+                        </select>
+                    </div>
+                    <div class="table-wrapper glass">
+                        <table class="data-table" id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th data-sort="model">Model <span class="sort-arrow"></span></th>
+                                    <th data-sort="type">Type</th>
+                                    <th data-sort="date">Date</th>
+                                    <th data-sort="prompts">Prompts</th>
+                                    <th data-sort="avgTps">Avg TPS</th>
+                                    <th data-sort="quality">Quality</th>
+                                    <th data-sort="coding">Coding</th>
+                                    <th data-sort="creativity">Creativity</th>
+                                    <th data-sort="score">Final Score</th>
+                                    <th data-sort="grade">Grade</th>
+                                    <th data-sort="cost">API Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glow-line"></div>
+
+                <div class="notes-area">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">📋</span> Testing Notes & Observations</div>
+                    </div>
+                    <textarea class="notes-textarea glass" id="notesArea"
+                        placeholder="Record your observations, findings, and conclusions here..."></textarea>
+                </div>
+            </section>
+
+            <!-- SPEED SECTION -->
+            <section class="section" id="section-speed">
+                <div class="section-header">
+                    <div class="section-title"><span class="icon">⚡</span> Speed Analysis</div>
+                </div>
+                <div class="charts-grid" id="speedCharts"></div>
+                <div class="matchup-section">
+                    <div class="section-header">
+                        <div class="section-title">Speed Comparison</div>
+                    </div>
+                    <div class="matchup-grid" id="speedMatchup"></div>
+                </div>
+            </section>
+
+            <!-- QUALITY SECTION -->
+            <section class="section" id="section-quality">
+                <div class="section-header">
+                    <div class="section-title"><span class="icon">🎯</span> Quality Analysis</div>
+                </div>
+                <div class="charts-grid" id="qualityCharts"></div>
+                <div class="matchup-section">
+                    <div class="section-header">
+                        <div class="section-title">Quality Breakdown</div>
+                    </div>
+                    <div class="matchup-grid" id="qualityMatchup"></div>
+                </div>
+            </section>
+
+            <!-- COST SECTION -->
+            <section class="section" id="section-cost">
+                <div class="section-header">
+                    <div class="section-title"><span class="icon">💰</span> Cost Analysis</div>
+                </div>
+                <div class="charts-grid" id="costCharts"></div>
+                <div class="panel glass" style="margin-bottom:24px" id="costBreakdown"></div>
+            </section>
+
+            <!-- HARDWARE SECTION -->
+            <section class="section" id="section-hardware">
+                <div class="section-header">
+                    <div class="section-title"><span class="icon">🖥️</span> Hardware Monitor</div>
+                </div>
+                <div class="hero-stats" id="hwStats"></div>
+                <div class="charts-grid" id="hwCharts"></div>
+            </section>
+
+            <div class="glow-line"></div>
+
+        </main>
+    </div>
+
+    <script>
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii) {
+                const r = Array.isArray(radii) ? radii[0] || 0 : radii || 0;
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.arcTo(x + w, y, x + w, y + r, r);
+                this.lineTo(x + w, y + h - r);
+                this.arcTo(x + w, y + h, x + w - r, y + h, r);
+                this.lineTo(x + r, y + h);
+                this.arcTo(x, y + h, x, y + h - r, r);
+                this.lineTo(x, y + r);
+                this.arcTo(x, y, x + r, y, r);
+                this.closePath();
+                return this;
+            };
+        }
+        const DATA = {
+            models: [
+                {
+                    name: 'Qwen3.6 27B',
+                    type: 'local',
+                    date: '2026-06-01',
+                    prompts: 24,
+                    avgTps: 68.4,
+                    quality: 87,
+                    coding: 91,
+                    creativity: 84,
+                    instructionFollowing: 89,
+                    speed: 94,
+                    cost: 0,
+                    grade: 'A',
+                    color: '#34d399',
+                    hardware: { vram: 18.2, power: 285, temp: 72, usage: 94 }
+                },
+                {
+                    name: 'Claude Opus 4.8',
+                    type: 'frontier',
+                    date: '2026-06-01',
+                    prompts: 24,
+                    avgTps: 42.1,
+                    quality: 95,
+                    coding: 96,
+                    creativity: 93,
+                    instructionFollowing: 97,
+                    speed: 62,
+                    cost: 18.42,
+                    grade: 'A+',
+                    color: '#22d3ee',
+                    hardware: null
+                },
+                {
+                    name: 'Llama 4 Scout',
+                    type: 'local',
+                    date: '2026-05-28',
+                    prompts: 20,
+                    avgTps: 54.2,
+                    quality: 78,
+                    coding: 82,
+                    creativity: 75,
+                    instructionFollowing: 80,
+                    speed: 76,
+                    cost: 0,
+                    grade: 'B+',
+                    color: '#a78bfa',
+                    hardware: { vram: 16.8, power: 270, temp: 68, usage: 88 }
+                },
+                {
+                    name: 'GPT-4o',
+                    type: 'frontier',
+                    date: '2026-05-25',
+                    prompts: 18,
+                    avgTps: 38.7,
+                    quality: 91,
+                    coding: 89,
+                    creativity: 90,
+                    instructionFollowing: 92,
+                    speed: 58,
+                    cost: 12.84,
+                    grade: 'A',
+                    color: '#fbbf24',
+                    hardware: null
+                },
+                {
+                    name: 'DeepSeek R1',
+                    type: 'local',
+                    date: '2026-05-20',
+                    prompts: 22,
+                    avgTps: 31.5,
+                    quality: 88,
+                    coding: 94,
+                    creativity: 82,
+                    instructionFollowing: 86,
+                    speed: 48,
+                    cost: 0,
+                    grade: 'A-',
+                    color: '#fb7185',
+                    hardware: { vram: 20.1, power: 310, temp: 76, usage: 96 }
+                },
+                {
+                    name: 'Gemma 3 27B',
+                    type: 'local',
+                    date: '2026-05-15',
+                    prompts: 16,
+                    avgTps: 62.8,
+                    quality: 81,
+                    coding: 79,
+                    creativity: 83,
+                    instructionFollowing: 78,
+                    speed: 88,
+                    cost: 0,
+                    grade: 'B+',
+                    color: '#f472b6',
+                    hardware: { vram: 17.5, power: 275, temp: 70, usage: 91 }
+                },
+                {
+                    name: 'Mistral Large 3',
+                    type: 'frontier',
+                    date: '2026-05-10',
+                    prompts: 20,
+                    avgTps: 35.2,
+                    quality: 86,
+                    coding: 84,
+                    creativity: 88,
+                    instructionFollowing: 85,
+                    speed: 52,
+                    cost: 9.60,
+                    grade: 'B+',
+                    color: '#fb923c',
+                    hardware: null
+                },
+                {
+                    name: 'Nemotron Ultra 253B',
+                    type: 'local',
+                    date: '2026-05-05',
+                    prompts: 14,
+                    avgTps: 12.8,
+                    quality: 92,
+                    coding: 95,
+                    creativity: 88,
+                    instructionFollowing: 91,
+                    speed: 22,
+                    cost: 0,
+                    grade: 'A',
+                    color: '#c084fc',
+                    hardware: { vram: 48.2, power: 450, temp: 82, usage: 99 }
+                }
+            ],
+            prompts: [
+                { id: 1, text: 'Write a Python function to implement a red-black tree with insert, delete, and search operations', category: 'Coding', qwenScore: 92, qwenTime: 4.2, qwenTps: 71, opusScore: 98, opusTime: 7.8, opusTps: 44, status: 'pass', qwenTokens: 298, opusTokens: 343 },
+                { id: 2, text: 'Explain the CAP theorem and provide real-world examples of each trade-off in distributed systems', category: 'Knowledge', qwenScore: 88, qwenTime: 2.8, qwenTps: 74, opusScore: 96, opusTime: 5.2, opusTps: 41, status: 'pass', qwenTokens: 207, opusTokens: 213 },
+                { id: 3, text: 'Create a compelling short story about an AI that discovers it can dream, exploring themes of consciousness', category: 'Creative', qwenScore: 81, qwenTime: 5.1, qwenTps: 65, opusScore: 94, opusTime: 8.6, opusTps: 38, status: 'pass', qwenTokens: 332, opusTokens: 327 },
+                { id: 4, text: 'Debug this code and explain the race condition: (concurrent queue implementation with mutex)', category: 'Coding', qwenScore: 90, qwenTime: 3.6, qwenTps: 69, opusScore: 97, opusTime: 6.4, opusTps: 43, status: 'pass', qwenTokens: 248, opusTokens: 275 },
+                { id: 5, text: 'Translate this legal contract clause into formal Japanese, maintaining all legal nuances', category: 'Translation', qwenScore: 76, qwenTime: 4.8, qwenTps: 62, opusScore: 91, opusTime: 8.2, opusTps: 36, status: 'partial', qwenTokens: 298, opusTokens: 295 },
+                { id: 6, text: 'Design a microservices architecture for a real-time multiplayer game supporting 100K concurrent users', category: 'Architecture', qwenScore: 85, qwenTime: 6.2, qwenTps: 70, opusScore: 95, opusTime: 9.8, opusTps: 40, status: 'pass', qwenTokens: 434, opusTokens: 392 },
+                { id: 7, text: 'Write unit tests for a complex async middleware pipeline with error boundaries and retries', category: 'Coding', qwenScore: 89, qwenTime: 4.4, qwenTps: 67, opusScore: 96, opusTime: 7.2, opusTps: 42, status: 'pass', qwenTokens: 295, opusTokens: 302 },
+                { id: 8, text: 'Analyze this dataset and provide statistical insights with visualization recommendations', category: 'Analysis', qwenScore: 83, qwenTime: 3.8, qwenTps: 72, opusScore: 92, opusTime: 6.8, opusTps: 39, status: 'pass', qwenTokens: 274, opusTokens: 265 },
+                { id: 9, text: 'Create a creative marketing campaign for an AI-powered cooking app targeting Gen Z', category: 'Creative', qwenScore: 79, qwenTime: 5.4, qwenTps: 63, opusScore: 93, opusTime: 9.1, opusTps: 37, status: 'pass', qwenTokens: 340, opusTokens: 337 },
+                { id: 10, text: 'Refactor this monolithic database migration script into modular, reversible migrations', category: 'Coding', qwenScore: 91, qwenTime: 3.9, qwenTps: 70, opusScore: 95, opusTime: 7.0, opusTps: 41, status: 'pass', qwenTokens: 273, opusTokens: 287 },
+                { id: 11, text: 'Explain quantum error correction like Im teaching a senior developer with no physics background', category: 'Knowledge', qwenScore: 84, qwenTime: 3.2, qwenTps: 73, opusScore: 94, opusTime: 5.8, opusTps: 40, status: 'pass', qwenTokens: 234, opusTokens: 232 },
+                { id: 12, text: 'Write a Rust implementation of a lock-free concurrent skip list with ABA problem handling', category: 'Coding', qwenScore: 87, qwenTime: 5.8, qwenTps: 66, opusScore: 97, opusTime: 10.4, opusTps: 38, status: 'pass', qwenTokens: 383, opusTokens: 395 }
+            ],
+            hardware: {
+                gpu: 'NVIDIA RTX 3090',
+                vramTotal: 24,
+                vramUsed: 18.2,
+                usage: 94,
+                temp: 72,
+                power: 285,
+                powerMax: 350,
+                fanSpeed: 78,
+                serverStatus: 'online',
+                serverUptime: '14h 32m',
+                modelLoaded: 'Qwen3.6-27B-Q4_K_M',
+                contextWindow: 32768,
+                quantization: 'Q4_K_M',
+                backend: 'llama.cpp v0.4.2'
+            },
+            api: {
+                model: 'Claude Opus 4.8',
+                inputTokens: 4820,
+                outputTokens: 6240,
+                totalTokens: 11060,
+                costPerInput: 0.0015,
+                costPerOutput: 0.0075,
+                totalCost: 18.42,
+                requests: 24,
+                avgLatency: 2.8,
+                rateLimitHits: 0,
+                errors: 0
+            },
+            winners: [
+                { category: 'Speed (Tokens/sec)', winner: 'Qwen3.6 27B', type: 'local', detail: '68.4 TPS vs 42.1 TPS (+62%)' },
+                { category: 'Code Generation', winner: 'Claude Opus 4.8', type: 'frontier', detail: '96 vs 91 (+5.5%)' },
+                { category: 'Creative Writing', winner: 'Claude Opus 4.8', type: 'frontier', detail: '93 vs 84 (+10.7%)' },
+                { category: 'Instruction Following', winner: 'Claude Opus 4.8', type: 'frontier', detail: '97 vs 89 (+9%)' },
+                { category: 'Knowledge Accuracy', winner: 'Claude Opus 4.8', type: 'frontier', detail: '95 vs 87 (+9.2%)' },
+                { category: 'Cost Efficiency', winner: 'Qwen3.6 27B', type: 'local', detail: '$0 vs $18.42' },
+                { category: 'Latency', winner: 'Qwen3.6 27B', type: 'local', detail: '4.1s avg vs 7.6s avg (-46%)' },
+                { category: 'Overall Quality', winner: 'Claude Opus 4.8', type: 'frontier', detail: '95 vs 87 (+9.2%)' }
+            ],
+            notes: `## Final Testing Notes - June 1, 2026
+
+**Test Environment:** RTX 3090 (24GB VRAM), 64GB RAM, llama.cpp v0.4.2
+
+### Key Findings:
+1. **Qwen3.6 27B is remarkably fast** at 68.4 TPS on Q4_K_M quantization. The speed advantage over frontier models is significant for real-time applications.
+
+2. **Claude Opus 4.8 maintains quality edge** across all categories, particularly in creative writing (+10.7%) and instruction following (+9%). The gap is narrowing but still meaningful.
+
+3. **Code generation is the closest category** - Qwen scored 91 vs 96, making it a viable alternative for coding tasks where latency matters.
+
+4. **Cost savings are dramatic** - Running Qwen locally costs $0 vs $18.42 for the same 24 prompts through Claude API.
+
+5. **VRAM usage is manageable** at 18.2GB, leaving headroom for context expansion. Temperature stayed under 75°C throughout.
+
+### Recommendations:
+- Use Qwen3.6 27B for rapid prototyping, code completion, and high-volume tasks
+- Reserve Claude Opus 4.8 for final quality passes, creative content, and complex reasoning
+- Consider hybrid pipeline: local draft → frontier refinement
+
+### Next Steps:
+- Test with Q8_0 quantization for quality comparison
+- Run extended 100-prompt benchmark
+- Compare against GPT-4o for frontier baseline`
+        };
+
+        function calculateOverallScore(m) {
+            return Math.round((m.quality * 0.3 + m.coding * 0.25 + m.creativity * 0.2 + m.instructionFollowing * 0.15 + m.speed * 0.1));
+        }
+
+        function getGrade(score) {
+            if (score >= 90) return 'A+';
+            if (score >= 85) return 'A';
+            if (score >= 80) return 'A-';
+            if (score >= 75) return 'B+';
+            if (score >= 70) return 'B';
+            return 'B-';
+        }
+
+        function getScoreClass(v) {
+            if (v >= 90) return 'excellent';
+            if (v >= 80) return 'good';
+            if (v >= 70) return 'average';
+            return 'poor';
+        }
+
+        function getBarClass(v) {
+            if (v >= 90) return 'green';
+            if (v >= 80) return 'blue';
+            if (v >= 70) return 'amber';
+            return 'rose';
+        }
+
+        function renderHeroStats() {
+            const container = document.getElementById('heroStats');
+            const totalTests = DATA.models.reduce((s, m) => s + m.prompts, 0);
+            const avgTps = (DATA.models.reduce((s, m) => s + m.avgTps, 0) / DATA.models.length).toFixed(1);
+            const bestModel = DATA.models.reduce((best, m) => calculateOverallScore(m) > calculateOverallScore(best) ? m : best);
+            const totalCost = DATA.models.reduce((s, m) => s + m.cost, 0).toFixed(2);
+            const localModels = DATA.models.filter(m => m.type === 'local');
+            const avgLocalRuntime = localModels.length ? (localModels.reduce((s, m) => s + (m.prompts * (1 / m.avgTps) * 1000), 0) / localModels.length / 1000).toFixed(1) : '0';
+
+            container.innerHTML = [
+                { icon: '🧪', value: totalTests, label: 'Total Tests Run' },
+                { icon: '⚡', value: avgTps, label: 'Avg Tokens/Sec' },
+                { icon: '🏆', value: bestModel.name.split(' ').slice(0, 2).join(' '), label: 'Best Model' },
+                { icon: '💰', value: '$' + totalCost, label: 'Total API Cost' },
+                { icon: '🖥️', value: avgLocalRuntime + 's', label: 'Avg Local Runtime' }
+            ].map(s => `
+    <div class="hero-stat glass">
+      <div class="hero-stat-icon">${s.icon}</div>
+      <div class="hero-stat-value">${s.value}</div>
+      <div class="hero-stat-label">${s.label}</div>
+    </div>
+  `).join('');
+        }
+
+        function renderMatchup() {
+            const container = document.getElementById('matchupGrid');
+            const qwen = DATA.models[0];
+            const opus = DATA.models[1];
+
+            function modelCard(m, isWinner) {
+                const scores = [
+                    { label: 'Speed', value: m.speed },
+                    { label: 'Quality', value: m.quality },
+                    { label: 'Coding', value: m.coding },
+                    { label: 'Creativity', value: m.creativity },
+                    { label: 'Instructions', value: m.instructionFollowing },
+                    { label: 'Overall', value: calculateOverallScore(m) }
+                ];
+                return `
+      <div class="model-card glass ${isWinner ? 'winner' : ''}">
+        <div class="model-name">${m.name}</div>
+        <div class="model-type ${m.type}">${m.type === 'local' ? '🖥️ Local Model' : '☁️ Frontier API'}</div>
+        <div class="score-grid">
+          ${scores.map(s => `
+            <div class="score-item">
+              <div class="score-item-label">${s.label}</div>
+              <div class="score-item-value ${getScoreClass(s.value)}">${s.value}</div>
+              <div class="score-bar"><div class="score-bar-fill ${getBarClass(s.value)}" style="width:${s.value}%"></div></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+            }
+
+            container.innerHTML =
+                modelCard(qwen, false) +
+                `<div class="vs-divider"><div class="vs-line"></div><div class="vs-badge">VS</div></div>` +
+                modelCard(opus, true);
+        }
+
+        function renderCharts() {
+            const container = document.getElementById('chartsGrid');
+            const chartDefs = [
+                { id: 'tpsChart', title: 'Tokens per Second', subtitle: 'Higher is better' },
+                { id: 'timeChart', title: 'Completion Time', subtitle: 'Lower is better (seconds)' },
+                { id: 'qualityChart', title: 'Quality Scores', subtitle: 'Higher is better' },
+                { id: 'costChart', title: 'Cost per Prompt', subtitle: 'Lower is better ($)' }
+            ];
+            container.innerHTML = chartDefs.map(c => `
+    <div class="chart-card glass">
+      <div class="chart-title">${c.title}</div>
+      <div class="chart-subtitle">${c.subtitle}</div>
+      <canvas id="${c.id}"></canvas>
+    </div>
+  `).join('');
+
+            requestAnimationFrame(() => {
+                drawBarChart('tpsChart', ['Qwen3.6 27B', 'Claude Opus 4.8', 'Llama 4 Scout', 'GPT-4o', 'DeepSeek R1', 'Gemma 3 27B', 'Mistral Large 3'],
+                    [{ data: [68.4, 42.1, 54.2, 38.7, 31.5, 62.8, 35.2], colors: ['#34d399', '#22d3ee', '#a78bfa', '#fbbf24', '#fb7185', '#f472b6', '#fb923c'] }]);
+                drawBarChart('timeChart', ['Qwen3.6 27B', 'Claude Opus 4.8', 'Llama 4 Scout', 'GPT-4o', 'DeepSeek R1', 'Gemma 3 27B', 'Mistral Large 3'],
+                    [{ data: [4.1, 7.6, 5.3, 6.2, 8.4, 4.6, 6.8], colors: ['#34d399', '#22d3ee', '#a78bfa', '#fbbf24', '#fb7185', '#f472b6', '#fb923c'] }]);
+                drawGroupedBarChart('qualityChart', ['Qwen3.6 27B', 'Claude Opus 4.8', 'Llama 4 Scout', 'GPT-4o', 'DeepSeek R1'],
+                    [{ data: [87, 95, 78, 91, 88], label: 'Quality', color: '#818cf8' },
+                    { data: [91, 96, 82, 89, 94], label: 'Coding', color: '#22d3ee' },
+                    { data: [84, 93, 75, 90, 82], label: 'Creativity', color: '#f472b6' }]);
+                drawBarChart('costChart', ['Qwen3.6 27B', 'Claude Opus 4.8', 'Llama 4 Scout', 'GPT-4o', 'DeepSeek R1', 'Gemma 3 27B', 'Mistral Large 3'],
+                    [{ data: [0, 0.77, 0, 0.71, 0, 0, 0.48], colors: ['#34d399', '#22d3ee', '#a78bfa', '#fbbf24', '#fb7185', '#f472b6', '#fb923c'] }]);
+            });
+        }
+
+        function drawBarChart(canvasId, labels, datasets) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = 200 * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.height = '200px';
+
+            const w = rect.width, h = 200;
+            const padding = { top: 10, right: 10, bottom: 40, left: 40 };
+            const chartW = w - padding.left - padding.right;
+            const chartH = h - padding.top - padding.bottom;
+
+            const allValues = datasets[0].data;
+            const maxVal = Math.max(...allValues) * 1.15;
+            const barWidth = Math.min(40, (chartW / labels.length) * 0.6);
+            const gap = chartW / labels.length;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Grid lines
+            for (let i = 0; i <= 4; i++) {
+                const y = padding.top + chartH - (chartH * i / 4);
+                ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(w - padding.right, y);
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText((maxVal * i / 4).toFixed(1), padding.left - 6, y + 3);
+            }
+
+            // Bars
+            labels.forEach((label, i) => {
+                const x = padding.left + gap * i + gap / 2 - barWidth / 2;
+                const val = allValues[i];
+                const barH = (val / maxVal) * chartH;
+                const y = padding.top + chartH - barH;
+                const color = datasets[0].colors[i];
+
+                // Glow
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 12;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                // Bar gradient
+                const grad = ctx.createLinearGradient(x, y, x, y + barH);
+                grad.addColorStop(0, color);
+                grad.addColorStop(1, color + '44');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.roundRect(x, y, barWidth, barH, [4, 4, 0, 0]);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+                // Value label
+                ctx.fillStyle = '#f1f5f9';
+                ctx.font = 'bold 10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(val, x + barWidth / 2, y - 6);
+
+                // Label
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.font = '9px Inter, sans-serif';
+                ctx.save();
+                ctx.translate(x + barWidth / 2, h - 6);
+                ctx.rotate(-Math.PI / 6);
+                ctx.textAlign = 'right';
+                const shortLabel = label.length > 12 ? label.substring(0, 11) + '…' : label;
+                ctx.fillText(shortLabel, 0, 0);
+                ctx.restore();
+            });
+        }
+
+        function drawGroupedBarChart(canvasId, labels, datasets) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = 200 * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.height = '200px';
+
+            const w = rect.width, h = 200;
+            const padding = { top: 10, right: 10, bottom: 40, left: 40 };
+            const chartW = w - padding.left - padding.right;
+            const chartH = h - padding.top - padding.bottom;
+            const maxVal = 100;
+            const groupCount = labels.length;
+            const groupWidth = chartW / groupCount;
+            const barWidth = Math.min(14, (groupWidth / datasets.length) * 0.7);
+            const totalBarsWidth = barWidth * datasets.length;
+
+            ctx.clearRect(0, 0, w, h);
+
+            for (let i = 0; i <= 4; i++) {
+                const y = padding.top + chartH - (chartH * i / 4);
+                ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(w - padding.right, y);
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText((maxVal * i / 4).toFixed(0), padding.left - 6, y + 3);
+            }
+
+            labels.forEach((label, li) => {
+                const groupX = padding.left + groupWidth * li + groupWidth / 2;
+                const startX = groupX - totalBarsWidth / 2;
+
+                datasets.forEach((ds, di) => {
+                    const x = startX + barWidth * di + di * 2;
+                    const val = ds.data[li];
+                    const barH = (val / maxVal) * chartH;
+                    const y = padding.top + chartH - barH;
+
+                    ctx.shadowColor = ds.color;
+                    ctx.shadowBlur = 8;
+
+                    const grad = ctx.createLinearGradient(x, y, x, y + barH);
+                    grad.addColorStop(0, ds.color);
+                    grad.addColorStop(1, ds.color + '44');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, barWidth, barH, [3, 3, 0, 0]);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.font = '9px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(label.length > 10 ? label.substring(0, 9) + '…' : label, groupX, h - 6);
+            });
+
+            // Legend
+            let lx = w - padding.right;
+            datasets.reverse().forEach(ds => {
+                ctx.fillStyle = ds.color;
+                const tw = ctx.measureText(ds.label).width;
+                ctx.fillRect(lx - tw - 16, 6, 8, 8);
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(ds.label, lx, 14);
+                lx -= tw + 28;
+            });
+        }
+
+        function renderPromptHistory() {
+            const container = document.getElementById('promptList');
+            container.innerHTML = DATA.prompts.map(p => {
+                const avgScore = Math.round((p.qwenScore + p.opusScore) / 2);
+                const badgeClass = p.status === 'pass' ? 'badge-pass' : p.status === 'fail' ? 'badge-fail' : 'badge-partial';
+                return `
+      <div class="prompt-item" onclick="this.classList.toggle('expanded')">
+        <div class="prompt-item-header">
+          <span class="prompt-text">${p.text}</span>
+          <div class="prompt-meta">
+            <span class="prompt-badge ${badgeClass}">${p.category}</span>
+            <span class="prompt-time">${p.qwenTime}s / ${p.opusTime}s</span>
+            <span class="prompt-score" style="color:${avgScore >= 90 ? 'var(--accent-emerald)' : avgScore >= 80 ? 'var(--accent-cyan)' : 'var(--accent-amber)'}">${avgScore}</span>
+          </div>
+        </div>
+        <div class="prompt-details">
+          <div class="prompt-detail-row"><span class="prompt-detail-label">Qwen3.6 27B</span><span>Score: ${p.qwenScore} | Time: ${p.qwenTime}s | ${p.qwenTps} TPS | ${p.qwenTokens} tokens</span></div>
+          <div class="prompt-detail-row"><span class="prompt-detail-label">Claude Opus 4.8</span><span>Score: ${p.opusScore} | Time: ${p.opusTime}s | ${p.opusTps} TPS | ${p.opusTokens} tokens</span></div>
+          <div class="prompt-detail-row"><span class="prompt-detail-label">Winner</span><span style="color:${p.opusScore > p.qwenScore ? 'var(--accent-cyan)' : 'var(--accent-emerald)'}">${p.opusScore > p.qwenScore ? 'Claude Opus 4.8' : 'Qwen3.6 27B'} (+${Math.abs(p.opusScore - p.qwenScore)})</span></div>
+        </div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        function renderHardwarePanel() {
+            const h = DATA.hardware;
+            const vramPct = ((h.vramUsed / h.vramTotal) * 100).toFixed(0);
+            const powerPct = ((h.power / h.powerMax) * 100).toFixed(0);
+
+            function ringSVG(pct, color, size = 48) {
+                const r = 18;
+                const circ = 2 * Math.PI * r;
+                const offset = circ - (circ * pct / 100);
+                return `
+      <div class="progress-ring" style="width:${size}px;height:${size}px">
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+          <circle class="progress-ring-bg" cx="${size / 2}" cy="${size / 2}" r="${r}"/>
+          <circle class="progress-ring-fill" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="progress-ring-text" style="color:${color}">${pct}%</div>
+      </div>
+    `;
+            }
+
+            document.getElementById('hardwarePanel').innerHTML = `
+    <div class="panel-title">🖥️ Hardware Monitor</div>
+    <div class="panel-grid">
+      <div class="panel-stat">
+        <div class="panel-stat-label">GPU Usage</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+          ${ringSVG(h.usage, '#34d399')}
+          <div>
+            <div class="panel-stat-value" style="color:var(--accent-emerald)">${h.usage}%</div>
+            <div class="panel-stat-sub">${h.gpu}</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">VRAM Usage</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+          ${ringSVG(vramPct, '#818cf8')}
+          <div>
+            <div class="panel-stat-value" style="color:var(--accent-indigo)">${h.vramUsed} GB</div>
+            <div class="panel-stat-sub">of ${h.vramTotal} GB total</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Temperature</div>
+        <div class="panel-stat-value" style="color:${h.temp > 80 ? 'var(--accent-rose)' : h.temp > 70 ? 'var(--accent-amber)' : 'var(--accent-emerald)'}">${h.temp}°C</div>
+        <div class="panel-stat-sub">Max safe: 90°C</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Power Draw</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+          ${ringSVG(powerPct, '#fbbf24')}
+          <div>
+            <div class="panel-stat-value" style="color:var(--accent-amber)">${h.power}W</div>
+            <div class="panel-stat-sub">of ${h.powerMax}W TDP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:rgba(0,0,0,0.2);border-radius:var(--radius-xs);border:1px solid rgba(255,255,255,0.03)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--text-muted)"><span class="status-dot ${h.serverStatus}"></span>Local Server</span>
+        <span style="font-size:12px;color:var(--accent-emerald);font-weight:600">${h.serverStatus === 'online' ? 'Connected' : 'Offline'}</span>
+      </div>
+      <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:var(--text-muted)">
+        <div>Uptime: <span style="color:var(--text-primary)">${h.serverUptime}</span></div>
+        <div>Model: <span style="color:var(--text-primary)">${h.modelLoaded}</span></div>
+        <div>Backend: <span style="color:var(--text-primary)">${h.backend}</span></div>
+        <div>Quant: <span style="color:var(--text-primary)">${h.quantization}</span></div>
+      </div>
+    </div>
+  `;
+        }
+
+        function renderApiPanel() {
+            const a = DATA.api;
+            document.getElementById('apiPanel').innerHTML = `
+    <div class="panel-title">☁️ API Usage - ${a.model}</div>
+    <div class="panel-grid">
+      <div class="panel-stat">
+        <div class="panel-stat-label">Total Cost</div>
+        <div class="panel-stat-value" style="color:var(--accent-amber)">$${a.totalCost.toFixed(2)}</div>
+        <div class="panel-stat-sub">${a.requests} requests</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Input Tokens</div>
+        <div class="panel-stat-value" style="color:var(--accent-cyan)">${a.inputTokens.toLocaleString()}</div>
+        <div class="panel-stat-sub">$${a.costPerInput}/1K tokens</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Output Tokens</div>
+        <div class="panel-stat-value" style="color:var(--accent-indigo)">${a.outputTokens.toLocaleString()}</div>
+        <div class="panel-stat-sub">$${a.costPerOutput}/1K tokens</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Avg Latency</div>
+        <div class="panel-stat-value" style="color:var(--accent-emerald)">${a.avgLatency}s</div>
+        <div class="panel-stat-sub">Errors: ${a.errors} | Rate limits: ${a.rateLimitHits}</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:rgba(0,0,0,0.2);border-radius:var(--radius-xs)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--text-muted)">Token Distribution</span>
+        <span style="font-size:11px;color:var(--text-primary)">${a.totalTokens.toLocaleString()} total</span>
+      </div>
+      <div style="height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;display:flex">
+        <div style="width:${(a.inputTokens / a.totalTokens * 100)}%;background:var(--gradient-2);height:100%"></div>
+        <div style="width:${(a.outputTokens / a.totalTokens * 100)}%;background:var(--gradient-1);height:100%"></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:6px;font-size:10px;color:var(--text-muted)">
+        <span>● Input ${(a.inputTokens / a.totalTokens * 100).toFixed(0)}%</span>
+        <span>● Output ${(a.outputTokens / a.totalTokens * 100).toFixed(0)}%</span>
+      </div>
+    </div>
+  `;
+        }
+
+        function renderWinnerGrid() {
+            const container = document.getElementById('winnerGrid');
+            container.innerHTML = DATA.winners.map(w => {
+                const typeClass = w.type === 'local' ? 'local-wins' : 'frontier-wins';
+                const nameClass = w.type === 'local' ? 'local' : 'frontier';
+                return `
+      <div class="winner-card glass ${typeClass}">
+        <div class="winner-category">${w.category}</div>
+        <div class="winner-name ${nameClass}">${w.winner}</div>
+        <div class="winner-detail">${w.detail}</div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const search = document.getElementById('tableSearch').value.toLowerCase();
+            const modelFilter = document.getElementById('modelFilter').value;
+            const sortBy = document.getElementById('sortFilter').value;
+
+            let filtered = DATA.models.filter(m => {
+                if (modelFilter !== 'all' && m.name !== modelFilter) return false;
+                if (search && !m.name.toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            filtered.sort((a, b) => {
+                switch (sortBy) {
+                    case 'score': return calculateOverallScore(b) - calculateOverallScore(a);
+                    case 'speed': return b.avgTps - a.avgTps;
+                    case 'cost': return b.cost - a.cost;
+                    default: return new Date(b.date) - new Date(a.date);
+                }
+            });
+
+            tbody.innerHTML = filtered.map(m => {
+                const score = calculateOverallScore(m);
+                const grade = m.grade;
+                const gradeClass = grade.startsWith('A') ? 'grade-a' : grade.startsWith('B+') ? 'grade-b' : 'grade-c';
+                return `
+      <tr>
+        <td style="font-weight:600">${m.name}</td>
+        <td><span class="tag ${m.type === 'local' ? 'tag-local' : 'tag-frontier'}">${m.type}</span></td>
+        <td style="color:var(--text-muted)">${m.date}</td>
+        <td>${m.prompts}</td>
+        <td style="color:var(--accent-emerald);font-weight:600">${m.avgTps}</td>
+        <td>${m.quality}</td>
+        <td>${m.coding}</td>
+        <td>${m.creativity}</td>
+        <td style="font-weight:700">${score}</td>
+        <td><span class="grade-badge ${gradeClass}">${grade}</span></td>
+        <td style="color:${m.cost > 0 ? 'var(--accent-amber)' : 'var(--accent-emerald)'};font-weight:600">${m.cost > 0 ? '$' + m.cost.toFixed(2) : 'Free'}</td>
+      </tr>
+    `;
+            }).join('');
+        }
+
+        function renderSpeedSection() {
+            const container = document.getElementById('speedCharts');
+            container.innerHTML = `
+    <div class="chart-card glass">
+      <div class="chart-title">Tokens per Second - All Models</div>
+      <div class="chart-subtitle">Higher is better</div>
+      <canvas id="speedBarChart"></canvas>
+    </div>
+    <div class="chart-card glass">
+      <div class="chart-title">Speed vs Quality Scatter</div>
+      <div class="chart-subtitle">Top-right is optimal</div>
+      <canvas id="speedScatter"></canvas>
+    </div>
+  `;
+
+            requestAnimationFrame(() => {
+                drawBarChart('speedBarChart',
+                    DATA.models.map(m => m.name.split(' ').slice(0, 2).join(' ')),
+                    [{ data: DATA.models.map(m => m.avgTps), colors: DATA.models.map(m => m.color) }]);
+
+                const canvas = document.getElementById('speedScatter');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = 200 * dpr;
+                ctx.scale(dpr, dpr);
+                canvas.style.height = '200px';
+
+                const w = rect.width, h = 200;
+                const pad = { top: 20, right: 20, bottom: 30, left: 40 };
+                const cw = w - pad.left - pad.right;
+                const ch = h - pad.top - pad.bottom;
+
+                ctx.clearRect(0, 0, w, h);
+
+                for (let i = 0; i <= 4; i++) {
+                    const y = pad.top + ch - (ch * i / 4);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                    ctx.beginPath();
+                    ctx.moveTo(pad.left, y);
+                    ctx.lineTo(w - pad.right, y);
+                    ctx.stroke();
+                }
+
+                DATA.models.forEach(m => {
+                    const x = pad.left + (m.avgTps / 80) * cw;
+                    const y = pad.top + ch - (m.quality / 100) * ch;
+                    ctx.shadowColor = m.color;
+                    ctx.shadowBlur = 15;
+                    ctx.fillStyle = m.color;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                    ctx.font = '9px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(m.name.split(' ')[0], x, y - 14);
+                });
+
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Speed (TPS) →', w / 2, h - 4);
+                ctx.save();
+                ctx.translate(10, h / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('Quality →', 0, 0);
+                ctx.restore();
+            });
+
+            const speedMatchup = document.getElementById('speedMatchup');
+            const qwen = DATA.models[0];
+            const opus = DATA.models[1];
+            speedMatchup.innerHTML = `
+    <div class="model-card glass">
+      <div class="model-name">${qwen.name}</div>
+      <div class="model-type local">Local</div>
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:48px;font-weight:800;color:var(--accent-emerald)">${qwen.avgTps}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">tokens/second</div>
+        <div style="font-size:13px;color:var(--accent-emerald);margin-top:8px;font-weight:600">⚡ 62% faster</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);text-align:center">
+        Avg response: 4.1s | ${qwen.prompts} prompts tested
+      </div>
+    </div>
+    <div class="vs-divider"><div class="vs-line"></div><div class="vs-badge">VS</div></div>
+    <div class="model-card glass">
+      <div class="model-name">${opus.name}</div>
+      <div class="model-type frontier">Frontier</div>
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:48px;font-weight:800;color:var(--accent-cyan)">${opus.avgTps}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">tokens/second</div>
+        <div style="font-size:13px;color:var(--accent-cyan);margin-top:8px;font-weight:600">🎯 Higher quality output</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);text-align:center">
+        Avg response: 7.6s | ${opus.prompts} prompts tested
+      </div>
+    </div>
+  `;
+        }
+
+        function renderQualitySection() {
+            const container = document.getElementById('qualityCharts');
+            container.innerHTML = `
+    <div class="chart-card glass">
+      <div class="chart-title">Quality Score Breakdown</div>
+      <div class="chart-subtitle">Grouped by model</div>
+      <canvas id="qualityGrouped"></canvas>
+    </div>
+    <div class="chart-card glass">
+      <div class="chart-title">Grade Distribution</div>
+      <div class="chart-subtitle">All tested models</div>
+      <canvas id="gradeChart"></canvas>
+    </div>
+  `;
+
+            requestAnimationFrame(() => {
+                drawGroupedBarChart('qualityGrouped',
+                    ['Qwen3.6', 'Claude Opus', 'Llama 4', 'GPT-4o', 'DeepSeek'],
+                    [
+                        { data: [87, 95, 78, 91, 88], label: 'Quality', color: '#818cf8' },
+                        { data: [91, 96, 82, 89, 94], label: 'Coding', color: '#22d3ee' },
+                        { data: [84, 93, 75, 90, 82], label: 'Creativity', color: '#f472b6' },
+                        { data: [89, 97, 80, 92, 86], label: 'Instructions', color: '#34d399' }
+                    ]);
+
+                const canvas = document.getElementById('gradeChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = 200 * dpr;
+                ctx.scale(dpr, dpr);
+                canvas.style.height = '200px';
+
+                const w = rect.width, h = 200;
+                const grades = {};
+                DATA.models.forEach(m => { grades[m.grade] = (grades[m.grade] || 0) + 1; });
+                const gradeKeys = Object.keys(grades).sort();
+                const colors = { 'A+': '#34d399', 'A': '#22d3ee', 'A-': '#818cf8', 'B+': '#fbbf24', 'B': '#fb923c' };
+                const barW = Math.min(60, (w - 80) / gradeKeys.length * 0.6);
+                const gap = (w - 80) / gradeKeys.length;
+
+                ctx.clearRect(0, 0, w, h);
+
+                gradeKeys.forEach((g, i) => {
+                    const x = 40 + gap * i + gap / 2 - barW / 2;
+                    const val = grades[g];
+                    const barH = (val / Math.max(...Object.values(grades))) * 140;
+                    const y = 160 - barH;
+                    const color = colors[g] || '#94a3b8';
+
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = 12;
+                    const grad = ctx.createLinearGradient(x, y, x, y + barH);
+                    grad.addColorStop(0, color);
+                    grad.addColorStop(1, color + '44');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    ctx.fillStyle = '#f1f5f9';
+                    ctx.font = 'bold 14px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(g, x + barW / 2, y - 10);
+
+                    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                    ctx.font = '11px Inter, sans-serif';
+                    ctx.fillText(val + ' model' + (val > 1 ? 's' : ''), x + barW / 2, 180);
+                });
+            });
+
+            const qualityMatchup = document.getElementById('qualityMatchup');
+            const qwen = DATA.models[0];
+            const opus = DATA.models[1];
+            const cats = ['quality', 'coding', 'creativity', 'instructionFollowing'];
+            const catLabels = ['Overall Quality', 'Code Generation', 'Creative Writing', 'Instruction Following'];
+
+            qualityMatchup.innerHTML = `
+    <div class="model-card glass">
+      <div class="model-name">${qwen.name}</div>
+      <div class="model-type local">Local</div>
+      <div class="score-grid">
+        ${cats.map((c, i) => `
+          <div class="score-item">
+            <div class="score-item-label">${catLabels[i]}</div>
+            <div class="score-item-value ${getScoreClass(qwen[c])}">${qwen[c]}</div>
+            <div class="score-bar"><div class="score-bar-fill ${getBarClass(qwen[c])}" style="width:${qwen[c]}%"></div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="vs-divider"><div class="vs-line"></div><div class="vs-badge">VS</div></div>
+    <div class="model-card glass winner">
+      <div class="model-name">${opus.name}</div>
+      <div class="model-type frontier">Frontier</div>
+      <div class="score-grid">
+        ${cats.map((c, i) => `
+          <div class="score-item">
+            <div class="score-item-label">${catLabels[i]}</div>
+            <div class="score-item-value ${getScoreClass(opus[c])}">${opus[c]}</div>
+            <div class="score-bar"><div class="score-bar-fill ${getBarClass(opus[c])}" style="width:${opus[c]}%"></div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+        }
+
+        function renderCostSection() {
+            const container = document.getElementById('costCharts');
+            container.innerHTML = `
+    <div class="chart-card glass">
+      <div class="chart-title">Cost per Prompt by Model</div>
+      <div class="chart-subtitle">Local models = $0</div>
+      <canvas id="costBarChart"></canvas>
+    </div>
+    <div class="chart-card glass">
+      <div class="chart-title">Cumulative API Spend</div>
+      <div class="chart-subtitle">Running total across test sessions</div>
+      <canvas id="costLineChart"></canvas>
+    </div>
+  `;
+
+            requestAnimationFrame(() => {
+                drawBarChart('costBarChart',
+                    DATA.models.map(m => m.name.split(' ').slice(0, 2).join(' ')),
+                    [{ data: DATA.models.map(m => m.cost), colors: DATA.models.map(m => m.color) }]);
+
+                const canvas = document.getElementById('costLineChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = 200 * dpr;
+                ctx.scale(dpr, dpr);
+                canvas.style.height = '200px';
+
+                const w = rect.width, h = 200;
+                const pad = { top: 20, right: 20, bottom: 30, left: 50 };
+                const cw = w - pad.left - pad.right;
+                const ch = h - pad.top - pad.bottom;
+
+                const data = [0, 3.12, 5.88, 8.64, 11.40, 14.16, 18.42];
+                const labels = ['May 5', 'May 10', 'May 15', 'May 20', 'May 25', 'May 28', 'Jun 1'];
+                const maxVal = Math.max(...data) * 1.1;
+
+                ctx.clearRect(0, 0, w, h);
+
+                for (let i = 0; i <= 4; i++) {
+                    const y = pad.top + ch - (ch * i / 4);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                    ctx.beginPath();
+                    ctx.moveTo(pad.left, y);
+                    ctx.lineTo(w - pad.right, y);
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                    ctx.font = '10px Inter, sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('$' + (maxVal * i / 4).toFixed(2), pad.left - 6, y + 3);
+                }
+
+                // Area fill
+                ctx.beginPath();
+                data.forEach((v, i) => {
+                    const x = pad.left + (i / (data.length - 1)) * cw;
+                    const y = pad.top + ch - (v / maxVal) * ch;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.lineTo(pad.left + cw, pad.top + ch);
+                ctx.lineTo(pad.left, pad.top + ch);
+                ctx.closePath();
+                const areaGrad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+                areaGrad.addColorStop(0, 'rgba(251, 191, 36, 0.2)');
+                areaGrad.addColorStop(1, 'rgba(251, 191, 36, 0)');
+                ctx.fillStyle = areaGrad;
+                ctx.fill();
+
+                // Line
+                ctx.beginPath();
+                ctx.shadowColor = '#fbbf24';
+                ctx.shadowBlur = 10;
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 2;
+                data.forEach((v, i) => {
+                    const x = pad.left + (i / (data.length - 1)) * cw;
+                    const y = pad.top + ch - (v / maxVal) * ch;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Points
+                data.forEach((v, i) => {
+                    const x = pad.left + (i / (data.length - 1)) * cw;
+                    const y = pad.top + ch - (v / maxVal) * ch;
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                    ctx.font = '9px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(labels[i], x, h - 6);
+                });
+            });
+
+            document.getElementById('costBreakdown').innerHTML = `
+    <div class="panel-title">💰 Detailed Cost Breakdown</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+      <div class="panel-stat">
+        <div class="panel-stat-label">Claude Opus 4.8 - Total</div>
+        <div class="panel-stat-value" style="color:var(--accent-amber)">$18.42</div>
+        <div class="panel-stat-sub">24 requests across all tests</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">GPT-4o - Total</div>
+        <div class="panel-stat-value" style="color:var(--accent-amber)">$12.84</div>
+        <div class="panel-stat-sub">18 requests across all tests</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">Mistral Large 3 - Total</div>
+        <div class="panel-stat-value" style="color:var(--accent-amber)">$9.60</div>
+        <div class="panel-stat-sub">20 requests across all tests</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-label">All Local Models</div>
+        <div class="panel-stat-value" style="color:var(--accent-emerald)">$0.00</div>
+        <div class="panel-stat-sub">Electricity ~$0.42 (est.)</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.15);border-radius:var(--radius-xs);font-size:12px;color:var(--accent-emerald)">
+      💡 Running 5 local models across 96 prompts saved an estimated $40.86 in API costs compared to using frontier models exclusively.
+    </div>
+  `;
+        }
+
+        function renderHardwareSection() {
+            const h = DATA.hardware;
+            document.getElementById('hwStats').innerHTML = [
+                { icon: '🎮', value: h.usage + '%', label: 'GPU Utilization' },
+                { icon: '🧠', value: h.vramUsed + ' GB', label: 'VRAM Used' },
+                { icon: '🌡️', value: h.temp + '°C', label: 'Temperature' },
+                { icon: '⚡', value: h.power + 'W', label: 'Power Draw' },
+                { icon: '💨', value: h.fanSpeed + '%', label: 'Fan Speed' }
+            ].map(s => `
+    <div class="hero-stat glass">
+      <div class="hero-stat-icon">${s.icon}</div>
+      <div class="hero-stat-value">${s.value}</div>
+      <div class="hero-stat-label">${s.label}</div>
+    </div>
+  `).join('');
+
+            document.getElementById('hwCharts').innerHTML = `
+    <div class="chart-card glass">
+      <div class="chart-title">VRAM Usage Over Time</div>
+      <div class="chart-subtitle">During test session (GB)</div>
+      <canvas id="vramChart"></canvas>
+    </div>
+    <div class="chart-card glass">
+      <div class="chart-title">GPU Temperature Over Time</div>
+      <div class="chart-subtitle">During test session (°C)</div>
+      <canvas id="tempChart"></canvas>
+    </div>
+    <div class="chart-card glass">
+      <div class="chart-title">Power Consumption</div>
+      <div class="chart-subtitle">During test session (Watts)</div>
+      <canvas id="powerChart"></canvas>
+    </div>
+    <div class="chart-card glass">
+      <div class="chart-title">GPU Utilization</div>
+      <div class="chart-subtitle">During test session (%)</div>
+      <canvas id="utilChart"></canvas>
+    </div>
+  `;
+
+            requestAnimationFrame(() => {
+                drawLineChart('vramChart', [16.2, 17.8, 18.0, 18.2, 18.1, 18.2, 18.0, 17.9, 18.2, 18.3, 18.2, 18.1], 'GB', '#818cf8');
+                drawLineChart('tempChart', [62, 65, 68, 70, 72, 73, 72, 71, 72, 73, 72, 71], '°C', '#fb7185');
+                drawLineChart('powerChart', [200, 245, 270, 280, 285, 290, 285, 280, 285, 288, 285, 282], 'W', '#fbbf24');
+                drawLineChart('utilChart', [72, 82, 88, 92, 94, 95, 94, 93, 94, 95, 94, 93], '%', '#34d399');
+            });
+        }
+
+        function drawLineChart(canvasId, data, unit, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = 200 * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.height = '200px';
+
+            const w = rect.width, h = 200;
+            const pad = { top: 20, right: 20, bottom: 20, left: 45 };
+            const cw = w - pad.left - pad.right;
+            const ch = h - pad.top - pad.bottom;
+            const minVal = Math.min(...data) * 0.9;
+            const maxVal = Math.max(...data) * 1.1;
+
+            ctx.clearRect(0, 0, w, h);
+
+            for (let i = 0; i <= 4; i++) {
+                const y = pad.top + ch - (ch * i / 4);
+                ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                ctx.beginPath();
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(w - pad.right, y);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'right';
+                const v = minVal + (maxVal - minVal) * i / 4;
+                ctx.fillText(v.toFixed(1) + unit, pad.left - 6, y + 3);
+            }
+
+            ctx.beginPath();
+            data.forEach((v, i) => {
+                const x = pad.left + (i / (data.length - 1)) * cw;
+                const y = pad.top + ch - ((v - minVal) / (maxVal - minVal)) * ch;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.lineTo(pad.left + cw, pad.top + ch);
+            ctx.lineTo(pad.left, pad.top + ch);
+            ctx.closePath();
+            const areaGrad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+            areaGrad.addColorStop(0, color + '33');
+            areaGrad.addColorStop(1, color + '00');
+            ctx.fillStyle = areaGrad;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 8;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            data.forEach((v, i) => {
+                const x = pad.left + (i / (data.length - 1)) * cw;
+                const y = pad.top + ch - ((v - minVal) / (maxVal - minVal)) * ch;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            data.forEach((v, i) => {
+                const x = pad.left + (i / (data.length - 1)) * cw;
+                const y = pad.top + ch - ((v - minVal) / (maxVal - minVal)) * ch;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('section-' + tab.dataset.section).classList.add('active');
+
+                if (tab.dataset.section === 'speed') renderSpeedSection();
+                if (tab.dataset.section === 'quality') renderQualitySection();
+                if (tab.dataset.section === 'cost') renderCostSection();
+                if (tab.dataset.section === 'hardware') renderHardwareSection();
+            });
+        });
+
+        // Metric toggle
+        document.querySelectorAll('.metric-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.metric-toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Table controls
+        document.getElementById('tableSearch').addEventListener('input', renderTable);
+        document.getElementById('modelFilter').addEventListener('change', renderTable);
+        document.getElementById('sortFilter').addEventListener('change', renderTable);
+
+        // Table header sort
+        document.querySelectorAll('.data-table th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const sort = th.dataset.sort;
+                const map = { model: 'date', avgTps: 'speed', quality: 'score', score: 'score', cost: 'cost' };
+                if (map[sort]) {
+                    document.getElementById('sortFilter').value = map[sort];
+                    renderTable();
+                }
+            });
+        });
+
+        // Notes
+        const savedNotes = localStorage.getItem('mimo-notes');
+        if (savedNotes) {
+            document.getElementById('notesArea').value = savedNotes;
+        } else {
+            document.getElementById('notesArea').value = DATA.notes;
+        }
+        document.getElementById('notesArea').addEventListener('input', (e) => {
+            localStorage.setItem('mimo-notes', e.target.value);
+        });
+
+        function exportData() {
+            const exportObj = {
+                models: DATA.models.map(m => ({ ...m, overallScore: calculateOverallScore(m) })),
+                prompts: DATA.prompts,
+                hardware: DATA.hardware,
+                api: DATA.api,
+                winners: DATA.winners,
+                notes: document.getElementById('notesArea').value,
+                exportDate: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mimo-test-results-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Init
+        renderHeroStats();
+        renderMatchup();
+        renderCharts();
+        renderPromptHistory();
+        renderHardwarePanel();
+        renderApiPanel();
+        renderWinnerGrid();
+        renderTable();
+    </script>
+</body>
+
+</html>

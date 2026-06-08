@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Command Center Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        /* Global styles */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            color: #e0e0e0;
+            background: #111;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header & Tabs */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a, #222);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, .5);
+        }
+
+        .app-header h1 {
+            font-size: 2rem;
+            margin: 0;
+            color: #00ffea;
+        }
+
+        .tabs {
+            display: flex;
+        }
+
+        .tab {
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all .3s ease;
+            margin-left: 5px;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, .05);
+            color: #00ffea;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid #00ffea;
+            color: #00ffea;
+        }
+
+        /* Main content */
+        .app-main {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Glassmorphism cards */
+        .glass {
+            background: rgba(0, 0, 0, .4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, .3);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .stat .label {
+            font-weight: bold;
+        }
+
+        .card-list li {
+            list-style: none;
+            margin-bottom: 4px;
+        }
+
+        .model-card {
+            background: rgba(0, 0, 0, .3);
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px;
+            flex: 1;
+        }
+
+        .cards-grid {
+            display: flex;
+            gap: 20px;
+        }
+
+        .toggle-switch {
+            margin-top: 10px;
+        }
+
+        .toggle-switch label {
+            font-size: .9rem;
+            color: #e0e0e0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .details {
+            background: rgba(0, 0, 0, .6);
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 8px;
+            font-size: .9rem;
+            color: #ccc;
+        }
+
+        .hardware p,
+        .breakdown p,
+        .api-usage p {
+            margin: 8px 0;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, .2);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #e0e0e0;
+        }
+
+        th,
+        td {
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(0, 0, 0, .5);
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, .05);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, .4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            color: #e0e0e0;
+            resize: vertical;
+            border: 1px solid rgba(255, 255, 255, .1);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #00ffea;
+        }
+
+        select,
+        button {
+            background: rgba(0, 0, 0, .5);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, .15);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: .9rem;
+            transition: all .2s ease;
+        }
+
+        select:hover,
+        button:hover {
+            border-color: #00ffea;
+            color: #00ffea;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .chart-box {
+            height: 280px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        @media(max-width:768px) {
+            .cards-grid {
+                flex-direction: column;
+            }
+
+            .app-main {
+                padding: 10px;
+            }
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Sample data
+        const models = ["Qwen3.6 27B", "Claude Opus 4.8", "OpenAI GPT-4 Turbo", "Local Llama2 7B"];
+        const frontierModels = ["Claude Opus 4.8"]; // Add more if needed
+        const costPerToken = 0.0001; // $ per token
+
+        const tests = [
+            { id: 1, prompt: "Explain the concept of quantum entanglement in simple terms.", model: "Qwen3.6 27B", tokens_in: 50, tokens_out: 120, completion_time_ms: 2000, quality_score: 85, coding_score: 80, creativity_score: 70, instruction_following: 90, final_grade: 84.5, status: "Success" },
+            { id: 2, prompt: "Explain the concept of quantum entanglement in simple terms.", model: "Claude Opus 4.8", tokens_in: 50, tokens_out: 110, completion_time_ms: 2500, quality_score: 88, coding_score: 85, creativity_score: 75, instruction_following: 92, final_grade: 86.4, status: "Success" },
+            { id: 3, prompt: "Write a Python function that computes the Fibonacci sequence up to n.", model: "Qwen3.6 27B", tokens_in: 60, tokens_out: 200, completion_time_ms: 3000, quality_score: 90, coding_score: 95, creativity_score: 80, instruction_following: 88, final_grade: 91.5, status: "Success" },
+            { id: 4, prompt: "Write a Python function that computes the Fibonacci sequence up to n.", model: "Claude Opus 4.8", tokens_in: 60, tokens_out: 190, completion_time_ms: 2800, quality_score: 92, coding_score: 94, creativity_score: 82, instruction_following: 90, final_grade: 93.4, status: "Success" },
+            { id: 5, prompt: "Summarize the main points of the Paris Agreement.", model: "OpenAI GPT-4 Turbo", tokens_in: 70, tokens_out: 150, completion_time_ms: 2200, quality_score: 87, coding_score: 80, creativity_score: 75, instruction_following: 85, final_grade: 84.5, status: "Success" },
+            { id: 6, prompt: "Generate a short poem about the sea.", model: "Local Llama2 7B", tokens_in: 40, tokens_out: 120, completion_time_ms: 1800, quality_score: 80, coding_score: 70, creativity_score: 90, instruction_following: 75, final_grade: 78.5, status: "Success" },
+            { id: 7, prompt: "Explain the difference between supervised and unsupervised learning.", model: "Qwen3.6 27B", tokens_in: 55, tokens_out: 140, completion_time_ms: 2100, quality_score: 86, coding_score: 80, creativity_score: 70, instruction_following: 88, final_grade: 84.5, status: "Success" },
+            { id: 8, prompt: "Explain the difference between supervised and unsupervised learning.", model: "Claude Opus 4.8", tokens_in: 55, tokens_out: 130, completion_time_ms: 1900, quality_score: 90, coding_score: 85, creativity_score: 75, instruction_following: 92, final_grade: 88.5, status: "Success" },
+            { id: 9, prompt: "Write a SQL query to find the top 10 customers by revenue.", model: "OpenAI GPT-4 Turbo", tokens_in: 60, tokens_out: 170, completion_time_ms: 2400, quality_score: 88, coding_score: 90, creativity_score: 80, instruction_following: 85, final_grade: 86.5, status: "Success" },
+            { id: 10, prompt: "Write a SQL query to find the top 10 customers by revenue.", model: "Local Llama2 7B", tokens_in: 60, tokens_out: 160, completion_time_ms: 2300, quality_score: 85, coding_score: 80, creativity_score: 78, instruction_following: 70, final_grade: 79.5, status: "Success" }
+        ];
+
+        // Helper functions
+        function computeSummaryMetrics() {
+            const totalTests = tests.length;
+            let sumTokensOut = 0, sumTimeMs = 0;
+            const modelGrades = {};
+            let apiCost = 0, localRuntimeMs = 0;
+
+            tests.forEach(t => {
+                sumTokensOut += t.tokens_out;
+                sumTimeMs += t.completion_time_ms;
+                if (!modelGrades[t.model]) modelGrades[t.model] = [];
+                modelGrades[t.model].push(t.final_grade);
+                if (frontierModels.includes(t.model)) {
+                    apiCost += (t.tokens_in + t.tokens_out) * costPerToken;
+                } else {
+                    localRuntimeMs += t.completion_time_ms;
+                }
+            });
+
+            const avgTokensSec = sumTokensOut / (sumTimeMs / 1000);
+            let bestModel = null, bestAvgGrade = -Infinity;
+            for (const [model, grades] of Object.entries(modelGrades)) {
+                const avgGrade = grades.reduce((a, b) => a + b) / grades.length;
+                if (avgGrade > bestAvgGrade) {
+                    bestAvgGrade = avgGrade;
+                    bestModel = model;
+                }
+            }
+
+            return { totalTests, avgTokensSec, bestModel, apiCost, localRuntimeMs };
+        }
+
+        function populateHeroSummary() {
+            const metrics = computeSummaryMetrics();
+            document.getElementById('total-tests').textContent = metrics.totalTests;
+            document.getElementById('avg-tokens-sec').textContent = metrics.avgTokensSec.toFixed(2);
+            document.getElementById('best-model').textContent = metrics.bestModel;
+            document.getElementById('total-api-cost').textContent = `$${metrics.apiCost.toFixed(4)}`;
+            document.getElementById('total-local-runtime').textContent = `${(metrics.localRuntimeMs / 1000).toFixed(2)} s`;
+        }
+
+        function getModelStats(model) {
+            const modelTests = tests.filter(t => t.model === model);
+            if (modelTests.length === 0) return null;
+            let sumTokensOut = 0, sumTimeMs = 0, sumQualityScore = 0, sumCodingScore = 0, sumCreativityScore = 0, sumInstructionFollowing = 0, sumFinalGrade = 0;
+
+            modelTests.forEach(t => {
+                sumTokensOut += t.tokens_out;
+                sumTimeMs += t.completion_time_ms;
+                sumQualityScore += t.quality_score;
+                sumCodingScore += t.coding_score;
+                sumCreativityScore += t.creativity_score;
+                sumInstructionFollowing += t.instruction_following;
+                sumFinalGrade += t.final_grade;
+            });
+
+            const avgTokensSec = sumTokensOut / (sumTimeMs / 1000);
+            const avgCompletionTimeSec = sumTimeMs / 1000 / modelTests.length;
+            const avgQualityScore = sumQualityScore / modelTests.length;
+            const avgCodingScore = sumCodingScore / modelTests.length;
+            const avgCreativityScore = sumCreativityScore / modelTests.length;
+            const avgInstructionFollowing = sumInstructionFollowing / modelTests.length;
+            const avgFinalGrade = sumFinalGrade / modelTests.length;
+
+            return { model, avgTokensSec, avgCompletionTimeSec, avgQualityScore, avgCodingScore, avgCreativityScore, avgInstructionFollowing, avgFinalGrade };
+        }
+
+        function populateHeadToHeadMatchup() {
+            const qwenStats = getModelStats("Qwen3.6 27B");
+            const claudeStats = getModelStats("Claude Opus 4.8");
+
+            function buildCard(stats) {
+                const card = document.createElement('div');
+                card.className = 'model-card';
+                card.innerHTML = `<h3>${stats.model}</h3>
+            <ul class="card-list">
+                <li>Tokens/sec: ${stats.avgTokensSec.toFixed(2)}</li>
+                <li>Completion Time: ${stats.avgCompletionTimeSec.toFixed(2)} s</li>
+                <li>Quality Score: ${stats.avgQualityScore.toFixed(1)}</li>
+                <li>Coding Score: ${stats.avgCodingScore.toFixed(1)}</li>
+                <li>Creativity Score: ${stats.avgCreativityScore.toFixed(1)}</li>
+                <li>Instruction Following: ${stats.avgInstructionFollowing.toFixed(1)}</li>
+                <li>Final Grade: ${stats.avgFinalGrade.toFixed(1)}</li>
+            </ul>`;
+                return card;
+            }
+
+            const qwenCard = buildCard(qwenStats);
+            const claudeCard = buildCard(claudeStats);
+
+            document.getElementById('qwen-card').replaceWith(qwenCard);
+            document.getElementById('claude-card').replaceWith(claudeCard);
+        }
+
+        const allCharts = [];
+
+        function createBarChart(ctx, labels, data, title) {
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: title,
+                        data,
+                        backgroundColor: '#00ffea',
+                        borderColor: '#00ffea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label(ctx) { return `${ctx.dataset.label}: ${ctx.parsed.y}` } } } }
+                }
+            });
+            allCharts.push(chart);
+            return chart;
+        }
+
+        function resizeChartsInSection(section) {
+            if (!section) return;
+            const canvases = section.querySelectorAll('canvas');
+            canvases.forEach(canvas => {
+                const chart = Chart.getChart(canvas);
+                if (chart) chart.resize();
+            });
+        }
+
+        function getAggregatedMetrics() {
+            const aggregated = {};
+            models.forEach(m => {
+                const stats = getModelStats(m);
+                if (stats) aggregated[m] = stats;
+            });
+            return aggregated;
+        }
+
+        function populateSummaryCharts() {
+            const agg = getAggregatedMetrics();
+            const labels = Object.keys(agg);
+
+            // Tokens/sec
+            const tokensPerSecData = labels.map(m => agg[m].avgTokensSec);
+            createBarChart(document.getElementById('tokensPerSecChart').getContext('2d'), labels, tokensPerSecData, 'Tokens/sec');
+
+            // Completion Time
+            const completionTimeData = labels.map(m => agg[m].avgCompletionTimeSec);
+            createBarChart(document.getElementById('completionTimeChart').getContext('2d'), labels, completionTimeData, 'Avg Completion Time (s)');
+
+            // Quality Score
+            const qualityScoreData = labels.map(m => agg[m].avgQualityScore);
+            createBarChart(document.getElementById('qualityScoreChart').getContext('2d'), labels, qualityScoreData, 'Average Quality Score');
+
+            // Cost Comparison
+            const costData = labels.map(m => {
+                if (frontierModels.includes(m)) return getModelCost(m);
+                else return 0;
+            });
+            createBarChart(document.getElementById('costComparisonChart').getContext('2d'), labels, costData, 'API Cost ($)');
+        }
+
+        function getModelCost(model) {
+            const modelTests = tests.filter(t => t.model === model);
+            if (!modelTests.length) return 0;
+            let sumTokensInOut = 0;
+            modelTests.forEach(t => sumTokensInOut += t.tokens_in + t.tokens_out);
+            return sumTokensInOut * costPerToken;
+        }
+
+        function truncatePrompt(prompt, maxLen = 50) { return prompt.length > maxLen ? prompt.slice(0, maxLen) + '...' : prompt; }
+
+        function populatePromptHistoryTable() {
+            const tbody = document.getElementById('prompt-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            tests.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.dataset.id = t.id;
+                tr.innerHTML = `<td>${t.id}</td>
+            <td class="prompt-cell">${truncatePrompt(t.prompt)}</td>
+            <td>${t.model}</td>
+            <td>${t.status}</td>
+            <td>${(t.completion_time_ms / 1000).toFixed(2)} s</td>
+            <td>${t.final_grade.toFixed(1)}</td>`;
+                tr.addEventListener('click', () => togglePromptDetails(t.id));
+                tbody.appendChild(tr);
+            });
+        }
+
+        function togglePromptDetails(id) {
+            const tr = document.querySelector(`tr[data-id="${id}"]`);
+            if (!tr) return;
+            let details = tr.querySelector('.details');
+            if (details) { tr.removeChild(details); return; }
+            const test = tests.find(t => t.id === id);
+            details = document.createElement('div'); details.className = 'details';
+            details.innerHTML = `<p>Prompt: ${test.prompt}</p>
+        <p>Tokens In: ${test.tokens_in}</p>
+        <p>Tokens Out: ${test.tokens_out}</p>
+        <p>Completion Time: ${(test.completion_time_ms / 1000).toFixed(2)} s</p>
+        <p>Quality Score: ${test.quality_score}</p>
+        <p>Coding Score: ${test.coding_score}</p>
+        <p>Creativity Score: ${test.creativity_score}</p>
+        <p>Instruction Following: ${test.instruction_following}</p>`;
+            tr.appendChild(details);
+        }
+
+        function populateHardwarePanel() {
+            const gpuUtil = 75;
+            const vramUsage = 12 * 1024; // MB
+            const temp = 70;
+            const powerDraw = 350;
+            const serverStatus = "Online";
+            document.getElementById('gpu-util').textContent = gpuUtil;
+            document.getElementById('vram-usage').textContent = vramUsage;
+            document.getElementById('temp').textContent = temp;
+            document.getElementById('power-draw').textContent = powerDraw;
+            document.getElementById('server-status').textContent = serverStatus;
+        }
+
+        function populateAPIUsagePanel() {
+            const claudeTests = tests.filter(t => t.model === "Claude Opus 4.8");
+            let totalInputTokens = 0, totalOutputTokens = 0;
+            claudeTests.forEach(t => {
+                totalInputTokens += t.tokens_in;
+                totalOutputTokens += t.tokens_out;
+            });
+            const totalSpend = (totalInputTokens + totalOutputTokens) * costPerToken;
+            document.getElementById('input-tokens').textContent = totalInputTokens;
+            document.getElementById('output-tokens').textContent = totalOutputTokens;
+            document.getElementById('total-spend').textContent = `$${totalSpend.toFixed(4)}`;
+        }
+
+        function populateWinnerBreakdown() {
+            const agg = getAggregatedMetrics();
+            const categories = [
+                { name: 'Speed', key: 'avgTokensSec' },
+                { name: 'Quality', key: 'avgQualityScore' },
+                { name: 'Coding', key: 'avgCodingScore' },
+                { name: 'Creativity', key: 'avgCreativityScore' },
+                { name: 'Instruction Following', key: 'avgInstructionFollowing' },
+                { name: 'Final Grade', key: 'avgFinalGrade' }
+            ];
+            categories.forEach(cat => {
+                let bestModel = null, bestValue = -Infinity;
+                for (const [model, stats] of Object.entries(agg)) {
+                    const val = stats[cat.key];
+                    if (val > bestValue) { bestValue = val; bestModel = model; }
+                }
+                document.getElementById(`${cat.name.toLowerCase().replace(/ /g, '-')}-winner`).textContent = `${bestModel} (${bestValue.toFixed(1)})`;
+            });
+        }
+
+        function populatePreviousTestsTable() {
+            const tbody = document.getElementById('previous-tests').querySelector('tbody');
+            const filterSelect = document.getElementById('model-filter');
+            filterSelect.innerHTML = '<option value="All">All</option>';
+            models.forEach(m => {
+                const opt = document.createElement('option'); opt.value = m; opt.textContent = m;
+                filterSelect.appendChild(opt);
+            });
+            renderTable(tests);
+        }
+
+        function renderTable(testData) {
+            const tbody = document.getElementById('previous-tests').querySelector('tbody');
+            tbody.innerHTML = '';
+            testData.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${t.id}</td>
+            <td>${truncatePrompt(t.prompt)}</td>
+            <td>${t.model}</td>
+            <td>${t.tokens_in}</td>
+            <td>${t.tokens_out}</td>
+            <td>${(t.completion_time_ms / 1000).toFixed(2)} s</td>
+            <td>${t.quality_score.toFixed(1)}</td>
+            <td>${t.coding_score.toFixed(1)}</td>
+            <td>${t.creativity_score.toFixed(1)}</td>
+            <td>${t.instruction_following.toFixed(1)}</td>
+            <td>${t.final_grade.toFixed(1)}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        let speedChartInstance = null;
+        let speedChartInitialized = false;
+
+        function destroySpeedChart() {
+            if (speedChartInstance && typeof speedChartInstance.destroy === 'function') {
+                speedChartInstance.destroy();
+            }
+            speedChartInstance = null;
+        }
+
+        function updateSpeedChart(showLocalOnly) {
+            const agg = getAggregatedMetrics();
+            const allLabels = Object.keys(agg);
+            const localModels = ["Qwen3.6 27B", "OpenAI GPT-4 Turbo", "Local Llama2 7B"];
+            let labels, data;
+            if (showLocalOnly) {
+                labels = allLabels.filter(m => localModels.includes(m));
+                data = labels.map(m => agg[m].avgTokensSec);
+            } else {
+                labels = allLabels;
+                data = labels.map(m => agg[m].avgTokensSec);
+            }
+            const canvas = document.getElementById('tokensPerSecSpeedChart');
+            if (!canvas) return;
+            destroySpeedChart();
+            try {
+                speedChartInstance = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: showLocalOnly ? 'Tokens/sec (Local)' : 'Tokens/sec (All)',
+                            data,
+                            backgroundColor: '#00ffea',
+                            borderColor: '#00ffea',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+                });
+            } catch (e) {
+                console.warn('Failed to create speed chart', e);
+            }
+        }
+
+        function rebuildChartsInSection(section) {
+            if (!section) return;
+            const canvases = section.querySelectorAll('canvas');
+            canvases.forEach(canvas => {
+                const existing = Chart.getChart(canvas);
+                if (existing) existing.resize();
+            });
+        }
+
+        function addEventListeners() {
+            // Tab navigation
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const view = btn.dataset.view;
+                    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                    const section = document.getElementById(view) || document.getElementById(`${view}-section`);
+                    if (section) section.classList.add('active');
+                    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    // Defer to next frame so the browser makes the section visible
+                    requestAnimationFrame(() => {
+                        rebuildChartsInSection(section);
+
+                        // Create speed chart on first visit to Speed tab
+                        if ((view === 'speed' || view === 'speed-section') && !speedChartInitialized) {
+                            speedChartInitialized = true;
+                            setTimeout(() => updateSpeedChart(false), 50);
+                        }
+                    });
+                });
+            });
+
+            // Filter dropdown
+            const filterSelect = document.getElementById('model-filter');
+            filterSelect.addEventListener('change', () => {
+                const sel = filterSelect.value;
+                let filtered = tests;
+                if (sel !== 'All') filtered = tests.filter(t => t.model === sel);
+                renderTable(filtered);
+            });
+
+            // Sort buttons
+            document.getElementById('sort-score-btn').addEventListener('click', () => renderTable([...tests].sort((a, b) => b.final_grade - a.final_grade)));
+            document.getElementById('sort-speed-btn').addEventListener('click', () => renderTable([...tests].sort((a, b) => (b.tokens_out / (b.completion_time_ms / 1000)) - (a.tokens_out / (a.completion_time_ms / 1000)))));
+
+            // Toggle local vs frontier
+            const toggle = document.getElementById('localFrontierToggle');
+            toggle.addEventListener('change', () => updateSpeedChart(toggle.checked));
+        }
+
+        function init() {
+            populateHeroSummary();
+            populateHeadToHeadMatchup();
+            populateSummaryCharts();
+            populatePromptHistoryTable();
+            populateHardwarePanel();
+            populateAPIUsagePanel();
+            populateWinnerBreakdown();
+            populatePreviousTestsTable();
+            addEventListeners();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</head>
+
+<body>
+    <header class="app-header">
+        <h1>AI Command Center Dashboard</h1>
+        <nav class="tabs">
+            <button data-view="summary" class="tab active">Summary</button>
+            <button data-view="speed" class="tab">Speed</button>
+            <button data-view="quality" class="tab">Quality</button>
+            <button data-view="cost" class="tab">Cost</button>
+            <button data-view="hardware" class="tab">Hardware</button>
+            <button data-view="prompt-history" class="tab">History</button>
+            <button data-view="winner-breakdown" class="tab">Winners</button>
+            <button data-view="previous-tests-table" class="tab">Tests</button>
+            <button data-view="notes-section" class="tab">Notes</button>
+        </nav>
+    </header>
+
+    <main class="app-main">
+        <!-- Summary Section -->
+        <section id="summary-section" class="view active">
+            <div class="hero-summary glass">
+                <h2>Hero Summary</h2>
+                <div class="stats-grid">
+                    <div class="stat"><span class="label">Total Tests:</span><span class="value"
+                            id="total-tests"></span></div>
+                    <div class="stat"><span class="label">Avg Tokens/sec:</span><span class="value"
+                            id="avg-tokens-sec"></span></div>
+                    <div class="stat"><span class="label">Best Model:</span><span class="value" id="best-model"></span>
+                    </div>
+                    <div class="stat"><span class="label">Total API Cost:</span><span class="value"
+                            id="total-api-cost"></span></div>
+                    <div class="stat"><span class="label">Total Local Runtime:</span><span class="value"
+                            id="total-local-runtime"></span></div>
+                </div>
+            </div>
+
+            <div class="matchup glass">
+                <h3>Head-to-Head Matchup: Qwen3.6 27B vs Claude Opus 4.8</h3>
+                <div class="cards-grid">
+                    <div id="qwen-card"></div>
+                    <div id="claude-card"></div>
+                </div>
+            </div>
+
+            <div class="charts glass">
+                <h3>Performance Overview</h3>
+                <div class="chart-box"><canvas id="tokensPerSecChart"></canvas></div>
+                <div class="chart-box"><canvas id="completionTimeChart"></canvas></div>
+                <div class="chart-box"><canvas id="qualityScoreChart"></canvas></div>
+                <div class="chart-box"><canvas id="costComparisonChart"></canvas></div>
+            </div>
+        </section>
+
+        <!-- Speed Section -->
+        <section id="speed-section" class="view">
+            <div class="glass">
+                <h2>Speed Metrics</h2>
+                <div class="charts">
+                    <h3>Tokens per Second (Local vs Frontier)</h3>
+                    <div class="chart-box"><canvas id="tokensPerSecSpeedChart"></canvas></div>
+                    <div class="toggle-switch"><label><input type="checkbox" id="localFrontierToggle"> Show Local
+                            Only</label></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quality Section -->
+        <section id="quality-section" class="view">
+            <div class="glass">
+                <h2>Quality Metrics</h2>
+                <div class="cards-grid">
+                    <!-- Model cards will be inserted here by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Cost Section -->
+        <section id="cost-section" class="view">
+            <div class="glass">
+                <h2>Cost Metrics</h2>
+                <div class="api-usage">
+                    <h3>Claude Opus 4.8 API Usage</h3>
+                    <p>Input Tokens: <span id="input-tokens"></span></p>
+                    <p>Output Tokens: <span id="output-tokens"></span></p>
+                    <p>Total Spend: <span id="total-spend"></span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hardware Section -->
+        <section id="hardware-section" class="view">
+            <div class="glass">
+                <h2>Hardware Monitor</h2>
+                <div class="hardware">
+                    <h3>RTX 3090 Usage</h3>
+                    <p>GPU Utilization: <span id="gpu-util"></span>%</p>
+                    <p>VRAM Usage: <span id="vram-usage"></span> MB</p>
+                    <p>Temperature: <span id="temp"></span> °C</p>
+                    <p>Power Draw: <span id="power-draw"></span> W</p>
+                    <p>Status: <span id="server-status"></span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Prompt History -->
+        <section id="prompt-history" class="view">
+            <div class="glass">
+                <h2>Prompt History</h2>
+                <div class="table-wrapper">
+                    <table id="prompt-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Prompt</th>
+                                <th>Model</th>
+                                <th>Status</th>
+                                <th>Time (s)</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Winner Breakdown -->
+        <section id="winner-breakdown" class="view">
+            <div class="glass">
+                <h2>Winner Breakdown</h2>
+                <div class="breakdown">
+                    <p>Speed: <span id="speed-winner"></span></p>
+                    <p>Quality: <span id="quality-winner"></span></p>
+                    <p>Coding: <span id="coding-winner"></span></p>
+                    <p>Creativity: <span id="creativity-winner"></span></p>
+                    <p>Instruction Following: <span id="instruction-following-winner"></span></p>
+                    <p>Final Grade: <span id="final-grade-winner"></span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Previous Tests Table -->
+        <section id="previous-tests-table" class="view">
+            <div class="glass">
+                <h2>Previous AI Model Tests</h2>
+                <div class="controls">
+                    <label for="model-filter">Filter by Model:</label>
+                    <select id="model-filter"></select>
+                    <button id="sort-score-btn">Sort by Score</button>
+                    <button id="sort-speed-btn">Sort by Speed</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="previous-tests">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Prompt</th>
+                                <th>Model</th>
+                                <th>Tokens In</th>
+                                <th>Tokens Out</th>
+                                <th>Completion Time (s)</th>
+                                <th>Quality Score</th>
+                                <th>Coding Score</th>
+                                <th>Creativity Score</th>
+                                <th>Instruction Following</th>
+                                <th>Final Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notes Section -->
+        <section id="notes-section" class="view">
+            <div class="glass">
+                <h2>Notes & Observations</h2>
+                <textarea id="notes-textarea" rows="5" placeholder="Enter your notes here..."></textarea>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

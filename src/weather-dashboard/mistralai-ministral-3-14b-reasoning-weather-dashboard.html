@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyGlass - Weather Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS (inline) -->
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --primary-color: rgba(59, 130, 246, 1);
+            --secondary-color: rgba(107, 118, 125, 1);
+        }
+
+        * {
+            transition: background-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(to right, #87CEEB, #E0F6FF);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .card-header {
+            background: transparent !important;
+            border-bottom: none !important;
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: rgba(59, 130, 246, 0.9);
+            border-color: rgba(59, 130, 246, 0.8);
+        }
+
+        #loading-spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .weather-icon {
+            width: 64px;
+            height: 64px;
+        }
+
+        .forecast-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+        }
+
+        .favorites-btn {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .favorites-btn:hover {
+            background-color: rgba(107, 118, 125, 0.9);
+            border-color: rgba(107, 118, 125, 0.8);
+        }
+
+        #error-toast {
+            width: 350px;
+        }
+
+        footer {
+            margin-top: auto;
+            background: transparent !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        /* Animation for glass cards */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .glass-card {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Time of day adjustments */
+        body.night {
+            background: linear-gradient(to right, #1a2a6c, #48CAE4);
+        }
+
+        body.stormy {
+            background: linear-gradient(to right, #5f6975, #8e9dab);
+        }
+    </style>
+</head>
+
+<body class="min-vh-100 d-flex flex-column">
+    <header class="bg-transparent p-3 glass-card mb-4">
+        <div class="container-fluid">
+            <!-- Search and location buttons -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="d-flex w-100 me-2">
+                    <input type="text" id="city-search" class="form-control me-2" placeholder="Search for a city...">
+                    <button id="search-btn" class="btn btn-primary">Search</button>
+                </div>
+                <button id="location-btn" class="btn btn-outline-light ms-2">Current Location</button>
+            </div>
+            <!-- Unit toggle and favorites -->
+            <div class="mt-2 d-flex justify-content-between align-items-center">
+                <button id="unit-toggle" class="btn btn-sm btn-outline-light">°C</button>
+                <button id="favorites-btn" class="btn btn-sm btn-outline-light">Favorites (0)</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow-1 container-fluid p-0">
+        <!-- Current weather card -->
+        <div id="current-weather" class="row g-4 mx-2 mb-4">
+            <div class="col-md-8 glass-card p-4 d-flex flex-column align-items-center text-center">
+                <h1 id="city-name" class="display-4 mb-0">London</h1>
+                <p id="weather-condition" class="fs-3 mb-4"></p>
+                <div class="d-flex align-items-center justify-content-center my-4">
+                    <img id="weather-icon" class="weather-icon me-3" src="" alt="Weather icon">
+                    <div>
+                        <h2 id="temperature" class="display-1">22</h2>
+                        <p id="unit-symbol" class="fs-5">°C</p>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <div class="card p-2 glass-card text-center w-25">
+                        <div class="card-body">
+                            <h6 class="card-title">Feels Like</h6>
+                            <p id="feels-like" class="card-text">21°C</p>
+                        </div>
+                    </div>
+                    <div class="card p-2 glass-card text-center w-25">
+                        <div class="card-body">
+                            <h6 class="card-title">Humidity</h6>
+                            <p id="humidity" class="card-text">65%</p>
+                        </div>
+                    </div>
+                    <div class="card p-2 glass-card text-center w-25">
+                        <div class="card-body">
+                            <h6 class="card-title">Wind</h6>
+                            <p id="wind-speed" class="card-text">10 km/h</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side panel for charts and additional info -->
+            <div id="side-panel" class="col-md-4 glass-card p-4 d-none d-md-block">
+                <h3 class="text-center mb-3">Today's Forecast</h3>
+                <div class="chart-container mb-3">
+                    <!-- Temperature chart will be inserted here -->
+                    <canvas id="temperature-chart"></canvas>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <small>Rain Chance</small>
+                    <span id="rain-chance">0%</span>
+                </div>
+                <div class="progress glass-card" style="height: 6px;">
+                    <div id="rain-progress" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forecast sections -->
+        <div class="row g-4 mx-2 mb-4">
+            <!-- Hourly forecast slider -->
+            <div id="hourly-forecast" class="col-12 glass-card p-4">
+                <h2 class="text-center mb-3">Hourly Forecast</h2>
+                <div id="hourly-slider-container" class="d-flex overflow-x-auto pb-2 gap-2">
+                    <!-- Hourly forecast items will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- 7-day forecast grid -->
+            <div id="seven-day-forecast" class="col-12 glass-card p-4">
+                <h2 class="text-center mb-3">7-Day Forecast</h2>
+                <div id="day-forecasts" class="row g-3">
+                    <!-- 7-day forecast cards will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional features (alerts, favorites, comparison) -->
+        <div class="row g-4 mx-2 mb-4">
+            <!-- Weather alerts -->
+            <div id="weather-alerts" class="col-md-6 glass-card p-4 d-none">
+                <h3>Weather Alerts</h3>
+                <p>No active alerts for this location.</p>
+                <!-- Alerts will be dynamically inserted here -->
+            </div>
+
+            <!-- Favorites and comparison -->
+            <div id="favorites-comparison" class="col-md-6 glass-card p-4 d-flex flex-column">
+                <h3>Favorites</h3>
+                <ul id="favorites-list" class="list-group list-group-flush mb-3">
+                    <!-- Favorites will be dynamically inserted here -->
+                </ul>
+                <button id="add-favorite-btn" class="btn btn-sm btn-outline-light w-100">Add Current City</button>
+            </div>
+
+            <!-- Comparison mode (placeholder) -->
+            <div id="comparison-mode" class="col-md-6 glass-card p-4 d-none">
+                <h3>Comparison Mode</h3>
+                <p>Compare two cities side by side.</p>
+                <!-- Comparison UI will be dynamically inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-transparent text-center p-3 glass-card mt-auto">
+        <p class="text-muted">Ministral-3-14b-reasoning - SkyGlass v1.0 - A premium weather dashboard</p>
+    </footer>
+
+    <!-- Loading spinner -->
+    <div id="loading-spinner" class="spinner-border text-primary d-none" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+
+    <!-- Error message container -->
+    <div id="error-message" class="toast-container position-fixed bottom-0 end-0 p-3 d-none">
+        <div id="error-toast" class="toast"></div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom JavaScript -->
+    <script>
+        // API Configuration
+        /*
+          To use this weather dashboard, you need to replace 'YOUR_API_KEY' with a valid OpenWeatherMap API key.
+          You can sign up for a free API key at: https://openweathermap.org/api
+    
+          The following APIs are used:
+          - Current weather: `https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}`
+          - Forecast (hourly): `https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}`
+          - Geocoding: `https://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&appid={API_KEY}`
+          - Air pollution (optional): `https://api.openweathermap.org/data/2.5/air_pollution?q={city}&appid={API_KEY}`
+    
+          Note: The free tier has rate limits, so handle errors gracefully.
+        */
+        const API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+        const BASE_URL = `https://api.openweathermap.org/data/2.5/weather?q={city}&appid=${API_KEY}`;
+        const FORECAST_URL = `https://api.openweathermap.org/data/2.5/forecast?q={city}&appid=${API_KEY}`;
+        const AIR_QUALITY_URL = `https://api.openweathermap.org/data/2.5/air_pollution?q={city}&appid=${API_KEY}`;
+
+        // State variables
+        let currentCity = 'London';
+        let unit = 'metric'; // 'metric' for Celsius, 'imperial' for Fahrenheit
+        let weatherData = null;
+        let hourlyForecast = null;
+        let sevenDayForecast = null;
+        let airQualityData = null;
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let isComparisonMode = false;
+        let comparisonCity1 = '';
+        let comparisonCity2 = '';
+
+        // DOM elements
+        const citySearchInput = document.getElementById('city-search');
+        const searchBtn = document.getElementById('search-btn');
+        const locationBtn = document.getElementById('location-btn');
+        const unitToggleBtn = document.getElementById('unit-toggle');
+        const currentWeatherDiv = document.getElementById('current-weather');
+        const hourlySliderContainer = document.getElementById('hourly-slider-container');
+        const dayForecastsDiv = document.getElementById('day-forecasts');
+        const weatherAlertsDiv = document.getElementById('weather-alerts');
+        const favoritesComparisonDiv = document.getElementById('favorites-comparison');
+        const comparisonModeDiv = document.getElementById('comparison-mode');
+        const favoritesList = document.getElementById('favorites-list');
+        const addFavoriteBtn = document.getElementById('add-favorite-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorToast = document.getElementById('error-toast');
+        const temperatureChartCanvas = document.getElementById('temperature-chart');
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            showLoading();
+            fetchWeatherData(currentCity)
+                .then(() => {
+                    renderCurrentWeather();
+                    renderHourlyForecast();
+                    renderSevenDayForecast();
+                    updateBackground(weatherData.weather[0].main);
+                    hideLoading();
+                    initializeCharts();
+                })
+                .catch(error => {
+                    showError(error.message);
+                    hideLoading();
+                });
+
+            // Initialize favorites list
+            renderFavorites();
+
+            // Set time of day based on current hour
+            const currentHour = new Date().getHours();
+            if (currentHour >= 18 || currentHour < 6) {
+                document.body.classList.add('night');
+            }
+        });
+
+        // Fetch weather data for a given city
+        async function fetchWeatherData(city) {
+            try {
+                showLoading();
+
+                // Fetch current weather
+                const weatherResponse = await fetch(BASE_URL.replace('{city}', encodeURIComponent(city)));
+                if (!weatherResponse.ok) throw new Error(`Weather data not found for ${city}`);
+                weatherData = await weatherResponse.json();
+
+                // Fetch hourly forecast (5-day, 3-hour interval)
+                const forecastResponse = await fetch(FORECAST_URL.replace('{city}', encodeURIComponent(city)));
+                if (!forecastResponse.ok) throw new Error(`Forecast data not found for ${city}`);
+                const rawHourlyData = await forecastResponse.json();
+                hourlyForecast = processHourlyForecast(rawHourlyData);
+
+                // For simplicity, we'll use the first 7 days from the hourly forecast
+                sevenDayForecast = getSevenDayForecast(hourlyForecast);
+
+                // Optionally fetch air quality data if available in free tier (may require additional API key)
+                try {
+                    const airQualityResponse = await fetch(AIR_QUALITY_URL.replace('{city}', encodeURIComponent(city)));
+                    if (airQualityResponse.ok) {
+                        airQualityData = await airQualityResponse.json();
+                    }
+                } catch (error) {
+                    console.warn(`Air quality data not available: ${error.message}`);
+                }
+
+                return { weatherData, hourlyForecast, sevenDayForecast };
+            } catch (error) {
+                throw new Error(`Failed to fetch data: ${error.message}`);
+            }
+        }
+
+        // Process raw hourly forecast data
+        function processHourlyForecast(rawData) {
+            const hourly = [];
+            for (let i = 0; i < rawData.list.length; i++) {
+                const item = rawData.list[i];
+                hourly.push({
+                    dt: item.dt,
+                    dt_txt: item.dt_txt,
+                    temp: unit === 'metric' ? item.main.temp : convertCtoF(item.main.temp),
+                    feels_like: unit === 'metric' ? item.main.feels_like : convertCtoF(item.main.feels_like),
+                    weather: item.weather[0],
+                    humidity: item.main.humidity,
+                    wind_speed: item.wind.speed,
+                    rain_chance: item.pop, // Probability of precipitation
+                });
+            }
+            return hourly;
+        }
+
+        // Get 7-day forecast from hourly data (group by day)
+        function getSevenDayForecast(hourlyData) {
+            const sevenDay = [];
+            for (let i = 0; i < 7; i++) {
+                if (i * 24 < hourlyData.length) {
+                    const dayIndex = i * 24;
+                    // Aggregate data for the day (simplified for this example)
+                    const dayData = hourlyData.slice(dayIndex, dayIndex + 24);
+                    sevenDay.push({
+                        date: new Date(hourlyData[dayIndex].dt_txt).toLocaleDateString(),
+                        temp_max: Math.max(...dayData.map(d => d.temp)),
+                        temp_min: Math.min(...dayData.map(d => d.temp)),
+                        weather: dayData[0].weather, // Use first hour's weather for simplicity
+                        humidity: dayData[0].humidity,
+                    });
+                }
+            }
+            return sevenDay;
+        }
+
+        // Render current weather card
+        function renderCurrentWeather() {
+            if (!weatherData) return;
+
+            const cityName = document.getElementById('city-name');
+            const weatherCondition = document.getElementById('weather-condition');
+            const temperature = document.getElementById('temperature');
+            const unitSymbol = document.getElementById('unit-symbol');
+            const feelsLike = document.getElementById('feels-like');
+            const humidity = document.getElementById('humidity');
+            const windSpeed = document.getElementById('wind-speed');
+            const weatherIcon = document.getElementById('weather-icon');
+
+            cityName.textContent = `${weatherData.name}, ${weatherData.sys.country}`;
+            weatherCondition.textContent = `${weatherData.weather[0].description.charAt(0).toUpperCase() + weatherData.weather[0].description.slice(1)}`;
+
+            // Temperature display
+            let tempValue, feelsLikeValue;
+            if (unit === 'metric') {
+                tempValue = Math.round(weatherData.main.temp);
+                feelsLikeValue = `${Math.round(weatherData.main.feels_like)}°C`;
+                windSpeed.textContent = `${weatherData.wind.speed} m/s`;
+            } else {
+                tempValue = Math.round(convertCtoF(weatherData.main.temp));
+                feelsLikeValue = `${Math.round(convertCtoF(weatherData.main.feels_like))}°F`;
+                windSpeed.textContent = `${Math.round(convertKmhToMph(weatherData.wind.speed))} mph`;
+            }
+            temperature.textContent = tempValue;
+            unitSymbol.textContent = unit === 'metric' ? '°C' : '°F';
+            feelsLike.textContent = feelsLikeValue;
+
+            // Humidity
+            humidity.textContent = `${weatherData.main.humidity}%`;
+
+            // Weather icon
+            weatherIcon.src = `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`;
+            weatherIcon.alt = weatherData.weather[0].description;
+
+            // Update rain chance progress bar if available
+            const rainChance = hourlyForecast ? Math.max(...hourlyForecast.map(item => item.rain_chance * 100)) : 0;
+            document.getElementById('rain-chance').textContent = `${Math.round(rainChance)}%`;
+            document.getElementById('rain-progress').style.width = `${rainChance * 100}%`;
+
+            // Update air quality if available
+            if (airQualityData) {
+                const aqi = airQualityData.list[0].main.aqi;
+                const components = airQualityData.list[0].components;
+                // You can add more details here if needed
+            }
+        }
+
+        // Render hourly forecast slider
+        function renderHourlyForecast() {
+            if (!hourlyForecast) return;
+
+            hourlySliderContainer.innerHTML = '';
+            hourlyForecast.forEach(item => {
+                const hourCard = document.createElement('div');
+                hourCard.className = 'forecast-card p-3 text-center glass-card';
+                hourCard.innerHTML = `
+          <h6>${new Date(item.dt_txt).getHours()}:00</h6>
+          <img src="https://openweathermap.org/img/wn/${item.weather.icon}@2x.png" alt="${item.weather.description}" class="weather-icon mb-2">
+          <p>${Math.round(item.temp)}°${unit === 'metric' ? 'C' : 'F'}</p>
+          <small>Feels: ${Math.round(unit === 'metric' ? item.feels_like : convertCtoF(item.feels_like))}°${unit === 'metric' ? 'C' : 'F'}</small>
+        `;
+                hourlySliderContainer.appendChild(hourCard);
+            });
+        }
+
+        // Render 7-day forecast grid
+        function renderSevenDayForecast() {
+            if (!sevenDayForecast) return;
+
+            dayForecastsDiv.innerHTML = '';
+            sevenDayForecast.forEach((day, index) => {
+                const dayCard = document.createElement('div');
+                dayCard.className = `col-md forecast-card d-flex flex-column align-items-center justify-content-center p-3`;
+                dayCard.innerHTML = `
+          <h5 class="mb-2">${new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}</h5>
+          <img src="https://openweathermap.org/img/wn/${day.weather.icon}@2x.png" alt="${day.weather.description}" class="weather-icon mb-2">
+          <p>${Math.round(day.temp_max)}°${unit === 'metric' ? 'C' : 'F'} / ${Math.round(day.temp_min)}°${unit === 'metric' ? 'C' : 'F'}</p>
+        `;
+                dayForecastsDiv.appendChild(dayCard);
+            });
+        }
+
+        // Update background based on weather condition and time of day
+        function updateBackground(condition) {
+            const body = document.body;
+
+            // Remove existing classes
+            body.classList.remove('night', 'stormy');
+
+            // Determine if it's night (simplified: between 6 PM and 6 AM)
+            const currentHour = new Date().getHours();
+            const isNight = currentHour >= 18 || currentHour < 6;
+
+            if (isNight) {
+                body.classList.add('night');
+            }
+
+            // Adjust based on weather condition
+            switch (condition.toLowerCase()) {
+                case 'clear':
+                    if (isNight) {
+                        body.style.background = 'linear-gradient(to right, #1a2a6c, #48CAE4)';
+                    } else {
+                        body.style.background = 'linear-gradient(to right, #87CEEB, #E0F6FF)';
+                    }
+                    break;
+                case 'clouds':
+                    if (isNight) {
+                        body.style.background = 'linear-gradient(to right, #2d3a4d, #5f6975)';
+                    } else {
+                        body.style.background = 'linear-gradient(to right, #D3D3D3, #E5E5E5)';
+                    }
+                    break;
+                case 'rain':
+                case 'thunderstorm':
+                    body.classList.add('stormy');
+                    if (isNight) {
+                        body.style.background = 'linear-gradient(to right, #1a2a6c, #48CAE4)';
+                    } else {
+                        body.style.background = 'linear-gradient(to right, #5f6975, #8e9dab)';
+                    }
+                    break;
+                case 'snow':
+                    if (isNight) {
+                        body.style.background = 'linear-gradient(to right, #2d3a4d, #5f6975)';
+                    } else {
+                        body.style.background = 'linear-gradient(to right, #E0F7FA, #B2EBF2)';
+                    }
+                    break;
+                default:
+                    if (isNight) {
+                        body.style.background = 'linear-gradient(to right, #1a2a6c, #48CAE4)';
+                    } else {
+                        body.style.background = 'linear-gradient(to right, #87CEEB, #E0F6FF)';
+                    }
+            }
+        }
+
+        // Show loading spinner
+        function showLoading() {
+            loadingSpinner.classList.remove('d-none');
+        }
+
+        // Hide loading spinner
+        function hideLoading() {
+            loadingSpinner.classList.add('d-none');
+        }
+
+        // Show error message in a toast
+        function showError(message) {
+            errorToast.innerHTML = `
+        <div class="toast-header bg-danger text-white">
+          <strong class="me-auto">Error</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">${message}</div>
+      `;
+            const toast = new bootstrap.Toast(errorToast);
+            toast.show();
+        }
+
+        // Toggle between Celsius and Fahrenheit
+        function toggleUnit() {
+            unit = unit === 'metric' ? 'imperial' : 'metric';
+            unitToggleBtn.textContent = unit === 'metric' ? '°C' : '°F';
+
+            if (weatherData) {
+                renderCurrentWeather();
+                renderHourlyForecast();
+                renderSevenDayForecast();
+                // Re-initialize charts with new units
+                initializeCharts();
+            }
+        }
+
+        // Convert Celsius to Fahrenheit
+        function convertCtoF(celsius) {
+            return (celsius * 9 / 5) + 32;
+        }
+
+        // Convert km/h to mph
+        function convertKmhToMph(kmh) {
+            return kmh * 0.621371;
+        }
+
+        // Initialize or update charts
+        function initializeCharts() {
+            if (!hourlyForecast || !window.Chart) return;
+
+            const ctx = temperatureChartCanvas.getContext('2d');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hourlyForecast.map(item => new Date(item.dt_txt).getHours()),
+                    datasets: [{
+                        label: `Temperature (${unit === 'metric' ? '°C' : '°F'})`,
+                        data: hourlyForecast.map(item => item.temp),
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: `Temperature (${unit === 'metric' ? '°C' : '°F'})`
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}°${unit === 'metric' ? 'C' : 'F'}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render favorites list
+        function renderFavorites() {
+            favoritesList.innerHTML = '';
+            if (favorites.length === 0) {
+                favoritesList.innerHTML = '<li class="list-group-item">No favorite cities added yet.</li>';
+                return;
+            }
+
+            favorites.forEach(city => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+          ${city}
+          <button class="btn btn-sm btn-outline-danger" data-city="${city}">Remove</button>
+        `;
+                favoritesList.appendChild(li);
+            });
+
+            // Add event listeners to remove buttons
+            document.querySelectorAll('[data-city]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const city = e.target.getAttribute('data-city');
+                    removeFavorite(city);
+                    renderFavorites();
+                });
+            });
+        }
+
+        // Add a city to favorites
+        function addToFavorites(city) {
+            if (!favorites.includes(city)) {
+                favorites.push(city);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                document.getElementById('favorites-btn').textContent = `Favorites (${favorites.length})`;
+                renderFavorites();
+            }
+        }
+
+        // Remove a city from favorites
+        function removeFavorite(city) {
+            const index = favorites.indexOf(city);
+            if (index > -1) {
+                favorites.splice(index, 1);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                document.getElementById('favorites-btn').textContent = `Favorites (${favorites.length})`;
+            }
+        }
+
+        // Toggle comparison mode
+        function toggleComparisonMode() {
+            isComparisonMode = !isComparisonMode;
+            if (isComparisonMode) {
+                favoritesComparisonDiv.classList.add('d-none');
+                comparisonModeDiv.classList.remove('d-none');
+                // In a real app, you'd fetch data for both cities here
+            } else {
+                favoritesComparisonDiv.classList.remove('d-none');
+                comparisonModeDiv.classList.add('d-none');
+            }
+        }
+
+        // Event listeners
+        searchBtn.addEventListener('click', () => {
+            const city = citySearchInput.value.trim();
+            if (city) {
+                showLoading();
+                fetchWeatherData(city)
+                    .then(() => {
+                        currentCity = city;
+                        renderCurrentWeather();
+                        renderHourlyForecast();
+                        renderSevenDayForecast();
+                        updateBackground(weatherData.weather[0].main);
+                        hideLoading();
+                        initializeCharts();
+                    })
+                    .catch(error => {
+                        showError(error.message);
+                        hideLoading();
+                    });
+            }
+        });
+
+        citySearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBtn.click();
+            }
+        });
+
+        locationBtn.addEventListener('click', () => {
+            if (navigator.geolocation) {
+                showLoading();
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&appid=${API_KEY}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.length > 0) {
+                                    const city = data[0].name;
+                                    currentCity = city;
+                                    return fetchWeatherData(city);
+                                } else {
+                                    throw new Error('No city found at this location.');
+                                }
+                            })
+                            .then(() => {
+                                renderCurrentWeather();
+                                renderHourlyForecast();
+                                renderSevenDayForecast();
+                                updateBackground(weatherData.weather[0].main);
+                                hideLoading();
+                                initializeCharts();
+                            })
+                            .catch(error => {
+                                showError(`Failed to get location: ${error.message}`);
+                                hideLoading();
+                            });
+                    },
+                    error => {
+                        showError(`Geolocation error: ${error.message}`);
+                        hideLoading();
+                    }
+                );
+            } else {
+                showError('Geolocation is not supported by your browser.');
+            }
+        });
+
+        unitToggleBtn.addEventListener('click', toggleUnit);
+
+        addFavoriteBtn.addEventListener('click', () => {
+            if (currentCity && !favorites.includes(currentCity)) {
+                addToFavorites(currentCity);
+            } else if (favorites.includes(currentCity)) {
+                showError(`"${currentCity}" is already in your favorites!`);
+            }
+        });
+
+        // Initialize charts when the page loads
+        if (window.Chart) {
+            initializeCharts();
+        }
+
+        // Add event listener for comparison mode toggle (placeholder)
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#favorites-btn')) {
+                toggleComparisonMode();
+            }
+        });
+    </script>
+</body>
+
+</html>

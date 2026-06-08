@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemma 4 E4B-IT-QAT - Apex Financial Analysis Dashboard</title>
+    <!-- Load Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        /* --- 1. GLOBAL STYLES & THEME MANAGEMENT --- */
+        :root {
+            --color-bg-light: #f0f2f5;
+            --color-surface-light: rgba(255, 255, 255, 0.8);
+            --color-text-light: #1a1a1a;
+            --color-primary: #00bcd4;
+            /* Cyan/Neon Accent */
+            --color-secondary: #ff9800;
+            /* Orange Accent */
+            --shadow-base: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme='dark'] {
+            --color-bg-light: #0a0e1a;
+            --color-surface-light: rgba(255, 255, 255, 0.08);
+            --color-text-light: #e0e0ff;
+            --color-primary: #00ffff;
+            /* Brighter Cyan */
+            --color-secondary: #ff6f00;
+            --shadow-base: 0 4px 30px rgba(0, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-bg-light);
+            color: var(--color-text-light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* --- GLASSMORPHISM BASE STYLES --- */
+        .glass {
+            background: var(--color-surface-light);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow-base);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        /* --- LAYOUT STRUCTURE --- */
+        #dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(var(--color-primary), 0.3);
+            margin-bottom: 20px;
+        }
+
+        /* Main Grid Layout for Desktop */
+        @media (min-width: 1200px) {
+            #dashboard {
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: auto auto;
+                gap: 30px;
+            }
+
+            /* Specific Grid Placements */
+            .hero-summary {
+                grid-column: span 2;
+            }
+
+            .comparison-panel {
+                grid-column: span 2;
+            }
+
+            .market-feed,
+            .api-usage {
+                grid-column: span 1;
+                height: fit-content;
+            }
+
+            .main-charts {
+                grid-column: span 3;
+            }
+
+            .financial-history {
+                grid-column: span 4;
+            }
+        }
+
+        /* --- UI COMPONENTS --- */
+        h2,
+        h3 {
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--color-primary);
+            text-shadow: 0 0 5px rgba(var(--color-primary), 0.4);
+        }
+
+        /* Navigation Tabs */
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .tab-button {
+            background: var(--color-surface-light);
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            border-radius: 8px;
+            color: var(--color-text-light);
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            background: rgba(var(--color-primary), 0.2);
+            border-bottom: 3px solid var(--color-primary);
+            box-shadow: 0 0 15px rgba(var(--color-primary), 0.6);
+        }
+
+        /* Card Styling */
+        .metric-card {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            background: var(--color-surface-light);
+            box-shadow: var(--shadow-base);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border: 1px solid var(--color-primary);
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 5px 0;
+            display: block;
+        }
+
+        /* Hero Summary Grid */
+        #hero-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        /* Head-to-Head Comparison */
+        .comparison-panel {
+            display: flex;
+            gap: 20px;
+        }
+
+        .company-head {
+            flex: 1;
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            background: var(--color-surface-light);
+            box-shadow: var(--shadow-base);
+        }
+
+        .company-head h3 {
+            margin-top: 0;
+        }
+
+        /* Financial Statement Table */
+        #financial-table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(var(--color-primary), 0.1);
+        }
+
+        .data-table th {
+            background-color: rgba(var(--color-primary), 0.15);
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-table tr:hover {
+            background-color: rgba(var(--color-primary), 0.05);
+        }
+
+        .data-table .expanded-details td {
+            padding: 10px 24px;
+            font-size: 0.9em;
+            border-top: 2px solid var(--color-secondary);
+            background-color: rgba(var(--color-primary), 0.1);
+        }
+
+        /* Market Data & API Panels */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        /* Winner Breakdown */
+        #winner-breakdown ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        #winner-breakdown li {
+            padding: 10px 0;
+            border-bottom: 1px dashed rgba(var(--color-text-light), 0.2);
+        }
+
+        /* Notes Section */
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(var(--color-primary), 0.3);
+            background: var(--color-bg-light);
+            color: var(--color-text-light);
+            resize: vertical;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="dashboard">
+        <!-- HEADER & CONTROLS -->
+        <header>
+            <h1>Apex Financial Intelligence Dashboard</h1>
+            <p style="font-size: 1.2em;">Institutional Grade Financial Analysis Platform</p>
+        </header>
+
+        <!-- THEME TOGGLE AND VIEW SWITCH -->
+        <div
+            style="grid-column: span 4; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div>
+                <button id="themeToggle" class="tab-button">🌙 Toggle Dark Mode</button>
+            </div>
+            <div class="tab-navigation">
+                <button class="tab-button active" data-view="summary">Summary View</button>
+                <button class="tab-button" data-view="revenue">Revenue Analysis</button>
+                <button class="tab-button" data-view="profitability">Profitability</button>
+                <button class="tab-button" data-view="cashflow">Cash Flow</button>
+                <button class="tab-button" data-view="marketdata">Market Data</button>
+            </div>
+        </div>
+
+        <!-- 1. HERO SUMMARY SECTION -->
+        <section id="hero-summary" class="glass hero-summary">
+            <h2>Executive Summary: Key Metrics</h2>
+            <div id="hero-summary-grid">
+                <!-- Dynamic Metric Cards will go here -->
+            </div>
+        </section>
+
+        <!-- 2. HEAD-TO-HEAD COMPARISON PANEL -->
+        <section class="glass comparison-panel" id="comparison-panel">
+            <div class="company-head" id="comp-apple">
+                <h3>Apple Inc. (AAPL)</h3>
+                <p><span style="color: var(--color-primary);">Revenue Growth %</span></p>
+                <p class="metric-value" id="aapl-rev-growth">-</p>
+                <p><span style="color: var(--color-secondary);">EBITDA Margin</span></p>
+                <p class="metric-value" id="aapl-ebitda">-</p>
+            </div>
+            <div class="company-head" id="comp-microsoft">
+                <h3>Microsoft Corp. (MSFT)</h3>
+                <p><span style="color: var(--color-primary);">Revenue Growth %</span></p>
+                <p class="metric-value" id="msft-rev-growth">-</p>
+                <p><span style="color: var(--color-secondary);">EBITDA Margin</span></p>
+                <p class="metric-value" id="msft-ebitda">-</p>
+            </div>
+        </section>
+
+        <!-- 3. INTERACTIVE CHARTS AREA -->
+        <div class="glass main-charts">
+            <h2>Trend Analysis & Visualizations</h2>
+            <canvas id="financialChart"></canvas>
+        </div>
+
+        <!-- 4. FINANCIAL STATEMENT HISTORY (Main Data Table) -->
+        <section class="glass financial-history" id="financial-statement-section">
+            <h2>Financial Statement History & Deep Dive</h2>
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <select id="companyFilter"></select>
+                <select id="periodFilter">
+                    <option value="annual">Annual</option>
+                    <option value="quarter">Quarterly</option>
+                </select>
+            </div>
+            <div id="financial-table-container">
+                <!-- Dynamic Table Renders Here -->
+            </div>
+        </section>
+
+        <!-- 5. MARKET DATA FEED & API USAGE (Side Panels) -->
+        <aside class="glass market-feed">
+            <h3>Market Data Feed Status</h3>
+            <p><span id="status-ticker" class="status-indicator" style="background-color: red;"></span> Ticker Stream:
+                <span id="tickerStatusText">Disconnected</span></p>
+            <p>Latency: <span id="latency">-- ms</span></p>
+            <p>Last Update: <span id="lastUpdate">N/A</span></p>
+        </aside>
+
+        <aside class="glass api-usage">
+            <h3>API Usage & Cost Tracking</h3>
+            <div style="margin-bottom: 15px;">
+                <p>Bloomberg Calls: <span id="bloombergCalls" style="color: var(--color-primary);">0</span></p>
+                <p>Alpha Vantage Calls: <span id="avCalls" style="color: var(--color-secondary);">0</span></p>
+            </div>
+            <div style="padding: 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); margin-top: 10px;">
+                <strong>Estimated Spend to Date:</strong> <span id="totalSpend"
+                    style="color: var(--color-primary); font-weight: bold;">$0.00</span>
+            </div>
+        </aside>
+
+        <!-- 6. WINNER BREAKDOWN -->
+        <section class="glass winner-breakdown">
+            <h2>Head-to-Head Performance Breakdown</h2>
+            <div id="winner-breakdown">
+                <!-- Dynamic Winner Analysis Here -->
+            </div>
+        </section>
+
+        <!-- 7. ANALYST NOTES SECTION -->
+        <section class="glass" style="grid-column: span 4;">
+            <h2>Analyst Notes & Commentary</h2>
+            <textarea id="analystNotes"
+                placeholder="Add your observations, sector outlook, or future investment theses here..."></textarea>
+        </section>
+
+    </div>
+
+    <script>
+        // ====================================================================
+        // MOCK DATA SIMULATION (Replacing live API calls for demonstration)
+        // ====================================================================
+
+        const MOCK_DATA = {
+            AAPL: {
+                name: "Apple Inc.",
+                metrics: { revenue: 38328500, netIncome: 9699000, eps: 6.17, peRatio: 30.5, roe: 145.9, deRatio: 1.0, marketCap: 29000000 },
+                history: [
+                    { period: 'FY2023', revenue: 38328500, operatingIncome: 11646300, netIncome: 9699000, eps: 6.17, peRatio: 30.5, roe: 145.9, deRatio: 1.0 },
+                    { period: 'FY2022', revenue: 39432800, operatingIncome: 11144600, netIncome: 9980300, eps: 6.52, peRatio: 27.5, roe: 138.5, deRatio: 1.1 },
+                    { period: 'FY2021', revenue: 36581300, operatingIncome: 9468000, netIncome: 5741100, eps: 3.82, peRatio: 25.0, roe: 120.1, deRatio: 0.9 },
+                    { period: 'FY2020', revenue: 27451500, operatingIncome: 6115000, netIncome: 5738000, eps: 3.76, peRatio: 23.0, roe: 115.0, deRatio: 0.8 },
+                    { period: 'FY2019', revenue: 26017400, operatingIncome: 5885000, netIncome: 5316000, eps: 3.22, peRatio: 22.0, roe: 110.0, deRatio: 0.7 },
+                ],
+                chartData: { revenue: [26017400, 27451500, 36581300, 39432800, 38328500], netIncome: [5316000, 5738000, 5741100, 9980300, 9699000] }
+            },
+            MSFT: {
+                name: "Microsoft Corp.",
+                metrics: { revenue: 21191500, netIncome: 7286500, eps: 9.43, peRatio: 38.2, roe: 38.5, deRatio: 0.4, marketCap: 30000000 },
+                history: [
+                    { period: 'FY2023', revenue: 21191500, operatingIncome: 7614700, netIncome: 7286500, eps: 9.43, peRatio: 38.2, roe: 38.5, deRatio: 0.4 },
+                    { period: 'FY2022', revenue: 19827000, operatingIncome: 6110000, netIncome: 7273800, eps: 9.01, peRatio: 35.0, roe: 34.0, deRatio: 0.3 },
+                    { period: 'FY2021', revenue: 16834000, operatingIncome: 4780000, netIncome: 6129000, eps: 7.50, peRatio: 30.0, roe: 28.0, deRatio: 0.2 },
+                    { period: 'FY2020', revenue: 14301000, operatingIncome: 3690000, netIncome: 4571000, eps: 5.80, peRatio: 25.0, roe: 20.0, deRatio: 0.1 },
+                    { period: 'FY2019', revenue: 12584000, operatingIncome: 3010000, netIncome: 3726000, eps: 4.50, peRatio: 22.0, roe: 18.0, deRatio: 0.1 },
+                ],
+                chartData: { revenue: [12584000, 14301000, 16834000, 19827000, 21191500], netIncome: [3726000, 4571000, 6129000, 7273800, 7286500] }
+            }
+        };
+
+        // ====================================================================
+        // STATE MANAGEMENT & INITIALIZATION
+        // ====================================================================
+
+        let currentView = 'summary';
+        let isDarkMode = false;
+        let financialChartInstance = null;
+
+        const state = {
+            selectedCompany: 'AAPL',
+            periodType: 'annual' // 'annual' or 'quarterly'
+        };
+
+        function initializeDashboard() {
+            setupEventListeners();
+            loadInitialData();
+            renderTheme();
+        }
+
+        function setupEventListeners() {
+            // Theme Toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // View Tabs
+            document.querySelectorAll('.tab-button[data-view]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const view = e.target.dataset.view;
+                    switchView(view);
+                });
+            });
+
+            // Filters and Controls
+            document.getElementById('companyFilter').addEventListener('change', handleFilterChange);
+            document.getElementById('periodFilter').addEventListener('change', (e) => {
+                state.periodType = e.target.value;
+                renderFinancialTable();
+            });
+
+            // Table Interaction (Delegation for expansion/sorting)
+            const tableContainer = document.getElementById('financial-table-container');
+            tableContainer.addEventListener('click', handleTableRowClick);
+        }
+
+        function loadInitialData() {
+            populateCompanyFilter();
+            renderHeroSummary(MOCK_DATA.AAPL); // Default to AAPL
+            renderComparisonPanel(MOCK_DATA.AAPL, MOCK_DATA.MSFT);
+            renderFinancialTable();
+            updateMarketFeedStatus();
+        }
+
+        function populateCompanyFilter() {
+            const filter = document.getElementById('companyFilter');
+            Object.keys(MOCK_DATA).forEach(key => {
+                let option = new Option(`${MOCK_DATA[key].name} (${key})`, key);
+                filter.add(option);
+            });
+            // Set default selection to the first one available
+            if (filter.options.length > 0) {
+                filter.value = 'AAPL';
+                state.selectedCompany = 'AAPL';
+            }
+        }
+
+        function handleFilterChange() {
+            const selectedKey = document.getElementById('companyFilter').value;
+            if (selectedKey) {
+                state.selectedCompany = selectedKey;
+                // Re-render all components dependent on the company selection
+                renderHeroSummary(MOCK_DATA[selectedKey]);
+                renderFinancialTable();
+                renderWinnerBreakdown(MOCK_DATA[selectedKey], MOCK_DATA['MSFT']); // Assuming MSFT is the comparison target
+            }
+        }
+
+        // ====================================================================
+        // THEME & UI RENDERING FUNCTIONS
+        // ====================================================================
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+            renderTheme();
+        }
+
+        function renderTheme() {
+            const themeToggleBtn = document.getElementById('themeToggle');
+            if (isDarkMode) {
+                themeToggleBtn.textContent = "☀️ Toggle Light Mode";
+            } else {
+                themeToggleBtn.textContent = "🌙 Toggle Dark Mode";
+            }
+            // Re-render charts to pick up new theme colors
+            if (financialChartInstance) {
+                financialChartInstance.destroy();
+                renderCharts(MOCK_DATA[state.selectedCompany]);
+            }
+        }
+
+        function switchView(viewName) {
+            currentView = viewName;
+            // Update active tab styling
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[data-view="${viewName}"]`).classList.add('active');
+
+            // In a real app, this would switch content visibility. Here we simulate by updating the main focus.
+            console.log(`Switched to ${viewName} view.`);
+            if (viewName === 'summary') {
+                renderHeroSummary(MOCK_DATA[state.selectedCompany]);
+            } else if (viewName === 'revenue' || viewName === 'profitability') {
+                // Logic to highlight specific charts/tables based on view
+                console.log(`Focusing on ${viewName} metrics.`);
+            }
+        }
+
+
+        // ====================================================================
+        // DATA RENDERING: HERO SUMMARY & COMPARISON
+        // ====================================================================
+
+        function renderMetricCard(title, value, unit = '', colorClass = 'primary') {
+            return `
+        <div class="metric-card">
+            <span style="color: var(--color-${colorClass}); font-size: 0.9em; text-transform: uppercase;">${title}</span>
+            <span class="metric-value">${value}${unit}</span>
+        </div>
+    `;
+        }
+
+        function renderHeroSummary(companyData) {
+            const metrics = companyData.metrics;
+            const grid = document.getElementById('hero-summary-grid');
+            if (!grid) return;
+
+            // Calculate derived values for display
+            const revenueDisplay = `$${(metrics.revenue / 1000).toFixed(1)}B`;
+            const netIncomeDisplay = `$${(metrics.netIncome / 1000).toFixed(1)}B`;
+            const epsDisplay = metrics.eps.toFixed(2);
+            const peRatioDisplay = metrics.peRatio.toFixed(1);
+            const roeDisplay = metrics.roe.toFixed(1) + '%';
+            const deRatioDisplay = metrics.deRatio.toFixed(2);
+            const marketCapDisplay = `$${(metrics.marketCap / 1000).toFixed(1)}T`;
+
+            grid.innerHTML = `
+        ${renderMetricCard("Total Revenue", revenueDisplay, 'B', 'primary')}
+        ${renderMetricCard("Net Income", netIncomeDisplay, 'B', 'secondary')}
+        ${renderMetricCard("EPS", epsDisplay, '', 'info')}
+        ${renderMetricCard("P/E Ratio", peRatioDisplay, '', 'warning')}
+        ${renderMetricCard("ROE", roeDisplay, '', 'success')}
+        ${renderMetricCard("D/E Ratio", deRatioDisplay, '', 'danger')}
+        ${renderMetricCard("Market Cap", marketCapDisplay, '', 'primary')}
+    `;
+        }
+
+        function renderComparisonPanel(comp1Data, comp2Data) {
+            const metrics = (data) => ({
+                revGrowth: ((data.history[0].revenue / data.history[4].revenue) - 1) * 100).toFixed(1), // Mock growth calculation
+                ebitdaMargin: ((data.operatingIncome / data.revenue) * 100).toFixed(1),
+                freeCashFlowYield: (Math.random() * 3 + 1).toFixed(2), // Mock value
+                dividendYield: (Math.random() * 2 + 0.5).toFixed(2), // Mock value
+                beta: (Math.random() * 1.5 - 0.5).toFixed(2)
+            });
+
+            const m1 = metrics(comp1Data);
+            const m2 = metrics(comp2Data);
+
+            document.getElementById('aapl-rev-growth').textContent = `${m1.revGrowth}%`;
+            document.getElementById('msft-rev-growth').textContent = `${m2.revGrowth}%`;
+            document.getElementById('aapl-ebitda').textContent = `${m1.ebitdaMargin}%`;
+            document.getElementById('msft-ebitda').textContent = `${m2.ebitdaMargin}%`;
+
+            // Add more comparison metrics dynamically here...
+        }
+
+
+        // ====================================================================
+        // DATA RENDERING: FINANCIAL TABLE & INTERACTIVITY
+        // ====================================================================
+
+        function renderFinancialTable() {
+            const companyKey = state.selectedCompany;
+            const data = MOCK_DATA[companyKey];
+            if (!data) return;
+
+            let tableHTML = `
+        <table class="data-table" id="financialDataTable">
+            <thead>
+                <tr>
+                    <th>Period</th>
+                    ${state.periodType === 'annual' ? '<th>Revenue ($M)</th>' : '<th>Quarterly Revenue ($M)</th>'}
+                    <th>Operating Income ($M)</th>
+                    <th>Net Income ($M)</th>
+                    <th>EPS</th>
+                    <th>P/E Ratio</th>
+                    <th>ROE (%)</th>
+                    <th>D/E Ratio</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+            // Sort data (simple descending by Revenue for initial load)
+            const sortedHistory = [...data.history].sort((a, b) => b.revenue - a.revenue);
+
+            sortedHistory.forEach(item => {
+                tableHTML += `
+            <tr data-period="${item.period}" data-company="${companyKey}">
+                <td>${item.period}</td>
+                <td>$${(item.revenue / 1000).toFixed(1)}M</td>
+                <td>$${(item.operatingIncome / 1000).toFixed(1)}M</td>
+                <td>$${(item.netIncome / 1000).toFixed(1)}M</td>
+                <td>${item.eps}</td>
+                <td>${item.peRatio.toFixed(1)}</td>
+                <td>${item.roe.toFixed(1)}%</td>
+                <td>${item.deRatio.toFixed(2)}</td>
+            </tr>
+        `;
+            });
+
+            tableHTML += `</tbody></table>`;
+            document.getElementById('financial-table-container').innerHTML = tableHTML;
+        }
+
+        function handleTableRowClick(e) {
+            const row = e.target.closest('tr');
+            if (!row || row.classList.contains('expanded')) return;
+
+            // Close any other expanded rows in the same section (simple implementation)
+            document.querySelectorAll('#financialDataTable tr').forEach(r => r.classList.remove('expanded'));
+
+            row.classList.add('expanded');
+
+            const period = row.dataset.period;
+            const companyKey = row.dataset.company;
+            const data = MOCK_DATA[companyKey];
+
+            // Mock detailed line items expansion
+            let detailsHTML = `
+        <td colspan="8" class="expanded-details">
+            <h4>Detailed Breakdown for ${period} (${data.name})</h4>
+            <ul>
+                <li>Revenue by Segment: Cloud ($X), Hardware ($Y)</li>
+                <li>SG&A Expenses: $Z Million (Up 5% YoY)</li>
+                <li>Interest Expense: $W Million</li>
+                <li>Cash & Equivalents: $V Billion</li>
+                <li style="color: var(--color-primary);">Financial Health Score: A+</li>
+            </ul>
+        </td>
+    `;
+
+            // Insert the detailed row immediately after the clicked row
+            const tableBody = document.querySelector('#financialDataTable tbody');
+            row.after(document.createRange().createContextualFragment(detailsHTML));
+        }
+
+
+        // ====================================================================
+        // DATA RENDERING: CHARTS & MARKET FEED
+        // ====================================================================
+
+        function renderCharts(companyData) {
+            const ctx = document.getElementById('financialChart').getContext('2d');
+
+            if (financialChartInstance) {
+                financialChartInstance.destroy();
+            }
+
+            // Mock data for the chart: Revenue vs Net Income over 5 years
+            const labels = companyData.chartData.revenue.map((_, i) => `Year ${i + 1}`);
+            const revenueData = companyData.chartData.revenue;
+            const netIncomeData = companyData.chartData.netIncome;
+
+            financialChartInstance = new Chart(ctx, {
+                type: 'bar', // Using bar chart for comparison over time
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Revenue (Billions $)',
+                            data: revenueData.map(v => v / 1000), // Convert to Billions for scale
+                            backgroundColor: 'rgba(0, 188, 212, 0.7)', // Primary color
+                            borderColor: 'var(--color-primary)',
+                            borderWidth: 1,
+                        },
+                        {
+                            label: 'Net Income (Billions $)',
+                            data: netIncomeData.map(v => v / 1000),
+                            backgroundColor: 'rgba(255, 152, 0, 0.7)', // Secondary color
+                            borderColor: 'var(--color-secondary)',
+                            borderWidth: 1,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'var(--color-text-light)' } },
+                        title: { display: true, text: `${companyData.name} Financial Trajectory`, color: 'var(--color-primary)' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: 'var(--color-text-light)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                        x: { ticks: { color: 'var(--color-text-light)' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function updateMarketFeedStatus() {
+            // Simulate API connection status change
+            const isConnected = Math.random() > 0.1;
+            const tickerStatusText = document.getElementById('tickerStatusText');
+            const statusIndicator = document.getElementById('status-ticker');
+            const latencyEl = document.getElementById('latency');
+
+            if (isConnected) {
+                statusIndicator.style.backgroundColor = 'green';
+                tickerStatusText.textContent = 'Live Stream Active';
+                latencyEl.textContent = `${Math.floor(Math.random() * 50) + 10} ms`;
+            } else {
+                statusIndicator.style.backgroundColor = 'red';
+                tickerStatusText.textContent = 'Reconnecting...';
+                latencyEl.textContent = '-- ms';
+            }
+
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+
+        // ====================================================================
+        // DATA RENDERING: WINNER BREAKDOWN & API USAGE
+        // ====================================================================
+
+        function renderWinnerBreakdown(comp1Data, comp2Data) {
+            const breakdownEl = document.getElementById('winner-breakdown');
+            if (!breakdownEl) return;
+
+            // Mock comparison logic based on predefined metrics in the mock data structure
+            const compareMetric = (key, val1, val2, isHigherBetter) => {
+                let winner = 'Tie';
+                if (isHigherBetter && val1 > val2) winner = comp1Data.name;
+                else if (val2 > val1) winner = comp2Data.name;
+                return `${key}: ${winner}`;
+            };
+
+            // Mock values for comparison (using Net Income as a proxy for profitability here)
+            const netIncome1 = comp1Data.metrics.netIncome;
+            const netIncome2 = comp2Data.metrics.netIncome;
+            const revenueGrowth1 = parseFloat(MOCK_DATA[state.selectedCompany].chartData.revenue[4] / MOCK_DATA[state.selectedCompany].chartData.revenue[0]); // Mock growth factor
+            const revenueGrowth2 = 1.35; // MSFT mock
+
+            breakdownEl.innerHTML = `
+        <ul>
+            <li><strong>Revenue Growth (Last 5Y):</strong> ${compareMetric('Revenue', revenueGrowth1, revenueGrowth2, true)}</li>
+            <li><strong>Profitability (Net Income):</strong> ${compareMetric('Profit', netIncome1, netIncome2, true)}</li>
+            <li><strong>Valuation (P/E Ratio):</strong> ${compareMetric('Valuation', comp1Data.metrics.peRatio, comp2Data.metrics.peRatio, false)}</li>
+            <li><strong>Liquidity (D/E Ratio):</strong> ${compareMetric('Leverage', comp1Data.metrics.deRatio, comp2Data.metrics.deRatio, false)}</li>
+        </ul>
+    `;
+
+            // Update API Usage Panel Mock Data
+            document.getElementById('bloombergCalls').textContent = Math.floor(Math.random() * 50);
+            document.getElementById('avCalls').textContent = Math.floor(Math.random() * 100);
+            const totalSpend = (Math.floor(Math.random() * 2) + 1) * 150; // $150 to $450 mock spend
+            document.getElementById('totalSpend').textContent = `$${totalSpend.toFixed(2)}`;
+        }
+
+
+        // ====================================================================
+        // INITIAL EXECUTION
+        // ====================================================================
+
+        window.onload = () => {
+            initializeDashboard();
+            // Start market feed simulation loop
+            setInterval(updateMarketFeedStatus, 3000);
+        };
+    </script>
+
+</body>
+
+</html>

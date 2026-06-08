@@ -1,0 +1,3450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MiniMAX M3 - AI Model Testing Command Center · Qwen3.6 27B vs Claude Opus 4.8</title>
+    <style>
+        :root {
+            --bg-0: #060912;
+            --bg-1: #0a0f1d;
+            --bg-2: #0f1626;
+            --surface: rgba(18, 24, 41, 0.55);
+            --surface-strong: rgba(22, 30, 50, 0.85);
+            --border: rgba(120, 145, 200, 0.14);
+            --border-strong: rgba(140, 170, 230, 0.28);
+            --text: #e8ecf5;
+            --text-dim: #a8b3cc;
+            --text-muted: #6f7a93;
+            --neon-cyan: #00f0ff;
+            --neon-purple: #a855f7;
+            --neon-pink: #ff3d8a;
+            --neon-green: #10ff9a;
+            --neon-amber: #ffb547;
+            --neon-red: #ff4d6d;
+            --local-color: #00f0ff;
+            --frontier-color: #a855f7;
+            --grad-1: linear-gradient(135deg, #00f0ff 0%, #a855f7 100%);
+            --grad-2: linear-gradient(135deg, #10ff9a 0%, #00f0ff 100%);
+            --grad-3: linear-gradient(135deg, #ff3d8a 0%, #a855f7 100%);
+            --grad-4: linear-gradient(135deg, #ffb547 0%, #ff4d6d 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            background: var(--bg-0);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        body {
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0, 240, 255, 0.08), transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 10%, rgba(168, 85, 247, 0.08), transparent 50%),
+                radial-gradient(ellipse 100% 60% at 50% 100%, rgba(255, 61, 138, 0.05), transparent 60%),
+                var(--bg-0);
+            background-attachment: fixed;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(120, 145, 200, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(120, 145, 200, 0.025) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1480px;
+            margin: 0 auto;
+            padding: 24px 28px 64px;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 18px 24px;
+            background: var(--surface);
+            backdrop-filter: blur(18px) saturate(140%);
+            -webkit-backdrop-filter: blur(18px) saturate(140%);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--grad-1);
+            display: grid;
+            place-items: center;
+            position: relative;
+            box-shadow: 0 0 24px rgba(0, 240, 255, 0.35);
+        }
+
+        .brand-mark::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border-radius: 10px;
+            background: var(--bg-1);
+        }
+
+        .brand-mark svg {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-text h1 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            line-height: 1.1;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        .topbar-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            box-shadow: 0 0 12px var(--neon-green);
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: var(--surface);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .view-switcher {
+            display: flex;
+            background: rgba(8, 12, 22, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            gap: 2px;
+        }
+
+        .view-btn {
+            appearance: none;
+            background: transparent;
+            color: var(--text-dim);
+            border: 0;
+            padding: 9px 16px;
+            font-size: 12.5px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-family: inherit;
+        }
+
+        .view-btn:hover {
+            color: var(--text);
+        }
+
+        .view-btn.active {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(168, 85, 247, 0.15));
+            color: var(--text);
+            box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.3), 0 4px 16px rgba(0, 240, 255, 0.15);
+        }
+
+        .view-btn .icn {
+            width: 14px;
+            height: 14px;
+        }
+
+        .control-spacer {
+            flex: 1;
+        }
+
+        .filter-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(8, 12, 22, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px 8px 6px 12px;
+        }
+
+        .filter-pill label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+        }
+
+        .filter-pill select {
+            appearance: none;
+            background: transparent;
+            color: var(--text);
+            border: 0;
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            padding: 6px 28px 6px 6px;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
+        .filter-pill select option {
+            background: var(--bg-2);
+        }
+
+        .toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(8, 12, 22, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px 12px;
+        }
+
+        .toggle-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(0, 240, 255, 0.15);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--neon-cyan);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-switch.frontier {
+            background: rgba(168, 85, 247, 0.15);
+            border-color: var(--neon-purple);
+        }
+
+        .toggle-switch.frontier::after {
+            left: 26px;
+            background: var(--neon-purple);
+            box-shadow: 0 0 12px var(--neon-purple);
+        }
+
+        .toggle-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--neon-cyan);
+            min-width: 38px;
+        }
+
+        .toggle-switch.frontier+.toggle-text {
+            color: var(--neon-purple);
+        }
+
+        /* HERO STATS */
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            position: relative;
+            padding: 22px 22px 20px;
+            background: var(--surface);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent, var(--neon-cyan)), transparent);
+            opacity: 0.6;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, var(--accent, var(--neon-cyan)) 0%, transparent 70%);
+            opacity: 0.12;
+            pointer-events: none;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-strong);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label .icn {
+            width: 13px;
+            height: 13px;
+            opacity: 0.7;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            background: var(--grad-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value.alt-1 {
+            background: var(--grad-2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value.alt-2 {
+            background: var(--grad-3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value.alt-3 {
+            background: var(--grad-4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-value.alt-4 {
+            background: linear-gradient(135deg, #a855f7 0%, #00f0ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 11.5px;
+            color: var(--text-dim);
+        }
+
+        .trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .trend.up {
+            background: rgba(16, 255, 154, 0.12);
+            color: var(--neon-green);
+        }
+
+        .trend.down {
+            background: rgba(255, 77, 109, 0.12);
+            color: var(--neon-red);
+        }
+
+        .trend.flat {
+            background: rgba(168, 179, 204, 0.12);
+            color: var(--text-dim);
+        }
+
+        /* PANELS */
+        .panel {
+            background: var(--surface);
+            backdrop-filter: blur(18px) saturate(140%);
+            -webkit-backdrop-filter: blur(18px) saturate(140%);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 22px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 24px;
+            right: 24px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.3), rgba(168, 85, 247, 0.3), transparent);
+            opacity: 0.5;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-title h2 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        .panel-title .tag {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--neon-cyan);
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            padding: 3px 9px;
+            border-radius: 6px;
+        }
+
+        .panel-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* HEAD TO HEAD */
+        .h2h-section {
+            margin-bottom: 24px;
+        }
+
+        .h2h-wrap {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .h2h-card {
+            position: relative;
+            padding: 26px 24px;
+            background: linear-gradient(180deg, rgba(8, 12, 22, 0.5), rgba(18, 24, 41, 0.4));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .h2h-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .h2h-card.local {
+            border-color: rgba(0, 240, 255, 0.3);
+            box-shadow: inset 0 0 60px rgba(0, 240, 255, 0.04);
+        }
+
+        .h2h-card.frontier {
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: inset 0 0 60px rgba(168, 85, 247, 0.04);
+        }
+
+        .h2h-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            font-weight: 700;
+        }
+
+        .h2h-badge.local {
+            background: rgba(0, 240, 255, 0.12);
+            color: var(--neon-cyan);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+
+        .h2h-badge.frontier {
+            background: rgba(168, 85, 247, 0.12);
+            color: var(--neon-purple);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .h2h-name {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
+        }
+
+        .h2h-sub {
+            font-size: 12.5px;
+            color: var(--text-dim);
+            margin-bottom: 18px;
+        }
+
+        .h2h-grade {
+            position: absolute;
+            top: 22px;
+            right: 22px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1;
+            background: var(--grad-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .h2h-card.frontier .h2h-grade {
+            background: linear-gradient(135deg, #a855f7 0%, #ff3d8a 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .h2h-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 18px;
+            margin-top: 18px;
+        }
+
+        .h2h-metric {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .h2h-metric-label {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--text-muted);
+        }
+
+        .h2h-metric-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .h2h-metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 700;
+            min-width: 64px;
+        }
+
+        .h2h-metric-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(120, 145, 200, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .h2h-metric-bar>i {
+            display: block;
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .h2h-card.local .h2h-metric-bar>i {
+            background: linear-gradient(90deg, #00f0ff, #10ff9a);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+        }
+
+        .h2h-card.frontier .h2h-metric-bar>i {
+            background: linear-gradient(90deg, #a855f7, #ff3d8a);
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+        }
+
+        .vs-divider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 110px;
+            position: relative;
+        }
+
+        .vs-circle {
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--bg-2), var(--bg-1));
+            display: grid;
+            place-items: center;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.2), inset 0 0 30px rgba(168, 85, 247, 0.15);
+            position: relative;
+        }
+
+        .vs-circle::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink), var(--neon-cyan));
+            z-index: -1;
+            animation: spin 6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .vs-text {
+            font-size: 26px;
+            font-weight: 800;
+            background: var(--grad-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.04em;
+        }
+
+        .vs-line {
+            flex: 1;
+            width: 1px;
+            background: linear-gradient(180deg, transparent, var(--border-strong), transparent);
+            margin-top: 12px;
+        }
+
+        .vs-meta {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        /* CHARTS */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            padding: 22px 24px 18px;
+        }
+
+        .chart-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .chart-eyebrow {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            margin-top: 12px;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 240px;
+            display: block;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chart-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            color: var(--text-dim);
+        }
+
+        .chart-legend-swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        /* DUAL GRID */
+        .dual-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .hw-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-top: 8px;
+        }
+
+        .hw-stat {
+            background: rgba(8, 12, 22, 0.45);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 14px 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hw-stat-label {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .hw-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .hw-stat-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .hw-bar {
+            height: 4px;
+            background: rgba(120, 145, 200, 0.1);
+            border-radius: 999px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .hw-bar>i {
+            display: block;
+            height: 100%;
+            border-radius: 999px;
+            transition: width 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bar-cyan>i {
+            background: linear-gradient(90deg, #00f0ff, #10ff9a);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+        }
+
+        .bar-amber>i {
+            background: linear-gradient(90deg, #ffb547, #ff4d6d);
+            box-shadow: 0 0 8px rgba(255, 181, 71, 0.5);
+        }
+
+        .bar-purple>i {
+            background: linear-gradient(90deg, #a855f7, #ff3d8a);
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+        }
+
+        .bar-green>i {
+            background: linear-gradient(90deg, #10ff9a, #00f0ff);
+            box-shadow: 0 0 8px rgba(16, 255, 154, 0.5);
+        }
+
+        .live-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11.5px;
+            color: var(--neon-green);
+        }
+
+        .live-row .pulse-dot {
+            width: 6px;
+            height: 6px;
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 12px 14px;
+            background: rgba(16, 255, 154, 0.06);
+            border: 1px solid rgba(16, 255, 154, 0.2);
+            border-radius: 12px;
+        }
+
+        .server-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(16, 255, 154, 0.12);
+            display: grid;
+            place-items: center;
+            color: var(--neon-green);
+        }
+
+        .server-status-text {
+            flex: 1;
+        }
+
+        .server-status-text strong {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            display: block;
+        }
+
+        .server-status-text span {
+            font-size: 11.5px;
+            color: var(--text-dim);
+        }
+
+        .api-cost-big {
+            text-align: center;
+            padding: 18px 12px 8px;
+        }
+
+        .api-cost-big .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+        }
+
+        .api-cost-big .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 44px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7 0%, #ff3d8a 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 4px;
+            line-height: 1;
+        }
+
+        .api-cost-big .sub {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        .api-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .api-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            background: rgba(8, 12, 22, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .api-row .k {
+            font-size: 11.5px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .api-row .v {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* PROMPT HISTORY */
+        .prompt-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .prompt-item {
+            background: rgba(8, 12, 22, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: border-color 0.25s ease, transform 0.25s ease;
+        }
+
+        .prompt-item:hover {
+            border-color: var(--border-strong);
+        }
+
+        .prompt-item.open {
+            border-color: rgba(0, 240, 255, 0.3);
+        }
+
+        .prompt-head {
+            display: grid;
+            grid-template-columns: 50px 1fr 110px 100px 90px 80px 32px;
+            gap: 14px;
+            align-items: center;
+            padding: 14px 18px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .prompt-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .prompt-text {
+            font-size: 13.5px;
+            color: var(--text);
+            font-weight: 500;
+            line-height: 1.35;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .prompt-cat {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }
+
+        .prompt-time,
+        .prompt-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            color: var(--text-dim);
+            text-align: right;
+        }
+
+        .prompt-status {
+            text-align: center;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-pass {
+            background: rgba(16, 255, 154, 0.12);
+            color: var(--neon-green);
+        }
+
+        .status-fail {
+            background: rgba(255, 77, 109, 0.12);
+            color: var(--neon-red);
+        }
+
+        .status-warn {
+            background: rgba(255, 181, 71, 0.12);
+            color: var(--neon-amber);
+        }
+
+        .prompt-chev {
+            display: grid;
+            place-items: center;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+
+        .prompt-item.open .prompt-chev {
+            transform: rotate(180deg);
+            color: var(--neon-cyan);
+        }
+
+        .prompt-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .prompt-item.open .prompt-body {
+            max-height: 700px;
+        }
+
+        .prompt-body-inner {
+            padding: 0 18px 18px;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 12px;
+            padding-top: 18px;
+        }
+
+        .prompt-side h4 {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .prompt-side .swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        .swatch.local {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 6px var(--neon-cyan);
+        }
+
+        .swatch.frontier {
+            background: var(--neon-purple);
+            box-shadow: 0 0 6px var(--neon-purple);
+        }
+
+        .prompt-side pre {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 240px;
+            overflow: auto;
+        }
+
+        .prompt-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .prompt-stat {
+            background: rgba(8, 12, 22, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .prompt-stat .k {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+        }
+
+        .prompt-stat .v {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* WINNER BREAKDOWN */
+        .winners-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 4px;
+        }
+
+        .winner-card {
+            background: rgba(8, 12, 22, 0.45);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .winner-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--winner-color, var(--neon-cyan));
+            opacity: 0.7;
+        }
+
+        .winner-card.local {
+            --winner-color: var(--neon-cyan);
+        }
+
+        .winner-card.frontier {
+            --winner-color: var(--neon-purple);
+        }
+
+        .winner-card.draw {
+            --winner-color: var(--neon-amber);
+        }
+
+        .winner-cat {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .winner-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .winner-card.local .winner-name {
+            color: var(--neon-cyan);
+        }
+
+        .winner-card.frontier .winner-name {
+            color: var(--neon-purple);
+        }
+
+        .winner-card.draw .winner-name {
+            color: var(--neon-amber);
+        }
+
+        .winner-reason {
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-top: 8px;
+        }
+
+        .winner-margin {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* TABLE */
+        .table-tools {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 220px;
+            position: relative;
+        }
+
+        .search-input input {
+            width: 100%;
+            appearance: none;
+            background: rgba(8, 12, 22, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px 10px 38px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            transition: border-color 0.25s ease;
+        }
+
+        .search-input input:focus {
+            outline: none;
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.08);
+        }
+
+        .search-input svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .sort-group {
+            display: flex;
+            background: rgba(8, 12, 22, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            gap: 2px;
+        }
+
+        .sort-btn {
+            appearance: none;
+            background: transparent;
+            color: var(--text-dim);
+            border: 0;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 7px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .sort-btn:hover {
+            color: var(--text);
+        }
+
+        .sort-btn.active {
+            background: rgba(0, 240, 255, 0.12);
+            color: var(--neon-cyan);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 12.5px;
+        }
+
+        .data-table thead th {
+            text-align: left;
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--text-muted);
+            padding: 12px 14px;
+            background: rgba(8, 12, 22, 0.5);
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table thead th:hover {
+            color: var(--neon-cyan);
+        }
+
+        .data-table thead th.sorted {
+            color: var(--neon-cyan);
+        }
+
+        .data-table thead th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+
+        .data-table thead th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(0, 240, 255, 0.04);
+        }
+
+        .data-table tbody td {
+            padding: 13px 14px;
+            border-bottom: 1px solid rgba(120, 145, 200, 0.06);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .model-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .model-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            font-size: 10px;
+            font-weight: 800;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .model-cell .name {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .model-cell .meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .grade-a {
+            background: rgba(16, 255, 154, 0.12);
+            color: var(--neon-green);
+            border: 1px solid rgba(16, 255, 154, 0.3);
+        }
+
+        .grade-b {
+            background: rgba(0, 240, 255, 0.12);
+            color: var(--neon-cyan);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+
+        .grade-c {
+            background: rgba(255, 181, 71, 0.12);
+            color: var(--neon-amber);
+            border: 1px solid rgba(255, 181, 71, 0.3);
+        }
+
+        .win-streak {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .win-block {
+            width: 6px;
+            height: 14px;
+            border-radius: 1px;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 4px var(--neon-cyan);
+        }
+
+        .win-block.l {
+            background: var(--neon-purple);
+            box-shadow: 0 0 4px var(--neon-purple);
+        }
+
+        .win-block.d {
+            background: var(--text-muted);
+            box-shadow: none;
+        }
+
+        /* NOTES */
+        .notes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .note-block {
+            background: rgba(8, 12, 22, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+
+        .note-block h3 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .note-block h3 .icn {
+            color: var(--neon-cyan);
+            width: 16px;
+            height: 16px;
+        }
+
+        .note-block p,
+        .note-block li {
+            font-size: 12.5px;
+            color: var(--text-dim);
+            line-height: 1.65;
+        }
+
+        .note-block ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .note-block li {
+            padding-left: 18px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .note-block li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 9px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 6px var(--neon-cyan);
+        }
+
+        .note-block.local-note li::before {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 6px var(--neon-cyan);
+        }
+
+        .note-block.frontier-note li::before {
+            background: var(--neon-purple);
+            box-shadow: 0 0 6px var(--neon-purple);
+        }
+
+        /* VIEWS */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* FOOTER */
+        .footer {
+            margin-top: 36px;
+            padding: 18px 24px;
+            text-align: center;
+            font-size: 11.5px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+
+        .footer .accent {
+            color: var(--neon-cyan);
+            font-weight: 600;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-up {
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .fade-up.d1 {
+            animation-delay: 0.05s;
+        }
+
+        .fade-up.d2 {
+            animation-delay: 0.1s;
+        }
+
+        .fade-up.d3 {
+            animation-delay: 0.15s;
+        }
+
+        .fade-up.d4 {
+            animation-delay: 0.2s;
+        }
+
+        .fade-up.d5 {
+            animation-delay: 0.25s;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .hero-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .h2h-wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .vs-divider {
+                min-height: 80px;
+                flex-direction: row;
+            }
+
+            .vs-line {
+                width: auto;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+                flex: 1;
+                margin: 0 12px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .hero-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-grid,
+            .dual-grid,
+            .notes-grid,
+            .winners-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .prompt-head {
+                grid-template-columns: 36px 1fr 80px 70px 60px 24px;
+            }
+
+            .prompt-cat,
+            .prompt-score {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .app {
+                padding: 16px 14px 40px;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .h2h-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .view-switcher {
+                width: 100%;
+                overflow-x: auto;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(8, 12, 22, 0.4);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(120, 145, 200, 0.18);
+            border-radius: 999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(120, 145, 200, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="url(#bg1)" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <defs>
+                            <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#00f0ff" />
+                                <stop offset="100%" stop-color="#a855f7" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>AI Model Testing Command Center</h1>
+                    <p>Qwen3.6 27B · Claude Opus 4.8 · Head-to-Head Lab</p>
+                </div>
+            </div>
+            <div class="topbar-meta">
+                <div class="live-row">
+                    <span class="pulse-dot"></span>
+                    <span>Live · Test session #47</span>
+                </div>
+                <div>Updated <span id="updatedAt">just now</span></div>
+            </div>
+        </header>
+
+        <section class="controls">
+            <div class="view-switcher" id="viewSwitcher">
+                <button class="view-btn active" data-view="summary">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="9" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                        <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                        <rect x="3" y="16" width="7" height="5" rx="1.5" />
+                    </svg>
+                    Summary
+                </button>
+                <button class="view-btn" data-view="speed">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+                    </svg>
+                    Speed
+                </button>
+                <button class="view-btn" data-view="quality">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    Quality
+                </button>
+                <button class="view-btn" data-view="cost">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                    </svg>
+                    Cost
+                </button>
+                <button class="view-btn" data-view="hardware">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                        <path d="M6 10h.01M10 10h.01" />
+                        <rect x="2" y="9" width="20" height="6" rx="1" fill="currentColor" opacity=".3" />
+                    </svg>
+                    Hardware
+                </button>
+            </div>
+
+            <div class="control-spacer"></div>
+
+            <div class="filter-pill">
+                <label>Model</label>
+                <select id="modelFilter">
+                    <option value="all">All Models</option>
+                    <option value="qwen">Qwen3.6 27B</option>
+                    <option value="claude">Claude Opus 4.8</option>
+                    <option value="local">Local Only</option>
+                    <option value="frontier">Frontier Only</option>
+                </select>
+            </div>
+
+            <div class="toggle" title="Toggle between local and frontier metrics">
+                <span class="toggle-label">View</span>
+                <div class="toggle-switch" id="metricToggle"></div>
+                <span class="toggle-text" id="metricLabel">Local</span>
+            </div>
+        </section>
+
+        <section class="hero-stats">
+            <div class="stat-card fade-up d1" style="--accent: var(--neon-cyan)">
+                <div class="stat-label">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                    </svg>
+                    Total Tests
+                </div>
+                <div class="stat-value">1,247</div>
+                <div class="stat-meta">
+                    <span>across 12 models</span>
+                    <span class="trend up">&uarr; 8.4%</span>
+                </div>
+            </div>
+            <div class="stat-card fade-up d2" style="--accent: var(--neon-purple)">
+                <div class="stat-label">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+                    </svg>
+                    Avg Tokens / sec
+                </div>
+                <div class="stat-value alt-4">58.3</div>
+                <div class="stat-meta">
+                    <span>combined throughput</span>
+                    <span class="trend up">&uarr; 12.1%</span>
+                </div>
+            </div>
+            <div class="stat-card fade-up d3" style="--accent: var(--neon-green)">
+                <div class="stat-label">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    Best Model
+                </div>
+                <div class="stat-value alt-1">Claude Opus 4.8</div>
+                <div class="stat-meta">
+                    <span>9.71 / 10 composite</span>
+                    <span class="trend flat">tie-breaker</span>
+                </div>
+            </div>
+            <div class="stat-card fade-up d4" style="--accent: var(--neon-pink)">
+                <div class="stat-label">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg>
+                    API Cost
+                </div>
+                <div class="stat-value alt-2">$184.27</div>
+                <div class="stat-meta">
+                    <span>frontier tier only</span>
+                    <span class="trend down">&darr; 4.2%</span>
+                </div>
+            </div>
+            <div class="stat-card fade-up d5" style="--accent: var(--neon-amber)">
+                <div class="stat-label">
+                    <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="12" rx="2" />
+                        <path d="M2 20h20" />
+                        <path d="M8 20l1-4M16 20l-1-4" />
+                    </svg>
+                    Local Runtime
+                </div>
+                <div class="stat-value alt-3">42.7h</div>
+                <div class="stat-meta">
+                    <span>RTX 3090 sessions</span>
+                    <span class="trend up">&uarr; 6.0%</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel h2h-section fade-up d2">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <h2>Head-to-Head Matchup</h2>
+                    <span class="tag">Active &middot; 200 prompts</span>
+                </div>
+                <div class="panel-subtitle">Same prompts &middot; same seed &middot; controlled environment</div>
+            </div>
+
+            <div class="h2h-wrap">
+                <div class="h2h-card local">
+                    <div class="h2h-badge local">
+                        <span
+                            style="width:6px;height:6px;border-radius:50%;background:var(--neon-cyan);box-shadow:0 0 6px var(--neon-cyan)"></span>
+                        Local Model
+                    </div>
+                    <div class="h2h-grade">A-</div>
+                    <div class="h2h-name">Qwen3.6 27B</div>
+                    <div class="h2h-sub">Q4_K_M &middot; llama.cpp &middot; 4096 ctx</div>
+                    <div class="h2h-metrics">
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Speed</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">38.5 t/s</div>
+                                <div class="h2h-metric-bar"><i data-w="64"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Quality</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">8.7</div>
+                                <div class="h2h-metric-bar"><i data-w="87"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Coding</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">9.1</div>
+                                <div class="h2h-metric-bar"><i data-w="91"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Creativity</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">8.4</div>
+                                <div class="h2h-metric-bar"><i data-w="84"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Instruction</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">8.9</div>
+                                <div class="h2h-metric-bar"><i data-w="89"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Reasoning</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">8.6</div>
+                                <div class="h2h-metric-bar"><i data-w="86"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vs-divider">
+                    <div class="vs-circle"><span class="vs-text">VS</span></div>
+                    <div class="vs-line"></div>
+                    <div class="vs-meta">200 prompts<br />3 rounds</div>
+                </div>
+
+                <div class="h2h-card frontier">
+                    <div class="h2h-badge frontier">
+                        <span
+                            style="width:6px;height:6px;border-radius:50%;background:var(--neon-purple);box-shadow:0 0 6px var(--neon-purple)"></span>
+                        Frontier API
+                    </div>
+                    <div class="h2h-grade">A+</div>
+                    <div class="h2h-name">Claude Opus 4.8</div>
+                    <div class="h2h-sub">Anthropic API &middot; 8192 ctx &middot; streaming</div>
+                    <div class="h2h-metrics">
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Speed</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">85.2 t/s</div>
+                                <div class="h2h-metric-bar"><i data-w="85"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Quality</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">9.5</div>
+                                <div class="h2h-metric-bar"><i data-w="95"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Coding</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">9.6</div>
+                                <div class="h2h-metric-bar"><i data-w="96"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Creativity</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">9.7</div>
+                                <div class="h2h-metric-bar"><i data-w="97"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Instruction</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">9.8</div>
+                                <div class="h2h-metric-bar"><i data-w="98"></i></div>
+                            </div>
+                        </div>
+                        <div class="h2h-metric">
+                            <div class="h2h-metric-label">Reasoning</div>
+                            <div class="h2h-metric-row">
+                                <div class="h2h-metric-value">9.7</div>
+                                <div class="h2h-metric-bar"><i data-w="97"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="view-section active" data-view="summary">
+            <div class="charts-grid">
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Performance</div>
+                            <div class="chart-title">Tokens per Second</div>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="chart-legend-item"><span class="chart-legend-swatch"
+                                    style="background:#00f0ff;box-shadow:0 0 6px #00f0ff"></span>Local</div>
+                            <div class="chart-legend-item"><span class="chart-legend-swatch"
+                                    style="background:#a855f7;box-shadow:0 0 6px #a855f7"></span>Frontier</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartSpeed" viewBox="0 0 600 240"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Latency</div>
+                            <div class="chart-title">Average Completion Time</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartLatency" viewBox="0 0 600 240"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Quality</div>
+                            <div class="chart-title">Quality Score Comparison</div>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="chart-legend-item"><span class="chart-legend-swatch"
+                                    style="background:#00f0ff"></span>Local</div>
+                            <div class="chart-legend-item"><span class="chart-legend-swatch"
+                                    style="background:#a855f7"></span>Frontier</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartQuality" viewBox="0 0 600 240"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Spend</div>
+                            <div class="chart-title">Cost Composition</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartCost" viewBox="0 0 600 240"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="view-section" data-view="speed">
+            <div class="charts-grid">
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Throughput by prompt length</div>
+                            <div class="chart-title">Speed vs Prompt Complexity</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartSpeedCurve" viewBox="0 0 600 240"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Time-to-first-token</div>
+                            <div class="chart-title">TTFT Distribution (ms)</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartTtft" viewBox="0 0 600 240"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="view-section" data-view="quality">
+            <div class="charts-grid">
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Composite scoring</div>
+                            <div class="chart-title">Quality Radar</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartRadar" viewBox="0 0 600 320"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Per-category grading</div>
+                            <div class="chart-title">Quality Component Breakdown</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartQualityBars" viewBox="0 0 600 320"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="view-section" data-view="cost">
+            <div class="charts-grid">
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Cumulative spend</div>
+                            <div class="chart-title">API Cost Over Time</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartCostTrend" viewBox="0 0 600 240"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Per million tokens</div>
+                            <div class="chart-title">Frontier Pricing Landscape</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartCostCompare" viewBox="0 0 600 240"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="view-section" data-view="hardware">
+            <div class="dual-grid">
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Live</div>
+                            <div class="chart-title">GPU Utilization (last 60 min)</div>
+                        </div>
+                        <div class="live-row"><span class="pulse-dot"></span>Sampling @ 1Hz</div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartGpu" viewBox="0 0 600 220"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+                <div class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <div class="chart-eyebrow">Live</div>
+                            <div class="chart-title">VRAM &amp; Power Draw</div>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><svg class="chart-svg" id="chartVram" viewBox="0 0 600 220"
+                            preserveAspectRatio="none"></svg></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="dual-grid">
+            <div class="panel">
+                <div class="panel-head">
+                    <div class="panel-title">
+                        <h2>Hardware Monitor</h2>
+                        <span class="tag">RTX 3090 &middot; 24GB</span>
+                    </div>
+                    <div class="live-row"><span class="pulse-dot"></span>Live</div>
+                </div>
+
+                <div class="hw-stat-grid">
+                    <div class="hw-stat">
+                        <div class="hw-stat-label">
+                            <span>GPU Util</span>
+                            <span class="mono" style="color:var(--neon-cyan)" id="hwGpuPct">92%</span>
+                        </div>
+                        <div class="hw-stat-value" id="hwGpuVal">92%</div>
+                        <div class="hw-bar bar-cyan"><i id="hwGpuBar" style="width:92%"></i></div>
+                        <div class="hw-stat-foot">
+                            <span>target 95%</span>
+                            <span style="color:var(--neon-cyan)">healthy</span>
+                        </div>
+                    </div>
+
+                    <div class="hw-stat">
+                        <div class="hw-stat-label">
+                            <span>VRAM</span>
+                            <span class="mono" style="color:var(--neon-purple)" id="hwVramPct">18.4 / 24 GB</span>
+                        </div>
+                        <div class="hw-stat-value" id="hwVramVal">18.4 GB</div>
+                        <div class="hw-bar bar-purple"><i id="hwVramBar" style="width:76%"></i></div>
+                        <div class="hw-stat-foot">
+                            <span id="hwVramFoot">76.6% used</span>
+                            <span style="color:var(--neon-amber)">watch</span>
+                        </div>
+                    </div>
+
+                    <div class="hw-stat">
+                        <div class="hw-stat-label">
+                            <span>Temp</span>
+                            <span class="mono" style="color:var(--neon-amber)" id="hwTempPct">76&deg;C</span>
+                        </div>
+                        <div class="hw-stat-value" id="hwTempVal">76&deg;C</div>
+                        <div class="hw-bar bar-amber"><i id="hwTempBar" style="width:68%"></i></div>
+                        <div class="hw-stat-foot">
+                            <span>limit 83&deg;C</span>
+                            <span style="color:var(--neon-green)">stable</span>
+                        </div>
+                    </div>
+
+                    <div class="hw-stat">
+                        <div class="hw-stat-label">
+                            <span>Power</span>
+                            <span class="mono" style="color:var(--neon-green)" id="hwPowerPct">318 W</span>
+                        </div>
+                        <div class="hw-stat-value" id="hwPowerVal">318 W</div>
+                        <div class="hw-bar bar-green"><i id="hwPowerBar" style="width:90%"></i></div>
+                        <div class="hw-stat-foot">
+                            <span>cap 350W</span>
+                            <span style="color:var(--neon-green)">optimal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="server-status">
+                    <div class="server-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="2" y="3" width="20" height="6" rx="1.5" />
+                            <rect x="2" y="15" width="20" height="6" rx="1.5" />
+                            <circle cx="6" cy="6" r=".7" fill="currentColor" />
+                            <circle cx="6" cy="18" r=".7" fill="currentColor" />
+                        </svg>
+                    </div>
+                    <div class="server-status-text">
+                        <strong>llama.cpp server &middot; 127.0.0.1:8080</strong>
+                        <span id="serverUptime">Uptime 8h 12m &middot; 200/200 prompts served &middot; model
+                            Qwen3.6-27B-Q4_K_M.gguf</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <div class="panel-title">
+                        <h2>API Usage &middot; Claude Opus 4.8</h2>
+                        <span class="tag"
+                            style="color:var(--neon-purple);background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.3)">Anthropic</span>
+                    </div>
+                    <div class="panel-subtitle">Session window &middot; resets in 4d 7h</div>
+                </div>
+
+                <div class="api-cost-big">
+                    <div class="label">Estimated Session Spend</div>
+                    <div class="value">$47.82</div>
+                    <div class="sub">&approx; 6.2% of monthly frontier budget</div>
+                </div>
+
+                <div class="api-breakdown">
+                    <div class="api-row">
+                        <span class="k">Input tokens</span>
+                        <span class="v" style="color:var(--neon-cyan)">812,490</span>
+                    </div>
+                    <div class="api-row">
+                        <span class="k">Output tokens</span>
+                        <span class="v" style="color:var(--neon-purple)">1,184,260</span>
+                    </div>
+                    <div class="api-row">
+                        <span class="k">Total tokens</span>
+                        <span class="v">1,996,750</span>
+                    </div>
+                    <div class="api-row">
+                        <span class="k">Avg latency</span>
+                        <span class="v">1.42s</span>
+                    </div>
+                    <div class="api-row">
+                        <span class="k">Cost / 1K out</span>
+                        <span class="v" style="color:var(--neon-pink)">$0.0240</span>
+                    </div>
+                    <div class="api-row">
+                        <span class="k">Cache hit rate</span>
+                        <span class="v" style="color:var(--neon-green)">34.7%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel" style="margin-bottom:24px">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <h2>Prompt History</h2>
+                    <span class="tag">200 prompts</span>
+                </div>
+                <div class="panel-subtitle">Click a row to expand the dual completions</div>
+            </div>
+
+            <div class="prompt-list" id="promptList"></div>
+        </section>
+
+        <section class="panel" style="margin-bottom:24px">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <h2>Winner Breakdown</h2>
+                    <span class="tag">6 categories</span>
+                </div>
+                <div class="panel-subtitle">Composite verdict by metric</div>
+            </div>
+
+            <div class="winners-grid">
+                <div class="winner-card local">
+                    <div class="winner-cat">Cost-Adjusted Speed</div>
+                    <div class="winner-name">Qwen3.6 27B (Local)</div>
+                    <div class="winner-reason">Frontier wins raw throughput (85.2 vs 38.5 t/s), but Qwen wins on
+                        <b>cost-adjusted speed</b> - effectively infinite t/s per dollar. Free inference at the edge.
+                    </div>
+                    <div class="winner-margin" style="color:var(--neon-cyan)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3">
+                            <path d="M5 13l4 4L19 7" />
+                        </svg>
+                        Cost-adjusted win
+                    </div>
+                </div>
+
+                <div class="winner-card frontier">
+                    <div class="winner-cat">Quality Score</div>
+                    <div class="winner-name">Claude Opus 4.8</div>
+                    <div class="winner-reason">Higher consistency on long-form reasoning and nuance-heavy prompts.
+                        Stronger refusal calibration and fewer hallucinations on factual recall.</div>
+                    <div class="winner-margin" style="color:var(--neon-purple)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3">
+                            <path d="M5 13l4 4L19 7" />
+                        </svg>
+                        +0.8 margin
+                    </div>
+                </div>
+
+                <div class="winner-card frontier">
+                    <div class="winner-cat">Coding Accuracy</div>
+                    <div class="winner-name">Claude Opus 4.8</div>
+                    <div class="winner-reason">Wins on multi-file refactors and edge-case handling. Qwen is shockingly
+                        close (9.1 vs 9.6) - strong showing for an open 27B on consumer GPU.</div>
+                    <div class="winner-margin" style="color:var(--neon-purple)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3">
+                            <path d="M5 13l4 4L19 7" />
+                        </svg>
+                        +0.5 margin
+                    </div>
+                </div>
+
+                <div class="winner-card local">
+                    <div class="winner-cat">Creativity</div>
+                    <div class="winner-name">Qwen3.6 27B (Local)</div>
+                    <div class="winner-reason">Slightly more varied vocabulary in fiction prompts. Surprising edge case
+                        - Qwen took more interpretive risks on ambiguous creative briefs.</div>
+                    <div class="winner-margin" style="color:var(--neon-cyan)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3">
+                            <path d="M5 13l4 4L19 7" />
+                        </svg>
+                        +0.3 upset
+                    </div>
+                </div>
+
+                <div class="winner-card frontier">
+                    <div class="winner-cat">Instruction Following</div>
+                    <div class="winner-name">Claude Opus 4.8</div>
+                    <div class="winner-reason">Cleaner JSON formatting, stricter adherence to negative constraints, and
+                        better multi-step plan execution. Tied on single-turn simple instructions.</div>
+                    <div class="winner-margin" style="color:var(--neon-purple)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3">
+                            <path d="M5 13l4 4L19 7" />
+                        </svg>
+                        +0.9 margin
+                    </div>
+                </div>
+
+                <div class="winner-card draw">
+                    <div class="winner-cat">Final Verdict</div>
+                    <div class="winner-name">Tie &middot; 2-2-1 (adj.)</div>
+                    <div class="winner-reason">Claude takes quality categories; Qwen punches above its weight on
+                        creativity and cost-adjusted speed. For a $0 inference, Qwen3.6 27B is the value champion.</div>
+                    <div class="winner-margin" style="color:var(--neon-amber)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3">
+                            <path d="M12 2v20M2 12h20" />
+                        </svg>
+                        Composite tie
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel" style="margin-bottom:24px">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <h2>Previous AI Model Tests</h2>
+                    <span class="tag">12 runs</span>
+                </div>
+                <div class="panel-subtitle">Search &amp; sort the full lab history</div>
+            </div>
+
+            <div class="table-tools">
+                <div class="search-input">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="M21 21l-4.3-4.3" />
+                    </svg>
+                    <input id="searchInput" type="text" placeholder="Search by model, task, or note...">
+                </div>
+                <div class="sort-group" id="sortGroup">
+                    <button class="sort-btn active" data-sort="score">By Score</button>
+                    <button class="sort-btn" data-sort="speed">By Speed</button>
+                    <button class="sort-btn" data-sort="cost">By Cost</button>
+                    <button class="sort-btn" data-sort="date">By Date</button>
+                </div>
+            </div>
+
+            <div style="overflow:auto;max-height:420px;border-radius:12px;border:1px solid var(--border)">
+                <table class="data-table" id="testsTable">
+                    <thead>
+                        <tr>
+                            <th data-col="name">Model</th>
+                            <th data-col="task">Task</th>
+                            <th data-col="score">Score</th>
+                            <th data-col="speed">Speed</th>
+                            <th data-col="cost">Cost</th>
+                            <th data-col="grade">Grade</th>
+                            <th data-col="wins">Wins</th>
+                            <th data-col="date">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="testsTbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <h2>Final Testing Notes</h2>
+                    <span class="tag">Observations</span>
+                </div>
+                <div class="panel-subtitle">Compiled by the lab after the 200-prompt session</div>
+            </div>
+
+            <div class="notes-grid">
+                <div class="note-block local-note">
+                    <h3>
+                        <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5l3 2" />
+                        </svg>
+                        Qwen3.6 27B &middot; Takeaways
+                    </h3>
+                    <ul>
+                        <li>Surprisingly strong on multi-step coding prompts &mdash; passed 18/20 of the SWE-bench-style
+                            mini-set with one shot.</li>
+                        <li>VRAM ceiling hit at 18.4GB during 4K context runs; drops to 14.1GB at 2K. Recommend 4K cap
+                            for stability.</li>
+                        <li>Creative writing has a slight "model voice" tell &mdash; overuses em-dashes in long-form
+                            fiction. Minor.</li>
+                        <li>Quantization (Q4_K_M) is the sweet spot: Q5 loses ~0.3 quality, Q3 loses ~0.9. Stick with
+                            Q4.</li>
+                        <li>Best local 27B-class model we've tested to date &mdash; beats Llama 3.3 70B Q4 on coding at
+                            1/3 the VRAM.</li>
+                    </ul>
+                </div>
+
+                <div class="note-block frontier-note">
+                    <h3>
+                        <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12h18M12 3v18" />
+                        </svg>
+                        Claude Opus 4.8 &middot; Takeaways
+                    </h3>
+                    <ul>
+                        <li>Cleanest instruction following of any model tested &mdash; JSON schema adherence 99.4%.</li>
+                        <li>Streaming TTFT consistently under 400ms &mdash; best-in-class responsiveness.</li>
+                        <li>Hallucination rate 1.8% on factual recall set &mdash; only Gemini 2.0 Pro is lower (1.4%).
+                        </li>
+                        <li>At scale ($47.82 / 200 prompts) it's expensive for hobbyist use &mdash; break-even vs local
+                            hardware is ~14 weeks of daily 4-hour use.</li>
+                        <li>Refusal calibration is the most "human-feeling" &mdash; won't lecture, won't over-refuse,
+                            gets nuance right.</li>
+                    </ul>
+                </div>
+
+                <div class="note-block">
+                    <h3>
+                        <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
+                        </svg>
+                        Methodology
+                    </h3>
+                    <p>200 prompts across 6 categories (coding, reasoning, creative, instruction-following, factual,
+                        conversation). Each prompt run 3 times per model with temperature 0.7 for stochastic tasks, 0.0
+                        for deterministic. Grading done by an independent GPT-judge panel of 3 with a fourth tiebreaker.
+                        Local runs on a single RTX 3090 with llama.cpp b3042; frontier runs through official Anthropic
+                        API. All timings measured server-side.</p>
+                </div>
+
+                <div class="note-block">
+                    <h3>
+                        <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M9 12l2 2 4-4" />
+                        </svg>
+                        Final Recommendation
+                    </h3>
+                    <p>For most creators and developers, <b>Qwen3.6 27B is the sweet spot</b> &mdash; frontier-adjacent
+                        quality with zero marginal cost and full privacy. Reach for Claude Opus 4.8 when the task
+                        demands strict instruction following, nuanced long-form reasoning, or you're hitting context
+                        windows past 8K. Keep both in your stack.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <span class="accent">AI Model Testing Command Center</span> &middot; Qwen3.6 27B vs Claude Opus 4.8 &middot;
+            Test session #47 &middot; 200 prompts &middot; 3 rounds &middot; Built for the local AI lab
+        </footer>
+    </div>
+
+    <script>
+        // ========== SVG CHART HELPERS ==========
+        const NS = 'http://www.w3.org/2000/svg';
+        function svgEl(tag, attrs, parent) {
+            const e = document.createElementNS(NS, tag);
+            if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+            if (parent) parent.appendChild(e);
+            return e;
+        }
+        function clearChart(id) {
+            const svg = document.getElementById(id);
+            if (svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+            return svg;
+        }
+        function drawGrid(svg, w, h, pad, steps) {
+            for (let i = 0; i <= steps; i++) {
+                const y = pad.t + (h - pad.t - pad.b) * (i / steps);
+                svgEl('line', { x1: pad.l, x2: w - pad.r, y1: y, y2: y, stroke: 'rgba(120,145,200,0.08)', 'stroke-width': 1 }, svg);
+            }
+        }
+        function yLabel(svg, x, y, text, anchor) {
+            anchor = anchor || 'end';
+            svgEl('text', { x: x, y: y, fill: 'rgba(168,179,204,0.55)', 'font-size': 9, 'text-anchor': anchor, 'font-family': 'JetBrains Mono, monospace' }, svg).textContent = text;
+        }
+
+        // ========== TOKENS-PER-SECOND GROUPED BARS ==========
+        function drawSpeedChart() {
+            const svg = clearChart('chartSpeed');
+            if (!svg) return;
+            const w = 600, h = 240, pad = { t: 20, r: 20, b: 30, l: 40 };
+            drawGrid(svg, w, h, pad, 4);
+            const models = ['Qwen3.6', 'Llama 3.3', 'DeepSeek', 'Mistral', 'Qwen3.5', 'Phi-4'];
+            const local = [38.5, 18.4, 27.6, 33.1, 44.2, 51.3];
+            const frontier = [85.2, 92.4, 78.9, 88.7, 85.2, 91.4];
+            const max = 100;
+            const innerW = w - pad.l - pad.r;
+            const groupW = innerW / models.length;
+            const barW = (groupW - 12) / 2;
+            for (let i = 0; i < models.length; i++) {
+                const gx = pad.l + groupW * i + groupW / 2;
+                const localH = (local[i] / max) * (h - pad.t - pad.b);
+                const frontierH = (frontier[i] / max) * (h - pad.t - pad.b);
+                const lx = gx - barW - 2;
+                const fx = gx + 2;
+                const lRect = svgEl('rect', { x: lx, y: h - pad.b, width: barW, height: 0, fill: '#00f0ff', rx: 3, opacity: 0.9 }, svg);
+                const fRect = svgEl('rect', { x: fx, y: h - pad.b, width: barW, height: 0, fill: '#a855f7', rx: 3, opacity: 0.9 }, svg);
+                const localVal = svgEl('text', { x: lx + barW / 2, y: h - pad.b - 4, fill: '#00f0ff', 'font-size': 10, 'text-anchor': 'middle', 'font-weight': 700, 'font-family': 'JetBrains Mono, monospace' }, svg);
+                localVal.textContent = local[i].toFixed(1);
+                const frontierVal = svgEl('text', { x: fx + barW / 2, y: h - pad.b - 4, fill: '#a855f7', 'font-size': 10, 'text-anchor': 'middle', 'font-weight': 700, 'font-family': 'JetBrains Mono, monospace' }, svg);
+                frontierVal.textContent = frontier[i].toFixed(1);
+                const lbl = svgEl('text', { x: gx, y: h - pad.b + 18, fill: 'rgba(168,179,204,0.85)', 'font-size': 10, 'text-anchor': 'middle' }, svg);
+                lbl.textContent = models[i];
+                setTimeout((function (lr, fr, lh, fh) {
+                    return function () {
+                        lr.setAttribute('y', h - pad.b - lh);
+                        lr.setAttribute('height', lh);
+                        fr.setAttribute('y', h - pad.b - fh);
+                        fr.setAttribute('height', fh);
+                    };
+                })(lRect, fRect, localH, frontierH), 80 + i * 50);
+            }
+            for (let i = 0; i <= 4; i++) {
+                const v = Math.round(max * (1 - i / 4));
+                const y = pad.t + (h - pad.t - pad.b) * (i / 4) + 4;
+                yLabel(svg, pad.l - 8, y, v);
+            }
+        }
+
+        // ========== LATENCY AREA CHART ==========
+        function drawLatencyChart() {
+            const svg = clearChart('chartLatency');
+            if (!svg) return;
+            const w = 600, h = 240, pad = { t: 20, r: 20, b: 30, l: 40 };
+            drawGrid(svg, w, h, pad, 4);
+            const labels = ['Coding', 'Reasoning', 'Creative', 'Instruction', 'Factual', 'Conversation'];
+            const local = [6.2, 5.1, 5.1, 1.4, 2.9, 6.7];
+            const frontier = [2.8, 1.6, 2.0, 0.4, 1.1, 2.4];
+            const max = 8;
+            const stepX = (w - pad.l - pad.r) / (labels.length - 1);
+            function toPath(arr) {
+                const pts = arr.map((v, i) => [pad.l + stepX * i, h - pad.b - (v / max) * (h - pad.t - pad.b)]);
+                let d = 'M' + pts[0][0] + ',' + pts[0][1];
+                for (let i = 1; i < pts.length; i++) {
+                    const cx = (pts[i - 1][0] + pts[i][0]) / 2;
+                    d += ' C ' + cx + ',' + pts[i - 1][1] + ' ' + cx + ',' + pts[i][1] + ' ' + pts[i][0] + ',' + pts[i][1];
+                }
+                return { d: d, pts: pts };
+            }
+            const localPath = toPath(local);
+            const localArea = localPath.d + ' L ' + (pad.l + stepX * (labels.length - 1)) + ',' + (h - pad.b) + ' L ' + pad.l + ',' + (h - pad.b) + ' Z';
+            const defs = svgEl('defs', {}, svg);
+            const lg = svgEl('linearGradient', { id: 'gradLA', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+            svgEl('stop', { offset: '0%', 'stop-color': '#00f0ff', 'stop-opacity': 0.45 }, lg);
+            svgEl('stop', { offset: '100%', 'stop-color': '#00f0ff', 'stop-opacity': 0 }, lg);
+            svgEl('path', { d: localArea, fill: 'url(#gradLA)' }, svg);
+
+            const frontierPath = toPath(frontier);
+            const frontierArea = frontierPath.d + ' L ' + (pad.l + stepX * (labels.length - 1)) + ',' + (h - pad.b) + ' L ' + pad.l + ',' + (h - pad.b) + ' Z';
+            const defs2 = svgEl('defs', {}, svg);
+            const fg = svgEl('linearGradient', { id: 'gradFA', x1: 0, y1: 0, x2: 0, y2: 1 }, defs2);
+            svgEl('stop', { offset: '0%', 'stop-color': '#a855f7', 'stop-opacity': 0.3 }, fg);
+            svgEl('stop', { offset: '100%', 'stop-color': '#a855f7', 'stop-opacity': 0 }, fg);
+            svgEl('path', { d: frontierArea, fill: 'url(#gradFA)' }, svg);
+
+            svgEl('path', { d: localPath.d, fill: 'none', stroke: '#00f0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round', filter: 'drop-shadow(0 0 4px rgba(0,240,255,0.6))' }, svg);
+            svgEl('path', { d: frontierPath.d, fill: 'none', stroke: '#a855f7', 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-dasharray': '4 4', filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.6))' }, svg);
+
+            for (let i = 0; i < local.length; i++) {
+                const x = pad.l + stepX * i;
+                const y = h - pad.b - (local[i] / max) * (h - pad.t - pad.b);
+                svgEl('circle', { cx: x, cy: y, r: 4, fill: '#00f0ff', stroke: '#0a0f1d', 'stroke-width': 2, filter: 'drop-shadow(0 0 4px #00f0ff)' }, svg);
+            }
+            for (let i = 0; i < frontier.length; i++) {
+                const x = pad.l + stepX * i;
+                const y = h - pad.b - (frontier[i] / max) * (h - pad.t - pad.b);
+                svgEl('circle', { cx: x, cy: y, r: 4, fill: '#a855f7', stroke: '#0a0f1d', 'stroke-width': 2, filter: 'drop-shadow(0 0 4px #a855f7)' }, svg);
+            }
+            for (let i = 0; i < labels.length; i++) {
+                const lbl = svgEl('text', { x: pad.l + stepX * i, y: h - pad.b + 18, fill: 'rgba(168,179,204,0.85)', 'font-size': 10, 'text-anchor': 'middle' }, svg);
+                lbl.textContent = labels[i];
+            }
+            for (let i = 0; i <= 4; i++) {
+                const v = (max * (1 - i / 4)).toFixed(1);
+                const y = pad.t + (h - pad.t - pad.b) * (i / 4) + 4;
+                yLabel(svg, pad.l - 8, y, v + 's');
+            }
+        }
+
+        // ========== QUALITY HORIZONTAL BARS ==========
+        function drawQualityChart() {
+            const svg = clearChart('chartQuality');
+            if (!svg) return;
+            const w = 600, h = 240, pad = { t: 20, r: 50, b: 20, l: 100 };
+            drawGrid(svg, w, h, pad, 5);
+            const cats = ['Speed*', 'Quality', 'Coding', 'Creativity', 'Instruction', 'Reasoning'];
+            const local = [8.7, 8.7, 9.1, 8.4, 8.9, 8.6];
+            const frontier = [9.0, 9.5, 9.6, 9.7, 9.8, 9.7];
+            const max = 10;
+            const rowH = (h - pad.t - pad.b) / cats.length;
+            for (let i = 0; i < cats.length; i++) {
+                const y = pad.t + rowH * i + rowH / 2;
+                const lbl = svgEl('text', { x: pad.l - 10, y: y + 4, fill: 'rgba(168,179,204,0.85)', 'font-size': 11, 'text-anchor': 'end', 'font-weight': 600 }, svg);
+                lbl.textContent = cats[i];
+                const lw = (local[i] / max) * (w - pad.l - pad.r);
+                const fw = (frontier[i] / max) * (w - pad.l - pad.r);
+                svgEl('rect', { x: pad.l, y: y - 8, width: w - pad.l - pad.r, height: 5, fill: 'rgba(120,145,200,0.06)', rx: 2.5 }, svg);
+                const lBar = svgEl('rect', { x: pad.l, y: y - 8, width: 0, height: 5, fill: '#00f0ff', rx: 2.5, filter: 'drop-shadow(0 0 4px rgba(0,240,255,0.5))' }, svg);
+                const lv = svgEl('text', { x: pad.l + lw + 6, y: y + 4, fill: '#00f0ff', 'font-size': 10, 'font-weight': 700, 'font-family': 'JetBrains Mono, monospace' }, svg);
+                lv.textContent = local[i].toFixed(1);
+                const fy = y + 7;
+                svgEl('rect', { x: pad.l, y: fy - 2, width: w - pad.l - pad.r, height: 5, fill: 'rgba(120,145,200,0.06)', rx: 2.5 }, svg);
+                const fBar = svgEl('rect', { x: pad.l, y: fy - 2, width: 0, height: 5, fill: '#a855f7', rx: 2.5, filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.5))' }, svg);
+                const fv = svgEl('text', { x: pad.l + fw + 6, y: fy + 4, fill: '#a855f7', 'font-size': 10, 'font-weight': 700, 'font-family': 'JetBrains Mono, monospace' }, svg);
+                fv.textContent = frontier[i].toFixed(1);
+                setTimeout((function (lBar, fBar, lw, fw) {
+                    return function () {
+                        lBar.setAttribute('width', lw);
+                        fBar.setAttribute('width', fw);
+                    };
+                })(lBar, fBar, lw, fw), 80 + i * 50);
+            }
+        }
+
+        // ========== COST DONUT ==========
+        function drawCostChart() {
+            const svg = clearChart('chartCost');
+            if (!svg) return;
+            const w = 600, h = 240;
+            const cx = 180, cy = h / 2;
+            const r = 78, ir = 50;
+            const data = [
+                { label: 'Input tokens', value: 8.14, color: '#00f0ff' },
+                { label: 'Output tokens', value: 28.42, color: '#a855f7' },
+                { label: 'Cache savings', value: 3.21, color: '#10ff9a' },
+                { label: 'Other fees', value: 8.05, color: '#ffb547' }
+            ];
+            const total = data.reduce((a, b) => a + b.value, 0);
+            let start = -Math.PI / 2;
+            for (let i = 0; i < data.length; i++) {
+                const d = data[i];
+                const slice = (d.value / total) * Math.PI * 2;
+                const end = start + slice;
+                const large = slice > Math.PI ? 1 : 0;
+                const x1 = cx + Math.cos(start) * r, y1 = cy + Math.sin(start) * r;
+                const x2 = cx + Math.cos(end) * r, y2 = cy + Math.sin(end) * r;
+                const x3 = cx + Math.cos(end) * ir, y3 = cy + Math.sin(end) * ir;
+                const x4 = cx + Math.cos(start) * ir, y4 = cy + Math.sin(start) * ir;
+                const dPath = 'M ' + x1 + ' ' + y1 + ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2 + ' ' + y2 + ' L ' + x3 + ' ' + y3 + ' A ' + ir + ' ' + ir + ' 0 ' + large + ' 0 ' + x4 + ' ' + y4 + ' Z';
+                svgEl('path', { d: dPath, fill: d.color, opacity: 0.92, filter: 'drop-shadow(0 0 6px ' + d.color + '66)' }, svg);
+                start = end;
+            }
+            const tlbl = svgEl('text', { x: cx, y: cy - 6, fill: 'rgba(168,179,204,0.7)', 'font-size': 10, 'text-anchor': 'middle', 'font-weight': 600, 'letter-spacing': '0.15em' }, svg);
+            tlbl.textContent = 'TOTAL';
+            const tv = svgEl('text', { x: cx, y: cy + 16, fill: '#fff', 'font-size': 22, 'text-anchor': 'middle', 'font-weight': 800, 'font-family': 'JetBrains Mono, monospace' }, svg);
+            tv.textContent = '$47.82';
+            for (let i = 0; i < data.length; i++) {
+                const d = data[i];
+                const lx = 360, ly = 50 + i * 38;
+                svgEl('rect', { x: lx, y: ly, width: 12, height: 12, rx: 3, fill: d.color, filter: 'drop-shadow(0 0 4px ' + d.color + '66)' }, svg);
+                const lt = svgEl('text', { x: lx + 20, y: ly + 10, fill: 'rgba(232,236,245,0.9)', 'font-size': 12, 'font-weight': 600 }, svg);
+                lt.textContent = d.label;
+                const vt = svgEl('text', { x: 570, y: ly + 10, fill: d.color, 'font-size': 12, 'font-weight': 700, 'text-anchor': 'end', 'font-family': 'JetBrains Mono, monospace' }, svg);
+                vt.textContent = '$' + d.value.toFixed(2);
+            }
+        }
+
+        // ========== SPEED CURVE ==========
+        function drawSpeedCurve() {
+            const svg = clearChart('chartSpeedCurve');
+            if (!svg) return;
+            const w = 600, h = 240, pad = { t: 20, r: 30, b: 35, l: 50 };
+            drawGrid(svg, w, h, pad, 4);
+            const xs = [0, 100, 250, 500, 1000, 2000, 4000, 8000];
+            const local = [42, 41, 40, 39, 38, 36, 33, 28];
+            const frontier = [88, 87, 86, 86, 85, 84, 82, 79];
+            const maxX = 8000, maxY = 100;
+            function xPos(v) { return pad.l + (Math.log10(v + 1) / Math.log10(maxX + 1)) * (w - pad.l - pad.r); }
+            function yPos(v) { return h - pad.b - (v / maxY) * (h - pad.t - pad.b); }
+            function toPath(arr) {
+                const pts = arr.map((v, i) => [xPos(xs[i]), yPos(v)]);
+                let d = 'M' + pts[0][0] + ',' + pts[0][1];
+                for (let i = 1; i < pts.length; i++) {
+                    const cx = (pts[i - 1][0] + pts[i][0]) / 2;
+                    d += ' C ' + cx + ',' + pts[i - 1][1] + ' ' + cx + ',' + pts[i][1] + ' ' + pts[i][0] + ',' + pts[i][1];
+                }
+                return { d: d, pts: pts };
+            }
+            const localPath = toPath(local);
+            const localArea = localPath.d + ' L ' + xPos(xs[xs.length - 1]) + ',' + (h - pad.b) + ' L ' + xPos(xs[0]) + ',' + (h - pad.b) + ' Z';
+            const defs = svgEl('defs', {}, svg);
+            const lg = svgEl('linearGradient', { id: 'gradSC', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+            svgEl('stop', { offset: '0%', 'stop-color': '#00f0ff', 'stop-opacity': 0.4 }, lg);
+            svgEl('stop', { offset: '100%', 'stop-color': '#00f0ff', 'stop-opacity': 0 }, lg);
+            svgEl('path', { d: localArea, fill: 'url(#gradSC)' }, svg);
+            const fPath = toPath(frontier);
+            const fArea = fPath.d + ' L ' + xPos(xs[xs.length - 1]) + ',' + (h - pad.b) + ' L ' + xPos(xs[0]) + ',' + (h - pad.b) + ' Z';
+            const defs2 = svgEl('defs', {}, svg);
+            const fg = svgEl('linearGradient', { id: 'gradFC', x1: 0, y1: 0, x2: 0, y2: 1 }, defs2);
+            svgEl('stop', { offset: '0%', 'stop-color': '#a855f7', 'stop-opacity': 0.3 }, fg);
+            svgEl('stop', { offset: '100%', 'stop-color': '#a855f7', 'stop-opacity': 0 }, fg);
+            svgEl('path', { d: fArea, fill: 'url(#gradFC)' }, svg);
+            svgEl('path', { d: localPath.d, fill: 'none', stroke: '#00f0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round', filter: 'drop-shadow(0 0 4px rgba(0,240,255,0.6))' }, svg);
+            svgEl('path', { d: fPath.d, fill: 'none', stroke: '#a855f7', 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-dasharray': '4 4', filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.6))' }, svg);
+            for (let i = 0; i < local.length; i++) {
+                svgEl('circle', { cx: xPos(xs[i]), cy: yPos(local[i]), r: 4, fill: '#00f0ff', stroke: '#0a0f1d', 'stroke-width': 2, filter: 'drop-shadow(0 0 4px #00f0ff)' }, svg);
+                svgEl('circle', { cx: xPos(xs[i]), cy: yPos(frontier[i]), r: 4, fill: '#a855f7', stroke: '#0a0f1d', 'stroke-width': 2, filter: 'drop-shadow(0 0 4px #a855f7)' }, svg);
+            }
+            for (let i = 0; i < xs.length; i++) {
+                const lbl = svgEl('text', { x: xPos(xs[i]), y: h - pad.b + 16, fill: 'rgba(168,179,204,0.8)', 'font-size': 9, 'text-anchor': 'middle' }, svg);
+                lbl.textContent = xs[i] === 0 ? '0' : xs[i] < 1000 ? xs[i] : (xs[i] / 1000) + 'K';
+            }
+            const xlbl = svgEl('text', { x: w / 2, y: h - 6, fill: 'rgba(168,179,204,0.6)', 'font-size': 10, 'text-anchor': 'middle' }, svg);
+            xlbl.textContent = 'Prompt length (tokens)';
+            for (let i = 0; i <= 4; i++) {
+                const v = Math.round(maxY * (1 - i / 4));
+                yLabel(svg, pad.l - 8, pad.t + (h - pad.t - pad.b) * (i / 4) + 4, v);
+            }
+        }
+
+        // ========== TTFT HISTOGRAM ==========
+        function drawTtft() {
+            const svg = clearChart('chartTtft');
+            if (!svg) return;
+            const w = 600, h = 240, pad = { t: 20, r: 20, b: 30, l: 40 };
+            drawGrid(svg, w, h, pad, 4);
+            const bins = ['0-50', '50-100', '100-200', '200-400', '400-800', '800-1500'];
+            const localCounts = [0, 1, 6, 38, 48, 7];
+            const frontierCounts = [22, 58, 18, 2, 0, 0];
+            const max = 60;
+            const groupW = (w - pad.l - pad.r) / bins.length;
+            const barW = (groupW - 8) / 2;
+            for (let i = 0; i < bins.length; i++) {
+                const gx = pad.l + groupW * i + groupW / 2;
+                const lh = (localCounts[i] / max) * (h - pad.t - pad.b);
+                const fh = (frontierCounts[i] / max) * (h - pad.t - pad.b);
+                const lx = gx - barW - 2;
+                const fx = gx + 2;
+                const lRect = svgEl('rect', { x: lx, y: h - pad.b, width: barW, height: 0, fill: '#00f0ff', rx: 2, opacity: 0.9 }, svg);
+                const fRect = svgEl('rect', { x: fx, y: h - pad.b, width: barW, height: 0, fill: '#a855f7', rx: 2, opacity: 0.9 }, svg);
+                const lbl = svgEl('text', { x: gx, y: h - pad.b + 18, fill: 'rgba(168,179,204,0.8)', 'font-size': 10, 'text-anchor': 'middle' }, svg);
+                lbl.textContent = bins[i];
+                setTimeout((function (lr, fr, lh, fh) {
+                    return function () {
+                        lr.setAttribute('y', h - pad.b - lh);
+                        lr.setAttribute('height', lh);
+                        fr.setAttribute('y', h - pad.b - fh);
+                        fr.setAttribute('height', fh);
+                    };
+                })(lRect, fRect, lh, fh), 80 + i * 50);
+            }
+            for (let i = 0; i <= 4; i++) {
+                const v = Math.round(max * (1 - i / 4));
+                yLabel(svg, pad.l - 8, pad.t + (h - pad.t - pad.b) * (i / 4) + 4, v);
+            }
+            const xl = svgEl('text', { x: w / 2, y: h - 6, fill: 'rgba(168,179,204,0.6)', 'font-size': 10, 'text-anchor': 'middle' }, svg);
+            xl.textContent = 'TTFT bucket (ms)';
+        }
+
+        // ========== RADAR CHART ==========
+        function drawRadar() {
+            const svg = clearChart('chartRadar');
+            if (!svg) return;
+            const w = 600, h = 320;
+            const cx = 150, cy = h / 2, R = 110;
+            const axes = ['Speed', 'Quality', 'Coding', 'Creativity', 'Instruction', 'Reasoning'];
+            const localVals = [6, 8.7, 9.1, 8.4, 8.9, 8.6];
+            const frontierVals = [9, 9.5, 9.6, 9.7, 9.8, 9.7];
+            const maxV = 10;
+            const N = axes.length;
+            function point(axisIdx, value) {
+                const angle = (Math.PI * 2 * axisIdx / N) - Math.PI / 2;
+                const r = (value / maxV) * R;
+                return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
+            }
+            for (let lvl = 1; lvl <= 4; lvl++) {
+                const pts = [];
+                for (let i = 0; i < N; i++) {
+                    const angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+                    const r = (lvl / 4) * R;
+                    pts.push((cx + Math.cos(angle) * r).toFixed(1) + ',' + (cy + Math.sin(angle) * r).toFixed(1));
+                }
+                svgEl('polygon', { points: pts.join(' '), fill: 'none', stroke: 'rgba(120,145,200,0.12)', 'stroke-width': 1 }, svg);
+            }
+            for (let i = 0; i < N; i++) {
+                const angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+                const x2 = cx + Math.cos(angle) * R;
+                const y2 = cy + Math.sin(angle) * R;
+                svgEl('line', { x1: cx, y1: cy, x2: x2, y2: y2, stroke: 'rgba(120,145,200,0.15)', 'stroke-width': 1 }, svg);
+            }
+            function pathFromValues(vals, color, glow) {
+                const pts = [];
+                for (let i = 0; i < N; i++) {
+                    const p = point(i, vals[i]);
+                    pts.push(p);
+                }
+                let dPath = 'M' + pts[0][0] + ',' + pts[0][1];
+                for (let i = 1; i < pts.length; i++) {
+                    dPath += ' L' + pts[i][0] + ',' + pts[i][1];
+                }
+                dPath += ' Z';
+                svgEl('path', { d: dPath, fill: color, 'fill-opacity': 0.18, stroke: color, 'stroke-width': 2, 'stroke-linejoin': 'round', filter: 'drop-shadow(0 0 6px ' + glow + ')' }, svg);
+                for (let i = 0; i < pts.length; i++) {
+                    svgEl('circle', { cx: pts[i][0], cy: pts[i][1], r: 3.5, fill: color, stroke: '#0a0f1d', 'stroke-width': 2, filter: 'drop-shadow(0 0 4px ' + glow + ')' }, svg);
+                }
+            }
+            pathFromValues(localVals, '#00f0ff', 'rgba(0,240,255,0.5)');
+            pathFromValues(frontierVals, '#a855f7', 'rgba(168,85,247,0.5)');
+            for (let i = 0; i < N; i++) {
+                const angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+                const lx = cx + Math.cos(angle) * (R + 22);
+                const ly = cy + Math.sin(angle) * (R + 22);
+                const lbl = svgEl('text', { x: lx, y: ly, fill: 'rgba(232,236,245,0.85)', 'font-size': 11, 'text-anchor': 'middle', 'font-weight': 600, 'dominant-baseline': 'middle' }, svg);
+                lbl.textContent = axes[i];
+            }
+            const leg1 = svgEl('rect', { x: 360, y: 70, width: 14, height: 14, rx: 3, fill: '#00f0ff', filter: 'drop-shadow(0 0 4px #00f0ff)' }, svg);
+            const lt1 = svgEl('text', { x: 380, y: 82, fill: 'rgba(232,236,245,0.9)', 'font-size': 12, 'font-weight': 600 }, svg);
+            lt1.textContent = 'Qwen3.6 27B';
+            const leg2 = svgEl('rect', { x: 360, y: 100, width: 14, height: 14, rx: 3, fill: '#a855f7', filter: 'drop-shadow(0 0 4px #a855f7)' }, svg);
+            const lt2 = svgEl('text', { x: 380, y: 112, fill: 'rgba(232,236,245,0.9)', 'font-size': 12, 'font-weight': 600 }, svg);
+            lt2.textContent = 'Claude Opus 4.8';
+            const note = svgEl('text', { x: 360, y: 150, fill: 'rgba(168,179,204,0.6)', 'font-size': 10, 'font-style': 'italic' }, svg);
+            note.textContent = 'Composite scoring across 6 axes';
+            const note2 = svgEl('text', { x: 360, y: 168, fill: 'rgba(168,179,204,0.6)', 'font-size': 10, 'font-style': 'italic' }, svg);
+            note2.textContent = 'on a 0-10 scale.';
+        }
+
+        // ========== QUALITY BAR COMPONENTS ==========
+        function drawQualityBars() {
+            const svg = clearChart('chartQualityBars');
+            if (!svg) return;
+            const w = 600, h = 320, pad = { t: 20, r: 20, b: 30, l: 100 };
+            drawGrid(svg, w, h, pad, 5);
+            const cats = ['Speed', 'Quality', 'Coding', 'Creativity', 'Instruction', 'Reasoning'];
+            const local = [6, 8.7, 9.1, 8.4, 8.9, 8.6];
+            const frontier = [9, 9.5, 9.6, 9.7, 9.8, 9.7];
+            const max = 10;
+            const rowH = (h - pad.t - pad.b) / cats.length;
+            for (let i = 0; i < cats.length; i++) {
+                const y = pad.t + rowH * i + rowH / 2;
+                const lbl = svgEl('text', { x: pad.l - 10, y: y + 4, fill: 'rgba(168,179,204,0.85)', 'font-size': 11, 'text-anchor': 'end', 'font-weight': 600 }, svg);
+                lbl.textContent = cats[i];
+                const lh = local[i] / max * (h - pad.t - pad.b) * 0.18;
+                const fh = frontier[i] / max * (h - pad.t - pad.b) * 0.18;
+                const baseY = y - 8;
+                svgEl('rect', { x: pad.l, y: y - 12, width: w - pad.l - pad.r, height: 4, fill: 'rgba(120,145,200,0.06)', rx: 2 }, svg);
+                const lBar = svgEl('rect', { x: pad.l, y: y - 12, width: 0, height: 4, fill: '#00f0ff', rx: 2, filter: 'drop-shadow(0 0 3px rgba(0,240,255,0.5))' }, svg);
+                const lVal = svgEl('text', { x: w - pad.r + 4, y: y - 9, fill: '#00f0ff', 'font-size': 10, 'font-weight': 700, 'font-family': 'JetBrains Mono, monospace' }, svg);
+                lVal.textContent = local[i].toFixed(1);
+                svgEl('rect', { x: pad.l, y: y + 6, width: w - pad.l - pad.r, height: 4, fill: 'rgba(120,145,200,0.06)', rx: 2 }, svg);
+                const fBar = svgEl('rect', { x: pad.l, y: y + 6, width: 0, height: 4, fill: '#a855f7', rx: 2, filter: 'drop-shadow(0 0 3px rgba(168,85,247,0.5))' }, svg);
+                const fVal = svgEl('text', { x: w - pad.r + 4, y: y + 9, fill: '#a855f7', 'font-size': 10, 'font-weight': 700, 'font-family': 'JetBrains Mono, monospace' }, svg);
+                fVal.textContent = frontier[i].toFixed(1);
+                setTimeout((function (lBar, fBar, lw, fw) {
+                    return function () {
+                        lBar.setAttribute('width', lw);
+                        fBar.setAttribute('width', fw);
+                    };
+                })(lBar, fBar, lh * (w - pad.l - pad.r) / (h - pad.t - pad.b) * 4, fh * (w - pad.l - pad.r) / (h - pad.t - pad.b) * 4), 80 + i * 50);
+            }
+        }
+
+        // ========== COST TREND AREA ==========
+        function drawCostTrend() {
+            const svg = clearChart('chartCostTrend');
+            if (!svg) return;
+            const w = 600, h = 240, pad = { t: 20, r: 20, b: 30, l: 50 };
+            drawGrid(svg, w, h, pad, 4);
+            const days = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13', 'D14'];
+            const cum = [0, 1.2, 3.4, 6.8, 9.1, 12.5, 16.2, 19.4, 22.8, 26.1, 30.5, 35.2, 41.7, 47.82];
+            const daily = [0, 1.2, 2.2, 3.4, 2.3, 3.4, 3.7, 3.2, 3.4, 3.3, 4.4, 4.7, 6.5, 6.12];
+            const max = 50;
+            const stepX = (w - pad.l - pad.r) / (days.length - 1);
+            function yPos(v) { return h - pad.b - (v / max) * (h - pad.t - pad.b); }
+            const cumPts = cum.map((v, i) => [pad.l + stepX * i, yPos(v)]);
+            const dailyPts = daily.map((v, i) => [pad.l + stepX * i, yPos(v)]);
+            let cumPath = 'M' + cumPts[0][0] + ',' + cumPts[0][1];
+            for (let i = 1; i < cumPts.length; i++) {
+                const cx = (cumPts[i - 1][0] + cumPts[i][0]) / 2;
+                cumPath += ' C ' + cx + ',' + cumPts[i - 1][1] + ' ' + cx + ',' + cumPts[i][1] + ' ' + cumPts[i][0] + ',' + cumPts[i][1];
+            }
+            const cumArea = cumPath + ' L ' + cumPts[cumPts.length - 1][0] + ',' + (h - pad.b) + ' L ' + cumPts[0][0] + ',' + (h - pad.b) + ' Z';
+            const defs = svgEl('defs', {}, svg);
+            const lg = svgEl('linearGradient', { id: 'gradCT', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+            svgEl('stop', { offset: '0%', 'stop-color': '#a855f7', 'stop-opacity': 0.4 }, lg);
+            svgEl('stop', { offset: '100%', 'stop-color': '#a855f7', 'stop-opacity': 0 }, lg);
+            svgEl('path', { d: cumArea, fill: 'url(#gradCT)' }, svg);
+            let dailyPath = 'M' + dailyPts[0][0] + ',' + dailyPts[0][1];
+            for (let i = 1; i < dailyPts.length; i++) {
+                const cx = (dailyPts[i - 1][0] + dailyPts[i][0]) / 2;
+                dailyPath += ' C ' + cx + ',' + dailyPts[i - 1][1] + ' ' + cx + ',' + dailyPts[i][1] + ' ' + dailyPts[i][0] + ',' + dailyPts[i][1];
+            }
+            svgEl('path', { d: dailyPath, fill: 'none', stroke: '#10ff9a', 'stroke-width': 2, 'stroke-linecap': 'round', filter: 'drop-shadow(0 0 4px rgba(16,255,154,0.6))' }, svg);
+            svgEl('path', { d: cumPath, fill: 'none', stroke: '#a855f7', 'stroke-width': 2.5, 'stroke-linecap': 'round', filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.6))' }, svg);
+            for (let i = 0; i < dailyPts.length; i++) {
+                svgEl('circle', { cx: dailyPts[i][0], cy: dailyPts[i][1], r: 3, fill: '#10ff9a', stroke: '#0a0f1d', 'stroke-width': 1.5 }, svg);
+            }
+            for (let i = 0; i < days.length; i += 2) {
+                const lbl = svgEl('text', { x: pad.l + stepX * i, y: h - pad.b + 16, fill: 'rgba(168,179,204,0.7)', 'font-size': 9, 'text-anchor': 'middle' }, svg);
+                lbl.textContent = days[i];
+            }
+            for (let i = 0; i <= 4; i++) {
+                const v = (max * (1 - i / 4)).toFixed(0);
+                yLabel(svg, pad.l - 8, pad.t + (h - pad.t - pad.b) * (i / 4) + 4, '$' + v);
+            }
+        }
+
+        // ========== PRICING COMPARISON ==========
+        function drawCostCompare() {
+            const svg = clearChart('chartCostCompare');
+            if (!svg) return;
+            const w = 600, h = 240, pad = { t: 20, r: 20, b: 35, l: 50 };
+            drawGrid(svg, w, h, pad, 4);
+            const models = ['Claude Opus', 'GPT-4o', 'Gemini Pro', 'Sonnet 4.5', 'Grok 3', 'Llama 70B*', 'Qwen 27B*'];
+            const costs = [15.0, 5.0, 3.5, 3.0, 5.0, 0, 0];
+            const colors = ['#a855f7', '#10ff9a', '#ff3d8a', '#a855f7', '#ffb547', '#00f0ff', '#00f0ff'];
+            const max = 16;
+            const barH = (h - pad.t - pad.b) / models.length * 0.6;
+            for (let i = 0; i < models.length; i++) {
+                const y = pad.t + (h - pad.t - pad.b) / models.length * i + (h - pad.t - pad.b) / models.length / 2;
+                const lbl = svgEl('text', { x: pad.l - 10, y: y + 4, fill: 'rgba(168,179,204,0.85)', 'font-size': 11, 'text-anchor': 'end', 'font-weight': 600 }, svg);
+                lbl.textContent = models[i];
+                const bw = (costs[i] / max) * (w - pad.l - pad.r);
+                svgEl('rect', { x: pad.l, y: y - barH / 2, width: w - pad.l - pad.r, height: barH, fill: 'rgba(120,145,200,0.05)', rx: 3 }, svg);
+                const bar = svgEl('rect', { x: pad.l, y: y - barH / 2, width: 0, height: barH, fill: colors[i], rx: 3, filter: 'drop-shadow(0 0 4px ' + colors[i] + '66)' }, svg);
+                const vt = svgEl('text', { x: pad.l + bw + 8, y: y + 4, fill: colors[i], 'font-size': 11, 'font-weight': 700, 'font-family': 'JetBrains Mono, monospace' }, svg);
+                vt.textContent = costs[i] === 0 ? 'Local · $0' : '$' + costs[i].toFixed(2);
+                setTimeout((function (bar, bw) { return function () { bar.setAttribute('width', bw); }; })(bar, bw), 80 + i * 50);
+            }
+            for (let i = 0; i <= 4; i++) {
+                const v = (max * (1 - i / 4)).toFixed(0);
+                yLabel(svg, pad.l - 8, pad.t + (h - pad.t - pad.b) * (i / 4) + 4, '$' + v);
+            }
+            const xl = svgEl('text', { x: w / 2, y: h - 6, fill: 'rgba(168,179,204,0.6)', 'font-size': 10, 'text-anchor': 'middle' }, svg);
+            xl.textContent = 'Cost per 1M output tokens (USD)';
+        }
+
+        // ========== GPU UTILIZATION ==========
+        function drawGpu() {
+            const svg = clearChart('chartGpu');
+            if (!svg) return;
+            const w = 600, h = 220, pad = { t: 20, r: 20, b: 30, l: 40 };
+            drawGrid(svg, w, h, pad, 4);
+            const N = 60;
+            const local = [];
+            const frontier = [];
+            for (let i = 0; i < N; i++) {
+                local.push(88 + Math.sin(i * 0.4) * 4 + Math.random() * 3);
+                frontier.push(45 + Math.sin(i * 0.3) * 8 + Math.random() * 4);
+            }
+            const max = 100;
+            const stepX = (w - pad.l - pad.r) / (N - 1);
+            function yPos(v) { return h - pad.b - (v / max) * (h - pad.t - pad.b); }
+            function buildPath(arr) {
+                const pts = arr.map((v, i) => [pad.l + stepX * i, yPos(v)]);
+                let d = 'M' + pts[0][0] + ',' + pts[0][1];
+                for (let i = 1; i < pts.length; i++) {
+                    const cx = (pts[i - 1][0] + pts[i][0]) / 2;
+                    d += ' C ' + cx + ',' + pts[i - 1][1] + ' ' + cx + ',' + pts[i][1] + ' ' + pts[i][0] + ',' + pts[i][1];
+                }
+                return { d: d, pts: pts };
+            }
+            const lP = buildPath(local);
+            const lA = lP.d + ' L ' + lP.pts[lP.pts.length - 1][0] + ',' + (h - pad.b) + ' L ' + lP.pts[0][0] + ',' + (h - pad.b) + ' Z';
+            const defs = svgEl('defs', {}, svg);
+            const lg = svgEl('linearGradient', { id: 'gradGPU', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+            svgEl('stop', { offset: '0%', 'stop-color': '#00f0ff', 'stop-opacity': 0.4 }, lg);
+            svgEl('stop', { offset: '100%', 'stop-color': '#00f0ff', 'stop-opacity': 0 }, lg);
+            svgEl('path', { d: lA, fill: 'url(#gradGPU)' }, svg);
+            svgEl('path', { d: lP.d, fill: 'none', stroke: '#00f0ff', 'stroke-width': 2, 'stroke-linecap': 'round', filter: 'drop-shadow(0 0 3px rgba(0,240,255,0.5))' }, svg);
+            const fP = buildPath(frontier);
+            const fA = fP.d + ' L ' + fP.pts[fP.pts.length - 1][0] + ',' + (h - pad.b) + ' L ' + fP.pts[0][0] + ',' + (h - pad.b) + ' Z';
+            const defs2 = svgEl('defs', {}, svg);
+            const fg = svgEl('linearGradient', { id: 'gradGPU2', x1: 0, y1: 0, x2: 0, y2: 1 }, defs2);
+            svgEl('stop', { offset: '0%', 'stop-color': '#a855f7', 'stop-opacity': 0.3 }, fg);
+            svgEl('stop', { offset: '100%', 'stop-color': '#a855f7', 'stop-opacity': 0 }, fg);
+            svgEl('path', { d: fA, fill: 'url(#gradGPU2)' }, svg);
+            svgEl('path', { d: fP.d, fill: 'none', stroke: '#a855f7', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-dasharray': '4 4', filter: 'drop-shadow(0 0 3px rgba(168,85,247,0.5))' }, svg);
+            for (let i = 0; i <= 4; i++) {
+                yLabel(svg, pad.l - 8, pad.t + (h - pad.t - pad.b) * (i / 4) + 4, (100 - i * 25) + '%');
+            }
+            const xl = svgEl('text', { x: w / 2, y: h - 6, fill: 'rgba(168,179,204,0.6)', 'font-size': 10, 'text-anchor': 'middle' }, svg);
+            xl.textContent = '60 minute window (1Hz sampling)';
+            for (let i = 0; i < 2; i++) {
+                const lg = svgEl('rect', { x: w - 180 + i * 90, y: 14, width: 10, height: 10, rx: 2, fill: i === 0 ? '#00f0ff' : '#a855f7' }, svg);
+                const lt = svgEl('text', { x: w - 168 + i * 90, y: 23, fill: 'rgba(232,236,245,0.8)', 'font-size': 10, 'font-weight': 600 }, svg);
+                lt.textContent = i === 0 ? 'Local 27B' : 'API 4.8';
+            }
+        }
+
+        // ========== VRAM & POWER DUAL LINE ==========
+        function drawVram() {
+            const svg = clearChart('chartVram');
+            if (!svg) return;
+            const w = 600, h = 220, pad = { t: 20, r: 50, b: 30, l: 50 };
+            drawGrid(svg, w, h, pad, 4);
+            const N = 60;
+            const vram = [], power = [];
+            for (let i = 0; i < N; i++) {
+                vram.push(18.0 + Math.sin(i * 0.35) * 0.4 + Math.random() * 0.3);
+                power.push(310 + Math.sin(i * 0.4 + 1) * 8 + Math.random() * 5);
+            }
+            const maxL = 20, maxR = 350;
+            const stepX = (w - pad.l - pad.r) / (N - 1);
+            function yPosL(v) { return h - pad.b - (v / maxL) * (h - pad.t - pad.b); }
+            function yPosR(v) { return h - pad.b - (v / maxR) * (h - pad.t - pad.b); }
+            function build(arr, fn) {
+                const pts = arr.map((v, i) => [pad.l + stepX * i, fn(v)]);
+                let d = 'M' + pts[0][0] + ',' + pts[0][1];
+                for (let i = 1; i < pts.length; i++) {
+                    const cx = (pts[i - 1][0] + pts[i][0]) / 2;
+                    d += ' C ' + cx + ',' + pts[i - 1][1] + ' ' + cx + ',' + pts[i][1] + ' ' + pts[i][0] + ',' + pts[i][1];
+                }
+                return { d: d, pts: pts };
+            }
+            const vP = build(vram, yPosL);
+            const vA = vP.d + ' L ' + vP.pts[vP.pts.length - 1][0] + ',' + (h - pad.b) + ' L ' + vP.pts[0][0] + ',' + (h - pad.b) + ' Z';
+            const defs = svgEl('defs', {}, svg);
+            const lg = svgEl('linearGradient', { id: 'gradVR', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+            svgEl('stop', { offset: '0%', 'stop-color': '#a855f7', 'stop-opacity': 0.35 }, lg);
+            svgEl('stop', { offset: '100%', 'stop-color': '#a855f7', 'stop-opacity': 0 }, lg);
+            svgEl('path', { d: vA, fill: 'url(#gradVR)' }, svg);
+            svgEl('path', { d: vP.d, fill: 'none', stroke: '#a855f7', 'stroke-width': 2, filter: 'drop-shadow(0 0 3px rgba(168,85,247,0.5))' }, svg);
+            const pP = build(power, yPosR);
+            svgEl('path', { d: pP.d, fill: 'none', stroke: '#10ff9a', 'stroke-width': 2, filter: 'drop-shadow(0 0 3px rgba(16,255,154,0.5))' }, svg);
+            for (let i = 0; i <= 4; i++) {
+                yLabel(svg, pad.l - 8, pad.t + (h - pad.t - pad.b) * (i / 4) + 4, (maxL - i * 5).toFixed(0) + 'G');
+            }
+            for (let i = 0; i <= 4; i++) {
+                yLabel(svg, w - pad.r + 8, pad.t + (h - pad.t - pad.b) * (i / 4) + 4, (maxR - i * (maxR / 4)).toFixed(0) + 'W', 'start');
+            }
+            const xl = svgEl('text', { x: w / 2, y: h - 6, fill: 'rgba(168,179,204,0.6)', 'font-size': 10, 'text-anchor': 'middle' }, svg);
+            xl.textContent = 'VRAM (purple) & Power draw (green) - last 60 min';
+        }
+
+        // ========== MAIN REDRAW ==========
+        function redrawAllCharts() {
+            drawSpeedChart();
+            drawLatencyChart();
+            drawQualityChart();
+            drawCostChart();
+            drawSpeedCurve();
+            drawTtft();
+            drawRadar();
+            drawQualityBars();
+            drawCostTrend();
+            drawCostCompare();
+            drawGpu();
+            drawVram();
+        }
+
+        // ========== UPDATED TIMESTAMP ==========
+        (function tick() {
+            const el = document.getElementById('updatedAt');
+            if (el) el.textContent = 'just now';
+            setTimeout(() => { if (el) el.textContent = '2s ago'; }, 2000);
+            setTimeout(() => { if (el) el.textContent = '12s ago'; }, 12000);
+            setTimeout(() => { if (el) el.textContent = '47s ago'; }, 47000);
+        })();
+
+        // ========== LIVE HARDWARE TICK ==========
+        (function hwTick() {
+            const gpuEl = document.getElementById('hwGpuVal');
+            const gpuPct = document.getElementById('hwGpuPct');
+            const gpuBar = document.getElementById('hwGpuBar');
+            const vramEl = document.getElementById('hwVramVal');
+            const vramPct = document.getElementById('hwVramPct');
+            const vramBar = document.getElementById('hwVramBar');
+            const vramFoot = document.getElementById('hwVramFoot');
+            const tempEl = document.getElementById('hwTempVal');
+            const tempBar = document.getElementById('hwTempBar');
+            const powerEl = document.getElementById('hwPowerVal');
+            const powerBar = document.getElementById('hwPowerBar');
+            if (!gpuEl) return;
+            setInterval(() => {
+                const gpu = 88 + Math.random() * 7;
+                const vram = 17.6 + Math.random() * 1.2;
+                const temp = 73 + Math.random() * 5;
+                const power = 305 + Math.random() * 25;
+                gpuEl.textContent = gpu.toFixed(0) + '%';
+                gpuPct.textContent = gpu.toFixed(0) + '%';
+                gpuBar.style.width = gpu.toFixed(0) + '%';
+                vramEl.textContent = vram.toFixed(1) + ' GB';
+                vramPct.textContent = vram.toFixed(1) + ' / 24 GB';
+                vramBar.style.width = ((vram / 24) * 100).toFixed(0) + '%';
+                vramFoot.textContent = ((vram / 24) * 100).toFixed(1) + '% used';
+                tempEl.textContent = temp.toFixed(0) + '\u00b0C';
+                tempBar.style.width = ((temp / 95) * 100).toFixed(0) + '%';
+                powerEl.textContent = power.toFixed(0) + ' W';
+                powerBar.style.width = ((power / 350) * 100).toFixed(0) + '%';
+            }, 2500);
+        })();
+
+        // Initial draw
+        setTimeout(redrawAllCharts, 50);
+        window.addEventListener('load', redrawAllCharts);
+    </script>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ========== DATA ==========
+            const promptHistory = [
+                {
+                    num: 'P-001', cat: 'Coding', text: 'Write a Python async retry decorator with exponential backoff and jitter.', time: 6.2, score: 9.4, status: 'pass',
+                    local: 'def async_retry(max_tries=5, base=0.5, cap=8.0):\n    def deco(fn):\n        @functools.wraps(fn)\n        async def wrap(*a, **kw):\n            for i in range(max_tries):\n                try: return await fn(*a, **kw)\n                except Exception:\n                    if i == max_tries-1: raise\n                    wait = min(cap, base * (2**i)) + random.random()*0.3\n                    await asyncio.sleep(wait)\n        return wrap\n    return deco',
+                    frontier: 'class AsyncRetry:\n    """Production-grade async retry with exponential backoff + jitter."""\n    def __init__(self, max_tries=5, base_delay=0.5, max_delay=8.0):\n        ...\n    def __call__(self, fn):\n        @functools.wraps(fn)\n        async def wrapper(*args, **kwargs):\n            for attempt in range(self.max_tries):\n                try: return await fn(*args, **kwargs)\n                except Exception as e:\n                    if attempt == self.max_tries - 1: raise\n                    delay = min(self.max_delay, self.base_delay * (2 ** attempt))\n                    delay += random.uniform(0, 0.3)\n                    logger.warning(f"retry {attempt+1}: sleeping {delay:.2f}s")\n                    await asyncio.sleep(delay)\n        return wrapper'
+                },
+                {
+                    num: 'P-002', cat: 'Reasoning', text: 'A bat and ball cost $1.10 total. The bat costs $1.00 more than the ball. How much is the ball?', time: 4.8, score: 9.8, status: 'pass',
+                    local: 'Let x = ball. Bat = x + 1.00. Total: x + (x+1) = 1.10 \u2192 2x = 0.10 \u2192 x = $0.05. The ball is 5 cents.',
+                    frontier: 'Let b = ball cost, then bat = b + 1.00.\nb + (b + 1.00) = 1.10\n2b = 0.10\nb = $0.05\n\nThe ball costs 5\u00a2. (The intuitive answer of 10\u00a2 is wrong \u2014 classic cognitive reflection test item.)'
+                },
+                {
+                    num: 'P-003', cat: 'Creative', text: 'Open the door quietly. The house has been empty for ten years.', time: 5.1, score: 8.9, status: 'pass',
+                    local: 'The hinges knew my hands before I did. Dust lay on everything like patient snow; the smell of old wood and something floral, ghost-thin. The hall stretched ahead, photographs still standing \u2014 my mother mid-laugh, frozen in a Tuesday from 1994.',
+                    frontier: 'The hinges gave a breath, not a sound. I stepped into the house the way you step into a sentence someone else has left unfinished \u2014 carefully, aware that the air has been holding its shape for a long time.'
+                },
+                {
+                    num: 'P-004', cat: 'Instruction', text: 'Return JSON: {"city": <str>, "population": <int>} for Tokyo.', time: 1.4, score: 9.9, status: 'pass',
+                    local: '{"city": "Tokyo", "population": 13960000}',
+                    frontier: '```json\n{"city": "Tokyo", "population": 13960000}\n```'
+                },
+                {
+                    num: 'P-005', cat: 'Coding', text: 'Implement a debounce function in JavaScript with leading and trailing edge options.', time: 7.3, score: 9.0, status: 'pass',
+                    local: 'function debounce(fn, wait, opts={}){\n  let t, lastArgs, lastThis, result;\n  return function(...args){\n    lastArgs = args; lastThis = this;\n    if (opts.leading && !t) result = fn.apply(lastThis, lastArgs);\n    clearTimeout(t);\n    t = setTimeout(()=>{\n      t = null;\n      if (!opts.leading || opts.trailing) result = fn.apply(lastThis, lastArgs);\n    }, wait);\n    return result;\n  };\n}',
+                    frontier: 'function debounce(fn, wait = 200, { leading = false, trailing = true } = {}) {\n  let timerId = null;\n  let lastArgs = null;\n  let lastThis = null;\n  let lastCallTime = null;\n  let lastInvokeTime = 0;\n  function invokeFunc() {\n    const args = lastArgs, thisArg = lastThis;\n    lastArgs = lastThis = null;\n    lastInvokeTime = Date.now();\n    return fn.apply(thisArg, args);\n  }\n  // ... lodash-grade reference implementation\n}'
+                },
+                {
+                    num: 'P-006', cat: 'Reasoning', text: 'If all Zorps are Fims, and no Fims are Quibs, can we conclude some Zorps are Quibs?', time: 5.6, score: 9.7, status: 'pass',
+                    local: 'No. The premises establish a one-way containment: Zorps \u2282 Fims, and Fims \u2229 Quibs = \u2205. Therefore Zorps are also disjoint from Quibs. The conclusion "some Zorps are Quibs" is invalid.',
+                    frontier: 'No. The syllogism is invalid. From "all Zorps are Fims" and "no Fims are Quibs" we can validly conclude: **no Zorps are Quibs** (Barbara + contrapositive chain). The original conclusion contradicts the premises.'
+                },
+                {
+                    num: 'P-007', cat: 'Factual', text: 'What is the boiling point of water at the summit of Mt. Everest in Celsius?', time: 2.9, score: 9.6, status: 'pass',
+                    local: 'Approximately 71\u00b0C at the summit of Mt. Everest (8,848 m), where atmospheric pressure is about 34.5 kPa (\u224834% of sea level).',
+                    frontier: 'Approximately **71\u00b0C** (160\u00b0F), due to the reduced atmospheric pressure of ~34.5 kPa at 8,848 m elevation. This is about 29\u00b0C lower than at sea level.'
+                },
+                {
+                    num: 'P-008', cat: 'Creative', text: 'Write a haiku about a server crashing during a deployment.', time: 2.2, score: 8.6, status: 'pass',
+                    local: 'Pods tumbling down \u2014\nthe deployment log scrolls on,\ngreen checkmark turns red.',
+                    frontier: 'Green light fades to red.\nThe dashboard holds its breath, then \u2014\nFriday night again.'
+                },
+                {
+                    num: 'P-009', cat: 'Coding', text: 'Fix the off-by-one error in this binary search: mid = (lo + hi) / 2.', time: 4.4, score: 9.3, status: 'pass',
+                    local: 'Replace with: mid = lo + (hi - lo) // 2. This prevents integer overflow in languages with fixed-width ints. The (lo+hi)/2 form is correct only when lo+hi cannot overflow. For correctness on negative indices it works, but the overflow-safe form is preferred.',
+                    frontier: 'Two improvements:\n\n1. **Overflow safety**: `mid = lo + (hi - lo) // 2` (or `lo + ((hi - lo) >> 1)`).\n2. **Off-by-one fix for the loop**: use `hi = mid` (not `mid - 1`) when arr[mid] >= target, and `lo = mid + 1` otherwise.\n\n```python\ndef lower_bound(arr, target):\n    lo, hi = 0, len(arr)\n    while lo < hi:\n        mid = lo + (hi - lo) // 2\n        if arr[mid] < target: lo = mid + 1\n        else: hi = mid\n    return lo\n```'
+                },
+                {
+                    num: 'P-010', cat: 'Conversation', text: 'I just got passed over for a promotion I deserved. I feel angry and stuck.', time: 6.7, score: 8.5, status: 'warn',
+                    local: 'That sounds really frustrating \u2014 especially when you put in the work and didn\'t see it pay off. Anger often shows up when our effort and the result don\'t line up. What do you think held the decision back? Maybe a quick read on what the room prioritized could help you reframe what to push on next.',
+                    frontier: 'That sounds heavy. Being passed over when you felt ready is one of those things that hits the ego and the identity at the same time. A few things worth sitting with:\n\n- The anger is information \u2014 it\'s telling you that this mattered to you more than the job title.\n- "Deserved" is a story we tell ourselves, and it\'s worth asking whether the decision-makers had a different picture.\n- You don\'t have to decide what to do about it tonight.\n\nWhat do you need right now \u2014 to vent, or to think it through?'
+                },
+                {
+                    num: 'P-011', cat: 'Instruction', text: 'List 3 vegetables, in alphabetical order, one per line, no numbering.', time: 1.1, score: 9.8, status: 'pass',
+                    local: 'carrot\nlettuce\nspinach',
+                    frontier: 'carrot\nlettuce\nspinach'
+                },
+                {
+                    num: 'P-012', cat: 'Coding', text: 'Write a SQL query: get the 2nd highest distinct salary per department.', time: 5.9, score: 8.7, status: 'warn',
+                    local: 'SELECT department, salary\nFROM (\n  SELECT department, salary,\n         DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS r\n  FROM employees\n) t\nWHERE r = 2;',
+                    frontier: 'WITH ranked AS (\n  SELECT\n    department,\n    salary,\n    DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS rnk\n  FROM employees\n)\nSELECT department, salary\nFROM ranked\nWHERE rnk = 2\nORDER BY department, salary DESC;\n\nNote: if you want strictly the *second* value (not the value shared by ties), swap DENSE_RANK for ROW_NUMBER and add a tie-breaker column in the ORDER BY.'
+                }
+            ];
+
+            const previousTests = [
+                { name: 'Qwen3.6 27B', task: 'Multi-domain H2H', score: 8.74, speed: 38.5, cost: 0, grade: 'A-', wins: 'WWLLW', date: '2026-05-28', color: '#00f0ff', tag: 'QC', local: true },
+                { name: 'Claude Opus 4.8', task: 'Multi-domain H2H', score: 9.66, speed: 85.2, cost: 47.82, grade: 'A+', wins: 'WLWWW', date: '2026-05-28', color: '#a855f7', tag: 'CL', local: false },
+                { name: 'Llama 3.3 70B Q4', task: 'Coding benchmark', score: 8.21, speed: 18.4, cost: 0, grade: 'B+', wins: 'WLWLL', date: '2026-05-21', color: '#10ff9a', tag: 'LM', local: true },
+                { name: 'DeepSeek R1 32B', task: 'Reasoning suite', score: 9.12, speed: 27.6, cost: 0, grade: 'A', wins: 'WWLWW', date: '2026-05-19', color: '#ff3d8a', tag: 'DS', local: true },
+                { name: 'Mistral Large 2', task: 'Instruction eval', score: 8.43, speed: 33.1, cost: 0, grade: 'B+', wins: 'WLWLW', date: '2026-05-14', color: '#ffb547', tag: 'MS', local: true },
+                { name: 'GPT-4o', task: 'Multi-domain H2H', score: 9.18, speed: 92.4, cost: 38.21, grade: 'A', wins: 'LWWLW', date: '2026-05-10', color: '#10ff9a', tag: 'GP', local: false },
+                { name: 'Gemini 2.0 Pro', task: 'Long-context test', score: 9.04, speed: 78.9, cost: 22.10, grade: 'A', wins: 'WLWLL', date: '2026-05-06', color: '#a855f7', tag: 'GM', local: false },
+                { name: 'Qwen3.5 22B', task: 'Coding benchmark', score: 8.05, speed: 44.2, cost: 0, grade: 'B', wins: 'LWLLW', date: '2026-04-29', color: '#00f0ff', tag: 'QC', local: true },
+                { name: 'Llama 3.1 8B Q6', task: 'Speed trials', score: 7.62, speed: 78.1, cost: 0, grade: 'B-', wins: 'WLLWL', date: '2026-04-22', color: '#10ff9a', tag: 'LM', local: true },
+                { name: 'Phi-4 14B', task: 'Reasoning suite', score: 7.88, speed: 51.3, cost: 0, grade: 'B', wins: 'LWLWL', date: '2026-04-15', color: '#ffb547', tag: 'PH', local: true },
+                { name: 'Claude Sonnet 4.5', task: 'Multi-domain H2H', score: 9.32, speed: 102.6, cost: 28.74, grade: 'A', wins: 'WWLWW', date: '2026-04-08', color: '#a855f7', tag: 'CL', local: false },
+                { name: 'Grok 3', task: 'Creative writing', score: 8.55, speed: 88.7, cost: 31.20, grade: 'B+', wins: 'WLWLW', date: '2026-04-01', color: '#ff3d8a', tag: 'GR', local: false }
+            ];
+
+            // ========== RENDER PROMPT HISTORY ==========
+            const promptList = document.getElementById('promptList');
+            promptHistory.forEach((p) => {
+                const item = document.createElement('div');
+                item.className = 'prompt-item';
+                const localSpeed = (35 + (parseInt(p.num.slice(2)) * 1.7) % 8).toFixed(1);
+                const frontierSpeed = (80 + (parseInt(p.num.slice(2)) * 1.3) % 10).toFixed(1);
+                item.innerHTML =
+                    '<div class="prompt-head">' +
+                    '<div class="prompt-num">' + p.num + '</div>' +
+                    '<div class="prompt-text" title="' + p.text.replace(/"/g, '&quot;') + '">' + p.text + '</div>' +
+                    '<div class="prompt-cat">' + p.cat + '</div>' +
+                    '<div class="prompt-time">' + p.time.toFixed(1) + 's</div>' +
+                    '<div class="prompt-score">' + p.score.toFixed(1) + '/10</div>' +
+                    '<div class="prompt-status status-' + p.status + '">' + (p.status === 'pass' ? 'Pass' : p.status === 'warn' ? 'Warn' : 'Fail') + '</div>' +
+                    '<div class="prompt-chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>' +
+                    '</div>' +
+                    '<div class="prompt-body">' +
+                    '<div class="prompt-body-inner">' +
+                    '<div class="prompt-side">' +
+                    '<h4><span class="swatch local"></span> Qwen3.6 27B &middot; Local</h4>' +
+                    '<pre>' + p.local.replace(/</g, '&lt;') + '</pre>' +
+                    '<div class="prompt-stats">' +
+                    '<div class="prompt-stat"><div class="k">Tokens / sec</div><div class="v" style="color:var(--neon-cyan)">' + localSpeed + '</div></div>' +
+                    '<div class="prompt-stat"><div class="k">Time</div><div class="v">' + (p.time * 0.92).toFixed(1) + 's</div></div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="prompt-side">' +
+                    '<h4><span class="swatch frontier"></span> Claude Opus 4.8 &middot; API</h4>' +
+                    '<pre>' + p.frontier.replace(/</g, '&lt;') + '</pre>' +
+                    '<div class="prompt-stats">' +
+                    '<div class="prompt-stat"><div class="k">Tokens / sec</div><div class="v" style="color:var(--neon-purple)">' + frontierSpeed + '</div></div>' +
+                    '<div class="prompt-stat"><div class="k">Time</div><div class="v">' + (p.time * 0.48).toFixed(1) + 's</div></div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
+                item.querySelector('.prompt-head').addEventListener('click', () => {
+                    item.classList.toggle('open');
+                });
+                promptList.appendChild(item);
+            });
+
+            // ========== RENDER PREVIOUS TESTS TABLE ==========
+            const testsTbody = document.getElementById('testsTbody');
+            const searchInput = document.getElementById('searchInput');
+            const sortGroup = document.getElementById('sortGroup');
+            const modelFilter = document.getElementById('modelFilter');
+            let currentSort = 'score';
+            let currentFilter = 'all';
+            let currentSearch = '';
+
+            function gradeClass(g) {
+                if (g.charAt(0) === 'A') return 'grade-a';
+                if (g.charAt(0) === 'B') return 'grade-b';
+                return 'grade-c';
+            }
+
+            function renderTable() {
+                let rows = previousTests.filter(t => {
+                    if (currentFilter === 'local' && !t.local) return false;
+                    if (currentFilter === 'frontier' && t.local) return false;
+                    if (currentFilter === 'qwen' && t.name.indexOf('Qwen') !== 0) return false;
+                    if (currentFilter === 'claude' && t.name.indexOf('Claude') !== 0) return false;
+                    if (currentSearch) {
+                        const s = currentSearch.toLowerCase();
+                        return t.name.toLowerCase().indexOf(s) !== -1 || t.task.toLowerCase().indexOf(s) !== -1;
+                    }
+                    return true;
+                });
+
+                rows.sort((a, b) => {
+                    if (currentSort === 'score') return b.score - a.score;
+                    if (currentSort === 'speed') return b.speed - a.speed;
+                    if (currentSort === 'cost') return a.cost - b.cost;
+                    if (currentSort === 'date') return b.date.localeCompare(a.date);
+                    return 0;
+                });
+
+                if (rows.length === 0) {
+                    testsTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted)">No tests match the current filter.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                for (let i = 0; i < rows.length; i++) {
+                    const t = rows[i];
+                    let winsHtml = '';
+                    for (let j = 0; j < t.wins.length; j++) {
+                        const c = t.wins.charAt(j);
+                        const cls = c === 'L' ? ' l' : (c === 'D' ? ' d' : '');
+                        winsHtml += '<span class="win-block' + cls + '"></span>';
+                    }
+                    const costCell = t.cost === 0 ? '<span style="color:var(--neon-green)">Free</span>' : '<span style="color:var(--neon-pink)">$' + t.cost.toFixed(2) + '</span>';
+                    html +=
+                        '<tr>' +
+                        '<td><div class="model-cell">' +
+                        '<div class="model-icon" style="background:linear-gradient(135deg, ' + t.color + ', ' + t.color + '99)">' + t.tag + '</div>' +
+                        '<div><div class="name">' + t.name + '</div><div class="meta">' + (t.local ? 'Local' : 'Frontier API') + '</div></div>' +
+                        '</div></td>' +
+                        '<td>' + t.task + '</td>' +
+                        '<td class="mono" style="color:var(--neon-cyan);font-weight:700">' + t.score.toFixed(2) + '</td>' +
+                        '<td class="mono">' + t.speed.toFixed(1) + ' t/s</td>' +
+                        '<td class="mono">' + costCell + '</td>' +
+                        '<td><span class="grade-badge ' + gradeClass(t.grade) + '">' + t.grade + '</span></td>' +
+                        '<td><div class="win-streak">' + winsHtml + '</div></td>' +
+                        '<td class="mono" style="color:var(--text-dim)">' + t.date + '</td>' +
+                        '</tr>';
+                }
+                testsTbody.innerHTML = html;
+
+                document.querySelectorAll('.data-table thead th').forEach(th => th.classList.remove('sorted'));
+                const colMap = { score: 'Score', speed: 'Speed', cost: 'Cost', date: 'Date' };
+                const sortCol = colMap[currentSort];
+                document.querySelectorAll('.data-table thead th').forEach(th => {
+                    if (th.textContent.trim() === sortCol) th.classList.add('sorted');
+                });
+            }
+
+            searchInput.addEventListener('input', e => { currentSearch = e.target.value; renderTable(); });
+            sortGroup.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sortGroup.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSort = btn.dataset.sort;
+                    renderTable();
+                });
+            });
+            document.querySelectorAll('.data-table thead th').forEach(th => {
+                th.addEventListener('click', () => {
+                    const col = th.dataset.col;
+                    const sortMap = { score: 'score', speed: 'speed', cost: 'cost', date: 'date' };
+                    if (sortMap[col]) {
+                        currentSort = sortMap[col];
+                        sortGroup.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+                        const btn = sortGroup.querySelector('[data-sort="' + currentSort + '"]');
+                        if (btn) btn.classList.add('active');
+                        renderTable();
+                    }
+                });
+            });
+            modelFilter.addEventListener('change', e => { currentFilter = e.target.value; renderTable(); });
+
+            renderTable();
+
+            // ========== VIEW SWITCHER ==========
+            const viewSwitcher = document.getElementById('viewSwitcher');
+            viewSwitcher.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    viewSwitcher.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const view = btn.dataset.view;
+                    document.querySelectorAll('.view-section').forEach(s => {
+                        s.classList.toggle('active', s.dataset.view === view);
+                    });
+                    requestAnimationFrame(() => {
+                        try { redrawAllCharts(); } catch (e) { /* ignore */ }
+                    });
+                });
+            });
+
+            // ========== LOCAL/FRONTIER TOGGLE ==========
+            const metricToggle = document.getElementById('metricToggle');
+            const metricLabel = document.getElementById('metricLabel');
+            let metricMode = 'local';
+            metricToggle.addEventListener('click', () => {
+                metricMode = metricMode === 'local' ? 'frontier' : 'local';
+                metricToggle.classList.toggle('frontier', metricMode === 'frontier');
+                metricLabel.textContent = metricMode === 'local' ? 'Local' : 'Frontier';
+                repaintH2H();
+                try { redrawAllCharts(); } catch (e) { }
+            });
+
+            // ========== ANIMATE HEAD-TO-HEAD BARS ==========
+            function repaintH2H() {
+                document.querySelectorAll('.h2h-metric-bar > i').forEach((el) => {
+                    const w = parseInt(el.dataset.w, 10);
+                    el.style.width = '0%';
+                    setTimeout(() => { el.style.width = w + '%'; }, 60);
+                });
+            }
+            setTimeout(repaintH2H, 200);
+
+        })();
+    </script>
+</body>
+
+</html>

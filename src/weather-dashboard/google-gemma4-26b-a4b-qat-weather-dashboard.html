@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyGlass | Premium Weather</title>
+    <!-- Tailwind CSS for rapid, modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for interactive data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons for sleek, modern iconography -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-blur: blur(12px);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            transition: background 1s ease;
+            min-height: 100vh;
+            color: white;
+        }
+
+        /* Dynamic Background Layers */
+        #bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            transition: all 1.5s ease-in-out;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .glass-button {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Custom Scrollbar for Hourly Slider */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        /* Comparison Mode Overlay */
+        #comparison-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900">
+
+    <!-- Dynamic Background -->
+    <div id="bg-layer"></div>
+
+    <!-- Main App Container -->
+    <div class="container mx-auto px-4 py-8 max-w-7xl min-h-screen flex flex-col gap-6">
+
+        <!-- Header / Search Bar -->
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 animate-fade">
+            <div class="flex items-center gap-3">
+                <div class="p-3 glass-card">
+                    <i data-lucide="cloud-sun" class="text-yellow-300 w-8 h-8"></i>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight">SkyGlass</h1>
+            </div>
+
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="relative flex-grow md:w-80">
+                    <input type="text" id="city-input" placeholder="Search city..."
+                        class="w-full bg-white/10 border border-white/20 rounded-full py-2.5 px-5 pl-12 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-md">
+                    <i data-lucide="search" class="absolute left-4 top-3 w-5 h-5 text-white/50"></i>
+                    <div id="search-loader" class="absolute right-4 top-2.5 hidden">
+                        <div class="loader"></div>
+                    </div>
+                </div>
+                <button id="btn-location" class="glass-button p-2.5 rounded-full" title="Use Current Location">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </button>
+                <button id="btn-unit" class="glass-button px-4 py-2 rounded-full font-semibold text-sm">
+                    °C
+                </button>
+                <button id="btn-compare" class="glass-button px-4 py-2 rounded-full font-semibold text-sm">
+                    Compare
+                </button>
+            </div>
+        </header>
+
+        <!-- Weather Alerts Bar -->
+        <div id="alert-bar" class="hidden animate-fade">
+            <div class="glass-card border-red-500/50 bg-red-500/20 p-4 flex items-center gap-3 text-red-100">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                <span id="alert-text">Severe weather warning in your area.</span>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left Column: Current Weather & Details -->
+            <div class="lg:col-span-4 flex flex-col gap-6 animate-fade" style="animation-delay: 0.1s">
+                <!-- Current Weather Card -->
+                <section class="glass-card p-8 text-center relative overflow-hidden">
+                    <div id="weather-icon-container" class="mb-4 flex justify-center">
+                        <!-- Icon injected by JS -->
+                    </div>
+                    <h2 id="display-city" class="text-2xl font-semibold mb-1">London, UK</h2>
+                    <p id="display-date" class="text-white/60 text-sm mb-6">Monday, 12 May</p>
+
+                    <div class="flex items-center justify-center gap-2">
+                        <span id="display-temp" class="text-7xl font-bold tracking-tighter">22</span>
+                        <span id="display-unit-symbol" class="text-3xl font-light text-white/60">°C</span>
+                    </div>
+                    <p id="display-condition" class="text-xl text-white/80 mt-2">Partly Cloudy</p>
+
+                    <div class="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-white/10">
+                        <div class="text-left">
+                            <p class="text-white/50 text-xs uppercase tracking-wider">Feels Like</p>
+                            <p id="display-feels" class="text-lg font-medium">24°C</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-white/50 text-xs uppercase tracking-wider">Humidity</p>
+                            <p id="display-humidity" class="text-lg font-medium">45%</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Detailed Metrics Grid -->
+                <section class="grid grid-cols-2 gap-4">
+                    <div class="glass-card p-4 flex items-center gap-3">
+                        <i data-lucide="wind" class="text-blue-300 w-5 h-5"></i>
+                        <div>
+                            <p class="text-white/50 text-[10px] uppercase">Wind</p>
+                            <p id="display-wind" class="font-semibold">12 km/h</p>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 flex items-center gap-3">
+                        <i data-lucide="droplets" class="text-blue-300 w-5 h-5"></i>
+                        <div>
+                            <p class="text-white/50 text-[10px] uppercase">UV Index</p>
+                            <p id="display-uv" class="font-semibold">3 (Low)</p>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 flex items-center gap-3">
+                        <i data-lucide="eye" class="text-blue-300 w-5 h-5"></i>
+                        <div>
+                            <p class="text-white/50 text-[10px] uppercase">Visibility</p>
+                            <p id="display-vis" class="font-semibold">10 km</p>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 flex items-center gap-3">
+                        <i data-lucide="thermometer" class="text-blue-300 w-5 h-5"></i>
+                        <div>
+                            <p class="text-white/50 text-[10px] uppercase">Pressure</p>
+                            <p id="display-press" class="font-semibold">1012 hPa</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Favorites Sidebar (Desktop) -->
+                <section class="glass-card p-4 hidden lg:block">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-semibold uppercase tracking-widest text-white/50">Favorites</h3>
+                        <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+                    </div>
+                    <ul id="favorites-list" class="space-y-3">
+                        <!-- Favorites injected by JS -->
+                    </ul>
+                </section>
+            </div>
+
+            <!-- Middle Column: Charts & Hourly -->
+            <div class="lg:col-span-5 flex flex-col gap-6 animate-fade" style="animation-delay: 0.2s">
+                <!-- Hourly Forecast Slider -->
+                <section class="glass-card p-6">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-white/50 mb-4">Hourly Forecast</h3>
+                    <div id="hourly-slider" class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                        <!-- Hourly cards injected by JS -->
+                    </div>
+                </section>
+
+                <!-- Interactive Chart -->
+                <section class="glass-card p-6 flex-grow min-h-[300px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-semibold uppercase tracking-widest text-white/50">Temperature Trend</h3>
+                        <div class="flex gap-2 text-[10px]">
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                Temp</span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-200"></span>
+                                Rain</span>
+                        </div>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: 7-Day Forecast & Air Quality -->
+            <div class="lg:col-span-3 flex flex-col gap-6 animate-fade" style="animation-delay: 0.3s">
+                <!-- 7-Day Forecast -->
+                <section class="glass-card p-6">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-white/50 mb-4">7-Day Forecast</h3>
+                    <div id="daily-forecast" class="space-y-4">
+                        <!-- Daily items injected by JS -->
+                    </div>
+                </section>
+
+                <!-- Air Quality & Sun -->
+                <section class="grid grid-cols-1 gap-4">
+                    <div class="glass-card p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-white/50 uppercase">Air Quality</span>
+                            <span id="display-aqi"
+                                class="text-xs font-bold px-2 py-0.5 rounded bg-green-500/20 text-green-400">Good</span>
+                        </div>
+                        <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                            <div id="aqi-bar" class="bg-green-400 h-full w-[20%]"></div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs text-white/50 uppercase">Sun Cycle</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="sunrise" class="w-4 h-4 text-orange-300"></i>
+                                <span id="display-sunrise">06:12 AM</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span id="display-sunset">07:45 PM</span>
+                                <i data-lucide="sunset" class="w-4 h-4 text-orange-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-auto py-6 text-center text-white/30 text-xs tracking-widest uppercase">
+            SkyGlass Engine &bull; Powered by Gemma 4
+        </footer>
+    </div>
+
+    <!-- Comparison Modal Overlay -->
+    <div id="comparison-overlay" class="flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 relative">
+            <button id="btn-close-compare" class="absolute top-4 right-4 text-white/50 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h2 class="text-2xl font-bold mb-6">City Comparison</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div id="compare-left" class="space-y-4">
+                    <!-- Comparison Data Left -->
+                </div>
+                <div id="compare-right" class="space-y-4">
+                    <!-- Comparison Data Right -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * CONFIGURATION
+         * ---------------------------------------------------------
+         * 1. To use real data: 
+         *    - Get a free API key from https://openweathermap.org/
+         *    - Set USE_MOCK_DATA = false
+         *    - Set API_KEY = 'your_key_here'
+         * 2. Note: Free tier OpenWeatherMap has limitations on 7-day/hourly data.
+         *    The Mock Data below is designed to show all features perfectly.
+         */
+        const CONFIG = {
+            USE_MOCK_DATA: false,
+            API_KEY: 'YOUR_API_KEY_HERE',
+            BASE_URL: 'https://api.openweathermap.org/data/2.5/'
+        };
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            currentCity: {
+                name: "London, UK",
+                temp: 18,
+                feelsLike: 19,
+                condition: "Partly Cloudy",
+                humidity: 62,
+                wind: 12,
+                pressure: 1012,
+                uv: 3,
+                visibility: 10,
+                sunrise: "06:12",
+                sunset: "19:45",
+                aqi: 25,
+                tempRange: { high: 22, low: 14 },
+                hourly: [],
+                daily: [],
+                rainChance: [10, 15, 5, 0, 0, 20, 40]
+            },
+            units: 'C', // 'C' or 'F'
+            favorites: ['New York, US', 'Tokyo, JP', 'Paris, FR'],
+            isComparisonMode: false,
+            comparisonCity: null
+        };
+
+        // --- DOM ELEMENTS ---
+        const els = {
+            bg: document.getElementById('bg-layer'),
+            cityInput: document.getElementById('city-input'),
+            btnLocation: document.getElementById('btn-location'),
+            btnUnit: document.getElementById('btn-unit'),
+            btnCompare: document.getElementById('btn-compare'),
+            btnCloseCompare: document.getElementById('btn-close-compare'),
+            compareOverlay: document.getElementById('comparison-overlay'),
+            searchLoader: document.getElementById('search-loader'),
+            displayCity: document.getElementById('display-city'),
+            displayTemp: document.getElementById('display-temp'),
+            displayUnitSymbol: document.getElementById('display-unit-symbol'),
+            displayCondition: document.getElementById('display-condition'),
+            displayFeels: document.getElementById('display-feels'),
+            displayHumidity: document.getElementById('display-humidity'),
+            displayWind: document.getElementById('display-wind'),
+            displayUV: document.getElementById('display-uv'),
+            displayVis: document.getElementById('display-vis'),
+            displayPress: document.getElementById('display-press'),
+            displaySunrise: document.getElementById('display-sunrise'),
+            displaySunset: document.getElementById('display-sunset'),
+            displayAqi: document.getElementById('display-aqi'),
+            aqiBar: document.getElementById('aqi-bar'),
+            hourlySlider: document.getElementById('hourly-slider'),
+            dailyForecast: document.getElementById('daily-forecast'),
+            favoritesList: document.getElementById('favorites-list'),
+            chartCanvas: document.getElementById('mainChart'),
+            compareLeft: document.getElementById('compare-left'),
+            compareRight: document.getElementById('compare-right'),
+            alertBar: document.getElementById('alert-bar'),
+            alertText: document.getElementById('alert-text')
+        };
+
+        // --- UTILITIES ---
+        const formatTemp = (celsius) => {
+            if (state.units === 'C') return `${Math.round(celsius)}°C`;
+            return `${Math.round((celsius * 9 / 5) + 32)}°F`;
+        };
+
+        const getIconForCondition = (condition) => {
+            const map = {
+                'Clear': 'sun',
+                'Clouds': 'cloud',
+                'Rain': 'cloud-rain',
+                'Drizzle': 'cloud-drizzle',
+                'Thunderstorm': 'cloud-lightning',
+                'Snow': 'snowflake',
+                'Mist': 'cloud-fog',
+                'Partly Cloudy': 'cloud-sun'
+            };
+            return map[condition] || 'cloud';
+        };
+
+        const updateBackground = (condition) => {
+            let gradient = '';
+            if (condition.includes('Clear')) {
+                gradient = 'radial-gradient(circle at 50% 50%, #4facfe 0%, #00f2fe 100%)';
+            } else if (condition.includes('Rain') || condition.includes('Thunderstorm')) {
+                gradient = 'radial-gradient(circle at 50% 50%, #2c3e50 0%, #000000 100%)';
+            } else if (condition.includes('Clouds')) {
+                gradient = 'radial-gradient(circle at 50% 50%, #757f9d 0%, #d3d3d3 100%)';
+            } else {
+                gradient = 'radial-gradient(circle at 50% 50%, #1e3c72 0%, #2a5298 100%)';
+            }
+            els.bg.style.background = gradient;
+        };
+
+        // --- DATA SERVICE ---
+        const WeatherService = {
+            async fetchWeather(query) {
+                if (CONFIG.USE_MOCK_DATA) {
+                    return this.getMockData(query);
+                }
+                // Real API implementation would go here
+                // For brevity in a single file, we simulate the fetch delay
+                return new Promise(resolve => {
+                    setTimeout(() => resolve(this.getMockData(query)), 800);
+                });
+            },
+
+            getMockData(query) {
+                // Generates pseudo-random data based on string to keep it "consistent" for the same city
+                const seed = query.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+                const pseudoTemp = 15 + (seed % 15);
+                const conditions = ['Clear', 'Clouds', 'Rain', 'Partly Cloudy', 'Thunderstorm'];
+                const condition = conditions[seed % conditions.length];
+
+                return {
+                    name: query.charAt(0).toUpperCase() + query.slice(1),
+                    temp: pseudoTemp,
+                    feelsLike: pseudoTemp + 2,
+                    condition: condition,
+                    humidity: 40 + (seed % 40),
+                    wind: 5 + (seed % 20),
+                    pressure: 1000 + (seed % 30),
+                    uv: (seed % 10),
+                    visibility: 10,
+                    sunrise: "06:10",
+                    sunset: "19:30",
+                    aqi: seed % 100,
+                    tempRange: { high: pseudoTemp + 5, low: pseudoTemp - 5 },
+                    hourly: Array.from({ length: 24 }, (_, i) => ({
+                        time: `${i}:00`,
+                        temp: pseudoTemp + Math.sin(i / 3) * 5,
+                        rain: Math.max(0, Math.sin(i / 5) * 30)
+                    })),
+                    daily: Array.from({ length: 7 }, (_, i) => ({
+                        day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i],
+                        temp: pseudoTemp + (i - 3),
+                        condition: conditions[i % conditions.length]
+                    }))
+                };
+            }
+        };
+
+        // --- UI CONTROLLER ---
+        const UI = {
+            async updateDashboard(cityData) {
+                els.searchLoader.classList.remove('hidden');
+
+                const data = await WeatherService.fetchWeather(cityData.name || cityData);
+                state.currentCity = data;
+
+                // Update Text
+                els.displayCity.innerText = data.name;
+                els.displayTemp.innerText = Math.round(data.temp);
+                els.displayUnitSymbol.innerText = `°${state.units}`;
+                els.displayCondition.innerText = data.condition;
+                els.displayFeels.innerText = formatTemp(data.feelsLike);
+                els.displayHumidity.innerText = `${data.humidity}%`;
+                els.displayWind.innerText = `${data.wind} km/h`;
+                els.displayUV.innerText = `${data.uv} (${data.uv < 3 ? 'Low' : data.uv < 6 ? 'Mod' : 'High'})`;
+                els.displayVis.innerText = `${data.visibility} km`;
+                els.displayPress.innerText = `${data.pressure} hPa`;
+                els.displaySunrise.innerText = data.sunrise;
+                els.displaySunset.innerText = data.sunset;
+
+                // Update AQI
+                const aqiVal = data.aqi;
+                els.displayAqi.innerText = aqiVal < 50 ? 'Good' : aqiVal < 100 ? 'Moderate' : 'Poor';
+                els.aqiBar.style.width = `${Math.min(aqiVal, 100)}%`;
+                els.aqiBar.className = `h-full ${aqiVal < 50 ? 'bg-green-400' : aqiVal < 100 ? 'bg-yellow-400' : 'bg-red-400'}`;
+
+                // Update Icon
+                const iconName = getIconForCondition(data.condition);
+                els.weatherIconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-20 h-20 text-white/90"></i>`;
+
+                // Update Background
+                updateBackground(data.condition);
+
+                // Update Hourly Slider
+                els.hourlySlider.innerHTML = '';
+                data.hourly.forEach(h => {
+                    const div = document.createElement('div');
+                    div.className = 'flex-shrink-0 w-16 text-center animate-fade';
+                    div.innerHTML = `
+                        <p class="text-xs text-white/50 mb-2">${h.time}</p>
+                        <i data-lucide="${getIconForCondition(data.condition)}" class="w-6 h-6 mx-auto mb-1"></i>
+                        <p class="font-bold">${Math.round(h.temp)}°</p>
+                    `;
+                    els.hourlySlider.appendChild(div);
+                });
+
+                // Update Daily Forecast
+                els.dailyForecast.innerHTML = '';
+                data.daily.forEach(d => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center justify-between animate-fade';
+                    div.innerHTML = `
+                        <span class="w-12 font-medium">${d.day}</span>
+                        <i data-lucide="${getIconForCondition(d.condition)}" class="w-6 h-6"></i>
+                        <span class="font-semibold">${Math.round(d.temp)}°</span>
+                    `;
+                    els.dailyForecast.appendChild(div);
+                });
+
+                // Update Favorites
+                els.favoritesList.innerHTML = '';
+                state.favorites.forEach(fav => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center text-sm cursor-pointer hover:text-yellow-400 transition-colors';
+                    li.innerHTML = `<span>${fav}</span> <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i>`;
+                    li.onclick = () => els.cityInput.value = fav;
+                    els.favoritesList.appendChild(li);
+                });
+
+                // Update Chart
+                this.renderChart(data);
+
+                // Refresh Icons
+                lucide.createIcons();
+                els.searchLoader.classList.add('hidden');
+            },
+
+            renderChart(data) {
+                if (window.myChart) window.myChart.destroy();
+
+                const ctx = els.chartCanvas.getContext('2d');
+                window.myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.hourly.map(h => h.time),
+                        datasets: [
+                            {
+                                label: 'Temp',
+                                data: data.hourly.map(h => h.temp),
+                                borderColor: '#60a5fa',
+                                backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                                fill: true,
+                                tension: 0.4,
+                                yAxisID: 'y',
+                            },
+                            {
+                                label: 'Rain',
+                                data: data.hourly.map(h => h.rain),
+                                borderColor: '#22c55e',
+                                borderDash: [5, 5],
+                                tension: 0.4,
+                                yAxisID: 'y1',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { display: false },
+                            y1: { display: false },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } }
+                            }
+                        }
+                    }
+                });
+            },
+
+            async showComparison() {
+                const city2 = prompt("Enter a second city to compare (e.g., Tokyo):");
+                if (!city2) return;
+
+                state.isComparisonMode = true;
+                const data2 = await WeatherService.fetchWeather(city2);
+                state.comparisonCity = data2;
+
+                const renderSide = (data, container, title) => {
+                    container.innerHTML = `
+                        <h3 class="text-xl font-bold">${data.name}</h3>
+                        <p class="text-white/60 mb-4">${data.condition}</p>
+                        <div class="space-y-2">
+                            <div class="flex justify-between"><span>Temp</span><span>${formatTemp(data.temp)}</span></div>
+                            <div class="flex justify-between"><span>Humidity</span><span>${data.humidity}%</span></div>
+                            <div class="flex justify-between"><span>Wind</span><span>${data.wind} km/h</span></div>
+                            <div class="flex justify-between"><span>UV Index</span><span>${data.uv}</span></div>
+                        </div>
+                    `;
+                };
+
+                renderSide(state.currentCity, els.compareLeft, "Current");
+                renderSide(data2, els.compareRight, "Comparison");
+
+                els.compareOverlay.style.display = 'flex';
+            }
+        };
+
+        // --- EVENT HANDLERS ---
+        els.cityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                UI.updateDashboard(els.cityInput.value);
+            }
+        });
+
+        els.btnUnit.addEventListener('click', () => {
+            state.units = state.units === 'C' ? 'F' : 'C';
+            els.btnUnit.innerText = `°${state.units}`;
+            UI.updateDashboard(state.currentCity.name);
+        });
+
+        els.btnLocation.addEventListener('click', () => {
+            // In a real app, use navigator.geolocation
+            els.cityInput.value = "San Francisco, US";
+            UI.updateDashboard("San Francisco, US");
+        });
+
+        els.btnCompare.addEventListener('click', () => UI.showComparison());
+        els.btnCloseCompare.addEventListener('click', () => {
+            els.compareOverlay.style.display = 'none';
+            state.isComparisonMode = false;
+        });
+
+        // --- INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            UI.updateDashboard(state.currentCity);
+        });
+    </script>
+</body>
+
+</html>

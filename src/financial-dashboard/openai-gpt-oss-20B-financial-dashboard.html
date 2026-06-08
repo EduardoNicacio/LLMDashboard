@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gpt-oss-20B - Financial Analysis Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Global Variables for Light/Dark Themes */
+        :root {
+            --bg-light: #ffffff;
+            --bg-dark: #1e1e1e;
+            --text-light: #000000;
+            --text-dark: #ffffff;
+            --accent: #ff00ff;
+            /* Neon Accent */
+            --glass-opacity: 0.8;
+        }
+
+        /* Theme Classes */
+        .theme-light {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        .theme-dark {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* Glassmorphism Effect */
+        .glass {
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            opacity: var(--glass-opacity);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* General Layout */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header,
+        nav,
+        main,
+        footer {
+            padding: 20px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Hero Summary Section */
+        .hero-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: var(--bg-light);
+            border-radius: 12px;
+        }
+
+        .hero-summary .card {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Head-to-Head Comparison Panel */
+        .head-to-head {
+            display: flex;
+            gap: 20px;
+        }
+
+        .head-to-head .card {
+            width: 300px;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Company Cards */
+        .company-card {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .company-card .card {
+            width: 200px;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Charts Section */
+        charts-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        chart-container {
+            width: 400px;
+            height: 300px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Financial Statement History */
+        history-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        thead tr {
+            background: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        tbody tr {
+            background: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        tbody tr:hover {
+            background: var(--accent);
+            color: var(--text-dark);
+        }
+
+        /* Market Data Feed Panel */
+        market-feed {
+            display: flex;
+            gap: 20px;
+        }
+
+        feed-card {
+            width: 200px;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* API Usage Panel */
+        api-panel {
+            display: flex;
+            gap: 20px;
+        }
+
+        api-card {
+            width: 200px;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Winner Breakdown Section */
+        winner-section {
+            display: flex;
+            gap: 20px;
+        }
+
+        winner-card {
+            width: 200px;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Notes Section */
+        notes-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Theme Toggle Button */
+        #themeToggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #themeToggle:hover {
+            background: var(--bg-light);
+        }
+
+        /* View Selection Buttons */
+        .viewBtn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .viewBtn:hover {
+            background: var(--bg-light);
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 768px) {
+
+            .hero-summary,
+            .head-to-head,
+            .company-card,
+            .charts-section,
+            .history-section,
+            .market-feed,
+            .api-panel,
+            .winner-section,
+            .notes-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <script>
+        /* Mock Data for Apple and Microsoft */
+        const data = { apple: { name: "Apple Inc.", revenue: [2000, 2100, 2200, 2300, 2400], netIncome: [500, 550, 600, 650, 700], EBITDA: [800, 850, 900, 950, 1000], freeCashFlow: [300, 350, 400, 450, 500], dividendYield: [2.5, 2.6, 2.7, 2.8, 2.9], beta: 1.2, marketCap: [150000, 155000, 160000, 165000, 170000], priceToEarnings: [15, 16, 17, 18, 19] }, microsoft: { name: "Microsoft Corp.", revenue: [2500, 2600, 2700, 2800, 2900], netIncome: [600, 650, 700, 750, 800], EBITDA: [900, 950, 1000, 1050, 1100], freeCashFlow: [400, 450, 500, 550, 600], dividendYield: [1.5, 1.6, 1.7, 1.8, 1.9], beta: 0.8, marketCap: [200000, 205000, 210000, 215000, 220000], priceToEarnings: [12, 13, 14, 15, 16] } }; /* Theme Toggle */ let currentTheme = 'light'; function toggleTheme() { const body = document.body; if (currentTheme === 'light') { body.classList.remove('theme-light'); body.classList.add('theme-dark'); currentTheme = 'dark'; } else { body.classList.remove('theme-dark'); body.classList.add('theme-light'); currentTheme = 'light'; } } /* View Selection */ let currentView = 'summary'; function setView(view) { currentView = view; updateCharts(); } /* Chart Drawing Functions */ function drawLineChart(canvas, dataArray, label) {
+            const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = '#ff00ff'; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i < dataArray.length; i++) { const x = (i / (dataArray.length - 1)) * canvas.width; const y = canvas.height - (dataArray[i] / Math.max(...dataArray) * canvas.height); ctx.moveTo(x, y); if (i > 0) ctx.lineTo(x, y); } ctx.stroke();
+            // Add labels 
+            ctx.fillStyle = '#ffffff'; ctx.font = '12px Arial'; for (let i = 0; i < dataArray.length; i++) { const x = (i / (dataArray.length - 1)) * canvas.width; const y = canvas.height - (dataArray[i] / Math.max(...dataArray) * canvas.height); ctx.fillText(label + ' ' + dataArray[i], x, y + 5); }
+        }
+        /* Update Charts Based on View */
+        function updateCharts() {
+            const charts = document.querySelectorAll('.chart-container');
+            if (currentView === 'summary') {
+                // Show revenue vs net income 
+                drawLineChart(charts[0].querySelector('canvas'), data.apple.revenue, 'Revenue'); drawLineChart(charts[1].querySelector('canvas'), data.apple.netIncome, 'Net Income'); // Show EBITDA margin trend 
+                drawLineChart(charts[2].querySelector('canvas'), data.apple.EBIDTA, 'EBITDA');
+            } else if (currentView === 'profitability') { // Show free cash flow vs capital expenditures (mock) 
+                drawLineChart(charts[0].querySelector('canvas'), data.apple.freeCashFlow, 'Free Cash Flow'); drawLineChart(charts[1].querySelector('canvas'), [200, 210, 220, 230, 240], 'Capital Expenditures'); // placeholder 
+            } else if (currentView === 'cashflow') {
+                // Show free cash flow vs capital expenditures again 
+                drawLineChart(charts[0].querySelector('canvas'), data.apple.freeCashFlow, 'Free Cash Flow'); drawLineChart(charts[1].querySelector('canvas'), [200, 210, 220, 230, 240], 'Capital Expenditures'); // placeholder 
+            } else if (currentView === 'marketdata') {
+                // Show stock price vs market cap 
+                drawLineChart(charts[0].querySelector('canvas'), data.apple.marketCap, 'Market Cap'); drawLineChart(charts[1].querySelector('canvas'), [150, 155, 160, 165, 170], 'Stock Price'); // placeholder 
+            }
+        }
+        /* Table Filtering & Sorting */
+        const table = document.querySelector('#financialTable'); let filterCriteria = { company: '', fiscalYear: '', quarter: '' }; function applyFilter() { const rows = table.querySelectorAll('tbody tr'); rows.forEach(row => { const data = row.dataset; if (filterCriteria.company && data.company !== filterCriteria.company) return false; if (filterCriteria.fiscalYear && data.year !== filterCriteria.fiscalYear) return false; if (filterCriteria.quarter && data.quarter !== filterCriteria.quarter) return false; row.style.display = 'table-row'; }); } function sortTable(metric) { const rows = Array.from(table.querySelectorAll('tbody tr')); rows.sort((a, b) => { const valA = parseFloat(a.dataset[metric]); const valB = parseFloat(b.dataset[metric]); return valA - valB; }); table.querySelector('tbody').innerHTML = ''; rows.forEach(row => table.querySelector('tbody').appendChild(row)); } /* Expand Row Details */ function toggleRowDetails(row) {
+            const details = row.nextSibling; // Assuming next sibling is the detail div 
+            if (details.style.display === 'none') { details.style.display = 'block'; } else { details.style.display = 'none'; }
+        }
+        /* Event Listeners */ document.addEventListener('DOMContentLoaded', () => {
+            // Initialize theme 
+            document.body.classList.add('theme-light');
+            // Set initial view 
+            setView('summary');
+            // Theme toggle button 
+            const themeToggleBtn = document.getElementById('themeToggle'); themeToggleBtn.addEventListener('click', toggleTheme);
+            // View selection buttons 
+            const viewBtns = document.querySelectorAll('.viewBtn'); viewBtns.forEach(btn => { btn.addEventListener('click', () => setView(btn.dataset.view)); });
+            // Table filter controls (placeholder) 
+            // For demonstration, we can add simple input fields 
+            const filterInputs = document.querySelectorAll('.filter-input'); filterInputs.forEach(input => { input.addEventListener('change', () => { filterCriteria[input.dataset.field] = input.value; applyFilter(); }); });
+            // Table sort controls (placeholder) 
+            const sortBtns = document.querySelectorAll('.sort-btn'); sortBtns.forEach(btn => { btn.addEventListener('click', () => sortTable(btn.dataset.metric)); });
+            // Expand row details 
+            const expandBtn = document.querySelectorAll('.expand-btn'); expandBtn.forEach(btn => { btn.addEventListener('click', () => toggleRowDetails(btn.parentElement)); });
+        });
+        /* Placeholder Data for Table */
+        const tableData = [{ company: 'Apple Inc.', year: '2021', quarter: 'Q4', revenue: 2400, netIncome: 700, priceToEarnings: 19 }, { company: 'Microsoft Corp.', year: '2021', quarter: 'Q4', revenue: 2900, netIncome: 800, priceToEarnings: 16 }, { company: 'Apple Inc.', year: '2020', quarter: 'Q3', revenue: 2300, netIncome: 650, priceToEarnings: 18 }, { company: 'Microsoft Corp.', year: '2020', quarter: 'Q2', revenue: 2800, netIncome: 750, priceToEarnings: 15 }];
+        // Populate table 
+        const tbody = document.querySelector('#financialTable tbody');
+        tableData.forEach(row => {
+            const tr = document.createElement('tr'); tr.dataset.company = row.company; tr.dataset.year = row.year; tr.dataset.quarter = row.quarter; tr.dataset.revenue = row.revenue; tr.dataset.netIncome = row.netIncome; tr.dataset.priceToEarnings = row.priceToEarnings; const td1 = document.createElement('td'); td1.textContent = row.company; const td2 = document.createElement('td'); td2.textContent = row.year; const td3 = document.createElement('td'); td3.textContent = row.quarter; const td4 = document.createElement('td'); td4.textContent = row.revenue; const td5 = document.createElement('td'); td5.textContent = row.netIncome; const td6 = document.createElement('td'); td6.textContent = row.priceToEarnings; tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
+            // Detail div (hidden by default) 
+            const detailDiv = document.createElement('div'); detailDiv.style.display = 'none'; detailDiv.className = 'detail-row'; detailDiv.textContent = `Detailed line items: Revenue by segment, SG&A expenses, interest expense...`; tr.appendChild(detailDiv); tbody.appendChild(tr);
+        }); 
+    </script>
+</head>
+
+<body class="theme-light">
+    <header>
+        <h1>Financial Analysis Dashboard</h1>
+        <div id="hero-summary" class="glass">
+            <div class="card" style="background: var(--bg-light);">
+                <h2>Total Revenue</h2>
+                <p>Apple Inc.: $2400M, Microsoft Corp.: $2900M</p>
+            </div>
+            <div class="card" style="background: var(--bg-light);">
+                <h2>Net Income</h2>
+                <p>Apple Inc.: $700M, Microsoft Corp.: $800M</p>
+            </div>
+            <div class="card" style="background: var(--bg-light);">
+                <h2>Earnings Per Share (EPS)</h2>
+                <p>Apple Inc.: $5.00, Microsoft Corp.: $4.50</p>
+            </div>
+            <div class="card" style="background: var(--bg-light);">
+                <h2>P/E Ratio</h2>
+                <p>Apple Inc.: 19, Microsoft Corp.: 16</p>
+            </div>
+            <div class="card" style="background: var(--bg-light);">
+                <h2>ROE</h2>
+                <p>Apple Inc.: 10%, Microsoft Corp.: 12%</p>
+            </div>
+            <div class="card" style="background: var(--bg-light);">
+                <h2>D/E Ratio</h2>
+                <p>Apple Inc.: 0.5, Microsoft Corp.: 0.4</p>
+            </div>
+            <div class="card" style="background: var(--bg-light);">
+                <h2>Market Cap</h2>
+                <p>Apple Inc.: $170B, Microsoft Corp.: $220B</p>
+            </div>
+        </div>
+    </header>
+    <nav> <button id="themeToggle" class="glass"></button>
+        <div> <button class="viewBtn" data-view="summary">Summary</button> <button class="viewBtn"
+                data-view="profitability">Profitability</button> <button class="viewBtn" data-view="cashflow">Cash
+                Flow</button> <button class="viewBtn" data-view="marketdata">Market Data</button> </div>
+    </nav>
+    <main>
+        <section id="head-to-head" class="glass">
+            <div class="card" style="background: var(--bg-light);">
+                <h2>Apple Inc.</h2>
+                <p>Revenue Growth %: 5%</p>
+                <p>EBITDA Margin: 40%</p>
+                <p>Free Cash Flow Yield: 15%</p>
+                <p>Dividend Yield: 2.5%</p>
+                <p>Beta: 1.2</p>
+            </div>
+            <div class="card" style="background: var(--bg-light);">
+                <h2>Microsoft Corp.</h2>
+                <p>Revenue Growth %: 4%</p>
+                <p>EBITDA Margin: 45%</p>
+                <p>Free Cash Flow Yield: 20%</p>
+                <p>Dividend Yield: 1.5%</p>
+                <p>Beta: 0.8</p>
+            </div>
+        </section>
+        <section id="company-card" class="glass">
+            <div class="card" style="background: var(--bg-light);">
+                <h2>Apple Inc.</h2>
+                <p>Revenue: $2400M</p>
+                <p>Operating Income: $800M</p>
+                <p>Net Income: $700M</p>
+                <p>EPS: $5.00</p>
+                <p>P/E: 19</p>
+                <p>ROE: 10%</p>
+                <p>D/E: 0.5</p>
+                <p>Total Assets: $150B</p>
+                <p>Total Liabilities: $70B</p>
+                <p>Cash & Equivalents: $30B</p>
+                <p>Score: 8/10 (Financial Health Index)</p>
+            </div>
+            <div class="card" style="background: var(--bg-light);">
+                <h2>Microsoft Corp.</h2>
+                <p>Revenue: $2900M</p>
+                <p>Operating Income: $900M</p>
+                <p>Net Income: $800M</p>
+                <p>EPS: $4.50</p>
+                <p>P/E: 16</p>
+                <p>ROE: 12%</p>
+                <p>D/E: 0.4</p>
+                <p>Total Assets: $200B</p>
+                <p>Total Liabilities: $80B</p>
+                <p>Cash & Equivalents: $35B</p>
+                <p>Score: 9/10 (Financial Health Index)</p>
+            </div>
+        </section>
+        <section id="charts-section" class="glass">
+            <div class="chart-container"> <canvas width="400" height="300"></canvas> </div>
+            <div class="chart-container"> <canvas width="400" height="300"></canvas> </div>
+            <div class="chart-container"> <canvas width="400" height="300"></canvas> </div>
+        </section>
+        <section id="history-section" class="glass">
+            <h2>Financial Statement History</h2>
+            <table id="financialTable">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Fiscal Year</th>
+                        <th>Quarter</th>
+                        <th>Revenue (M)</th>
+                        <th>Net Income (M)</th>
+                        <th>P/E Ratio</th>
+                    </tr>
+                </thead>
+                <tbody> <!-- Rows populated by JS --> </tbody>
+            </table>
+        </section>
+        <section id="market-feed" class="glass">
+            <div class="feed-card" style="background: var(--bg-light);">
+                <h2>Bloomberg API Status</h2>
+                <p>Status: Connected</p>
+                <p>Latency: 0.5s</p>
+                <p>Last Update: 2026-06-07 12:00 UTC</p>
+            </div>
+            <div class="feed-card" style="background: var(--bg-light);">
+                <h2>Alpha Vantage API Status</h2>
+                <p>Status: Connected</p>
+                <p>Latency: 0.3s</p>
+                <p>Last Update: 2026-06-07 12:00 UTC</p>
+            </div>
+        </section>
+        <section id="api-panel" class="glass">
+            <div class="api-card" style="background: var(--bg-light);">
+                <h2>Bloomberg API Cost</h2>
+                <p>Calls Made: 10</p>
+                <p>Total Spend: $5000</p>
+            </div>
+            <div class="api-card" style="background: var(--bg-light);">
+                <h2>Alpha Vantage API Cost</h2>
+                <p>Calls Made: 5</p>
+                <p>Total Spend: $2000</p>
+            </div>
+        </section>
+        <section id="winner-section" class="glass">
+            <div class="winner-card" style="background: var(--bg-light);">
+                <h2>Revenue Growth Winner</h2>
+                <p>Apple Inc. (5%) vs Microsoft Corp. (4%)</p>
+            </div>
+            <div class="winner-card" style="background: var(--bg-light);">
+                <h2>Profitability Winner</h2>
+                <p>Microsoft Corp. (45% EBITDA) vs Apple Inc. (40% EBITDA)</p>
+            </div>
+        </section>
+        <section id="notes-section" class="glass">
+            <h2>Notes & Observations</h2> <textarea placeholder="Add your observations here..."></textarea>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2026 Financial Analysis Dashboard © All Rights Reserved.</p>
+    </footer>
+</body>
+
+</html>

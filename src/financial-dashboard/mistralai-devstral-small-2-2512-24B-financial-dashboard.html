@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Premium Financial Results & Analysis Dashboard</title>
+    <style>
+        :root {
+            --bg-light: #f5f7fa;
+            --card-light: #ffffff;
+            --text-light: #2c3e50;
+            --border-light: #e1e8ed;
+            --neon-blue: #4dabf7;
+            --neon-green: #a3e635;
+            --neon-purple: #b983ff;
+            --bg-dark: #121212;
+            --card-dark: #1e1e1e;
+            --text-dark: #e0e0e0;
+            --border-dark: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            transition: all .4s ease;
+        }
+
+        .dark-mode body {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .theme-toggle {
+            background: var(--card-light);
+            border: none;
+            cursor: pointer;
+            padding: .5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .dark-mode .theme-toggle {
+            background: var(--card-dark);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--card-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, .08);
+            transition: transform .3s ease;
+        }
+
+        .dark-mode .metric-card {
+            background: var(--card-dark);
+            box-shadow: 0 4px 6px rgba(255, 255, 255, .1);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--neon-blue);
+        }
+
+        .h2h-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .company-card {
+            background: var(--card-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, .08);
+        }
+
+        .dark-mode .company-card {
+            background: var(--card-dark);
+            box-shadow: 0 4px 6px rgba(255, 255, 255, .1);
+        }
+
+        .chart-container {
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-light);
+            margin-bottom: 1rem;
+        }
+
+        .dark-mode table {
+            background: var(--card-dark);
+        }
+
+        th,
+        td {
+            padding: .75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .dark-mode th,
+        .dark-mode td {
+            border-color: var(--border-dark);
+        }
+
+        tr:hover {
+            background: rgba(77, 171, 247, .1);
+        }
+
+        .dark-mode tr:hover {
+            background: rgba(77, 171, 247, .2);
+        }
+
+        .notes {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--card-light);
+            border-radius: 12px;
+        }
+
+        .dark-mode .notes {
+            background: var(--card-dark);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            margin-top: .75rem;
+            padding: .75rem;
+            border: none;
+            border-radius: 8px;
+            resize: vertical;
+            background: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        .dark-mode textarea {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+    </style>
+</head>
+
+<body class="light-mode">
+    <div class="dashboard">
+        <header>
+            <h1>Financial Results & Analysis Dashboard</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+        </header>
+
+        <!-- Hero Summary -->
+        <section class="hero">
+            <div class="metric-card"><span>Total Revenue</span>
+                <div class="metric-value">$387B</div>
+            </div>
+            <div class="metric-card"><span>Net Income</span>
+                <div class="metric-value">$97B</div>
+            </div>
+            <div class="metric-card"><span>EPS</span>
+                <div class="metric-value">$5.12</div>
+            </div>
+            <div class="metric-card"><span>P/E Ratio</span>
+                <div class="metric-value">30.4x</div>
+            </div>
+            <div class="metric-card"><span>ROE</span>
+                <div class="metric-value">68%</div>
+            </div>
+            <div class="metric-card"><span>D/E</span>
+                <div class="metric-value">1.2x</div>
+            </div>
+            <div class="metric-card"><span>Market Cap</span>
+                <div class="metric-value">$2.9T</div>
+            </div>
+        </section>
+
+        <!-- Head-to-Head Comparison -->
+        <section class="h2h-comparison">
+            <div class="company-card">
+                <h3>Apple Inc.</h3>
+                <p>Revenue Growth: +15%</p>
+                <p>EBITDA Margin: 28%</p>
+                <p>FCF Yield: 4.2%</p>
+                <p>Dividend Yield: 0.6%</p>
+                <p>Beta: 1.2</p>
+            </div>
+            <div class="company-card">
+                <h3>Microsoft Corp.</h3>
+                <p>Revenue Growth: +18%</p>
+                <p>EBITDA Margin: 34%</p>
+                <p>FCF Yield: 5.1%</p>
+                <p>Dividend Yield: 0.7%</p>
+                <p>Beta: 1.1</p>
+            </div>
+        </section>
+
+        <!-- Interactive Charts -->
+        <section class="chart-container">
+            <canvas id="revenueChart"></canvas>
+        </section>
+
+        <!-- Financial Statement History -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Fiscal Year</th>
+                    <th>Quarter</th>
+                    <th>Revenue</th>
+                    <th>Net Income</th>
+                    <th>EPS</th>
+                </tr>
+            </thead>
+            <tbody id="financialData">
+                <tr onclick="showDetails(this)">
+                    <td>2023</td>
+                    <td>Q4</td>
+                    <td>$160B</td>
+                    <td>$34B</td>
+                    <td>$2.05</td>
+                </tr>
+                <tr onclick="showDetails(this)">
+                    <td>2023</td>
+                    <td>Q3</td>
+                    <td>$97B</td>
+                    <td>$28B</td>
+                    <td>$1.85</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Notes Section -->
+        <div class="notes">
+            <h3>Analyst Notes</h3>
+            <textarea placeholder="Add your observations..."></textarea>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            updateCharts();
+        }
+
+        // Chart Initialization
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        let revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                datasets: [
+                    { label: 'Revenue', data: [80, 95, 110, 125], borderColor: '#4dabf7', backgroundColor: 'rgba(77,171,247,.2)' },
+                    { label: 'Net Income', data: [30, 36, 42, 48], borderColor: '#a3e635', backgroundColor: 'rgba(163,230,53,.2)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: false } },
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+
+        function updateCharts() {
+            revenueChart.update();
+        }
+
+        // Table Expansion
+        function showDetails(row) {
+            const detail = row.nextElementSibling;
+            if (detail && detail.classList.contains('details')) return detail.remove();
+            const newDetail = document.createElement('tr');
+            newDetail.className = 'details';
+            newDetail.innerHTML = `
+        <td colspan="5">
+          <div style="padding:1rem; background:rgba(77,171,247,.08); border-radius:8px;">
+            Revenue by Segment: iPhone $60B | Services $20B<br>
+            SG&A Expenses: $30B | Interest Expense: $5B
+          </div>
+        </td>
+      `;
+            row.parentNode.insertBefore(newDetail, row.nextSibling);
+        }
+    </script>
+</body>
+
+</html>
