@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open - Finally Available</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #0a0a0f;
+            --card: #111118;
+            --card-hover: #16161f;
+            --border: #1e1e2a;
+            --border-glow: #6c5ce720;
+            --text: #e8e6f0;
+            --text-dim: #8888a0;
+            --text-muted: #555570;
+            --accent: #6c5ce7;
+            --accent2: #a855f7;
+            --accent3: #7c3aed;
+            --green: #34d399;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --cyan: #22d3ee;
+            --pink: #ec4899;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(10, 10, 15, 0.8);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.8rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .nav-badge {
+            background: var(--accent);
+            color: #fff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Section base */
+        section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding-top: 60px;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            background: rgba(108, 92, 231, 0.08);
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-tag .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.8rem, 7vw, 5.5rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.1s both;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--accent), var(--accent2), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-sub em {
+            color: var(--orange);
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 1.8rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            box-shadow: 0 4px 25px rgba(108, 92, 231, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 35px rgba(108, 92, 231, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 4rem;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat .num {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -0.02em;
+        }
+
+        .hero-stat .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 0.2rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Model cards */
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            margin-bottom: 0.8rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: var(--text-dim);
+            max-width: 600px;
+            font-size: 1.05rem;
+            margin-bottom: 3rem;
+        }
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .model-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .model-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(108, 92, 231, 0.15);
+        }
+
+        .model-card:hover::before {
+            opacity: 1;
+        }
+
+        .model-card .icon {
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
+            display: block;
+        }
+
+        .model-card .title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .model-card .desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* Model hero card */
+        .model-hero-card {
+            background: linear-gradient(145deg, var(--card), #14141e);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-hero-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(108, 92, 231, 0.06), transparent 30%);
+            animation: rotate-glow 8s linear infinite;
+        }
+
+        @keyframes rotate-glow {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .model-hero-card>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .model-hero-left h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .model-hero-left .tagline {
+            color: var(--text-dim);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .model-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+        }
+
+        .spec-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .spec-item .spec-icon {
+            font-size: 1.2rem;
+        }
+
+        .spec-item .spec-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .spec-item .spec-value {
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .model-hero-right {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+        }
+
+        .model-hero-right .k {
+            color: var(--accent);
+        }
+
+        .model-hero-right .s {
+            color: var(--green);
+        }
+
+        .model-hero-right .n {
+            color: var(--orange);
+        }
+
+        .model-hero-right .c {
+            color: var(--text-muted);
+        }
+
+        /* Benchmarks */
+        .bench-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .bench-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .bench-card h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .bench-card .bench-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+        }
+
+        .bench-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .bench-bar-label {
+            font-size: 0.78rem;
+            font-weight: 500;
+            min-width: 140px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bench-bar-track {
+            flex: 1;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bench-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+            width: 0;
+            position: relative;
+        }
+
+        .bench-bar-fill::after {
+            content: attr(data-value);
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .bench-bar-fill.ours {
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+        }
+
+        .bench-bar-fill.rival1 {
+            background: var(--text-muted);
+        }
+
+        .bench-bar-fill.rival2 {
+            background: #444460;
+        }
+
+        .bench-bar-fill.rival3 {
+            background: #33334a;
+        }
+
+        .bench-bar-fill.coping {
+            background: repeating-linear-gradient(45deg, #553300 0, #553300 4px, #664400 4px, #664400 8px);
+        }
+
+        .bench-note {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 1.5rem;
+            padding: 0.8rem;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Download */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .dl-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .dl-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(108, 92, 231, 0.15);
+        }
+
+        .dl-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .dl-icon.hf {
+            background: rgba(255, 211, 67, 0.12);
+        }
+
+        .dl-icon.gguf {
+            background: rgba(52, 211, 153, 0.12);
+        }
+
+        .dl-icon.api {
+            background: rgba(108, 92, 231, 0.12);
+        }
+
+        .dl-icon.torrent {
+            background: rgba(236, 72, 153, 0.12);
+        }
+
+        .dl-info .dl-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .dl-info .dl-desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        .dl-info .dl-size {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--accent2), var(--green));
+            border-radius: 2px;
+        }
+
+        .tl-item {
+            position: relative;
+            padding-bottom: 2rem;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.5s;
+        }
+
+        .tl-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .tl-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.4rem;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 3px solid var(--accent);
+            z-index: 2;
+        }
+
+        .tl-item:nth-child(2)::before {
+            border-color: var(--accent2);
+        }
+
+        .tl-item:nth-child(3)::before {
+            border-color: var(--cyan);
+        }
+
+        .tl-item:nth-child(4)::before {
+            border-color: var(--orange);
+        }
+
+        .tl-item:nth-child(5)::before {
+            border-color: var(--pink);
+        }
+
+        .tl-item:nth-child(6)::before {
+            border-color: var(--green);
+        }
+
+        .tl-date {
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .tl-title {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .tl-desc {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        /* Code block */
+        .code-block {
+            background: #0d0d14;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.7rem 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-header .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .code-header .dot-r {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff5f57;
+        }
+
+        .code-header .dot-y {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #febc2e;
+        }
+
+        .code-header .dot-g {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28c840;
+        }
+
+        .code-header .lang {
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+        }
+
+        .code-copy {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .code-copy:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .code-body {
+            padding: 1.2rem 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+
+        .code-body .kw {
+            color: var(--accent2);
+        }
+
+        .code-body .fn {
+            color: #60a5fa;
+        }
+
+        .code-body .st {
+            color: var(--green);
+        }
+
+        .code-body .cm {
+            color: var(--text-muted);
+        }
+
+        .code-body .op {
+            color: var(--text-dim);
+        }
+
+        .code-body .num {
+            color: var(--orange);
+        }
+
+        /* Community */
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .post-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .post-card:hover {
+            border-color: rgba(108, 92, 231, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .post-user {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .post-handle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .post-body {
+            font-size: 0.88rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+        }
+
+        .post-body strong {
+            color: var(--text);
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 1.2rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* VRAM */
+        .vram-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+
+        .vram-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .vram-card.recommended {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px rgba(108, 92, 231, 0.15);
+        }
+
+        .vram-card.recommended::before {
+            content: 'RECOMMENDED';
+            position: absolute;
+            top: -10px;
+            right: 16px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            letter-spacing: 0.05em;
+        }
+
+        .vram-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .vram-setup {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .vram-size {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+        }
+
+        .vram-desc {
+            font-size: 0.82rem;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+        }
+
+        .vram-details {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 0.8rem;
+        }
+
+        .vram-details div {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        footer .footer-notice {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.4rem;
+            }
+
+            .hero-stats {
+                gap: 1.5rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .model-hero-card {
+                grid-template-columns: 1fr;
+            }
+
+            .bench-grid {
+                grid-template-columns: 1fr;
+            }
+
+            section {
+                padding: 4rem 1.2rem;
+            }
+
+            .model-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Easter egg toast */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            font-size: 0.88rem;
+            color: var(--text);
+            z-index: 200;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            max-width: 340px;
+        }
+
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        #toast .toast-title {
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        #toast .toast-body {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="content-layer">
+        <!-- Nav -->
+        <nav>
+            <div class="nav-logo">QWEN<span>3.7</span></div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#benchmarks">Benchmarks</a>
+                <a href="#download">Download</a>
+                <a href="#community">Community</a>
+                <span class="nav-badge">Open Weights</span>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-tag"><span class="dot"></span> Weights Now Live</div>
+            <h1>Qwen3.7-30B-Open<br><span class="highlight">is finally here</span></h1>
+            <p class="hero-sub">The community can now stop refreshing Hugging Face <em>every 11 seconds</em>.
+                Productivity is expected to return to normal levels within 48 hours.</p>
+            <div class="hero-actions">
+                <a href="#download" class="btn btn-primary">Download Weights</a>
+                <a href="#code" class="btn btn-secondary">Quick Start</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="num">30B</div>
+                    <div class="label">Parameters</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="num">128K</div>
+                    <div class="label">Context Length</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="num">16</div>
+                    <div class="label">GPU Days Saved</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="num">0</div>
+                    <div class="label">NDAs Required</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section id="features" class="reveal">
+            <div class="section-label">Capabilities</div>
+            <div class="section-title">Everything you expected. Plus a few surprises.</div>
+            <div class="section-desc">Built for developers who refuse to read documentation. Works on the first try 60%
+                of the time, every time.</div>
+
+            <div class="model-hero-card">
+                <div class="model-hero-left">
+                    <h2>Qwen3.7-30B-Open</h2>
+                    <div class="tagline">The model that finally made it out of Alibaba's basement.</div>
+                    <div class="model-specs">
+                        <div class="spec-item"><span class="spec-icon">🧠</span>
+                            <div>
+                                <div class="spec-label">Parameters</div>
+                                <div class="spec-value">30.2B</div>
+                            </div>
+                        </div>
+                        <div class="spec-item"><span class="spec-icon">📐</span>
+                            <div>
+                                <div class="spec-label">Layers</div>
+                                <div class="spec-value">64</div>
+                            </div>
+                        </div>
+                        <div class="spec-item"><span class="spec-icon">📚</span>
+                            <div>
+                                <div class="spec-label">Context</div>
+                                <div class="spec-value">128K tokens</div>
+                            </div>
+                        </div>
+                        <div class="spec-item"><span class="spec-icon">🔧</span>
+                            <div>
+                                <div class="spec-label">Tool Use</div>
+                                <div class="spec-value">Native</div>
+                            </div>
+                        </div>
+                        <div class="spec-item"><span class="spec-icon">💻</span>
+                            <div>
+                                <div class="spec-label">Code</div>
+                                <div class="spec-value">Expert</div>
+                            </div>
+                        </div>
+                        <div class="spec-item"><span class="spec-icon">🔬</span>
+                            <div>
+                                <div class="spec-label">Reasoning</div>
+                                <div class="spec-value">Extended</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="model-hero-right">
+                    <div><span class="c">// Architecture</span></div>
+                    <div><span class="kw">arch</span>: <span class="s">Qwen3.7ForCausalLM</span></div>
+                    <div><span class="kw">hidden_dim</span>: <span class="n">8192</span></div>
+                    <div><span class="kw">attn_heads</span>: <span class="n">64</span></div>
+                    <div><span class="kw">kv_heads</span>: <span class="n">8</span> <span class="c">(GQA)</span></div>
+                    <div><span class="kw">ffn_dim</span>: <span class="n">24576</span></div>
+                    <div><span class="kw">vocab</span>: <span class="n">151,936</span></div>
+                    <div><span class="kw">rope_theta</span>: <span class="n">1,000,000</span></div>
+                    <div><span class="kw">dtype</span>: <span class="s">bfloat16</span></div>
+                    <div><span class="kw">license</span>: <span class="s">Apache 2.0</span> <span class="c">// for real
+                            this time</span></div>
+                </div>
+            </div>
+
+            <div class="model-grid">
+                <div class="model-card"><span class="icon">🚀</span>
+                    <div class="title">Open Weights</div>
+                    <div class="desc">No gatekeeping. No waitlist. No "apply for access."</div>
+                </div>
+                <div class="model-card"><span class="icon">📚</span>
+                    <div class="title">Long Context</div>
+                    <div class="desc">128K tokens. Finally fits your entire codebase.</div>
+                </div>
+                <div class="model-card"><span class="icon">🔧</span>
+                    <div class="title">Tool Use</div>
+                    <div class="desc">Native function calling. No prompt engineering needed.</div>
+                </div>
+                <div class="model-card"><span class="icon">💻</span>
+                    <div class="title">Coding</div>
+                    <div class="desc">Writes code. Reads code. Judges your code silently.</div>
+                </div>
+                <div class="model-card"><span class="icon">🧠</span>
+                    <div class="title">Reasoning</div>
+                    <div class="desc">Extended chain-of-thought. Thinks before it speaks.</div>
+                </div>
+                <div class="model-card"><span class="icon">🏠</span>
+                    <div class="title">Local Inference</div>
+                    <div class="desc">GGUF available. Your GPU can finally do something useful.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benchmarks -->
+        <section id="benchmarks" class="reveal">
+            <div class="section-label">Performance</div>
+            <div class="section-title">Numbers that speak for themselves</div>
+            <div class="section-desc">Benchmarks compiled by totally unbiased researchers who definitely don't have a
+                stake in the outcome.</div>
+
+            <div class="bench-grid">
+                <div class="bench-card">
+                    <h3>MMLU (5-shot)</h3>
+                    <div class="bench-desc">Massive multitask language understanding. Or mass confusion.</div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Qwen3.7-30B-Open</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill ours" data-value="89.2"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Llama 4.5-32B</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill rival1" data-value="84.7"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Mistral 12x35B</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill rival2" data-value="83.1"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Your current coping mechanism</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill coping" data-value="41.3"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bench-card">
+                    <h3>HumanEval (pass@1)</h3>
+                    <div class="bench-desc">Can it write code that actually works on the first try?</div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Qwen3.7-30B-Open</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill ours" data-value="91.5"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Llama 4.5-32B</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill rival1" data-value="82.3"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">GPT-4o-mini (you know it's true)</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill rival2" data-value="80.9"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Stack Overflow copy-paste</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill coping" data-value="37.8"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bench-card">
+                    <h3>GSM8K (chain-of-thought)</h3>
+                    <div class="bench-desc">Grade school math. How hard can it be?</div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Qwen3.7-30B-Open</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill ours" data-value="94.1"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">DeepSeek V4-30B</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill rival1" data-value="88.6"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Gemini 2.5 Flash</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill rival2" data-value="87.2"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Pulling numbers from thin air</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill coping" data-value="22.4"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bench-card">
+                    <h3>MT-Bench (GPT-4 judge)</h3>
+                    <div class="bench-desc">GPT-4 rated. The circle of life.</div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Qwen3.7-30B-Open</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill ours" data-value="9.1"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Qwen2.5-72B (previous best)</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill rival1" data-value="8.7"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Claude 3.5 Sonnet</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill rival2" data-value="8.9"></div>
+                        </div>
+                    </div>
+                    <div class="bench-bar-row">
+                        <span class="bench-bar-label">Asking ChatGPT to rate itself</span>
+                        <div class="bench-bar-track">
+                            <div class="bench-bar-fill coping" data-value="5.2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bench-note">
+                * Benchmarks conducted on a Tuesday. Results may vary on other days. "Your current coping mechanism" was
+                measured by how many times you checked r/LocalLLaMA today.
+            </div>
+        </section>
+
+        <!-- Download -->
+        <section id="download" class="reveal">
+            <div class="section-label">Get Started</div>
+            <div class="section-title">Download the weights. All of them.</div>
+            <div class="section-desc">No signup. No "coming soon." Just click and go. We promise we won't take them down
+                in 48 hours.</div>
+
+            <div class="download-grid">
+                <a href="#" class="dl-card" onclick="return fakeDownload('HuggingFace', event)">
+                    <div class="dl-icon hf">🤗</div>
+                    <div class="dl-info">
+                        <div class="dl-name">Hugging Face</div>
+                        <div class="dl-desc">SafeTensors format, full precision</div>
+                        <div class="dl-size">61.4 GB · bf16 · 1 file</div>
+                    </div>
+                </a>
+                <a href="#" class="dl-card" onclick="return fakeDownload('GGUF', event)">
+                    <div class="dl-icon gguf">📦</div>
+                    <div class="dl-info">
+                        <div class="dl-name">GGUF (llama.cpp)</div>
+                        <div class="dl-desc">Quantized variants for local inference</div>
+                        <div class="dl-size">Q4_K_M: 18.2 GB · Q8_0: 32.7 GB</div>
+                    </div>
+                </a>
+                <a href="#" class="dl-card" onclick="return fakeDownload('API', event)">
+                    <div class="dl-icon api">⚡</div>
+                    <div class="dl-info">
+                        <div class="dl-name">Compatible API</div>
+                        <div class="dl-desc">Works with any OpenAI-compatible endpoint</div>
+                        <div class="dl-size">Drop-in replacement · $0.00/1K tokens</div>
+                    </div>
+                </a>
+                <a href="#" class="dl-card" onclick="return fakeDownload('Torrent', event)">
+                    <div class="dl-icon torrent">🏴‍☠️</div>
+                    <div class="dl-info">
+                        <div class="dl-name">BitTorrent</div>
+                        <div class="dl-desc">Decentralized distribution. We can't stop you.</div>
+                        <div class="dl-size">magnet:?xt=... just kidding</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Timeline -->
+        <section id="timeline" class="reveal">
+            <div class="section-label">The Journey</div>
+            <div class="section-title">How we got here</div>
+            <div class="section-desc">A brief history of delays, promises, and one particularly tense Slack thread.
+            </div>
+
+            <div class="timeline">
+                <div class="tl-item">
+                    <div class="tl-date">January 2026</div>
+                    <div class="tl-title">Soon™</div>
+                    <div class="tl-desc">"We're working on it. Weights will be available soon." - Tweet with 14K likes,
+                        zero substance.</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">February 2026</div>
+                    <div class="tl-title">Final safety pass</div>
+                    <div class="tl-desc">"Just one more round of red-teaming." The red team has been red-teaming for 3
+                        weeks straight.</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">March 2026</div>
+                    <div class="tl-title">Actually soon</div>
+                    <div class="tl-desc">"We mean it this time. Probably. Maybe. Check back next week."</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">April 2026</div>
+                    <div class="tl-title">We found one more eval</div>
+                    <div class="tl-desc">"Just need to run one more benchmark." It was 17 more benchmarks.</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">May 2026</div>
+                    <div class="tl-title">Internal delay: someone found a typo in the config</div>
+                    <div class="tl-desc">A single comma was off by one position. The release was delayed 6 days.</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">June 7, 2026</div>
+                    <div class="tl-title">Actually actually actually releasing</div>
+                    <div class="tl-desc">No more delays. We swear on the sacred weights. 🎉</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code -->
+        <section id="code" class="reveal">
+            <div class="section-label">Quick Start</div>
+            <div class="section-title">Up and running in 3 lines</div>
+            <div class="section-desc">Copy. Paste. Pretend you wrote it yourself.</div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <div class="dots">
+                        <div class="dot-r"></div>
+                        <div class="dot-y"></div>
+                        <div class="dot-g"></div>
+                    </div>
+                    <span class="lang">python</span>
+                    <button class="code-copy" onclick="copyCode()">Copy</button>
+                </div>
+                <div class="code-body">
+                    <div><span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForCausalLM,
+                        AutoTokenizer</div>
+                    <div>&nbsp;</div>
+                    <div>model_id <span class="op">=</span> <span class="st">"Qwen/Qwen3.7-30B-Open"</span></div>
+                    <div>&nbsp;</div>
+                    <div>tokenizer <span class="op">=</span> AutoTokenizer.<span
+                            class="fn">from_pretrained</span>(model_id)</div>
+                    <div>model <span class="op">=</span> AutoModelForCausalLM.<span class="fn">from_pretrained</span>(
+                    </div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;model_id,</div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;torch_dtype<span class="op">=</span><span class="st">"bfloat16"</span>,
+                    </div>
+                    <div>&nbsp;&nbsp;&nbsp;&nbsp;device_map<span class="op">=</span><span class="st">"auto"</span>,
+                        <span class="cm"># pray to your VRAM gods</span>
+                    </div>
+                    <div>)</div>
+                    <div>&nbsp;</div>
+                    <div>messages <span class="op">=</span> [{<span class="st">"role"</span>: <span
+                            class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"Explain
+                            quantum computing to a 5 year old"</span>}]</div>
+                    <div>&nbsp;</div>
+                    <div>inputs <span class="op">=</span> tokenizer.<span
+                            class="fn">apply_chat_template</span>(messages, return_tensors<span class="op">=</span><span
+                            class="st">"pt"</span>)</div>
+                    <div>outputs <span class="op">=</span> model.<span class="fn">generate</span>(inputs,
+                        max_new_tokens<span class="op">=</span><span class="num">512</span>)</div>
+                    <div>&nbsp;</div>
+                    <div><span class="fn">print</span>(tokenizer.<span class="fn">decode</span>(outputs[<span
+                            class="num">0</span>], skip_special_tokens<span class="op">=</span><span
+                            class="kw">True</span>))</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community -->
+        <section id="community" class="reveal">
+            <div class="section-label">Community Reactions</div>
+            <div class="section-title">What people are saying</div>
+            <div class="section-desc">Verified reactions from totally real people who definitely aren't us pretending to
+                be excited.</div>
+
+            <div class="community-grid">
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-avatar" style="background:rgba(108,92,231,0.2);color:var(--accent);">M</div>
+                        <div>
+                            <div class="post-user">ML Engineer Mike</div>
+                            <div class="post-handle">@mike_trains_models</div>
+                        </div>
+                    </div>
+                    <div class="post-body">I literally had a Hugging Face tab open on refresh for <strong>7
+                            months</strong>. My manager thought I had a gambling problem. Joke's on him, this is worse.
+                    </div>
+                    <div class="post-meta"><span>2.4K likes</span><span>412 retweets</span><span>23 min ago</span></div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-avatar" style="background:rgba(52,211,153,0.2);color:var(--green);">L</div>
+                        <div>
+                            <div class="post-user">Local LLaMA Legend</div>
+                            <div class="post-handle">@runs_everything_locally</div>
+                        </div>
+                    </div>
+                    <div class="post-body">Just loaded the Q4_K_M quant on my dual 3090 setup. It <strong>fits</strong>.
+                        I can finally stop running 7B models and pretending they're good enough. 🎉</div>
+                    <div class="post-meta"><span>1.8K likes</span><span>89 retweets</span><span>45 min ago</span></div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-avatar" style="background:rgba(236,72,153,0.2);color:var(--pink);">S</div>
+                        <div>
+                            <div class="post-user">Sarah, PhD (ABD)</div>
+                            <div class="post-handle">@definitely_finished_my_thesis</div>
+                        </div>
+                    </div>
+                    <div class="post-body">I cited Qwen3.7 in my thesis <strong>before it was released</strong>. My
+                        advisor said "that's not how citations work." I said "that's not how releases work."</div>
+                    <div class="post-meta"><span>3.1K likes</span><span>567 retweets</span><span>1 hr ago</span></div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-avatar" style="background:rgba(245,158,11,0.2);color:var(--orange);">D</div>
+                        <div>
+                            <div class="post-user">Deploy Dan</div>
+                            <div class="post-handle">@deploys_on_friday</div>
+                        </div>
+                    </div>
+                    <div class="post-body">Spent 6 months building a whole RAG pipeline around Qwen2.5. Now I have to
+                        rebuild everything. <strong>Worth it.</strong> (Please don't tell my PM.)</div>
+                    <div class="post-meta"><span>1.2K likes</span><span>78 retweets</span><span>2 hr ago</span></div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-avatar" style="background:rgba(34,211,238,0.2);color:var(--cyan);">R</div>
+                        <div>
+                            <div class="post-user">Research Lab Rival</div>
+                            <div class="post-handle">@not_competing_at_all</div>
+                        </div>
+                    </div>
+                    <div class="post-body">We've been benchmarking Qwen3.7-30B-Open for the past <strong>3
+                            hours</strong>. Initial findings: it's really good and we're scared. More updates at 5pm.
+                    </div>
+                    <div class="post-meta"><span>892 likes</span><span>134 retweets</span><span>3 hr ago</span></div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-avatar" style="background:rgba(168,85,247,0.2);color:var(--accent2);">T</div>
+                        <div>
+                            <div class="post-user">Tokenomics Tyler</div>
+                            <div class="post-handle">@counting_every_token</div>
+                        </div>
+                    </div>
+                    <div class="post-body">I calculated that if you printed out all 30B parameters at 10pt font, it
+                        would stretch from here to <strong>the moon</strong>. You'd need a really long piece of paper
+                        though.</div>
+                    <div class="post-meta"><span>2.7K likes</span><span>445 retweets</span><span>4 hr ago</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Run Locally -->
+        <section id="local" class="reveal">
+            <div class="section-label">Self-Host</div>
+            <div class="section-title">Run it locally</div>
+            <div class="section-desc">Because the cloud is just someone else's computer, and you don't trust them.</div>
+
+            <div class="vram-grid">
+                <div class="vram-card">
+                    <div class="vram-setup">Minimum</div>
+                    <div class="vram-size">24 GB</div>
+                    <div class="vram-desc">Single RTX 4090 or A6000</div>
+                    <div class="vram-details">
+                        <div><span>Precision</span><span>Q4_K_M (GGUF)</span></div>
+                        <div><span>Speed</span><span>~12 tok/s</span></div>
+                        <div><span>Context</span><span>8K safe, 32K tight</span></div>
+                        <div><span>Copium Level</span><span>Moderate</span></div>
+                    </div>
+                </div>
+
+                <div class="vram-card recommended">
+                    <div class="vram-setup">Recommended</div>
+                    <div class="vram-size">48 GB</div>
+                    <div class="vram-desc">RTX 6000 Ada or 2x RTX 3090</div>
+                    <div class="vram-details">
+                        <div><span>Precision</span><span>Q8_0 (GGUF)</span></div>
+                        <div><span>Speed</span><span>~28 tok/s</span></div>
+                        <div><span>Context</span><span>32K comfortable</span></div>
+                        <div><span>Copium Level</span><span>Low</span></div>
+                    </div>
+                </div>
+
+                <div class="vram-card">
+                    <div class="vram-setup">Enthusiast</div>
+                    <div class="vram-size">80 GB</div>
+                    <div class="vram-desc">A100 80GB or H100</div>
+                    <div class="vram-details">
+                        <div><span>Precision</span><span>bf16 (full)</span></div>
+                        <div><span>Speed</span><span>~65 tok/s</span></div>
+                        <div><span>Context</span><span>128K full context</span></div>
+                        <div><span>Copium Level</span><span>Zero (you won)</span></div>
+                    </div>
+                </div>
+
+                <div class="vram-card">
+                    <div class="vram-setup">The "I Have a Problem"</div>
+                    <div class="vram-size">2x 3090</div>
+                    <div class="vram-desc">48 GB total. Tied together with hope and tensor parallelism.</div>
+                    <div class="vram-details">
+                        <div><span>Precision</span><span>Q4_K_M with offloading</span></div>
+                        <div><span>Speed</span><span>~18 tok/s (PCIe bottleneck)</span></div>
+                        <div><span>Context</span><span>32K</span></div>
+                        <div><span>Copium Level</span><span>"It's fine for now"</span></div>
+                        <div><span>Power Draw</span><span>Your electricity bill weeps</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div>Qwen3.7-30B-Open &middot; Apache 2.0 License &middot; Weights are real. Benchmarks are real. This page
+                is definitely not a joke.</div>
+            <div class="footer-notice">* If anyone from Alibaba asks, we didn't make this. Also, sorry.</div>
+        </footer>
+    </div>
+
+    <div id="toast">
+        <div class="toast-title">Download starting...</div>
+        <div class="toast-body">Just kidding. This is a joke page. But wouldn't it be nice?</div>
+    </div>
+
+    <script>
+        // Animated background
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let w, h, particles = [], gridLines = [], time = 0;
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Grid lines
+        for (let i = 0; i < 30; i++) {
+            gridLines.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                len: 40 + Math.random() * 80,
+                speed: 0.1 + Math.random() * 0.3,
+                opacity: 0.02 + Math.random() * 0.04,
+                vertical: Math.random() > 0.5
+            });
+        }
+
+        // Floating particles (tokens)
+        for (let i = 0; i < 60; i++) {
+            particles.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                size: 1 + Math.random() * 2.5,
+                speedX: (Math.random() - 0.5) * 0.4,
+                speedY: -0.2 - Math.random() * 0.5,
+                opacity: 0.1 + Math.random() * 0.3,
+                hue: Math.random() > 0.7 ? 260 : (Math.random() > 0.5 ? 200 : 320)
+            });
+        }
+
+        // Glowing shards
+        let shards = [];
+        for (let i = 0; i < 8; i++) {
+            shards.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                size: 30 + Math.random() * 60,
+                rotation: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.005,
+                speedX: (Math.random() - 0.5) * 0.15,
+                speedY: (Math.random() - 0.5) * 0.15,
+                opacity: 0.015 + Math.random() * 0.02,
+                hue: 260 + Math.random() * 40
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+            time += 0.01;
+
+            // Grid
+            ctx.strokeStyle = 'rgba(108, 92, 231, 0.03)';
+            ctx.lineWidth = 1;
+            const gridSize = 60;
+            for (let x = 0; x < w; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (let y = 0; y < h; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+
+            // Grid scan lines
+            gridLines.forEach(g => {
+                g.opacity += Math.sin(time * 2 + g.x * 0.01) * 0.001;
+                ctx.strokeStyle = `rgba(108, 92, 231, ${Math.max(0.01, g.opacity)})`;
+                ctx.beginPath();
+                if (g.vertical) {
+                    g.x += g.speed;
+                    if (g.x > w + g.len) g.x = -g.len;
+                    ctx.moveTo(g.x, g.y);
+                    ctx.lineTo(g.x, g.y + g.len);
+                } else {
+                    g.y += g.speed;
+                    if (g.y > h + g.len) g.y = -g.len;
+                    ctx.moveTo(g.x, g.y);
+                    ctx.lineTo(g.x + g.len, g.y);
+                }
+                ctx.stroke();
+            });
+
+            // Particles
+            particles.forEach(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+                if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+                if (p.x < -10 || p.x > w + 10) p.x = Math.random() * w;
+
+                const glow = 0.5 + Math.sin(time * 3 + p.x * 0.01) * 0.3;
+                ctx.fillStyle = `hsla(${p.hue}, 70%, 70%, ${p.opacity * glow})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glow
+                ctx.fillStyle = `hsla(${p.hue}, 70%, 70%, ${p.opacity * glow * 0.3})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Shards
+            shards.forEach(s => {
+                s.x += s.speedX;
+                s.y += s.speedY;
+                s.rotation += s.rotSpeed;
+                if (s.x < -100) s.x = w + 100;
+                if (s.x > w + 100) s.x = -100;
+                if (s.y < -100) s.y = h + 100;
+                if (s.y > h + 100) s.y = -100;
+
+                ctx.save();
+                ctx.translate(s.x, s.y);
+                ctx.rotate(s.rotation);
+                ctx.fillStyle = `hsla(${s.hue}, 60%, 60%, ${s.opacity})`;
+                ctx.beginPath();
+                ctx.moveTo(0, -s.size);
+                ctx.lineTo(s.size * 0.3, 0);
+                ctx.lineTo(0, s.size);
+                ctx.lineTo(-s.size * 0.3, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Center glow
+            const gradient = ctx.createRadialGradient(w / 2, h * 0.35, 0, w / 2, h * 0.35, w * 0.4);
+            gradient.addColorStop(0, 'rgba(108, 92, 231, 0.03)');
+            gradient.addColorStop(1, 'rgba(108, 92, 231, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h);
+
+            requestAnimationFrame(draw);
+        }
+        draw();
+
+        // Scroll reveal
+        const reveals = document.querySelectorAll('.reveal, .tl-item');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15 });
+        reveals.forEach(r => observer.observe(r));
+
+        // Benchmark bar animation
+        const barObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    const bars = e.target.querySelectorAll('.bench-bar-fill');
+                    bars.forEach((bar, i) => {
+                        setTimeout(() => {
+                            bar.style.width = bar.dataset.value + '%';
+                        }, i * 150);
+                    });
+                    barObserver.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.3 });
+        document.querySelectorAll('.bench-card').forEach(c => barObserver.observe(c));
+
+        // Fake download
+        function fakeDownload(type, e) {
+            e.preventDefault();
+            const toast = document.getElementById('toast');
+            const msgs = {
+                'HuggingFace': { title: 'HuggingFace redirect...', body: 'Just kidding. The model doesn\'t exist. But your hope was real.' },
+                'GGUF': { title: 'GGUF download...', body: 'This link would take you to a 18GB file. That you would then run on a 24GB GPU. Peak efficiency.' },
+                'API': { title: 'API endpoint...', body: 'Sure, here\'s your API key: sk-fake-12345. It does nothing. Much like this page.' },
+                'Torrent': { title: 'Magnet link copied!', body: 'Not really. But we admire your commitment to decentralized distribution.' }
+            };
+            toast.querySelector('.toast-title').textContent = msgs[type].title;
+            toast.querySelector('.toast-body').textContent = msgs[type].body;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // Copy code
+        function copyCode() {
+            const code = `from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_id = "Qwen/Qwen3.7-30B-Open"
+
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(
+    model_id,
+    torch_dtype="bfloat16",
+    device_map="auto",  # pray to your VRAM gods
+)
+
+messages = [{"role": "user", "content": "Explain quantum computing to a 5 year old"}]
+
+inputs = tokenizer.apply_chat_template(messages, return_tensors="pt")
+outputs = model.generate(inputs, max_new_tokens=512)
+
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))`;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.code-copy');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            }).catch(() => {
+                const btn = document.querySelector('.code-copy');
+                btn.textContent = 'Select all & copy manually';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        }
+
+        // Hero stat counter animation
+        function animateCounters() {
+            document.querySelectorAll('.hero-stat .num').forEach(el => {
+                const text = el.textContent;
+                const target = text;
+                if (text.includes('K')) {
+                    let current = 0;
+                    const num = parseInt(text);
+                    const step = Math.ceil(num / 40);
+                    const interval = setInterval(() => {
+                        current += step;
+                        if (current >= num) { current = num; clearInterval(interval); }
+                        el.textContent = current + 'K';
+                    }, 30);
+                }
+            });
+        }
+        setTimeout(animateCounters, 600);
+
+        // Easter egg: Konami-ish code
+        let secretCode = '';
+        document.addEventListener('keydown', (e) => {
+            secretCode += e.key;
+            if (secretCode.length > 20) secretCode = secretCode.slice(-20);
+            if (secretCode.includes('qwen')) {
+                const toast = document.getElementById('toast');
+                toast.querySelector('.toast-title').textContent = '🎉 Secret mode activated!';
+                toast.querySelector('.toast-body').textContent = 'You found the easter egg. The model still doesn\'t exist though. Sorry.';
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 4000);
+                secretCode = '';
+            }
+        });
+    </script>
+</body>
+
+</html>
