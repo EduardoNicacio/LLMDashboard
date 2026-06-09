@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open | Official Release</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: rgba(20, 20, 20, 0.8);
+            --accent: #3b82f6;
+            --accent-purple: #a855f7;
+            --text: #e5e7eb;
+            --text-dim: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: blur(12px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Background Animations --- */
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 50%, #111 0%, #050505 100%);
+            overflow: hidden;
+        }
+
+        .grid {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg) translateY(-20%);
+            animation: moveGrid 20s linear infinite;
+            opacity: 0.2;
+        }
+
+        @keyframes moveGrid {
+            from {
+                transform: perspective(500px) rotateX(60deg) translateY(-20%);
+            }
+
+            to {
+                transform: perspective(500px) rotateX(60deg) translateY(0%);
+            }
+        }
+
+        .shard {
+            position: absolute;
+            background: var(--accent);
+            filter: blur(80px);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(100px, 50px) scale(1.5);
+            }
+        }
+
+        /* --- Layout --- */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(circle at center, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+        }
+
+        .badge {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        h1 {
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 800;
+            line-height: 0.9;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to bottom, #fff 30%, #666);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subheadline {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--text-dim);
+            max-width: 700px;
+            margin-bottom: 3rem;
+        }
+
+        /* --- Model Card --- */
+        .model-card {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+            margin: 4rem 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .model-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .stat-box h3 {
+            font-size: 2.5rem;
+            color: #fff;
+        }
+
+        .stat-box p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* --- Benchmarks --- */
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .benchmark-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .bar-wrapper {
+            margin: 20px 0;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .bar-bg {
+            height: 12px;
+            background: #222;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-purple));
+            width: 0%;
+            transition: width 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+        }
+
+        /* --- Timeline --- */
+        .timeline {
+            margin: 6rem 0;
+            padding: 2rem;
+            border-left: 2px solid var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -9px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .timeline-date {
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        /* --- Code Block --- */
+        .code-block {
+            background: #000;
+            padding: 2rem;
+            border-radius: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .code-block::before {
+            content: "python";
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+
+        .keyword {
+            color: #ff79c6;
+        }
+
+        .func {
+            color: #50fa7b;
+        }
+
+        .string {
+            color: #f1fa8c;
+        }
+
+        /* --- Community Wall --- */
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .comment {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .user {
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* --- Hardware --- */
+        .hardware-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .hw-card {
+            padding: 2rem;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .hw-card.featured {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* --- Buttons --- */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 3rem;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-outline {
+            color: white;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        footer {
+            padding: 5rem 0;
+            text-align: center;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+            margin-top: 10rem;
+        }
+
+        /* Scroll Reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 4rem;
+            }
+
+            .model-card {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-container">
+        <div class="grid"></div>
+        <div class="shard" style="width: 400px; height: 400px; top: 10%; left: 10%; animation-delay: 0s;"></div>
+        <div class="shard" style="width: 300px; height: 300px; top: 60%; left: 70%; animation-delay: -5s;"></div>
+        <div class="shard" style="width: 500px; height: 500px; top: 40%; left: 40%; animation-delay: -2s;"></div>
+    </div>
+
+    <header>
+        <div class="container">
+            <div class="badge">The Wait is Over</div>
+            <h1>Qwen3.7-30B-Open</h1>
+            <p class="subheadline">You can finally stop refreshing Hugging Face every 11 seconds. We know, we know. It
+                was worth the wait. The weights are live.</p>
+            <div class="btn-group">
+                <a href="#download" class="btn btn-primary">Download Weights</a>
+                <a href="#benchmarks" class="btn btn-outline">View Benchmarks</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="container reveal">
+        <div class="model-card">
+            <div class="stat-box">
+                <h3>30B</h3>
+                <p>Parameters</p>
+            </div>
+            <div class="stat-box">
+                <h3>Open</h3>
+                <p>Weights & Architecture</p>
+            </div>
+            <div class="stat-box">
+                <h3>128k</h3>
+                <p>Context Window</p>
+            </div>
+            <div class="stat-box">
+                <h3>Native</h3>
+                <p>Tool Use & Reasoning</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="container reveal" id="benchmarks">
+        <h2 class="section-title">Benchmarks</h2>
+        <div class="benchmark-grid">
+            <div class="chart-container">
+                <h3>Reasoning (MMLU)</h3>
+                <div class="bar-wrapper">
+                    <div class="bar-label"><span>Qwen3.7-30B-Open</span><span>89.4%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" data-width="89.4%"></div>
+                    </div>
+                </div>
+                <div class="bar-wrapper">
+                    <div class="bar-label"><span>Llama-4-Imaginary</span><span>72.1%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" data-width="72.1%"></div>
+                    </div>
+                </div>
+                <div class="bar-wrapper">
+                    <div class="bar-label"><span>Your Coping Mechanism</span><span>2.4%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" data-width="2.4%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Coding (HumanEval)</h3>
+                <div class="bar-wrapper">
+                    <div class="bar-label"><span>Qwen3.7-30B-Open</span><span>94.2%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" data-width="94.2%"></div>
+                    </div>
+                </div>
+                <div class="bar-wrapper">
+                    <div class="bar-label"><span>GPT-5-Beta-Leak</span><span>88.0%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" data-width="88.0%"></div>
+                    </div>
+                </div>
+                <div class="bar-wrapper">
+                    <div class="bar-label"><span>StackOverflow_Copypasta</span><span>0.0%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" data-width="0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container reveal">
+        <h2 class="section-title">The Journey to "Soon™"</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-date">January 2023</div>
+                <p>Initial announcement: "We are working on something massive. Coming soon."</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">June 2023</div>
+                <p>The "Final Safety Pass" begins. (It lasted 8 months).</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">December 2023</div>
+                <p>"Actually soon." - A tweet that caused a minor stock market fluctuation.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">March 2024</div>
+                <p>"We found one more eval that needs to be perfect."</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">Today</div>
+                <p>The weights are finally released. Please don't scream too loud.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="container reveal">
+        <h2 class="section-title">Quick Start</h2>
+        <div class="code-block">
+            <span class="keyword">from</span> transformers <span class="keyword">import</span> AutoModelForCausalLM,
+            AutoTokenizer
+
+            <span class="keyword">model_id</span> = <span class="string">"qwen/qwen3.7-30b-open"</span>
+            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            model = AutoModelForCausalLM.from_pretrained(model_id, device_map=<span class="string">"auto"</span>)
+
+            <span class="keyword">input_text</span> = <span class="string">"Write a poem about a GPU that gained
+                sentience."</span>
+            inputs = tokenizer(input_text, return_tensors=<span class="string">"pt"</span>).to(<span
+                class="string">"cuda"</span>)
+
+            outputs = model.generate(**inputs, max_new_tokens=512)
+            print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+        </div>
+    </section>
+
+    <section class="container reveal">
+        <h2 class="section-title">Community Reaction</h2>
+        <div class="community-grid">
+            <div class="comment">
+                <span class="user">@DeepLearning_Wizard</span>
+                "I've been waiting so long I've actually aged into a different demographic. Worth it."
+            </div>
+            <div class="comment">
+                <span class="user">@GPU_Hoarder_99</span>
+                "Finally! My dual 3090s are screaming for some actual work."
+            </div>
+            <div class="comment">
+                <span class="user">@PromptEngineer_Pro</span>
+                "Is it actually open weights or is it just a very polite suggestion that we can use it?"
+            </div>
+            <div class="comment">
+                <span class="user">@CodeMonkey_01</span>
+                "The benchmarks are insane. My coping mechanism is officially obsolete."
+            </div>
+        </div>
+    </section>
+
+    <section class="container reveal" id="hardware">
+        <h2 class="section-title">Run it Locally</h2>
+        <div class="hardware-grid">
+            <div class="hw-card">
+                <h3>The "I have a budget"</h3>
+                <p>Single RTX 4090 (24GB)</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">4-bit Quantization recommended</p>
+            </div>
+            <div class="hw-card featured">
+                <h3>The "Standard"</h3>
+                <p>Dual RTX 3090 / 4090</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">Full FP16 precision (barely)</p>
+            </div>
+            <div class="hw-card">
+                <h3>The "Enterprise"</h3>
+                <p>A100 / H100 Cluster</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">For the truly obsessed</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="container reveal" id="download" style="text-align: center; margin-bottom: 10rem;">
+        <h2 class="section-title">Get the Weights</h2>
+        <div class="btn-group">
+            <a href="#" class="btn btn-primary">Hugging Face</a>
+            <a href="#" class="btn btn-outline">GGUF (Llama.cpp)</a>
+            <a href="#" class="btn btn-outline">API Access</a>
+            <a href="#" class="btn btn-outline">Torrent (For the rebels)</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 Qwen Labs. This is a joke. Please don't actually try to download this.</p>
+    </footer>
+
+    <script>
+        // Scroll Reveal Logic
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+
+                    // Trigger bar animations if it's a benchmark section
+                    if (entry.target.parentElement.querySelector('.bar-fill')) {
+                        const fills = entry.target.parentElement.querySelectorAll('.bar-fill');
+                        fills.forEach(fill => {
+                            fill.style.width = fill.dataset.width;
+                        });
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Fake Interaction: Button click
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (btn.innerText.includes('Download') || btn.innerText.includes('Hugging Face')) {
+                    e.preventDefault();
+                    alert("Error 404: The weights are still being 'final safety passed'. Please wait another 3 months.");
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

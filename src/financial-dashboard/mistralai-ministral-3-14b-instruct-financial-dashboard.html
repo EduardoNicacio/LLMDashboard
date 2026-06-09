@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Financial Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --neon-accent: #6c5ce7;
+            --primary-text: #e0e0e0;
+            --secondary-text: #a0a0a0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --chart-bg: rgba(30, 41, 59, 0.6);
+        }
+
+        [data-theme="light"] {
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --neon-accent: #4a6bff;
+            --primary-text: #1e293b;
+            --secondary-text: #475569;
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--primary-text);
+            background-color: #0f172a;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--neon-accent);
+            text-shadow: 0 0 10px rgba(108, 92, 231, 0.5);
+        }
+
+        .theme-toggle {
+            background: var(--glass-bg);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        #search {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.8rem 1.2rem;
+            border-radius: 50px;
+            border: none;
+            background: var(--glass-bg);
+            color: var(--primary-text);
+            font-size: 1rem;
+        }
+
+        #search::placeholder {
+            color: var(--secondary-text);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            padding: 0.3rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab {
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab.active {
+            background-color: rgba(79, 70, 249, 0.2);
+            color: white;
+            font-weight: 500;
+        }
+
+        .tab::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active::after {
+            background-color: var(--neon-accent);
+        }
+
+        .hero-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .metric-label {
+            color: var(--secondary-text);
+            font-size: 0.9rem;
+        }
+
+        .comparison-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .company-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.8rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+        }
+
+        .company-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .company-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            border-radius: 8px;
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .company-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            background: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+        }
+
+        .data-table {
+            width: 100%;
+            background: var(--glass-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th,
+        td {
+            padding: 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: rgba(30, 41, 59, 0.6);
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+        }
+
+        th:hover {
+            background: rgba(79, 70, 249, 0.1);
+        }
+
+        th.sort-asc::after {
+            content: ' ↑';
+            color: var(--neon-accent);
+        }
+
+        th.sort-desc::after {
+            content: ' ↓';
+            color: var(--neon-accent);
+        }
+
+        tr:hover {
+            background-color: rgba(108, 92, 231, 0.05);
+        }
+
+        .expanded-row {
+            display: none;
+            padding: 0 !important;
+        }
+
+        .expanded-row.active {
+            display: table-row;
+        }
+
+        .winner-section {
+            background: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+        }
+
+        .winner-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            padding: 0.8rem;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+        }
+
+        .winner-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notes-section {
+            background: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.8rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 1rem;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            color: var(--primary-text);
+            resize: vertical;
+        }
+
+        .api-panel {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .api-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            flex: 1;
+        }
+
+        .market-data-panel {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #10b981;
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+
+            .hero-section,
+            .comparison-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <div class="logo">FINVIZ PRO</div>
+            <button class="theme-toggle" id="themeToggle">
+                <span id="moon">🌙</span>
+                <span id="sun" style="display: none;">☀️</span>
+            </button>
+        </header>
+
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Search companies, metrics...">
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-view="summary">Summary</div>
+            <div class="tab" data-view="revenue">Revenue</div>
+            <div class="tab" data-view="profitability">Profitability</div>
+            <div class="tab" data-view="cash-flow">Cash Flow</div>
+            <div class="tab" data-view="market-data">Market Data</div>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="metric-card">
+                <div class="metric-label">Revenue (TTM)</div>
+                <div class="metric-value" id="revenue-ttm">$383.27B</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Net Income (TTM)</div>
+                <div class="metric-value" id="net-income-ttm">$94.61B</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">EPS (TTM)</div>
+                <div class="metric-value" id="eps-ttm">$5.87</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">P/E Ratio</div>
+                <div class="metric-value" id="pe-ratio">29.36x</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">ROE</div>
+                <div class="metric-value" id="roe">25.4%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">D/E Ratio</div>
+                <div class="metric-value" id="de-ratio">1.36x</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Market Cap</div>
+                <div class="metric-value" id="market-cap">$2.95T</div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section class="comparison-section">
+            <div class="company-card">
+                <div class="company-header">
+                    <div class="company-logo">🍎</div>
+                    <div class="company-name">Apple Inc.</div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Revenue Growth (YoY)</span>
+                        <span id="apple-rev-growth">3%</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #ef4444, #6c5ce7); border-radius: 2px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>EBITDA Margin</span>
+                        <span id="apple-ebitda">27.8%</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #6c5ce7, #10b981); border-radius: 2px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Free Cash Flow Yield</span>
+                        <span id="apple-fcf">2.4%</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #fbbf24, #6c5ce7); border-radius: 2px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Dividend Yield</span>
+                        <span id="apple-div-yield">0.5%</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #fbbf24, #ef4444); border-radius: 2px;">
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Beta</span>
+                        <span id="apple-beta">1.39</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #ef4444, #fbbf24); border-radius: 2px;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="company-card">
+                <div class="company-header">
+                    <div class="company-logo">🖥️</div>
+                    <div class="company-name">Microsoft Corp.</div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Revenue Growth (YoY)</span>
+                        <span id="msft-rev-growth">24%</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #10b981, #6c5ce7); border-radius: 2px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>EBITDA Margin</span>
+                        <span id="msft-ebitda">42.3%</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #6c5ce7, #10b981); border-radius: 2px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Free Cash Flow Yield</span>
+                        <span id="msft-fcf">4.8%</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #10b981, #fbbf24); border-radius: 2px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Dividend Yield</span>
+                        <span id="msft-div-yield">0.6%</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #fbbf24, #10b981); border-radius: 2px;">
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Beta</span>
+                        <span id="msft-beta">1.19</span>
+                    </div>
+                    <div
+                        style="height: 4px; background: linear-gradient(to right, #fbbf24, #ef4444); border-radius: 2px;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <div class="chart-container">
+            <canvas id="revenueChart" height="300"></canvas>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(48%, 1fr)); gap: 2rem;">
+            <div class="chart-container">
+                <canvas id="ebitdaMarginChart" height="300"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="cashFlowChart" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Financial Statements Table -->
+        <section class="data-table">
+            <table id="financialTable">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th data-sort="fiscalYear">Fiscal Year</th>
+                        <th data-sort="quarter">Quarter</th>
+                        <th data-sort="revenue">Revenue</th>
+                        <th data-sort="netIncome">Net Income</th>
+                        <th data-sort="eps">EPS</th>
+                        <th data-sort="peRatio">P/E Ratio</th>
+                        <th data-sort="roe">ROE</th>
+                        <th data-sort="deRatio">D/E Ratio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Apple Inc.</td>
+                        <td>2023</td>
+                        <td>Q4</td>
+                        <td>$185.7B</td>
+                        <td>$36.9B</td>
+                        <td>$1.40</td>
+                        <td>30.1x</td>
+                        <td>26.1%</td>
+                        <td>1.38x</td>
+                        <td><button class="expand-btn">▶</button></td>
+                    </tr>
+                    <tr class="expanded-row">
+                        <td colspan="9" style="padding: 0;">
+                            <div
+                                style="background: rgba(30,41,59,0.6); padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    <div>
+                                        <strong>Revenue by Segment:</strong>
+                                        <div style="margin-top: 0.5rem;">iPhone: $93.7B</div>
+                                        <div>Services: $84.2B</div>
+                                        <div>Mac: $16.3B</div>
+                                    </div>
+                                    <div>
+                                        <strong>Expenses:</strong>
+                                        <div style="margin-top: 0.5rem;">Cost of Sales: $97.8B</div>
+                                        <div>Operating Expenses: $42.1B</div>
+                                        <div>R&D: $16.3B</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Microsoft Corp.</td>
+                        <td>2023</td>
+                        <td>Q4</td>
+                        <td>$56.9B</td>
+                        <td>$18.7B</td>
+                        <td>$2.61</td>
+                        <td>36.5x</td>
+                        <td>30.2%</td>
+                        <td>0.45x</td>
+                        <td><button class="expand-btn">▶</button></td>
+                    </tr>
+                    <tr class="expanded-row">
+                        <td colspan="9" style="padding: 0;">
+                            <div
+                                style="background: rgba(30,41,59,0.6); padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    <div>
+                                        <strong>Revenue by Segment:</strong>
+                                        <div style="margin-top: 0.5rem;">Productivity & Business Processes: $38.6B</div>
+                                        <div>Intelligent Cloud: $24.7B</div>
+                                        <div>More Personal Computing: $13.6B</div>
+                                    </div>
+                                    <div>
+                                        <strong>Expenses:</strong>
+                                        <div style="margin-top: 0.5rem;">Cost of Revenue: $9.8B</div>
+                                        <div>Operating Expenses: $27.4B</div>
+                                        <div>R&D: $16.3B</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Additional rows would be added here in a real implementation -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Winner Breakdown Section -->
+        <section class="winner-section">
+            <h3 style="margin-bottom: 1.5rem;">Performance Comparison</h3>
+            <div style="display: flex; justify-content: space-between;">
+                <div>
+                    <strong>Revenue Growth:</strong>
+                    <div class="winner-item" style="margin-top: 0.5rem;">
+                        <div class="winner-icon">🏆</div>
+                        <span>Microsoft Corp.</span>
+                        <span style="margin-left: auto; color: #10b981;">+24%</span>
+                    </div>
+                </div>
+                <div>
+                    <strong>Profitability:</strong>
+                    <div class="winner-item" style="margin-top: 0.5rem;">
+                        <div class="winner-icon">🏆</div>
+                        <span>Microsoft Corp.</span>
+                        <span style="margin-left: auto; color: #10b981;">EBITDA Margin +42.3%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between;">
+                <div>
+                    <strong>Liquidity:</strong>
+                    <div class="winner-item" style="margin-top: 0.5rem;">
+                        <div class="winner-icon">🏆</div>
+                        <span>Apple Inc.</span>
+                        <span style="margin-left: auto; color: #10b981;">FCF Yield +2.4%</span>
+                    </div>
+                </div>
+                <div>
+                    <strong>Valuation:</strong>
+                    <div class="winner-item" style="margin-top: 0.5rem;">
+                        <div class="winner-icon">🏆</div>
+                        <span>Apple Inc.</span>
+                        <span style="margin-left: auto; color: #10b981;">P/E Ratio 29.36x</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between;">
+                <div>
+                    <strong>Dividend Yield:</strong>
+                    <div class="winner-item" style="margin-top: 0.5rem;">
+                        <div class="winner-icon">🏆</div>
+                        <span>Microsoft Corp.</span>
+                        <span style="margin-left: auto; color: #10b981;">0.6%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API and Market Data Panels -->
+        <div class="api-panel">
+            <div class="api-card">
+                <h4>API Usage</h4>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Bloomberg Terminal:</strong>
+                    <div style="display: flex; align-items: center; margin-top: 0.5rem;">
+                        <span class="status-indicator"></span>
+                        <span>Connected</span>
+                        <span style="margin-left: auto;">Last updated: <span id="bloomberg-time">2 min ago</span></span>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Alpha Vantage:</strong>
+                    <div style="display: flex; align-items: center; margin-top: 0.5rem;">
+                        <span class="status-indicator"></span>
+                        <span>Connected</span>
+                        <span style="margin-left: auto;">Calls this month: 42/1,000</span>
+                    </div>
+                </div>
+                <div>
+                    <strong>Estimated Cost:</strong>
+                    <div style="display: flex; align-items: center; margin-top: 0.5rem;">
+                        <span>$38.75</span>
+                        <span style="margin-left: auto;">Total spend this month</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-card">
+                <h4>Market Data Feed</h4>
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                    <span class="status-indicator"></span>
+                    <span>Real-time data stream active</span>
+                    <span style="margin-left: auto;">Latency: <strong>87ms</strong></span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span class="status-indicator"></span>
+                    <span>Data source: Bloomberg Terminal</span>
+                    <span style="margin-left: auto;">Last update: <span id="market-time">3 min ago</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Section -->
+        <section class="notes-section">
+            <h3>Analyst Notes</h3>
+            <textarea placeholder="Add your observations, commentary, and future outlook here..."></textarea>
+            <button
+                style="margin-top: 1rem; background: var(--neon-accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer;">Save
+                Notes</button>
+        </section>
+
+        <!-- Company Cards Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+            <div class="company-card">
+                <h4>Apple Inc.</h4>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Financial Health Score:</strong> <span
+                        style="color: #6c5ce7; font-weight: bold;">89/100</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">Revenue (TTM)</div>
+                        <div>$383.27B</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">Operating Income</div>
+                        <div>$115.69B</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">Net Income (TTM)</div>
+                        <div>$94.61B</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">EPS (TTM)</div>
+                        <div>$5.87</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">P/E Ratio</div>
+                        <div>29.36x</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">ROE</div>
+                        <div>25.4%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="company-card">
+                <h4>Microsoft Corp.</h4>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Financial Health Score:</strong> <span
+                        style="color: #6c5ce7; font-weight: bold;">92/100</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">Revenue (TTM)</div>
+                        <div>$215.67B</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">Operating Income</div>
+                        <div>$98.44B</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">Net Income (TTM)</div>
+                        <div>$72.41B</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">EPS (TTM)</div>
+                        <div>$8.65</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">P/E Ratio</div>
+                        <div>36.49x</div>
+                    </div>
+                    <div>
+                        <div style="margin-bottom: 0.3rem;">ROE</div>
+                        <div>30.2%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional company cards would be added here -->
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const moon = document.getElementById('moon');
+        const sun = document.getElementById('sun');
+
+        function toggleTheme() {
+            const currentTheme = body.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                body.setAttribute('data-theme', 'light');
+                moon.style.display = 'none';
+                sun.style.display = 'block';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                moon.style.display = 'block';
+                sun.style.display = 'none';
+            }
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // In a real implementation, this would update the dashboard view
+                console.log(`Switched to ${tab.dataset.view} view`);
+            });
+        });
+
+        // Expandable table rows
+        const expandBtns = document.querySelectorAll('.expand-btn');
+        expandBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const row = btn.closest('tr').nextElementSibling;
+                if (row) {
+                    row.classList.toggle('active');
+
+                    // Toggle arrow direction
+                    if (row.classList.contains('active')) {
+                        btn.textContent = '▼';
+                    } else {
+                        btn.textContent = '▶';
+                    }
+                }
+            });
+        });
+
+        // Sortable table
+        const tableHeaders = document.querySelectorAll('th[data-sort]');
+        let currentSort = { column: null, direction: 'asc' };
+
+        function sortTable(column) {
+            const tbody = document.querySelector('#financialTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Remove previous sort indicators
+            tableHeaders.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            const header = document.querySelector(`th[data-sort="${column}"]`);
+            header.classList.add(`sort-${currentSort.direction}`);
+
+            rows.sort((a, b) => {
+                const aValue = a.cells[Array.from(tableHeaders).findIndex(h => h.dataset.sort === column)].textContent;
+                const bValue = b.cells[Array.from(tableHeaders).findIndex(h => h.dataset.sort === column)].textContent;
+
+                // Handle numeric sorting
+                if (!isNaN(aValue.replace(/[^0-9.-]/g, '')) && !isNaN(bValue.replace(/[^0-9.-]/g, ''))) {
+                    const numA = parseFloat(aValue);
+                    const numB = parseFloat(bValue);
+
+                    return currentSort.direction === 'asc' ? numA - numB : numB - numA;
+                }
+
+                // Default string sorting
+                return currentSort.direction === 'asc'
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            });
+
+            // Rebuild table
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        tableHeaders.forEach(header => {
+            header.addEventListener('click', () => sortTable(header.dataset.sort));
+        });
+
+        // Initialize charts (simplified example)
+        function initCharts() {
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2019', '2020', '2021', '2022', '2023'],
+                    datasets: [
+                        {
+                            label: 'Apple Revenue (TTM)',
+                            data: [265.6, 274.5, 365.8, 394.3, 383.3],
+                            borderColor: '#6c5ce7',
+                            backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Microsoft Revenue (TTM)',
+                            data: [143.0, 168.7, 198.3, 217.5, 215.7],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `$${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+
+            // EBITDA Margin Chart
+            const ebitdaCtx = document.getElementById('ebitdaMarginChart').getContext('2d');
+            new Chart(ebitdaCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Q1 2023', 'Q2 2023', 'Q3 2023', 'Q4 2023'],
+                    datasets: [
+                        {
+                            label: 'Apple EBITDA Margin (%)',
+                            data: [27.8, 26.5, 28.1, 29.4],
+                            borderColor: '#fbbf24',
+                            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Microsoft EBITDA Margin (%)',
+                            data: [41.8, 42.7, 42.3, 42.9],
+                            borderColor: '#6c5ce7',
+                            backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Cash Flow Chart
+            const cashFlowCtx = document.getElementById('cashFlowChart').getContext('2d');
+            new Chart(cashFlowCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    datasets: [
+                        {
+                            label: 'Apple Free Cash Flow ($B)',
+                            data: [20.5, 22.8, 26.7, 32.1],
+                            backgroundColor: '#6c5ce7',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Microsoft Free Cash Flow ($B)',
+                            data: [19.8, 20.3, 21.7, 23.5],
+                            backgroundColor: '#10b981',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `$${context.raw.toLocaleString()}B`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update market data timestamps
+        function updateTimestamps() {
+            const now = new Date();
+            const bloombergTime = new Date(now.getTime() - Math.floor(Math.random() * 120) * 1000);
+            const marketTime = new Date(now.getTime() - Math.floor(Math.random() * 180) * 1000);
+
+            document.getElementById('bloomberg-time').textContent =
+                `${Math.floor((now - bloombergTime) / 60000)} min ago`;
+
+            document.getElementById('market-time').textContent =
+                `${Math.floor((now - marketTime) / 60000)} min ago`;
+        }
+
+        // Initialize everything
+        initCharts();
+        updateTimestamps();
+
+        // Update timestamps every minute
+        setInterval(updateTimestamps, 60000);
+    </script>
+</body>
+
+</html>

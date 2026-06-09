@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Qwen3.7-30B-Open Launch</title>
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #121212, #0d0d0d);
+            color: white;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: #121212;
+            color: white;
+            padding: 2rem;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #ccc;
+            margin-bottom: 3rem;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        /* Model Card */
+        .model-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e1e1e;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            animation: floatIn 2s ease-in-out;
+        }
+
+        .model-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .model-card ul {
+            list-style-type: none;
+            padding-left: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .model-card li {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 0.8rem 1.2rem;
+            font-size: 0.95rem;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .model-card li:hover {
+            transform: scale(1.05);
+            opacity: 0.95;
+        }
+
+        /* Benchmark Section */
+        .benchmark {
+            background: #121212;
+            padding: 4rem 2rem;
+            color: white;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 80%;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .chart {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #2a2a2a, #1e1e1e);
+            border-radius: 15px;
+        }
+
+        .chart::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        .chart::after {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        .chart::before {
+            opacity: 0.3;
+        }
+
+        .chart::after {
+            opacity: 0.2;
+        }
+
+        /* Download Section */
+        .download-section {
+            background: #121212;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .button-container {
+            background: #2a2a2a;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .button-container:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Timeline */
+        .timeline {
+            background: #121212;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin: 2rem auto;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .timeline-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-text {
+            color: #ccc;
+            font-size: 0.95rem;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #2a2a2a;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 3rem auto;
+            max-width: 80%;
+            overflow-x: auto;
+            color: white;
+            font-family: monospace;
+        }
+
+        .code-block code {
+            background: #1e1e1e;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            color: #ccc;
+        }
+
+        /* Community Wall */
+        .community-wall {
+            background: #121212;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .comment {
+            position: relative;
+            max-width: 80%;
+            margin: 1.5rem auto;
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 1rem;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .comment::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 50% 50%, #ff6384, #ff6384);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        /* Run It Locally */
+        .run-locally {
+            background: #121212;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .run-locally h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .run-locally ul {
+            list-style-type: none;
+            padding-left: 0;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .run-locally li {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 0.8rem 1.2rem;
+            font-size: 0.95rem;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .run-locally li:hover {
+            transform: scale(1.05);
+            opacity: 0.95;
+        }
+
+        /* Animated Background */
+        .background-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .background-grid::before {
+            content: '';
+            position: absolute;
+            background: linear-gradient(135deg, #2a2a2a, #1e1e1e);
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            opacity: 0.1;
+            animation: floatGrid 10s linear infinite;
+        }
+
+        .background-grid {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(45deg, #1e1e1e, #1e1e1e 10px, #2a2a2a 10px, #2a2a2a 20px);
+        }
+
+        .background-grid::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+            border-radius: 10px;
+            opacity: 0.1;
+            animation: floatGrid 10s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes floatIn {
+            from {
+                transform: translate(-50%, -50%) scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes floatGrid {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            25% {
+                transform: translate(-50%, -50%) rotate(45deg);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) rotate(90deg);
+            }
+
+            75% {
+                transform: translate(-50%, -50%) rotate(135deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(180deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .model-card {
+                padding: 2rem;
+            }
+
+            .download-buttons {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+        }
+
+        /* Dark Mode Toggle */
+        #darkModeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        #darkModeToggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Dark Mode Toggle -->
+    <button id="darkModeToggle">🌙 Dark Mode</button>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Qwen3.7-30B-Open is finally here</h1>
+        <p>The community can now stop refreshing Hugging Face every 11 seconds.</p>
+    </section>
+
+    <!-- Model Card -->
+    <div class="model-card">
+        <h2>Model Overview</h2>
+        <ul>
+            <li>30B Parameters</li>
+            <li>Open Weights (No More Hugging Face)</li>
+            <li>Long Context Understanding</li>
+            <li>Tool Use & Code Generation</li>
+            <li>Advanced Reasoning</li>
+            <li>Local Inference Available</li>
+        </ul>
+    </div>
+
+    <!-- Benchmark Section -->
+    <section class="benchmark">
+        <h2>Benchmark Performance</h2>
+        <p>Qwen3.7-30B-Open outperforms all fake rivals in the latest benchmarks.</p>
+        <div class="chart-container">
+            <div class="chart"></div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="download-section">
+        <h2>Download & Use</h2>
+        <div class="download-buttons">
+            <button class="button-container" onclick="alert('Hugging Face download button clicked!')">Hugging
+                Face</button>
+            <button class="button-container" onclick="alert('GGUF download button clicked!')">GGUF</button>
+            <button class="button-container" onclick="alert('API key generation button clicked!')">API Key</button>
+            <button class="button-container" onclick="alert('Torrent download button clicked!')">Torrent</button>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section class="timeline">
+        <h2>Release Timeline</h2>
+        <div class="timeline-item">
+            <p class="timeline-title">Soon™</p>
+            <p class="timeline-text">The wait was worth it — we finally got the open weights.</p>
+        </div>
+        <div class="timeline-item">
+            <p class="timeline-title">Final Safety Pass</p>
+            <p class="timeline-text">We ran 100% of the evals and passed with flying colors.</p>
+        </div>
+        <div class="timeline-item">
+            <p class="timeline-title">Actually Soon</p>
+            <p class="timeline-text">It was just a matter of time before we could release the open weights to the world.
+            </p>
+        </div>
+        <div class="timeline-item">
+            <p class="timeline-title">We Found One More Eval</p>
+            <p class="timeline-text">Just one more evaluation, and the world was ready for Qwen3.7-30B-Open.</p>
+        </div>
+    </section>
+
+    <!-- Code Block -->
+    <section class="code-block">
+        <h2>Example Usage (Transformers)</h2>
+        <pre><code class="language-python">
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "qwen3.7-30b-open"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+input_text = "Explain quantum computing in simple terms."
+inputs = tokenizer(input_text, return_tensors="pt")
+outputs = model.generate(**inputs, max_length=150)
+
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+    </code></pre>
+    </section>
+
+    <!-- Community Reaction Wall -->
+    <section class="community-wall">
+        <h2>Community Reactions</h2>
+        <div class="comment">
+            <p>"Finally, someone who doesn't charge $100/hour for a few words. This is the future!"</p>
+        </div>
+        <div class="comment">
+            <p>"I tried to download it and got a 404. I think it's still in beta."</p>
+        </div>
+        <div class="comment">
+            <p>"This model is so good, it can now write this entire page for me."</p>
+        </div>
+        <div class="comment">
+            <p>"I just used it to generate a fake release page. That's the power of open weights."</p>
+        </div>
+    </section>
+
+    <!-- Run It Locally -->
+    <section class="run-locally">
+        <h3>Run It Locally</h3>
+        <ul>
+            <li>Dual RTX 3090s (12GB VRAM each) for full 30B context support</li>
+            <li>Single GPU with 8GB VRAM can handle basic tasks</li>
+            <li>Use GGUF format for faster local inference</li>
+            <li>Optimize for low latency and high throughput</li>
+        </ul>
+    </section>
+
+    <!-- Animated Background -->
+    <div class="background-grid">
+        <div class="background-grid"></div>
+    </div>
+
+    <!-- JavaScript (Fake Interactions) -->
+    <script>
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        darkModeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+        });
+
+        // Fake Hugging Face Button Click
+        document.querySelectorAll('.button-container').forEach(button => {
+            button.addEventListener('click', () => {
+                alert("Hugging Face download button clicked! (No real download available)");
+            });
+        });
+
+        // Fake Code Block Highlight
+        const codeBlock = document.querySelector('.code-block');
+        codeBlock.addEventListener('click', () => {
+            alert("Code block clicked! (No actual code execution)");
+        });
+
+        // Fake Torrent Button Click
+        const torrentButton = document.querySelector('.button-container:nth-child(4)');
+        if (torrentButton) {
+            torrentButton.addEventListener('click', () => {
+                alert("Torrent download button clicked! (No real torrent available)");
+            });
+        }
+
+        // Fake API Key Button Click
+        const apiButton = document.querySelector('.button-container:nth-child(3)');
+        if (apiButton) {
+            apiButton.addEventListener('click', () => {
+                alert("API key generation button clicked! (No real API key generated)");
+            });
+        }
+    </script>
+</body>
+
+</html>

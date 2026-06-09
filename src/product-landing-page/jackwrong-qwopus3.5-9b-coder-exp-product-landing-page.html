@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open - The Wait is Over</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --surface: rgba(20, 20, 25, 0.6);
+            --surface-hover: rgba(30, 30, 40, 0.8);
+            --primary: #3b82f6;
+            --accent: #8b5cf6;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- Background Animation --- */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -2;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            top: -20%;
+            left: 20%;
+            filter: blur(80px);
+            animation: pulse 10s infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1.2) translate(-5%, -5%);
+                opacity: 0.8;
+            }
+        }
+
+        /* --- Floating Shards --- */
+        .shard-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shard {
+            position: absolute;
+            background: linear-gradient(45deg, var(--primary), transparent);
+            border-radius: 2px;
+            opacity: 0.3;
+            filter: blur(2px);
+        }
+
+        /* --- Typography & Utilities --- */
+        h1,
+        h2,
+        h3 {
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-spacer {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- Components --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.6);
+        }
+
+        .glass-card {
+            background: var(--surface);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 16px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            padding-top: 8rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(3.5rem, 8vw, 6rem);
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 60ch;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- Model Card Stats --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 4rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        /* --- Timeline --- */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            border-left: 2px solid var(--border);
+            margin-left: 2rem;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.4rem;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            background: var(--bg);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+        }
+
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .timeline-date {
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* --- Benchmarks --- */
+        .benchmark-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border);
+            width: 80%;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .benchmark-row.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .bench-name {
+            font-weight: 700;
+            width: 30%;
+        }
+
+        .bench-bar-container {
+            flex-grow: 1;
+            margin: 0 2rem;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bench-fill {
+            height: 100%;
+            width: 0;
+            transition: width 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        .bench-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            position: absolute;
+            right: 2rem;
+            top: -24px;
+        }
+
+        /* --- Code Block --- */
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 2rem;
+            font-family: 'Fira Code', monospace;
+            position: relative;
+            overflow: hidden;
+            width: 80%;
+            max-width: 900px;
+            margin: 4rem auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .code-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .red {
+            background: #ff5f56;
+        }
+
+        .yellow {
+            background: #febc2e;
+        }
+
+        .green {
+            background: #28c840;
+        }
+
+        pre {
+            color: #d4d4d4;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .kwd {
+            color: #569cd6;
+        }
+
+        /* keyword */
+        .str {
+            color: #ce9178;
+        }
+
+        /* string */
+        .com {
+            color: #6a9955;
+            font-style: italic;
+        }
+
+        /* comment */
+
+        /* --- Downloads --- */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            width: 80%;
+            max-width: 900px;
+            margin: 4rem auto 0;
+        }
+
+        .dl-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dl-card:hover {
+            background: var(--surface-hover);
+            transform: scale(1.02);
+        }
+
+        .dl-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* --- Community Wall --- */
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            width: 80%;
+            max-width: 900px;
+            margin: 4rem auto;
+        }
+
+        .tweet-card {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            position: absolute;
+            top: -24px;
+            left: 1.5rem;
+            z-index: 2;
+        }
+
+        .tweet-handle {
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* --- Local Run Section --- */
+        .vram-setup {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+            border-left: 4px solid var(--primary);
+            padding: 2rem;
+            margin-top: 4rem;
+            width: 80%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .vram-setup h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 4rem 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Scroll Animation Classes */
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        .reveal-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Floating Shards -->
+    <div class="shard-container" id="shardContainer"></div>
+
+    <header
+        style="position: fixed; top: 0; left: 0; width: 100%; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 100; backdrop-filter: blur(4px);">
+        <div style="font-weight: 900; font-size: 1.5rem; letter-spacing: -0.03em;">Qwen<span
+                style="color:var(--primary)">3.7</span></div>
+        <nav>
+            <a href="#benchmarks" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">Get Started</a>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero container">
+        <div class="reveal-up">
+            <h1 class="gradient-text">Qwen3.7-30B-Open<br><span
+                    style="font-size: 0.6em; color: var(--text-muted); display:block; margin-top:1rem;">is finally
+                    here</span></h1>
+            <p>The community has been waiting forever. We heard you were refreshing Hugging Face every 11 seconds. Stop
+                it. Your GPU will thank you.</p>
+
+            <div style="margin-top: 3rem; display: flex; gap: 1rem;">
+                <a href="#download" class="btn btn-primary">Download Now</a>
+                <a href="#" class="btn" style="background: rgba(255,255,255,0.05); color:white;">Read the Paper</a>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-item reveal-up">
+                    <span class="stat-value" data-val="30B">30B</span>
+                    <span class="stat-label">Parameters</span>
+                </div>
+                <div class="stat-item reveal-up" style="transition-delay: 100ms;">
+                    <span class="stat-value" data-val="128K">128K</span>
+                    <span class="stat-label">Context Window</span>
+                </div>
+                <div class="stat-item reveal-up" style="transition-delay: 200ms;">
+                    <span class="stat-value" data-val="99.4%">99.4%</span>
+                    <span class="stat-label">Open Weights</span>
+                </div>
+                <div class="stat-item reveal-up" style="transition-delay: 300ms;">
+                    <span class="stat-value" data-val="12ms">12ms</span>
+                    <span class="stat-label">Latency @ 8k tokens/s</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline -->
+    <section id="timeline" style="padding: 6rem 0;">
+        <div class="container reveal-up">
+            <h2 style="margin-bottom: 3rem; text-align: center;">The Road to Release</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <span class="timeline-date">Jan 2024</span>
+                    <p>"Soon™"</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-date">Mar 2024</span>
+                    <p>"We are working on it!" (Still waiting)</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-date">May 2024</span>
+                    <p>"Final safety pass..." (Actually just a meme)</p>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-date">Aug 2024</span>
+                    <p>"Actually soon"</p>
+                </div>
+                <div class="timeline-item" style="border-left: 4px solid var(--primary);">
+                    <span class="timeline-date" style="color:var(--accent)">Dec 2024 (Today)</span>
+                    <p>"We found one more eval"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benchmarks -->
+    <section id="benchmarks" style="padding: 6rem 0;">
+        <div class="container reveal-up">
+            <h2 style="margin-bottom: 3rem; text-align: center;">Benchmark Results</h2>
+
+            <div class="benchmark-row">
+                <span class="bench-name">MMLU Pro</span>
+                <div class="bench-bar-container">
+                    <div class="bench-fill" style="width: 85%; background: var(--primary);"></div>
+                </div>
+                <span class="bench-label">+12% vs Coping Mechanism</span>
+            </div>
+
+            <div class="benchmark-row">
+                <span class="bench-name">GSM8K (Math)</span>
+                <div class="bench-bar-container">
+                    <div class="bench-fill" style="width: 92%; background: var(--accent);"></div>
+                </div>
+                <span class="bench-label">Beats your calculator</span>
+            </div>
+
+            <div class="benchmark-row">
+                <span class="bench-name">HumanEval (Coding)</span>
+                <div class="bench-bar-container">
+                    <div class="bench-fill" style="width: 78%; background: #10b981;"></div>
+                </div>
+                <span class="bench-label">Can fix your Python</span>
+            </div>
+
+            <div class="benchmark-row">
+                <span class="bench-name">Your current coping mechanism</span>
+                <div class="bench-bar-container">
+                    <div class="bench-fill" style="width: 45%; background: #ef4444;"></div>
+                </div>
+                <span class="bench-label">Keep scrolling</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Demo -->
+    <section class="container reveal-up" style="padding-bottom: 6rem;">
+        <h2 style="margin-bottom: 1.5rem; text-align: center;">Run it locally in 3 lines</h2>
+
+        <div class="code-block">
+            <div class="code-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <pre><span class="com"># Load the model</span>
+<span class="kwd">from</span> transformers <span class="kwd">import</span> AutoModelForCausalLM, AutoTokenizer
+
+model = AutoModelForCausalLM.from_pretrained(
+    <span class="str">"Qwen/Qwen3.7-30B-Open"</span>, 
+    device_map=<span class="str">"auto"</span>, 
+    torch_dtype=<span class="str">"float16"</span>
+)
+
+<span class="com"># Ask it to fix your life</span>
+prompt = <span class="str">"""You are a helpful assistant. Explain quantum computing like I'm 5."""</span>
+inputs = tokenizer(prompt, return_tensors=<span class="str">"pt"</span>).to(model.device)
+
+outputs = model.generate(**inputs, max_new_tokens=100)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))</pre>
+        </div>
+    </section>
+
+    <!-- Local Run / VRAM -->
+    <section class="container reveal-up" style="padding-bottom: 6rem;">
+        <h2 style="margin-bottom: 1.5rem; text-align: center;">Run it locally</h2>
+
+        <div class="vram-setup">
+            <h3>⚡ Recommended VRAM Setups</h3>
+            <ul style="list-style: none; padding-left: 0;">
+                <li style="margin-bottom: 1rem;"><strong>Single RTX 4090 (24GB):</strong> Runs comfortably at 8k context
+                    with quantization.</li>
+                <li style="margin-bottom: 1rem;"><strong>Dual RTX 3090s (48GB):</strong> The gold standard. You can run
+                    this at full precision and still have VRAM left over for Stable Diffusion XL.</li>
+                <li style="margin-bottom: 1rem;"><strong>M2 Max / Mac Studio:</strong> Unified memory is great, but
+                    Qwen3.7-30B-Open runs faster on CUDA.</li>
+            </ul>
+        </div>
+
+        <!-- Downloads -->
+        <div id="download" class="download-grid reveal-up">
+            <a href="#" class="dl-card">
+                <span class="dl-icon">🐍</span>
+                <h3>Hugging Face</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem;">The official weights and tokenizer.</p>
+            </a>
+            <a href="#" class="dl-card">
+                <span class="dl-icon">📦</span>
+                <h3>GGUF (Llama.cpp)</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem;">For Ollama, LM Studio, and portable inference.</p>
+            </a>
+            <a href="#" class="dl-card">
+                <span class="dl-icon">🔗</span>
+                <h3>API Endpoint</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem;">Deploy instantly on RunPod or Lambda.</p>
+            </a>
+            <a href="#" class="dl-card">
+                <span class="dl-icon">🌊</span>
+                <h3>Torrent (12GB)</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem;">For the truly dedicated.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Community Wall -->
+    <section class="container reveal-up" style="padding-bottom: 6rem;">
+        <h2 style="margin-bottom: 1.5rem; text-align: center;">Community Reactions</h2>
+
+        <div class="community-grid">
+            <div class="tweet-card">
+                <div class="avatar">J</div>
+                <span class="tweet-handle">@jason_ai</span>
+                <p style="color:#d4d4d4;">"I trained my own model on a single RTX 3090 for 4 years, Qwen finally beat
+                    it. I'm crying."</p>
+            </div>
+
+            <div class="tweet-card">
+                <div class="avatar" style="background:var(--accent)">A</div>
+                <span class="tweet-handle">@alice_codes</span>
+                <p style="color:#d4d4d4;">"My local inference is so fast I can hear the fan spin up before the first
+                    token comes out. This is insane."</p>
+            </div>
+
+            <div class="tweet-card">
+                <div class="avatar" style="background:var(--primary)">B</div>
+                <span class="tweet-handle">@bob_the_builder</span>
+                <p style="color:#d4d4d4;">"Just replaced my 'I'll just use a LLM API' with Qwen3.7-30B-Open. Saved
+                    $500/month."</p>
+            </div>
+
+            <div class="tweet-card">
+                <div class="avatar" style="background:#ef4444; color:white;">S</div>
+                <span class="tweet-handle">@sarah_dev</span>
+                <p style="color:#d4d4d4;">"The 128k context is actually useful. I pasted my entire project repo and it
+                    summarized the bugs perfectly."</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 Qwen Technologies. All rights reserved.<br>Qwen3.7-30B-Open is a fictional model created for
+            demonstration purposes.</p>
+    </footer>
+
+    <script>
+        // --- Floating Shards Animation ---
+        const shardContainer = document.getElementById('shardContainer');
+
+        function createShard() {
+            const shard = document.createElement('div');
+            shard.classList.add('shard');
+
+            // Randomize size and position
+            const size = Math.random() * 10 + 2;
+            shard.style.width = `${size}rem`;
+            shard.style.height = `${size}rem`;
+            shard.style.left = `${Math.random() * 100}%`;
+            shard.style.top = `${Math.random() * 100}%`;
+
+            // Randomize animation duration and delay
+            const duration = Math.random() * 20 + 15;
+            const delay = Math.random() * -20;
+
+            shard.style.transition = `all ${duration}s linear`;
+            shard.style.opacity = Math.random() * 0.3;
+
+            // Add a slight rotation animation via JS interval or CSS keyframes? 
+            // Let's use simple CSS transition for movement, and rotate on mousemove if we wanted, 
+            // but let's just drift them.
+
+            // Initial state
+            shard.style.transform = `translateY(100vh)`;
+
+            shardContainer.appendChild(shard);
+
+            // Animate falling
+            setTimeout(() => {
+                const targetTop = -Math.random() * 50 - 20;
+                shard.style.transition = `top ${duration}s linear`;
+                shard.style.top = `${targetTop}vh`;
+
+                // Add a slight horizontal drift
+                const drift = (Math.random() - 0.5) * 10;
+                shard.style.transform = `translateX(${drift}rem)`;
+            }, 10);
+
+            // Cleanup after animation
+            setTimeout(() => {
+                if (shard.parentNode) shard.parentNode.removeChild(shard);
+            }, duration * 1000 + 500);
+        }
+
+        setInterval(createShard, 800);
+
+
+        // --- Scroll Animations (Intersection Observer) ---
+
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+
+                    // Trigger specific animations based on element type
+                    if (entry.target.classList.contains('stat-item')) {
+                        const valEl = entry.target.querySelector('.stat-value');
+                        const finalVal = valEl.dataset.val;
+                        animateValue(valEl, 0, finalVal);
+                    }
+
+                    if (entry.target.classList.contains('bench-fill')) {
+                        // The CSS transition handles the width, but we can trigger JS logic here if needed.
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-up, .timeline-item, .benchmark-row').forEach(el => {
+            observer.observe(el);
+        });
+
+
+        // --- Number Counter Animation for Stats ---
+        function animateValue(obj, start, end) {
+            let startTimestamp = null;
+            const duration = 1500;
+            const stepTime = Math.abs(Math.floor(duration / (end.length * 2))); // Speed up slightly
+
+            const startTime = Date.now();
+
+            function updateValue() {
+                const elapsed = Date.now() - startTime;
+                let progress = Math.min(elapsed / duration, 1);
+
+                // Simple easing
+                progress = 1 - Math.pow(1 - progress, 3);
+
+                let currentVal = Math.floor(progress * (end.length) + start).toString();
+
+                if (progress < 1) {
+                    obj.innerHTML = currentVal;
+                    requestAnimationFrame(updateValue);
+                } else {
+                    obj.innerHTML = end;
+                }
+            }
+
+            // Handle decimals like "99.4%"
+            if (end.includes('.')) {
+                let startTimestamp = Date.now();
+                const duration = 2000;
+                function update() {
+                    let elapsed = Date.now() - startTimestamp;
+                    let progress = Math.min(elapsed / duration, 1);
+                    progress = 1 - Math.pow(1 - progress, 3);
+
+                    if (progress < 1) {
+                        obj.innerHTML = (progress * end).toFixed(1);
+                        requestAnimationFrame(update);
+                    } else {
+                        obj.innerHTML = end;
+                    }
+                }
+                update();
+            } else {
+                updateValue();
+            }
+        }
+
+    </script>
+</body>
+
+</html>

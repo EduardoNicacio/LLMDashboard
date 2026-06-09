@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open | Official Release</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: rgba(20, 20, 20, 0.7);
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.3);
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+            --border: rgba(255, 255, 255, 0.1);
+            --gradient: linear-gradient(135deg, #00f2ff 0%, #7000ff 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- Background Animation --- */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Layout Components --- */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        section {
+            padding: 100px 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding-top: 0;
+        }
+
+        .badge {
+            background: var(--gradient);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to bottom, #fff 40%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subheadline {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            max-width: 600px;
+        }
+
+        /* --- Model Card --- */
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .spec-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 16px;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spec-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+        }
+
+        .spec-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .spec-card p {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        /* --- Benchmarks --- */
+        .benchmark-container {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 3rem;
+            border: 1px solid var(--border);
+        }
+
+        .chart-row {
+            margin-bottom: 2rem;
+        }
+
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .bar-bg {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            width: 0;
+            /* Animated via JS */
+            transition: width 1.5s cubic-bezier(0.65, 0, 0.01, 1);
+        }
+
+        .bar-fill.qwen {
+            background: var(--gradient);
+        }
+
+        .bar-fill.rival {
+            background: #444;
+        }
+
+        .bar-fill.coping {
+            background: #ff4d4d;
+        }
+
+        /* --- Code Block --- */
+        .code-window {
+            background: #000;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .code-header {
+            background: #1a1a1a;
+            padding: 10px 15px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .red {
+            background: #ff5f56;
+        }
+
+        .yellow {
+            background: #ffbd2e;
+        }
+
+        .green {
+            background: #27c93f;
+        }
+
+        pre {
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            color: #d4d4d4;
+        }
+
+        .token-keyword {
+            color: #c586c0;
+        }
+
+        .token-func {
+            color: #dcdcaa;
+        }
+
+        .token-string {
+            color: #ce9178;
+        }
+
+        .token-comment {
+            color: #6a9955;
+        }
+
+        /* --- Download Section --- */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--text-main);
+            color: var(--bg);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+            transform: scale(1.02);
+        }
+
+        .btn-outline {
+            color: var(--text-main);
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-main);
+        }
+
+        /* --- Timeline --- */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: var(--border);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            margin-bottom: 3rem;
+            position: relative;
+            width: 50%;
+            padding: 0 40px;
+        }
+
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            text-align: left;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .timeline-item:nth-child(odd) .timeline-dot {
+            right: -6px;
+        }
+
+        .timeline-item:nth-child(even) .timeline-dot {
+            left: -6px;
+        }
+
+        /* --- Community --- */
+        .community-wall {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .comment {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .comment-user {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .comment-text {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+        }
+
+        /* --- VRAM Section --- */
+        .vram-card {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.05), transparent);
+            border-radius: 24px;
+        }
+
+        .vram-badge {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            color: var(--accent);
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                width: 100%;
+                left: 0 !important;
+                text-align: left !important;
+                padding-left: 40px;
+            }
+
+            .timeline-dot {
+                left: 14px !important;
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvas-bg"></canvas>
+    <div class="grid-overlay"></div>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero visible">
+            <div class="badge">Release v3.7.0-Stable</div>
+            <h1>Qwen3.7-30B-Open is finally here</h1>
+            <p class="subheadline">You can finally stop refreshing Hugging Face every 11 seconds. The weights are live.
+                The wait is over.</p>
+        </section>
+
+        <!-- Specs Section -->
+        <section id="specs">
+            <div class="specs-grid">
+                <div class="spec-card">
+                    <h3>Parameters</h3>
+                    <p>30.2 Billion</p>
+                </div>
+                <div class="spec-card">
+                    <h3>Weights</h3>
+                    <p>Fully Open</p>
+                </div>
+                <div class="spec-card">
+                    <h3>Context</h3>
+                    <p>128k Tokens</p>
+                </div>
+                <div class="spec-card">
+                    <h3>Reasoning</h3>
+                    <p>SOTA Level</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benchmarks Section -->
+        <section id="benchmarks">
+            <h2 style="text-align: center; margin-bottom: 3rem; font-size: 2.5rem;">Performance Benchmarks</h2>
+            <div class="benchmark-container">
+                <div class="chart-row">
+                    <div class="chart-label"><span>MMLU (General Knowledge)</span><span>92.4%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill qwen" data-width="92.4%"></div>
+                    </div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-label"><span>HumanEval (Coding)</span><span>88.1%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill qwen" data-width="88.1%"></div>
+                    </div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-label"><span>GSM8K (Math Reasoning)</span><span>94.2%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill qwen" data-width="94.2%"></div>
+                    </div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-label"><span>Your Current Coping Mechanism</span><span>12.0%</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill coping" data-width="12%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Section -->
+        <section id="code">
+            <h2 style="margin-bottom: 2rem;">Quick Start</h2>
+            <div class="code-window">
+                <div class="code-header">
+                    <div class="dot red"></div>
+                    <div class="dot yellow"></div>
+                    <div class="dot green"></div>
+                </div>
+                <pre><code><span class="token-keyword">from</span> transformers <span class="token-keyword">import</span> AutoModelForCausalLM, AutoTokenizer
+
+<span class="token-comment"># Finally, no more waiting for the weights to appear...</span>
+model_id = <span class="token-string">"qwen/Qwen3.7-30B-Open"</span>
+model = AutoModelForCausalLM.<span class="token-func">from_pretrained</span>(model_id, device_map=<span class="token-string">"auto"</span>)
+tokenizer = AutoTokenizer.<span class="token-func">from_pretrained</span>(model_id)
+
+<span class="token-comment"># Running local inference</span>
+inputs = tokenizer(<span class="token-string">"Explain why the weights were delayed for 14 months."</span>, return_tensors=<span class="token-string">"pt"</span>)
+outputs = model.<span class="token-func">generate</span>(**inputs, max_new_tokens=100)
+print(tokenizer.<span class="token-func">decode</span>(outputs[0]))</code></pre>
+            </div>
+        </section>
+
+        <!-- Download Section -->
+        <section id="download">
+            <h2 style="text-align: center; margin-bottom: 3rem;">Download Weights</h2>
+            <div class="download-grid">
+                <a href="#" class="btn btn-primary" onclick="fakeDownload('Hugging Face')">🤗 Hugging Face</a>
+                <a href="#" class="btn btn-outline" onclick="fakeDownload('GGUF')">📦 GGUF (Quantized)</a>
+                <a href="#" class="btn btn-outline" onclick="fakeDownload('API')">🌐 API Access</a>
+                <a href="#" class="btn btn-outline" onclick="fakeDownload('Torrent')">🚀 Torrent</a>
+            </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section id="timeline">
+            <h2 style="text-align: center; margin-bottom: 3rem;">The Journey to Release</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <span class="comment-user">Q3 2023</span>
+                    <p class="comment-text">"Coming Soon™"</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <span class="comment-user">Q1 2024</span>
+                    <p class="comment-text">"Final safety pass (Phase 1 of 452)"</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <span class="comment-user">Q3 2024</span>
+                    <p class="comment-text">"We found one more eval to run..."</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <span class="comment-user">Today</span>
+                    <p class="comment-text">"Actually, it's here. We promise."</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Local Run Section -->
+        <section id="local">
+            <div class="vram-card">
+                <h2>Run it Locally</h2>
+                <p>Optimized for high-performance inference</p>
+                <div class="vram-badge">24GB - 48GB VRAM</div>
+                <p style="color: var(--text-dim);">Recommended: 2x RTX 3090/4090 or A6000</p>
+            </div>
+        </section>
+
+        <!-- Community Section -->
+        <section id="community">
+            <h2 style="margin-bottom: 2rem;">Community Reaction</h2>
+            <div class="community-wall">
+                <div class="comment">
+                    <span class="comment-user">@LLM_Lover</span>
+                    <p class="comment-text">"I've been staring at the HF repo for 400 days straight. I'm actually crying
+                        right now."</p>
+                </div>
+                <div class="comment">
+                    <span class="comment-user">@GPU_Hoarder</span>
+                    <p class="comment-text">"Time to sell the car and buy another 3090. Let's goooo!"</p>
+                </div>
+                <div class="comment">
+                    <span class="comment-user">@PromptEngineer</span>
+                    <p class="comment-text">"Finally, I can stop pretending Llama-3 is better for coding."</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            &copy; 2024 Qwen Open Model Project. All rights reserved. (Probably).
+        </footer>
+    </div>
+
+    <script>
+        // --- Background Animation (Canvas) ---
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+            draw() {
+                ctx.fillStyle = `rgba(0, 242, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 100; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- Reveal on Scroll ---
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+
+                    // If it's the benchmark section, trigger bar animations
+                    if (entry.target.id === 'benchmarks') {
+                        const bars = entry.target.querySelectorAll('.bar-fill');
+                        bars.forEach(bar => {
+                            bar.style.width = bar.dataset.width;
+                        });
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // --- Fake Interactions ---
+        function fakeDownload(type) {
+            alert(`Starting ${type} download... \n(Note: This is a joke, but the feeling of relief is real.)`);
+        }
+    </script>
+</body>
+
+</html>

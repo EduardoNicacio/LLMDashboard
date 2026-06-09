@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open</title>
+    <style>
+        /* Variables for colors */
+        :root {
+            --primary-light: #1f2d4b;
+            --primary-dark: #0c1e35;
+            --accent-light: #ff6a00;
+            --accent-dark: #ff8a00;
+            --bg-light: #f5f7fa;
+            --bg-dark: #121212;
+            --text-light: #222222;
+            --text-dark: #ffffff;
+        }
+
+        /* General styles */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90%;
+            max-width: 1200px;
+            min-height: 100vh;
+        }
+
+        /* Dark mode toggle */
+        .dark-mode-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: .5rem .8rem;
+            border-radius: 4px;
+            background-color: var(--accent-light);
+            color: var(--text-light);
+        }
+
+        body.dark .dark-mode-toggle {
+            background-color: var(--accent-dark);
+            color: var(--text-dark);
+        }
+
+        body.dark .container {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* Hero section */
+        #hero {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        #hero h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--accent-light);
+        }
+
+        #hero p {
+            font-size: 1.4rem;
+            color: var(--text-light);
+            margin-top: .5rem;
+        }
+
+        /* Subheadline */
+        #subheadline {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        #subheadline p {
+            font-size: 1.2rem;
+            color: var(--accent-light);
+        }
+
+        /* Model card */
+        #model-card {
+            width: 80%;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, .15);
+            margin-top: 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #model-card .card-header {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-light);
+        }
+
+        #model-card .card-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-top: .8rem;
+        }
+
+        #model-card .card-item {
+            width: 120px;
+            height: 120px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #model-card .card-item img {
+            width: 60%;
+            height: 60%;
+        }
+
+        /* Animated card rotation */
+        @keyframes rotateCard {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #model-card:hover {
+            animation: rotateCard 5s linear infinite;
+        }
+
+        /* Benchmark section */
+        #benchmark {
+            margin-top: 4rem;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        #benchmark h2 {
+            font-size: 1.8rem;
+            color: var(--accent-light);
+        }
+
+        #benchmark .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        #benchmark .bar-chart {
+            width: 100%;
+            height: 200px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #benchmark .bar-item {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: calc(100% * var(--percent));
+            height: 100%;
+            background: var(--accent-light);
+            transition: width .5s ease-in-out;
+        }
+
+        /* Download section */
+        #download {
+            margin-top: 3rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .8rem;
+        }
+
+        #download button {
+            padding: .6rem .9rem;
+            font-size: 1.2rem;
+            border-radius: 4px;
+            background: #fff;
+            color: var(--text-light);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+            cursor: pointer;
+        }
+
+        #download button:hover {
+            background: var(--accent-light);
+            color: var(--text-dark);
+        }
+
+        #download button .icon {
+            width: 20px;
+            height: 20px;
+            background: #ff6a00;
+            border-radius: 50%;
+            margin-right: .5rem;
+        }
+
+        /* Timeline section */
+        #timeline {
+            margin-top: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: .8rem;
+        }
+
+        #timeline h2 {
+            font-size: 1.8rem;
+            color: var(--accent-light);
+        }
+
+        #timeline .item {
+            font-size: 1.4rem;
+            color: var(--text-light);
+            padding: .5rem .8rem;
+            background: #e0e0e0;
+            border-radius: 6px;
+        }
+
+        /* Code block */
+        #code-block {
+            margin-top: 3rem;
+            width: 80%;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, .15);
+        }
+
+        #code-block h2 {
+            font-size: 1.6rem;
+            color: var(--accent-light);
+        }
+
+        #code-block pre {
+            font-family: "Courier New", monospace;
+            background: #f5f7fa;
+            padding: .8rem .9rem;
+            border-radius: 4px;
+        }
+
+        /* Community wall */
+        #community-wall {
+            margin-top: 3rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+        }
+
+        #community-wall .post {
+            width: 120px;
+            height: 120px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #community-wall .post img {
+            width: 60%;
+            height: 60%;
+        }
+
+        #community-wall .post p {
+            font-size: .8rem;
+            color: var(--text-light);
+            margin-top: .5rem;
+        }
+
+        /* Run local section */
+        #run-local {
+            margin-top: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+        }
+
+        #run-local h2 {
+            font-size: 1.6rem;
+            color: var(--accent-light);
+        }
+
+        #run-local .info {
+            font-size: .9rem;
+            color: var(--text-light);
+            padding: .5rem .8rem;
+            background: #e0e0e0;
+            border-radius: 6px;
+        }
+
+        /* Background animation */
+        .background-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--bg-light), var(--bg-dark));
+            z-index: -1;
+        }
+
+        @keyframes floatShards {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(50%, 50%) rotate(360deg);
+            }
+        }
+
+        .background-animation::before {
+            content: "";
+            width: 200px;
+            height: 200px;
+            background: #ff6a00;
+            border-radius: 50%;
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            animation: floatShards 20s linear infinite;
+        }
+
+        /* Responsive layout */
+        @media (max-width:600px) {
+            .container {
+                width: 95%;
+            }
+
+            #hero h1 {
+                font-size: 2.5rem;
+            }
+
+            #model-card {
+                width: 90%;
+                max-width: 400px;
+            }
+
+            #benchmark .bar-chart {
+                height: 150px;
+            }
+
+            #download button {
+                padding: .4rem .6rem;
+                font-size: .9rem;
+            }
+
+            #timeline .item {
+                padding: .3rem .5rem;
+            }
+
+            #code-block pre {
+                padding: .6rem .7rem;
+            }
+
+            #community-wall .post {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+
+    /* Dark mode toggle JS */
+    <script>document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.querySelector('.dark-mode-toggle');
+
+            toggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark');
+            });
+
+            // Button click feedback
+            document.querySelectorAll('#download button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const msg = document.createElement('div');
+                    msg.textContent = 'Downloading...';
+                    msg.style.position = 'fixed';
+                    msg.style.bottom = '10px';
+                    msg.style.right = '10px';
+                    msg.style.background = '#ff6a00';
+                    msg.style.color = '#fff';
+                    msg.style.padding = '.5rem .8rem';
+                    msg.style.borderRadius = '4px';
+                    msg.style.opacity = 0;
+                    document.body.appendChild(msg);
+
+                    setTimeout(() => {
+                        msg.style.opacity = 1;
+
+                        setTimeout(() => {
+                            msg.remove();
+                        }
+
+                            , 2000);
+                    }
+
+                        , 500);
+                });
+            });
+
+            // Animated card rotation
+            const card = document.querySelector('#model-card');
+
+            card.addEventListener('mouseenter', () => {
+                card.style.animation = 'rotateCard 5s linear infinite';
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.animation = '';
+            });
+
+            // Benchmark bar animation
+            const bars = document.querySelectorAll('.bar-item');
+
+            bars.forEach(bar => {
+                bar.style.width = '0%';
+
+                setTimeout(() => {
+                    bar.style.width = bar.dataset.percent + '%';
+                }
+
+                    , 1000);
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="dark-mode-toggle">🌙</div>
+        <!-- Hero Section -->
+        <section id="hero">
+            <h1>Qwen3.7-30B-Open is finally here</h1>
+            <p>The community can now stop refreshing Hugging Face every 11 seconds !</p>
+        </section>
+        <!-- Subheadline -->
+        <section id="subheadline">
+            <p>Stop the endless refresh cycle ! 🎉</p>
+        </section>
+        <!-- Model Card -->
+        <section id="model-card">
+            <div class="card-header">30B Parameters & Open Weights</div>
+            <div class="card-body">
+                <div class="card-item"><img src="" alt="Long Context"></div>
+                <div class="card-item"><img src="" alt="Tool Use"></div>
+                <div class="card-item"><img src="" alt="Coding"></div>
+                <div class="card-item"><img src="" alt="Reasoning"></div>
+                <div class="card-item"><img src="" alt="Local Inference"></div>
+            </div>
+        </section>
+        <!-- Benchmark Section -->
+        <section id="benchmark">
+            <h2>Benchmarks</h2>
+            <div class="chart-container">
+                <div class="bar-chart">
+                    <div class="bar-item" data-percent="70">Qwen3.7-30B-Open</div>
+                    <div class="bar-item" data-percent="50">Fake Rival A</div>
+                    <div class="bar-item" data-percent="40">Fake Rival B</div>
+                </div>
+            </div>
+        </section>
+        <!-- Download Section -->
+        <section id="download"><button><span class="icon"></span>Hugging Face
+                (Download)</button><button><span class="icon"></span>GGUF
+                (Download)</button><button><span class="icon"></span>API
+                (Access)</button><button><span class="icon"></span>Torrent (Download)</button>
+        </section>
+        <!-- Timeline Section -->
+        <section id="timeline">
+            <h2>Timeline</h2>
+            <div class="item">Soon™ – 12 hours</div>
+            <div class="item">Final Safety Pass – 24 hours</div>
+            <div class="item">Actually Soon – 3 days</div>
+            <div class="item">We found one more eval – 5 days</div>
+        </section>
+        <!-- Code Block -->
+        <section id="code-block">
+            <h2>Example Usage</h2>
+            <pre># import transformers from transformers import AutoModelForCausalLM,
+        AutoTokenizer model=AutoModelForCausalLM.from_pretrained("Qwen3.7-30B-Open") tokenizer=AutoTokenizer.from_pretrained("Qwen3.7-30B-Open") prompt="Hello world!"
+        input_ids=tokenizer.encode(prompt, return_tensors="pt") output=model.generate(input_ids, max_length=50) print(tokenizer.decode(output[0], skip_special_tokens=True)) </pre>
+        </section>
+        <!-- Community Wall -->
+        <section id="community-wall">
+            <div class="post"><img src="" alt="User1"></div>
+            <p>🎉 Finally ! 🎉</p>
+            <div class="post"><img src="" alt="User2"></div>
+            <p>Stop refreshing forever !</p>
+            <div class="post"><img src="" alt="User3"></div>
+            <p>We can now run locally ! 🚀</p>
+        </section>
+        <!-- Run Local Section -->
+        <section id="run-local">
+            <h2>Run Locally</h2>
+            <div class="info">Dual 3090s (12GB each) recommended for full inference.
+            </div>
+            <div class="info">Single 3090 (8GB) can handle partial inference.</div>
+        </section>
+        <!-- Background Animation -->
+        <div class="background-animation"></div>
+    </div>
+</body>
+
+</html>

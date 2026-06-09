@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open is finally here</title>
+    <style>
+        :root {
+            --bg-color: #0a0a1a;
+            --text-primary: #e6e6e6;
+            --text-secondary: #a5a5a5;
+            --accent-color: #4fc3f7;
+            --card-bg: #16213e;
+            --shadow-color: rgba(79, 195, 247, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: radial-gradient(ellipse at center, rgba(79, 195, 247, 0.1) 0%, transparent 70%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(79, 195, 247, 0.2), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(79, 195, 247, 0.2), transparent),
+                radial-gradient(1px 1px at 100px 40px, rgba(79, 195, 247, 0.2), transparent);
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.3;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 6rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #4fc3f7, #a5b4fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+            }
+
+            to {
+                box-shadow: 0 0 20px rgba(79, 195, 247, 0.6);
+            }
+        }
+
+        .subheadline {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Model Card Section */
+        .model-card {
+            padding: 4rem 0;
+        }
+
+        .card-content {
+            background-color: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow-color);
+            position: relative;
+            overflow: hidden;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card-content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(79, 195, 247, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(79, 195, 247, 0.1) 0%, transparent 30%);
+            background-size: 100% 100%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) rotate(180deg);
+            }
+        }
+
+        .model-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background-color: rgba(79, 195, 247, 0.1);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(79, 195, 247, 0.3);
+        }
+
+        /* Benchmark Section */
+        .benchmark {
+            padding: 4rem 0;
+        }
+
+        .chart-container {
+            background-color: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow-color);
+            margin-bottom: 2rem;
+        }
+
+        .bar-chart {
+            display: flex;
+            height: 400px;
+            align-items: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .bar {
+            background-color: rgba(79, 195, 247, 0.3);
+            border-radius: 0.5rem 0.5rem 0 0;
+            position: relative;
+            transition: height 0.5s ease;
+        }
+
+        .bar:hover {
+            background-color: rgba(79, 195, 247, 0.6);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -2rem;
+            width: 100%;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* Download Section */
+        .download {
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .download-btn {
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .download-btn:hover {
+            background-color: var(--accent-color);
+            color: #0a0a1a;
+            border-color: var(--accent-color);
+        }
+
+        .glow {
+            box-shadow: 0 0 20px rgba(79, 195, 247, 0.6);
+        }
+
+        /* Timeline Section */
+        .timeline {
+            padding: 4rem 0;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background-color: rgba(79, 195, 247, 0.3);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 3rem;
+            padding-left: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 1.5rem;
+            top: 0;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+        }
+
+        .timeline-content {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            max-width: 400px;
+        }
+
+        /* Code Block Section */
+        .code-block {
+            padding: 4rem 0;
+            background-color: #1e1e2e;
+        }
+
+        pre {
+            margin: 0;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            overflow-x: auto;
+            background-color: transparent;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            color: #e6e6e6;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        /* Community Reaction Wall */
+        .community {
+            padding: 4rem 0;
+        }
+
+        .community-reaction {
+            background-color: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 20px var(--shadow-color);
+        }
+
+        /* Run Locally Section */
+        .run-locally {
+            padding: 4rem 0;
+        }
+
+        .run-locally-item {
+            background-color: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px var(--shadow-color);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            border-top: 1px solid rgba(79, 195, 247, 0.1);
+        }
+
+        /* Model Shards Animation */
+        .model-shard {
+            position: absolute;
+            background-color: rgba(79, 195, 247, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            animation: float-shard 8s ease-in-out infinite;
+        }
+
+        @keyframes float-shard {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+
+            50% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            75% {
+                transform: translateY(20px) rotate(-5deg);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .subheadline {
+                font-size: 1rem;
+            }
+
+            .model-features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container">
+            <h1>Qwen3.7-30B-Open is finally here</h1>
+            <p class="subheadline">After 42 months of waiting, the community can finally stop refreshing Hugging Face
+                every 11 seconds.</p>
+        </div>
+    </header>
+
+    <!-- Model Card Section -->
+    <section class="model-card">
+        <div class="container">
+            <div class="card-content">
+                <h2 style="margin-bottom: 1rem;">Qwen3.7-30B-Open</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">The most anticipated open-weight model of
+                    the decade is now available for research and commercial use.</p>
+
+                <div class="model-features">
+                    <div class="feature-card">
+                        <h3>30 Billion Parameters</h3>
+                        <p>Scaling new heights in model capacity with optimized training infrastructure.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Open Weights</h3>
+                        <p>Fully open-sourced with permissive licensing for research and commercial use.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>128K Context Length</h3>
+                        <p>Process documents, codebases, or entire novels in a single prompt.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Advanced Tool Use</h3>
+                        <p>Seamless integration with external tools and APIs (with 99.9% success rate).</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Coding Expertise</h3>
+                        <p>Understands and generates code in 10+ languages with style.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Reasoning Capabilities</h3>
+                        <p>Chain-of-thought reasoning with a touch of humor (when appropriate).</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Local Inference</h3>
+                        <p>Run on your own hardware with optimized performance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benchmark Section -->
+    <section class="benchmark">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Benchmark Results</h2>
+            <p style="text-align: center; color: var(--text-secondary); max-width: 800px; margin: 0 auto 3rem;">
+                Comparing Qwen3.7-30B-Open against other models and your current coping mechanism.</p>
+
+            <div class="chart-container">
+                <!-- Accuracy Comparison -->
+                <h3 style="margin-bottom: 1rem;">Model Accuracy (MMLU)</h3>
+                <div class="bar-chart">
+                    <div class="bar" style="flex: 1; height: 80%;" title="Qwen3.7-30B-Open">
+                        <div class="bar-label">Qwen3.7-30B-Open</div>
+                    </div>
+                    <div class="bar" style="flex: 1; height: 65%; background-color: rgba(255, 107, 53, 0.3);"
+                        title="Fake Rival A">
+                        <div class="bar-label">Fake Rival A</div>
+                    </div>
+                    <div class="bar" style="flex: 1; height: 50%; background-color: rgba(138, 43, 226, 0.3);"
+                        title="Fake Rival B">
+                        <div class="bar-label">Fake Rival B</div>
+                    </div>
+                    <div class="bar" style="flex: 1; height: 30%; background-color: rgba(77, 77, 77, 0.3);"
+                        title="Your Current Coping Mechanism">
+                        <div class="bar-label">Your Current Coping Mechanism</div>
+                    </div>
+                </div>
+
+                <!-- Additional metrics -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-top: 3rem;">
+                    <div>
+                        <h4>Long Context Understanding</h4>
+                        <p>128K tokens (vs. 32K for rivals)</p>
+                    </div>
+                    <div>
+                        <h4>Tool Use Integration</h4>
+                        <p>Seamless with 99.9% success rate</p>
+                    </div>
+                    <div>
+                        <h4>Coding Capabilities</h4>
+                        <p>Understands and generates code in 10+ languages</p>
+                    </div>
+                    <div>
+                        <h4>Reasoning</h4>
+                        <p>Chain-of-thought with style</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional benchmark charts -->
+            <div class="chart-container">
+                <h3 style="margin-bottom: 1rem;">Performance Metrics</h3>
+                <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                    <div
+                        style="flex: 1; background-color: rgba(79, 195, 247, 0.1); padding: 1rem; border-radius: 0.5rem;">
+                        <h4>Inference Speed</h4>
+                        <p>2 tokens/ms on dual 3090s (vs. 1.5 for closed models)</p>
+                    </div>
+                    <div
+                        style="flex: 1; background-color: rgba(79, 195, 247, 0.1); padding: 1rem; border-radius: 0.5rem;">
+                        <h4>Memory Efficiency</h4>
+                        <p>30% more efficient than rivals (you'll notice)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="download">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 1rem;">Download Qwen3.7-30B-Open</h2>
+            <p style="text-align: center; color: var(--text-secondary); max-width: 800px; margin: 0 auto 2rem;">
+                Choose your preferred way to access the model weights. All options are officially supported (except
+                maybe the torrent).
+            </p>
+
+            <div class="download-buttons">
+                <a href="#" class="download-btn glow" style="background-color: #f5f5f7; color: #0a0a1a;">
+                    <img src="https://huggingface.co/favicon.ico" alt="Hugging Face"
+                        style="width: 24px; height: 24px; margin-right: 0.5rem; vertical-align: middle;">
+                    Hugging Face
+                </a>
+                <a href="#" class="download-btn">
+                    <img src="https://github.com/github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                        alt="GitHub" style="width: 24px; height: 24px; margin-right: 0.5rem; vertical-align: middle;">
+                    GGUF
+                </a>
+                <a href="#" class="download-btn">
+                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg"
+                        alt="Python" style="width: 24px; height: 24px; margin-right: 0.5rem; vertical-align: middle;">
+                    API
+                </a>
+                <a href="#" class="download-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/BitTorrent_logo.svg/1280px-BitTorrent_logo.svg.png"
+                        alt="BitTorrent"
+                        style="width: 24px; height: 24px; margin-right: 0.5rem; vertical-align: middle;">
+                    Torrent (for the rebellious)
+                </a>
+            </div>
+            <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                Note: The torrent file is unofficially blessed by the Qwen team. Use at your own risk (and maybe a VPN).
+            </p>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section class="timeline">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 3rem;">Development Timeline</h2>
+            <div style="position: relative; max-width: 800px; margin: 0 auto;">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>January 2023</h3>
+                        <p>Announced with much fanfare and a "Soon™" badge.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>March 2023</h3>
+                        <p>Final safety pass completed (or so we thought).</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>July 2023</h3>
+                        <p>Actually soon™. Just needed one more eval.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>January 2024</h3>
+                        <p>We found one more eval that needed addressing.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>March 2024</h3>
+                        <p>Final safety pass (again).</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>July 2024</h3>
+                        <p>Actually, actually soon™.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>January 2025</h3>
+                        <p>We found one more eval (this time about memes).</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>March 2025</h3>
+                        <p>Final safety pass (one last time, we promise).</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3>July 2025</h3>
+                        <p>Actually, actually, actually soon™.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Block Section -->
+    <section class="code-block">
+        <div class="container" style="max-width: 900px; margin: 0 auto;">
+            <pre><code class="language-python"># Example usage with transformers
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "Qwen/Qwen3.7-30B-Open"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+# Generate text - this will take a while on consumer hardware
+inputs = tokenizer("The future of AI is", return_tensors="pt")
+outputs = model.generate(**inputs, max_new_tokens=50)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+
+# For local inference with optimized parameters (recommended for dual 3090s):
+# from transformers import TextGenerationPipeline
+# pipe = TextGenerationPipeline.from_pretrained(
+#     model_name,
+#     device_map="auto",
+#     torch_dtype=torch.bfloat16,
+#     max_memory={0: "24GB", 1: "24GB"}
+# )
+# print(pipe("The future of AI is"))</code></pre>
+        </div>
+    </section>
+
+    <!-- Community Reaction Wall -->
+    <section class="community">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Community Reactions</h2>
+            <p style="text-align: center; color: var(--text-secondary); max-width: 800px; margin: 0 auto 2rem;">
+                What the community is saying about Qwen3.7-30B-Open:
+            </p>
+
+            <div class="community-reaction">
+                <p><strong>@AIEnthusiast42</strong></p>
+                <p>Finally! I've been refreshing Hugging Face every 11 seconds for months. Worth it.</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- Anonymous User, 2
+                    minutes ago</p>
+            </div>
+
+            <div class="community-reaction">
+                <p><strong>@CodeMaster99</strong></p>
+                <p>Just tried it out. It understands my memes better than my girlfriend. 😭</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- CodeMaster99, 5
+                    minutes ago</p>
+            </div>
+
+            <div class="community-reaction">
+                <p><strong>@Researcher420</strong></p>
+                <p>The wait was real, but the model is even more impressive than we hoped!</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- Researcher420, 10
+                    minutes ago</p>
+            </div>
+
+            <div class="community-reaction">
+                <p><strong>@GPUWhale</strong></p>
+                <p>Dual 3090s? More like dual credit cards... but worth it.</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- GPUWhale, 15 minutes
+                    ago</p>
+            </div>
+
+            <div class="community-reaction">
+                <p><strong>@EarlyAdopter</strong></p>
+                <p>We did it! No more '404 Model Not Found' errors in our dreams.</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- EarlyAdopter, 20
+                    minutes ago</p>
+            </div>
+
+            <div class="community-reaction">
+                <p><strong>@LocalInferenceFan</strong></p>
+                <p>Just ran a local inference with Qwen3.7-30B-Open. My GPU fans are singing the national anthem.</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- LocalInferenceFan, 25
+                    minutes ago</p>
+            </div>
+
+            <div class="community-reaction">
+                <p><strong>@LongContextKing</strong></p>
+                <p>The long context is OP. I just fed it my entire novel and it summarized it perfectly.</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- LongContextKing, 30
+                    minutes ago</p>
+            </div>
+
+            <div class="community-reaction">
+                <p><strong>@ToolUsePro</strong></p>
+                <p>Tool use? More like 'tool abuse' - this model does everything but the dishes.</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- ToolUsePro, 35 minutes
+                    ago</p>
+            </div>
+
+            <div class="community-reaction">
+                <p><strong>@WaitIsOver</strong></p>
+                <p>I can't believe it's finally here. The memes were not wrong about the wait.</p>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- WaitIsOver, 40 minutes
+                    ago</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Run Locally Section -->
+    <section class="run-locally">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 1rem;">Run it locally</h2>
+            <p style="text-align: center; color: var(--text-secondary); max-width: 800px; margin: 0 auto 2rem;">
+                Qwen3.7-30B-Open is optimized for local inference with the right hardware setup.
+            </p>
+
+            <div class="run-locally-item">
+                <div>
+                    <h3>Dual NVIDIA RTX 3090 (24GB each)</h3>
+                    <p style="color: var(--text-secondary); margin: 0.5rem 0 0;">Recommended setup for full 30B
+                        parameter experience</p>
+                </div>
+                <button class="download-btn" style="background-color: #f5f5f7; color: #0a0a1a;">
+                    Calculate VRAM
+                </button>
+            </div>
+
+            <div class="run-locally-item">
+                <div>
+                    <h3>Single NVIDIA RTX 4090 (24GB)</h3>
+                    <p style="color: var(--text-secondary); margin: 0.5rem 0 0;">Works, but you'll feel the pain</p>
+                </div>
+                <button class="download-btn" style="background-color: #f5f5f7; color: #0a0a1a;">
+                    Calculate VRAM
+                </button>
+            </div>
+
+            <div class="run-locally-item">
+                <div>
+                    <h3>Cloud (AWS/GCP)</h3>
+                    <p style="color: var(--text-secondary); margin: 0.5rem 0 0;">For those who prefer not to sell a
+                        kidney for GPU cards</p>
+                </div>
+                <button class="download-btn" style="background-color: #f5f5f7; color: #0a0a1a;">
+                    Estimate Cost
+                </button>
+            </div>
+
+            <p style="margin-top: 2rem; color: var(--text-secondary); font-size: 0.9rem;">
+                Note: Your GPU will thank you after a few hours of training.
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>Qwen3.7-30B-Open - Open Weights | © 2025 Qwen AI</p>
+        </div>
+    </footer>
+
+    <script>
+        // Add floating model shards on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            const container = document.querySelector('.model-card');
+            if (container) {
+                // Create 10 floating shards
+                for (let i = 0; i < 10; i++) {
+                    const shard = document.createElement('div');
+                    shard.className = 'model-shard';
+                    shard.style.width = `${Math.random() * 200 + 50}px`;
+                    shard.style.height = `${Math.random() * 80 + 30}px`;
+                    shard.style.left = `${Math.random() * 100}%`;
+                    shard.style.top = `${Math.random() * 100 + 20}%`;
+                    shard.style.animationDelay = `${Math.random() * 4}s`;
+                    container.appendChild(shard);
+                }
+            }
+
+            // Add glow effect to download buttons on hover
+            const downloadButtons = document.querySelectorAll('.download-btn');
+            downloadButtons.forEach(btn => {
+                btn.addEventListener('mouseenter', function () {
+                    this.classList.add('glow');
+                });
+                btn.addEventListener('mouseleave', function () {
+                    this.classList.remove('glow');
+                });
+            });
+
+            // Add subtle background animation to hero
+            const hero = document.querySelector('.hero');
+            if (hero) {
+                setInterval(() => {
+                    void hero.offsetHeight;
+                }, 100);
+            }
+        });
+
+        // Add some fake community reactions dynamically
+        function addCommunityReactions() {
+            const container = document.querySelector('.community');
+            if (container) {
+                const additionalReactions = [
+                    "The coding capabilities are insane. It just wrote my entire backend for me.",
+                    "I tried to train it on my meme collection. It learned too well.",
+                    "Finally, a model that doesn't make up references like I'm an idiot.",
+                    "Dual 3090s required? I'm selling my firstborn to get this setup.",
+                    "The tool use integration is so smooth, it feels like magic (but with more math).",
+                    "I fed it my entire GitHub repo. It understood all my bad code practices.",
+                    "This model gets my humor better than my friends. That's saying something.",
+                    "Just ran a local inference. My laptop is now a paperweight (in the best way)."
+                ];
+
+                additionalReactions.forEach(reaction => {
+                    const reactionElement = document.createElement('div');
+                    reactionElement.className = 'community-reaction';
+                    reactionElement.innerHTML = `<p><strong>@${['RandomUser', 'TechGuru', 'AIEnthusiast', 'CodingNinja', 'Hacker420'][Math.floor(Math.random() * 5)]}</strong></p>
+                                                <p>${reaction}</p>
+                                                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">- ${['Anonymous User', 'Verified Developer', 'Community Member'][Math.floor(Math.random() * 3)]}, ${Math.floor(Math.random() * 60)} minutes ago</p>`;
+                    container.appendChild(reactionElement);
+                });
+            }
+        }
+
+        // Call the function after a short delay to simulate loading
+        setTimeout(addCommunityReactions, 1000);
+
+        // Add some humor with a fake "loading" animation for the model card
+        const modelCard = document.querySelector('.card-content');
+        if (modelCard) {
+            let isLoading = true;
+            setInterval(() => {
+                if (isLoading) {
+                    const loadingTexts = ["Loading model parameters...", "Optimizing inference pipeline...", "Preparing to blow your mind...", "Calculating 42..."];
+                    const randomText = loadingTexts[Math.floor(Math.random() * loadingTexts.length)];
+                    const existingText = modelCard.querySelector('.loading-text');
+                    if (existingText) {
+                        existingText.textContent = randomText;
+                    } else {
+                        const textElement = document.createElement('p');
+                        textElement.className = 'loading-text';
+                        textElement.style.color = 'var(--accent-color)';
+                        textElement.style.fontStyle = 'italic';
+                        textElement.style.marginTop = '1rem';
+                        textElement.textContent = randomText;
+                        modelCard.appendChild(textElement);
+                    }
+                } else {
+                    const loadingText = modelCard.querySelector('.loading-text');
+                    if (loadingText) {
+                        loadingText.remove();
+                    }
+                }
+            }, 2000);
+
+            // Simulate loading completion after a while
+            setTimeout(() => {
+                isLoading = false;
+                const existingFeatures = modelCard.querySelectorAll('.feature-card');
+                if (existingFeatures.length === 0) {
+                    // Add features if they don't exist (shouldn't happen in our case)
+                    const featuresHTML = `
+                        <div class="model-features">
+                            <div class="feature-card">
+                                <h3>30 Billion Parameters</h3>
+                                <p>Scaling new heights in model capacity with optimized training infrastructure.</p>
+                            </div>
+                            <div class="feature-card">
+                                <h3>Open Weights</h3>
+                                <p>Fully open-sourced with permissive licensing for research and commercial use.</p>
+                            </div>
+                            <!-- More features... -->
+                        </div>
+                    `;
+                    modelCard.innerHTML += featuresHTML;
+                }
+            }, 10000);
+        }
+    </script>
+</body>
+
+</html>

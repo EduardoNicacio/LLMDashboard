@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open | Finally Here</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #7c3aed;
+            --accent: #ec4899;
+            --dark: #111827;
+            --light: #f9fafb;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--dark);
+            color: #e5e7eb;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(rgba(30, 41, 59, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.2) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .floating-shards {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .shard {
+            position: absolute;
+            border-radius: 8px;
+            opacity: 0.7;
+            animation: float linear infinite;
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .token-glow {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #ec4899, transparent);
+            border-radius: 50%;
+            animation: pulse 2s infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Header */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 120%;
+            height: 140%;
+            background:
+                linear-gradient(45deg, transparent 30%, rgba(79, 70, 229, 0.6) 30%),
+                linear-gradient(-45deg, transparent 30%, rgba(236, 72, 153, 0.6) 30%);
+            transform: rotate(45deg);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #7c3aed, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #9ca3af;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 8px;
+            background: linear-gradient(90deg, #7c3aed, #ec4899);
+            border-radius: 4px;
+        }
+
+        /* Model Card */
+        .model-card {
+            display: flex;
+            justify-content: center;
+            margin: 60px 0;
+            position: relative;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 20px;
+            padding: 40px;
+            width: 80%;
+            max-width: 800px;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .model-icon {
+            width: 60px;
+            height: 60px;
+            background:
+                linear-gradient(45deg, #7c3aed, #ec4899),
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .model-icon::before {
+            content: 'Q';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-item {
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 15px;
+            background:
+                linear-gradient(135deg, #7c3aed, #ec4899),
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        /* Benchmark Section */
+        .benchmark {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .benchmark h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 60px;
+            flex-wrap: wrap;
+        }
+
+        .benchmark-chart {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 30px;
+            width: 300px;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+        }
+
+        .chart-title {
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        /* Download Section */
+        .download {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .download h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 60px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(79, 70, 229, 0.3);
+            color: #e5e7eb;
+            border: 1px solid rgba(79, 70, 229, 0.4);
+        }
+
+        /* Timeline Section */
+        .timeline {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .timeline h2 {
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+        }
+
+        .timeline-items {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        .timeline-item {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 200px;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border-left: 4px solid #ec4899;
+        }
+
+        .timeline-item h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        /* Code Section */
+        .code-section {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .code-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .code-block {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            font-family: 'Monaco', 'Menlo', monospace;
+            text-align: left;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            background: #ec4899;
+            border-radius: 4px;
+        }
+
+        /* Community Section */
+        .community {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .community h2 {
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+        }
+
+        .reaction-wall {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .reaction-card {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 250px;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border-left: 4px solid #ec4899;
+        }
+
+        .reaction-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        /* Local Run Section */
+        .local-run {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .local-run h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .vram-table {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            margin: 0 auto;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+        }
+
+        .vram-table h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade {
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+
+            .download-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .timeline-items {
+                gap: 20px;
+            }
+        }
+
+        /* Dark mode toggle (fake) */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            padding: 8px 16px;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation">
+        <div class="grid-overlay"></div>
+        <div class="floating-shards" id="shards"></div>
+        <div id="tokens"></div>
+    </div>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <span>Qwen</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero animate-fade">
+            <div class="container">
+                <h1>Qwen3.7-30B-Open is finally here</h1>
+                <p>The model you've been waiting for (and refreshing Hugging Face every 11 seconds for). Now with 100%
+                    more open weights than before.</p>
+
+                <div class="model-card animate-fade" style="animation-delay: 0.3s;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="model-icon"></div>
+                            <h2 class="card-title">Qwen3.7-30B-Open</h2>
+                        </div>
+
+                        <div class="feature-list">
+                            <div class="feature-item">
+                                <div class="feature-icon">📊</div>
+                                <div class="feature-title">30 Billion Parameters</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">🔓</div>
+                                <div class="feature-title">Fully Open Weights</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">📄</div>
+                                <div class="feature-title">2048k Context</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">⚙️</div>
+                                <div class="feature-title">Tool Use Support</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">💻</div>
+                                <div class="feature-title">Code Generation</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">🧠</div>
+                                <div class="feature-title">Advanced Reasoning</div>
+                            </div>
+                        </div>
+
+                        <p style="margin-top: 30px; color: #9ca3af;">Now you can finally run it locally (with enough
+                            VRAM).</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="benchmark animate-fade">
+            <div class="container">
+                <h2>Benchmark Performance</h2>
+                <p style="color: #9ca3af; margin-bottom: 40px;">Outperforming all existing models in every category
+                    (except your current coping mechanism)</p>
+
+                <div class="chart-container">
+                    <div class="benchmark-chart">
+                        <div class="chart-title">Comprehension</div>
+                        <svg width="250" height="120" viewBox="0 0 250 120">
+                            <path d="M20,80 L40,30 L60,70 L80,20 L100,90 L120,10 L140,80 L160,5 L180,75 L200,15 L220,65"
+                                stroke="#ec4899" stroke-width="3" fill="none" />
+                            <circle cx="20" cy="80" r="4" fill="#ec4899" />
+                            <text x="20" y="100" text-anchor="middle" font-size="10">You</text>
+                            <circle cx="230" cy="65" r="6" fill="#7c3aed" />
+                            <text x="230" y="85" text-anchor="middle" font-size="10">Qwen3.7-Open</text>
+                        </svg>
+                    </div>
+
+                    <div class="benchmark-chart">
+                        <div class="chart-title">Reasoning</div>
+                        <svg width="250" height="120" viewBox="0 0 250 120">
+                            <path d="M20,90 L40,85 L60,70 L80,30 L100,95 L120,10 L140,20 L160,50 L180,5 L200,40 L220,15"
+                                stroke="#ec4899" stroke-width="3" fill="none" />
+                            <circle cx="20" cy="90" r="4" fill="#ec4899" />
+                            <text x="20" y="110" text-anchor="middle" font-size="10">Current Model</text>
+                            <circle cx="230" cy="15" r="6" fill="#7c3aed" />
+                            <text x="230" y="35" text-anchor="middle" font-size="10">Qwen3.7-Open</text>
+                        </svg>
+                    </div>
+
+                    <div class="benchmark-chart">
+                        <div class="chart-title">Coding</div>
+                        <svg width="250" height="120" viewBox="0 0 250 120">
+                            <path d="M20,70 L40,65 L60,30 L80,90 L100,20 L120,80 L140,10 L160,60 L180,5 L200,50 L220,15"
+                                stroke="#ec4899" stroke-width="3" fill="none" />
+                            <circle cx="20" cy="70" r="4" fill="#ec4899" />
+                            <text x="20" y="90" text-anchor="middle" font-size="10">Competitors</text>
+                            <circle cx="230" cy="15" r="6" fill="#7c3aed" />
+                            <text x="230" y="35" text-anchor="middle" font-size="10">Qwen3.7-Open</text>
+                        </svg>
+                    </div>
+
+                    <div class="benchmark-chart">
+                        <div class="chart-title">Hugging Face Refreshes</div>
+                        <svg width="250" height="120" viewBox="0 0 250 120">
+                            <path d="M20,90 L40,85 L60,70 L80,30 L100,95 L120,10 L140,20 L160,50 L180,5 L200,40 L220,15"
+                                stroke="#ec4899" stroke-width="3" fill="none" />
+                            <circle cx="20" cy="90" r="4" fill="#ec4899" />
+                            <text x="20" y="110" text-anchor="middle" font-size="10">Before</text>
+                            <circle cx="230" cy="15" r="6" fill="#7c3aed" />
+                            <text x="230" y="35" text-anchor="middle" font-size="10">After</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <p style="margin-top: 40px; color: #9ca3af;">*Results may vary based on your hardware and willingness to
+                    accept the EULA.</p>
+            </div>
+        </section>
+
+        <section class="download animate-fade">
+            <div class="container">
+                <h2>Download Qwen3.7-30B-Open</h2>
+                <p style="color: #9ca3af; margin-bottom: 40px;">Choose your preferred format below:</p>
+
+                <div class="download-buttons">
+                    <a href="#" class="btn btn-primary animate-pulse">🔗 Hugging Face Hub</a>
+                    <a href="#" class="btn btn-secondary">📁 GGUF Quantized (4.75TB)</a>
+                    <a href="#" class="btn btn-secondary">🌐 API Access (Coming Soon™)</a>
+                    <a href="#" class="btn btn-secondary">⚡ Torrent (Magnet Link)</a>
+                    <a href="#" class="btn btn-primary animate-pulse" style="animation-delay: 0.2s;">📥 Direct Download
+                        (1-click install)</a>
+                </div>
+
+                <p style="margin-top: 40px; color: #9ca3af;">
+                    <strong>Note:</strong> For best results, we recommend using our proprietary QwenOS which includes:
+                <ul style="text-align: left; max-width: 600px; margin: 20px auto;">
+                    <li>✓ Built-in 1TB VRAM support</li>
+                    <li>✓ Automatic model updates (every 3 seconds)</li>
+                    <li>✓ Integrated Hugging Face refresh counter</li>
+                    <li>✓ Complimentary GPU cooling system</li>
+                </ul>
+                </p>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <button class="btn btn-primary"
+                        onclick="alert('System requirements: 1. A time machine\n2. An infinite power supply\n3. The patience of a saint')">
+                        Check System Requirements
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="timeline animate-fade">
+            <div class="container">
+                <h2>The Long Road to Release</h2>
+                <p style="color: #9ca3af; margin-bottom: 40px;">Here's how we got here:</p>
+
+                <div class="timeline-items">
+                    <div class="timeline-item" style="animation-delay: 0.1s;">
+                        <h3>2020</h3>
+                        <p>"We're working on it"</p>
+                    </div>
+                    <div class="timeline-item" style="animation-delay: 0.2s;">
+                        <h3>2021</h3>
+                        <p>"Soon™"</p>
+                    </div>
+                    <div class="timeline-item" style="animation-delay: 0.3s;">
+                        <h3>2022</h3>
+                        <p>"Final safety pass"</p>
+                    </div>
+                    <div class="timeline-item" style="animation-delay: 0.4s;">
+                        <h3>2023</h3>
+                        <p>"Actually soon"</p>
+                    </div>
+                    <div class="timeline-item" style="animation-delay: 0.5s;">
+                        <h3>2024 (Jan)</h3>
+                        <p>"We found one more eval"</p>
+                    </div>
+                    <div class="timeline-item" style="animation-delay: 0.6s;">
+                        <h3>2024 (Feb)</h3>
+                        <p>"Just need to train it some more"</p>
+                    </div>
+                    <div class="timeline-item" style="animation-delay: 0.7s;"
+                        style="background: linear-gradient(135deg, #ec4899, #7c3aed); border-left-color: white;">
+                        <h3>2024 (Mar)</h3>
+                        <p style="color: white;">"IT'S HERE"</p>
+                    </div>
+                </div>
+
+                <p style="margin-top: 60px; color: #9ca3af;">
+                    <strong>Fun fact:</strong> The model was actually released in our private testing environment in
+                    2021,
+                    but we held it back to maintain hype. Thanks for your patience!
+                </p>
+            </div>
+        </section>
+
+        <section class="code-section animate-fade">
+            <div class="container">
+                <h2>Get Started with Transformers</h2>
+                <p style="color: #9ca3af; margin-bottom: 40px;">Here's how to load Qwen3.7-Open in your Python
+                    environment:</p>
+
+                <div class="code-block animate-fade">
+                    <pre><code># First install the required packages (if you have enough VRAM)
+pip install torch transformers accelerate bitsandbytes
+
+# Then load the model
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model = AutoModelForCausalLM.from_pretrained(
+    "Qwen/Qwen3.7-30B-Open",
+    device_map="auto",  # This will use all your GPUs (and possibly your CPU too)
+    torch_dtype=torch.bfloat16,  # Or float16 if you're feeling brave
+    trust_remote_code=True,
+    offload_folder="disk"  # For when you run out of memory
+)
+
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.7-30B-Open")
+
+# Example usage (after waiting several hours for loading)
+inputs = tokenizer("Explain quantum computing to a 5-year-old", return_tensors="pt").to(model.device)
+outputs = model.generate(**inputs, max_new_tokens=1024)
+
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+
+# Pro tip: Add --deepspeed to your command line for maximum drama</code></pre>
+                </div>
+
+                <p style="margin-top: 30px; color: #9ca3af;">
+                    <strong>Note:</strong> For best performance, we recommend running this on our cloud service
+                    which includes free VRAM upgrades and automatic model refreshing.
+                </p>
+            </div>
+        </section>
+
+        <section class="community animate-fade">
+            <div class="container">
+                <h2>Community Reactions</h2>
+                <p style="color: #9ca3af; margin-bottom: 40px;">Here's what people are saying about Qwen3.7-Open:</p>
+
+                <div class="reaction-wall">
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.1s;">
+                        <h3>@HuggingFaceUser</h3>
+                        <p>"Finally! After 4 years of waiting and refreshing every 5 seconds, it's here! 🎉"</p>
+                    </div>
+
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.2s;">
+                        <h3>@AIResearcher</h3>
+                        <p>"The benchmarks are unreal. My current model just cried in the corner."</p>
+                    </div>
+
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.3s;">
+                        <h3>@GPUEnthusiast</h3>
+                        <p>"Just upgraded to dual 4090s. Still not enough VRAM for this beast."</p>
+                    </div>
+
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.4s;">
+                        <h3>@OpenSourceDev</h3>
+                        <p>"Now I can finally stop pretending to understand LLMs and just use the real thing!"</p>
+                    </div>
+
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.5s;">
+                        <h3>@StudentCoder</h3>
+                        <p>"My laptop fan is now a permanent fixture in my room. Worth it."</p>
+                    </div>
+
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.6s;">
+                        <h3>@CorporateAI</h3>
+                        <p>"We've signed an NDA to get early access. The rest of you will have to wait."</p>
+                    </div>
+
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.7s;">
+                        <h3>@SkepticalUser</h3>
+                        <p>"This is just another vaporware release like all the others..."</p>
+                    </div>
+
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.8s;"
+                        style="background: linear-gradient(135deg, #ec4899, #7c3aed); color: white;">
+                        <h3>@QwenTeam</h3>
+                        <p>"We promise this time it's really open! (Probably)"</p>
+                    </div>
+
+                    <div class="reaction-card animate-fade" style="animation-delay: 0.9s;">
+                        <h3>@TorrentUser</h3>
+                        <p>"Where's the magnet link? I need this YESTERDAY."</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center;">
+                    <button class="btn btn-primary"
+                        onclick="alert('We\'re working on a community edition that runs in your browser. It might take a few years.')">
+                        Join the Community
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="local-run animate-fade">
+            <div class="container">
+                <h2>Run Qwen3.7-Open Locally</h2>
+                <p style="color: #9ca3af; margin-bottom: 40px;">Here are our recommended hardware configurations:</p>
+
+                <div class="vram-table animate-fade">
+                    <h3>Minimum Requirements</h3>
+                    <ul style="text-align: left; list-style-type: none;">
+                        <li>✓ 1x NVIDIA RTX 4090 (80GB VRAM)</li>
+                        <li>✓ 256GB RAM</li>
+                        <li>✓ SSD with at least 1TB free space</li>
+                        <li>✓ Cooling system for your entire room</li>
+                    </ul>
+
+                    <h3 style="margin-top: 30px;">Recommended Setup</h3>
+                    <ul style="text-align: left; list-style-type: none;">
+                        <li>✓ Dual NVIDIA RTX 4090 (160GB VRAM combined)</li>
+                        <li>✓ 512GB RAM</li>
+                        <li>✓ Water cooling for your GPUs</li>
+                        <li>✓ Uninterruptible power supply</li>
+                    </ul>
+
+                    <h3 style="margin-top: 30px;">Enterprise Grade</h3>
+                    <ul style="text-align: left; list-style-type: none;">
+                        <li>✓ Quad NVIDIA H100 (800GB VRAM)</li>
+                        <li>✓ 2TB RAM</li>
+                        <li>✓ Dedicated cooling server</li>
+                        <li>✓ Redundant power systems</li>
+                    </ul>
+
+                    <p style="margin-top: 30px; color: #9ca3af;">
+                        <strong>Pro Tip:</strong> For maximum performance, we recommend using our cloud service
+                        which includes automatic hardware scaling and no VRAM limits.
+                    </p>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <button class="btn btn-primary"
+                        onclick="alert('Our local inference software is coming soon. In the meantime, try our web demo (it runs on a single RTX 8000)')">
+                        Download Local Inference Software
+                    </button>
+                </div>
+
+                <p style="margin-top: 20px; color: #9ca3af;">
+                    <strong>Note:</strong> All local inference is subject to our EULA which prohibits:
+                <ul style="text-align: left; max-width: 600px; margin: 15px auto;">
+                    <li>✗ Sharing with competitors</li>
+                    <li>✗ Using for non-AI purposes</li>
+                    <li>✗ Refreshing Hugging Face more than 3 times per hour</li>
+                </ul>
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="#" style="color: #9ca3af;">Documentation</a>
+                <a href="#" style="color: #9ca3af;">API Reference</a>
+                <a href="#" style="color: #9ca3af;">Community Forum</a>
+                <a href="#" style="color: #9ca3af;">GitHub</a>
+            </div>
+
+            <p style="color: #6b7280; font-size: 0.9rem;">
+                Qwen3.7-Open is provided under the Qwen Open License.
+                All rights reserved by Alibaba Cloud (probably).
+            </p>
+        </div>
+    </footer>
+
+    <div class="dark-mode-toggle">
+        🌓 Dark Mode
+    </div>
+
+    <script>
+        // Create floating shards animation
+        document.addEventListener('DOMContentLoaded', function () {
+            const shardsContainer = document.getElementById('shards');
+            const tokensContainer = document.getElementById('tokens');
+
+            // Create floating shards
+            for (let i = 0; i < 15; i++) {
+                createShard();
+            }
+
+            // Create glowing tokens
+            for (let i = 0; i < 30; i++) {
+                createToken();
+            }
+
+            function createShard() {
+                const shard = document.createElement('div');
+                shard.className = 'shard';
+
+                // Random properties
+                const size = Math.random() * 80 + 40;
+                const left = Math.random() * 100;
+                const duration = Math.random() * 20 + 10;
+
+                shard.style.width = `${size}px`;
+                shard.style.height = `${size / 1.5}px`;
+                shard.style.left = `${left}%`;
+                shard.style.top = `${Math.random() * 100}%`;
+                shard.style.animationDuration = `${duration}s`;
+                shard.style.opacity = Math.random() * 0.3 + 0.4;
+                shard.style.background = `linear-gradient(135deg, rgba(79,70,229,${Math.random() * 0.5 + 0.3}), rgba(236,72,153,${Math.random() * 0.5 + 0.3}))`;
+                shard.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+                // Random delay
+                setTimeout(() => {
+                    shardsContainer.appendChild(shard);
+                }, Math.random() * 2000);
+
+                // Remove after animation completes
+                shard.addEventListener('animationend', () => {
+                    shard.remove();
+                });
+            }
+
+            function createToken() {
+                const token = document.createElement('div');
+                token.className = 'token-glow';
+
+                // Random properties
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+                const size = Math.random() * 6 + 2;
+                const duration = Math.random() * 5 + 3;
+
+                token.style.left = `${left}%`;
+                token.style.top = `${top}%`;
+                token.style.width = `${size}px`;
+                token.style.height = `${size}px`;
+                token.style.animationDuration = `${duration}s`;
+                token.style.backgroundSize = `${Math.random() * 20 + 10}px ${Math.random() * 20 + 10}px`;
+
+                // Random delay
+                setTimeout(() => {
+                    tokensContainer.appendChild(token);
+                }, Math.random() * 3000);
+
+                // Remove after animation completes
+                token.addEventListener('animationend', () => {
+                    token.remove();
+                });
+            }
+
+            // Add some interactive elements
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault;
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+
+                    // Fake loading for some buttons
+                    if (this.textContent.includes('Direct Download')) {
+                        alert('Downloading... This might take a while.\n\nSystem requirements:\n- A time machine\n- Infinite patience\n- The ability to accept that this is just vaporware');
+                    } else if (this.textContent.includes('Local Inference Software')) {
+                        alert('Our local inference software is coming soon. In the meantime, enjoy our cloud service!\n\n(Which requires you to sign an NDA and pay $99/month)');
+                    }
+                });
+            });
+
+            // Add some subtle hover effects
+            document.querySelectorAll('.feature-item').forEach(item => {
+                item.addEventListener('mouseenter', function () {
+                    this.querySelector('.feature-icon').style.transform = 'scale(1.2)';
+                    this.querySelector('.feature-title').style.color = '#ec4899';
+                });
+
+                item.addEventListener('mouseleave', function () {
+                    this.querySelector('.feature-icon').style.transform = '';
+                    this.querySelector('.feature-title').style.color = '';
+                });
+            });
+        });
+
+        // Add some subtle animations to the page
+        window.addEventListener('scroll', function () {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.5;
+
+            document.querySelectorAll('.animate-fade').forEach(el => {
+                const speed = Number.parseFloat(el.dataset.speed) || 1;
+                const yPos = -(scrolled * speed * 0.1);
+                el.style.transform = `translateY(${yPos}px)`;
+            });
+        });
+
+        // Add some interactive elements to the model card
+        document.querySelector('.model-card').addEventListener('click', function () {
+            this.querySelector('.card').style.boxShadow =
+                '0 0 30px rgba(79,70,229,0.5), 0 0 60px rgba(236,72,153,0.4)';
+            setTimeout(() => {
+                this.querySelector('.card').style.boxShadow = '';
+            }, 800);
+        });
+    </script>
+</body>
+
+</html>

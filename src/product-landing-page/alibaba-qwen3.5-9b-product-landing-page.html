@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open | The Wait is Over</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --surface: #0f0f11;
+            --surface-hover: #1a1a1e;
+            --primary: #3b82f6;
+            --accent: #8b5cf6;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border: #27272a;
+            --glow: rgba(59, 130, 246, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- Background Animation --- */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+
+        .bg-token {
+            position: absolute;
+            font-family: monospace;
+            color: var(--primary);
+            opacity: 0.1;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatToken 20s infinite linear;
+        }
+
+        @keyframes floatToken {
+            0% {
+                transform: translateY(110vh) rotate(0deg);
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+            }
+        }
+
+        /* --- Layout Utilities --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        section {
+            padding: 5rem 0;
+            position: relative;
+        }
+
+        /* --- Typography --- */
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeUp 1s ease-out forwards 0.2s;
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            color: var(--text-muted);
+            max-width: 800px;
+            opacity: 0;
+            animation: fadeUp 1s ease-out forwards 0.4s;
+        }
+
+        .hero-badge {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0;
+            animation: fadeUp 1s ease-out forwards 0.6s;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        /* --- Model Card (Animated) --- */
+        .model-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: -3rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* --- Benchmark Section --- */
+        .benchmark-container {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: flex-end;
+            height: 300px;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .bar {
+            width: 60px;
+            background: linear-gradient(to top, var(--primary), var(--accent));
+            border-radius: 4px 4px 0 0;
+            transition: height 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+            opacity: 0;
+            transform: scaleY(0);
+            transform-origin: bottom;
+        }
+
+        .bar-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .bar-percentage {
+            position: absolute;
+            top: -25px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* --- Timeline Section --- */
+        .timeline {
+            position: relative;
+            margin-top: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .timeline-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            max-width: 400px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .timeline-content:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-color: var(--primary);
+        }
+
+        .date-badge {
+            display: inline-block;
+            background: #27272a;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        /* --- Code Block --- */
+        .code-block {
+            background: #0d0d0d;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+
+        .token {
+            color: #fff;
+        }
+
+        .keyword {
+            color: #ff79c6;
+        }
+
+        .string {
+            color: #f1fa8c;
+        }
+
+        .comment {
+            color: #6272a4;
+            font-style: italic;
+        }
+
+        .function {
+            color: #8be9fd;
+        }
+
+        /* --- Downloads --- */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .download-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .download-card:hover {
+            background: var(--surface-hover);
+            border-color: var(--primary);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* --- Community Wall --- */
+        .wall-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .wall-post {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .user-handle {
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* --- Hardware Section --- */
+        .hardware-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .gpu-card {
+            background: #111;
+            border: 1px solid var(--border);
+            padding: 1rem;
+            text-align: center;
+            border-radius: 0.5rem;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Footer --- */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 3rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-grid" id="bgGrid"></div>
+
+    <!-- Hero -->
+    <section class="hero container">
+        <div class="hero-badge">
+            <div class="pulse-dot"></div>
+            <span>Official Release v3.7</span>
+        </div>
+        <h1>Qwen3.7-30B-Open<br><span class="gradient-text">is finally here.</span></h1>
+        <p>The community can now stop refreshing Hugging Face every 11 seconds to check if the weights are actually open
+            this time.</p>
+    </section>
+
+    <!-- Model Card -->
+    <div class="container">
+        <div class="model-card fade-in-section">
+            <div class="stat-item">
+                <span class="stat-value">30B</span>
+                <span class="stat-label">Parameters (Open)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">128k</span>
+                <span class="stat-label">Context Window</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">99.2%</span>
+                <span class="stat-label">Reasoning Score</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">∞</span>
+                <span class="stat-label">Wait Time (Fixed)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <section id="timeline" class="container">
+        <h2 style="text-align: center; margin-bottom: 1rem;">The Journey to Release</h2>
+        <div class="timeline fade-in-section">
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <span class="date-badge">Qwen3.5 Announced</span>
+                    <h3>Soon™</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">We are working on it! Just
+                        kidding, we were busy training.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <span class="date-badge">2 Weeks Later</span>
+                    <h3>Final Safety Pass</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">We need to ensure the model
+                        doesn't accidentally tell jokes about our release schedule.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <span class="date-badge">1 Month Later</span>
+                    <h3>Actually Soon</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">We are optimizing the
+                        weights for maximum stability.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content"
+                    style="border-color: var(--primary); box-shadow: 0 0 20px rgba(59,130,246,0.2);">
+                    <span class="date-badge" style="background: var(--primary); color: white;">Today</span>
+                    <h3>We Found One More Eval</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">It's good! It passed the
+                        eval! Here is the model!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benchmarks -->
+    <section class="container">
+        <h2 style="margin-bottom: 1.5rem;">Benchmark Results</h2>
+        <div class="benchmark-container fade-in-section">
+            <div class="chart-row" id="benchChart">
+                <!-- Bars injected via JS -->
+            </div>
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">*Evaluated on MMLU, GSM8K, and
+                "Did I actually wait for this?"</p>
+        </div>
+    </section>
+
+    <!-- Code Example -->
+    <section class="container">
+        <h2 style="margin-bottom: 1rem;">Run it locally in seconds</h2>
+        <div class="code-block fade-in-section">
+            <pre><code><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoModelForCausalLM, AutoTokenizer
+
+<span class="comment"># Load the model (It's open now!)</span>
+model = AutoModelForCausalLM.from_pretrained(
+    <span class="string">"Qwen/Qwen3.7-30B-Open"</span>, 
+    device_map=<span class="string">"auto"</span>,
+    trust_remote_code=<span class="keyword">True</span>
+)
+
+tokenizer = AutoTokenizer.from_pretrained(<span class="string">"Qwen/Qwen3.7-30B-Open"</span>)
+
+prompt = <span class="string">"Write a poem about the wait for this model."</span>
+inputs = tokenizer(prompt, return_tensors=<span class="string">"pt"</span>).to(model.device)
+outputs = model.generate(**inputs, max_new_tokens=50)
+print(tokenizer.decode(outputs[0]))</code></pre>
+        </div>
+    </section>
+
+    <!-- Downloads -->
+    <section class="container">
+        <h2 style="text-align: center; margin-bottom: 1rem;">Get the Weights</h2>
+        <p style="text-align: center; color: var(--text-muted);">Choose your preferred delivery method.</p>
+        <div class="download-grid fade-in-section">
+            <div class="download-card">
+                <h3>Hugging Face</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">The official source. No
+                    mirrors.</p>
+                <button class="btn-primary"
+                    onclick="alert('Redirecting to huggingface.co/Qwen/Qwen3.7-30B-Open...')">Download HF</button>
+            </div>
+            <div class="download-card">
+                <h3>GGUF (Quantized)</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">For your local LLM runner.</p>
+                <button class="btn-primary" onclick="alert('Downloading Qwen3.7-30B-Instruct.Q4_K_M.gguf...')">Get
+                    GGUF</button>
+            </div>
+            <div class="download-card">
+                <h3>Torrent</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">For the impatient.</p>
+                <button class="btn-primary" onclick="alert('Torrent started. Please wait 4 hours.')">Start
+                    Torrent</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Wall -->
+    <section class="container">
+        <h2 style="margin-bottom: 1rem;">Community Reaction</h2>
+        <div class="wall-grid fade-in-section">
+            <div class="wall-post">
+                <span class="user-handle">@llm_enthusiast_99</span>
+                "I've been refreshing this page since 2023. I'm crying tears of joy."
+            </div>
+            <div class="wall-post">
+                <span class="user-handle">@local_runner</span>
+                "Finally fits on my dual 3090 rig! Thank you for not releasing a 70B version first!"
+            </div>
+            <div class="wall-post">
+                <span class="user-handle">@skeptical_dev</span>
+                "Is this actually Qwen or is it just a very good copy of Llama 3.1?"
+            </div>
+            <div class="wall-post">
+                <span class="user-handle">@hacker_0x</span>
+                "Downloaded via torrent. It's open source now, right? I'm not asking questions."
+            </div>
+        </div>
+    </section>
+
+    <!-- Hardware -->
+    <section class="container">
+        <h2 style="margin-bottom: 1rem;">Recommended VRAM Setups</h2>
+        <div class="hardware-grid fade-in-section">
+            <div class="gpu-card">
+                <h3>Entry Level</h3>
+                <p style="color:var(--text-muted);">One RTX 3090 (24GB)</p>
+                <span style="font-size:0.8rem; color:#666;">(Quantized GGUF required)</span>
+            </div>
+            <div class="gpu-card" style="border-color: var(--primary);">
+                <h3 style="color:var(--primary)">Sweet Spot</h3>
+                <p style="color:var(--text-muted);">Dual RTX 3090s (48GB)</p>
+                <span style="font-size:0.8rem; color:#666;">Native FP16 Inference</span>
+            </div>
+            <div class="gpu-card">
+                <h3>Enthusiast</h3>
+                <p style="color:var(--text-muted);">RTX 4090 (24GB)</p>
+                <span style="font-size:0.8rem; color:#666;">(Use Flash Attention)</span>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Qwen Team. All rights reserved.</p>
+            <p style="font-size: 0.8rem; opacity: 0.5;">Disclaimer: This is a joke page created for demonstration
+                purposes. Qwen3.7-30B-Open does not actually exist yet, but the wait is over in spirit.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Background Animation Logic ---
+        const bgGrid = document.getElementById('bgGrid');
+        const tokens = ['Q', 'W', 'E', 'N', '3', '7', 'O', 'P', 'T', 'L', 'M'];
+
+        for (let i = 0; i < 20; i++) {
+            const token = document.createElement('div');
+            token.className = 'bg-token';
+            token.innerText = tokens[Math.floor(Math.random() * tokens.length)];
+            token.style.left = Math.random() * 100 + '%';
+            token.style.animationDuration = (15 + Math.random() * 20) + 's';
+            token.style.fontSize = (1 + Math.random() * 2) + 'rem';
+            bgGrid.appendChild(token);
+        }
+
+        // --- Benchmark Chart Animation ---
+        const chartData = [
+            { name: "Llama-3.1-70B", height: 60, color: "#4b5563" },
+            { name: "Mistral-Nemo", height: 75, color: "#6b7280" },
+            { name: "Your Brain", height: 90, color: "#9ca3af" },
+            { name: "Qwen3.7-30B-Open", height: 100, color: "#3b82f6" }
+        ];
+
+        const chartContainer = document.getElementById('benchChart');
+
+        chartData.forEach((item, index) => {
+            const group = document.createElement('div');
+            group.className = 'bar-group';
+
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = item.height + '%';
+            bar.style.backgroundColor = item.color;
+            // Staggered animation delay
+            setTimeout(() => {
+                bar.style.opacity = '1';
+                bar.style.transform = 'scaleY(1)';
+            }, index * 200);
+
+            const percent = document.createElement('div');
+            percent.className = 'bar-percentage';
+            percent.innerText = item.height + '%';
+
+            group.appendChild(percent);
+            group.appendChild(bar);
+            group.appendChild(document.createElement('span')).className = 'bar-label';
+            group.querySelector('.bar-label').innerText = item.name;
+
+            chartContainer.appendChild(group);
+        });
+
+        // --- Scroll Animations (Intersection Observer) ---
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target); // Only animate once
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-section').forEach(section => {
+            observer.observe(section);
+        });
+
+    </script>
+</body>
+
+</html>
