@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Model Testing Command Center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@500;700&display=swap"
+        rel="stylesheet"> <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0b0f14;
+            --glass-bg: rgba(20, 25, 35, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-cyan: #00fffc;
+            --neon-purple: #bc13fe;
+            --neon-green: #0aff0a;
+            --text-primary: #e0e6ed;
+            --text-secondary: #9ca3b0;
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --hover-scale: 1.02;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #1b2735, #090a0f);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 5px var(--neon-cyan);
+        }
+
+        .app-header {
+            padding: 1rem 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .app-header h1 {
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Hero Summary */
+        .hero-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .hero-stat {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hero-stat:hover {
+            transform: var(--hover-scale);
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        .hero-stat .label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero-stat .value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--neon-green);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(11, 15, 20, 0.9);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 68px;
+            z-index: 999;
+        }
+
+        .tab-btn {
+            padding: 0.6rem 1.5rem;
+            background: transparent;
+            border: 1px solid var(--neon-purple);
+            color: var(--neon-purple);
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active,
+        .tab-btn:hover {
+            background: var(--neon-purple);
+            color: #0b0f14;
+            box-shadow: 0 0 10px var(--neon-purple);
+        }
+
+        /* Main Dashboard */
+        .dashboard {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Section styling */
+        .section-title {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--neon-green);
+        }
+
+        /* Model Cards */
+        .head-to-head {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 2rem 0;
+            justify-content: center;
+        }
+
+        .model-card {
+            flex: 1 1 300px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-card:hover {
+            transform: var(--hover-scale);
+            box-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        .model-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--neon-cyan);
+            opacity: 0.5;
+        }
+
+        .model-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .model-card .meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .model-card .meta-item {
+            text-align: center;
+        }
+
+        .model-card .meta-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+        }
+
+        .model-card .meta-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .model-card .grade {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--neon-purple), transparent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            border: 2px solid var(--neon-purple);
+            box-shadow: 0 0 10px var(--neon-purple);
+        }
+
+        /* Winner Breakdown */
+        .winner-breakdown {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 4px solid var(--neon-green);
+            border-radius: 8px;
+        }
+
+        .winner-breakdown h3 {
+            margin-bottom: 1rem;
+        }
+
+        .winner-breakdown ul {
+            list-style: none;
+        }
+
+        .winner-breakdown li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .winner-breakdown li:last-child {
+            border-bottom: none;
+        }
+
+        .winner {
+            font-weight: 600;
+            color: var(--neon-cyan);
+        }
+
+        /* Prompt History */
+        .prompt-history {
+            margin: 2rem 0;
+        }
+
+        .prompt-entry {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .prompt-entry:hover {
+            box-shadow: 0 0 15px var(--neon-purple);
+        }
+
+        .prompt-header {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prompt-header .status {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: rgba(10, 255, 10, 0.2);
+            color: #0aff0a;
+            border: 1px solid #0aff0a;
+        }
+
+        .status.error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+        }
+
+        .prompt-details {
+            padding: 1rem;
+            display: none;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .prompt-details.expanded {
+            display: block;
+        }
+
+        .prompt-details pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Hardware Monitor */
+        .hardware-monitor {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+        }
+
+        .hardware-item {
+            text-align: center;
+        }
+
+        .hardware-item .label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .hardware-item .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--neon-cyan);
+        }
+
+        /* API Usage */
+        .api-usage {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+        }
+
+        .api-usage h3 {
+            margin-bottom: 1rem;
+            color: var(--neon-green);
+        }
+
+        .api-usage .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .api-usage .stat {
+            text-align: center;
+        }
+
+        .api-usage .stat .label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .api-usage .stat .value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--neon-purple);
+        }
+
+        /* Table of Previous Tests */
+        .previous-tests {
+            margin: 2rem 0;
+        }
+
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            font-size: 1rem;
+            flex: 1 1 250px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 0.8rem;
+            background: transparent;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--neon-green);
+            color: #0b0f14;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--glass-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--neon-cyan);
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        th:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        th::after {
+            content: '↕';
+            font-size: 0.8rem;
+            margin-left: 5px;
+            opacity: 0.5;
+        }
+
+        th.asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        th.desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        tr {
+            transition: background 0.2s ease;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .table-model {
+            font-weight: 600;
+            color: var(--neon-green);
+        }
+
+        .table-score {
+            font-weight: bold;
+            color: var(--neon-purple);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: rgba(10, 255, 10, 0.2);
+            color: #0aff0a;
+            border: 1px solid #0aff0a;
+        }
+
+        .status-error {
+            background: rgba(255, 77, 77, 0.2);
+            color: #ff4d4d;
+            border: 1px solid #ff4d4d;
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 2rem 0;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        /* Notes */
+        .notes {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 4px solid var(--neon-purple);
+            border-radius: 8px;
+        }
+
+        .notes label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .notes textarea {
+            width: 100%;
+            height: 150px;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--glass-border);
+            margin-top: auto;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .head-to-head {
+                flex-direction: column;
+            }
+
+            .hero-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            th,
+            td {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="app-header">
+        <h1><i class="fa-solid fa-microchip"></i> AI Model Testing Command Center</h1>
+        <div class="header-controls">
+            <button class="tab-btn active" data-tab="summary">Summary</button>
+            <button class="tab-btn" data-tab="speed">Speed</button>
+            <button class="tab-btn" data-tab="quality">Quality</button>
+            <button class="tab-btn" data-tab="cost">Cost</button>
+            <button class="tab-btn" data-tab="hardware">Hardware</button>
+        </div>
+    </header>
+
+    <!-- Hero Summary (global) -->
+    <section class="hero-summary" id="heroSummary">
+        <div class="hero-stat">
+            <div class="label">Total Tests</div>
+            <div class="value" id="totalTests">0</div>
+        </div>
+        <div class="hero-stat">
+            <div class="label">Avg Tokens/sec</div>
+            <div class="value" id="avgTps">0</div>
+        </div>
+        <div class="hero-stat">
+            <div class="label">Best Model</div>
+            <div class="value" id="bestModel">N/A</div>
+        </div>
+        <div class="hero-stat">
+            <div class="label">Total API Cost ($)</div>
+            <div class="value" id="totalApiCost">0.00</div>
+        </div>
+        <div class="hero-stat">
+            <div class="label">Total Local Runtime (s)</div>
+            <div class="value" id="totalLocalRuntime">0</div>
+        </div>
+    </section>
+
+    <!-- Tabs Navigation (duplicate for clarity) -->
+    <nav class="tabs">
+        <button class="tab-btn active" data-tab="summary">Summary</button>
+        <button class="tab-btn" data-tab="speed">Speed</button>
+        <button class="tab-btn" data-tab="quality">Quality</button>
+        <button class="tab-btn" data-tab="cost">Cost</button>
+        <button class="tab-btn" data-tab="hardware">Hardware</button>
+    </nav>
+
+    <main class="dashboard">
+        <!-- Summary Tab -->
+        <section id="tab-summary" class="tab-content active">
+            <h2 class="section-title"><i class="fa-solid fa-scale-balanced"></i> Head-to-Head Comparison</h2>
+            <section class="head-to-head" id="headToHeadSection">
+                <!-- Populated via JS -->
+            </section>
+
+            <section class="winner-breakdown" id="winnerBreakdown">
+                <h3><i class="fa-solid fa-trophy"></i> Winner Breakdown</h3>
+                <ul id="winnerList">
+                    <!-- Populated via JS -->
+                </ul>
+            </section>
+
+            <h2 class="section-title"><i class="fa-solid fa-history"></i> Prompt History</h2>
+            <section class="prompt-history" id="promptHistory">
+                <!-- Populated via JS -->
+            </section>
+
+            <h2 class="section-title"><i class="fa-solid fa-server"></i> Previous Model Tests</h2>
+            <section class="previous-tests">
+                <div class="controls-bar">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by model or prompt...">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="local">Local</button>
+                        <button class="filter-btn" data-filter="frontier">Frontier</button>
+                    </div>
+                </div>
+                <table id="testsTable">
+                    <thead>
+                        <tr>
+                            <th data-sort="model">Model</th>
+                            <th data-sort="date">Date</th>
+                            <th>Prompt Preview</th>
+                            <th data-sort="time">Time (s)</th>
+                            <th data-sort="score">Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </section>
+        </section>
+
+        <!-- Speed Tab -->
+        <section id="tab-speed" class="tab-content">
+            <h2 class="section-title"><i class="fa-solid fa-gauge-high"></i> Tokens Per Second</h2>
+            <div class="chart-container">
+                <canvas id="chartTokensPerSec"></canvas>
+            </div>
+            <h2 class="section-title"><i class="fa-solid fa-clock"></i> Completion Time</h2>
+            <div class="chart-container">
+                <canvas id="chartCompletionTime"></canvas>
+            </div>
+        </section>
+
+        <!-- Quality Tab -->
+        <section id="tab-quality" class="tab-content">
+            <h2 class="section-title"><i class="fa-solid fa-star"></i> Quality Scores</h2>
+            <div class="chart-container">
+                <canvas id="chartQualityScore"></canvas>
+            </div>
+            <h2 class="section-title"><i class="fa-solid fa-dollar-sign"></i> Cost Comparison</h2>
+            <div class="chart-container">
+                <canvas id="chartCostComparison"></canvas>
+            </div>
+        </section>
+
+        <!-- Cost Tab -->
+        <section id="tab-cost" class="tab-content">
+            <h2 class="section-title"><i class="fa-solid fa-wallet"></i> API Usage</h2>
+            <section class="api-usage" id="apiUsagePanel">
+                <h3>Claude Opus 4.8 Usage</h3>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="label">Input Tokens</div>
+                        <div class="value" id="apiInputTokens">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="label">Output Tokens</div>
+                        <div class="value" id="apiOutputTokens">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="label">Total Spend ($)</div>
+                        <div class="value" id="apiTotalSpend">0.00</div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <!-- Hardware Tab -->
+        <section id="tab-hardware" class="tab-content">
+            <h2 class="section-title"><i class="fa-solid fa-microchip"></i> Hardware Monitor</h2>
+            <section class="hardware-monitor" id="hardwareMonitor">
+                <div class="hardware-item">
+                    <div class="label">GPU Usage</div>
+                    <div class="value" id="gpuUsage">0%</div>
+                </div>
+                <div class="hardware-item">
+                    <div class="label">VRAM Used</div>
+                    <div class="value" id="vramUsed">0 GB / 24 GB</div>
+                </div>
+                <div class="hardware-item">
+                    <div class="label">Temperature</div>
+                    <div class="value" id="temperature">0°C</div>
+                </div>
+                <div class="hardware-item">
+                    <div class="label">Power Draw</div>
+                    <div class="value" id="powerDraw">0 W</div>
+                </div>
+                <div class="hardware-item">
+                    <div class="label">Server Status</div>
+                    <div class="value" id="serverStatus">Running</div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <!-- Notes Section -->
+    <section class="notes">
+        <label for="finalObservations"><i class="fa-solid fa-pen-to-square"></i> Final Testing Observations</label>
+        <textarea id="finalObservations"
+            placeholder="Enter any final notes about the testing session...">Testing session notes will appear here. All model comparisons completed successfully.</textarea>
+    </section>
+
+    <footer>
+        <p>AI Model Testing Command Center &copy; 2024 | Real-time Model Comparison Dashboard</p>
+    </footer>
+
+    <script>
+        // ------------------------------------------------------------
+        // Sample Data
+        // ------------------------------------------------------------
+        const sampleTests = [
+            // Qwen3.6 27B – local
+            {
+                id: 1,
+                model: "Qwen3.6 27B",
+                modelType: "local",
+                date: "2024-09-20",
+                prompt: "Write a Python function to compute Fibonacci sequence.\nExplanation of algorithm and sample usage.",
+                inputTokens: 20,
+                outputTokens: 150,
+                tokens_per_sec: 123,
+                time_taken: 0.45,
+                quality_score: 85,
+                coding_score: 90,
+                creativity_score: 78,
+                instruction_following: 88,
+                final_grade: 85,
+                cost: 0,
+                hardware: { vram_used: "6.2GB / 24GB", temp: "68°C", power: "150W", usage: "45%" }
+            },
+            // Claude Opus 4.8 – frontier
+            {
+                id: 2,
+                model: "Claude Opus 4.8",
+                modelType: "frontier",
+                date: "2024-09-21",
+                prompt: "Summarize the plot of 'To Kill a Mockingbird'.\nKey themes and character analysis.",
+                inputTokens: 30,
+                outputTokens: 210,
+                tokens_per_sec: 210,
+                time_taken: 0.32,
+                quality_score: 92,
+                coding_score: 70,
+                creativity_score: 88,
+                instruction_following: 94,
+                final_grade: 91,
+                cost: 0.018,
+                hardware: { vram_used: "0GB / 24GB", temp: "45°C", power: "0W", usage: "0%" }
+            },
+            // Llama 3 70B – local
+            {
+                id: 3,
+                model: "Llama 3 70B",
+                modelType: "local",
+                date: "2024-09-18",
+                prompt: "Translate the following French sentence to English: 'Le chat est sur le tapis.'.\nProvide literal translation.",
+                inputTokens: 12,
+                outputTokens: 85,
+                tokens_per_sec: 95,
+                time_taken: 0.62,
+                quality_score: 78,
+                coding_score: 60,
+                creativity_score: 70,
+                instruction_following: 75,
+                final_grade: 73,
+                cost: 0,
+                hardware: { vram_used: "12.4GB / 24GB", temp: "72°C", power: "180W", usage: "50%" }
+            },
+            // Gemini Pro – frontier
+            {
+                id: 4,
+                model: "Gemini Pro",
+                modelType: "frontier",
+                date: "2024-09-19",
+                prompt: "Design a responsive HTML page for a portfolio website.\nInclude semantic tags and CSS grid.",
+                inputTokens: 45,
+                outputTokens: 320,
+                tokens_per_sec: 180,
+                time_taken: 0.28,
+                quality_score: 94,
+                coding_score: 88,
+                creativity_score: 85,
+                instruction_following: 92,
+                final_grade: 91,
+                cost: 0.032,
+                hardware: { vram_used: "0GB / 24GB", temp: "40°C", power: "0W", usage: "0%" }
+            },
+            // Mistral Large 2 – local
+            {
+                id: 5,
+                model: "Mistral Large 2",
+                modelType: "local",
+                date: "2024-09-22",
+                prompt: "Generate a 200-word poem about urban nightlife.\nMaintain a rhythmic structure.",
+                inputTokens: 15,
+                outputTokens: 120,
+                tokens_per_sec: 110,
+                time_taken: 0.55,
+                quality_score: 82,
+                coding_score: 55,
+                creativity_score: 90,
+                instruction_following: 80,
+                final_grade: 81,
+                cost: 0,
+                hardware: { vram_used: "8.1GB / 24GB", temp: "66°C", power: "160W", usage: "38%" }
+            },
+            // GPT-4 Turbo – frontier
+            {
+                id: 6,
+                model: "GPT-4 Turbo",
+                modelType: "frontier",
+                date: "2024-09-23",
+                prompt: "Create a SQL query to find customers who have made more than 3 orders and spent over $500 total.\nInclude joins and grouping.",
+                inputTokens: 40,
+                outputTokens: 200,
+                tokens_per_sec: 150,
+                time_taken: 0.48,
+                quality_score: 89,
+                coding_score: 85,
+                creativity_score: 75,
+                instruction_following: 88,
+                final_grade: 86,
+                cost: 0.025,
+                hardware: { vram_used: "0GB / 24GB", temp: "42°C", power: "0W", usage: "0%" }
+            }
+        ];
+
+        // ------------------------------------------------------------
+        // Helper Functions
+        // ------------------------------------------------------------
+        function formatNumber(num, decimals = 2) {
+            return Number(num).toFixed(decimals);
+        }
+
+        function getGradeLetter(grade) {
+            if (grade >= 90) return 'A+';
+            if (grade >= 85) return 'A';
+            if (grade >= 80) return 'A-';
+            if (grade >= 75) return 'B+';
+            if (grade >= 70) return 'B';
+            if (grade >= 65) return 'B-';
+            if (grade >= 60) return 'C+';
+            if (grade >= 55) return 'C';
+            return 'F';
+        }
+
+        // ------------------------------------------------------------
+        // Dashboard Calculations
+        // ------------------------------------------------------------
+        const totalTests = sampleTests.length;
+        const avgTokensPerSec = sampleTests.reduce((sum, t) => sum + t.tokens_per_sec, 0) / totalTests;
+        // Best model based on average final_grade across all tests per model
+        const modelGrades = {};
+        sampleTests.forEach(t => {
+            if (!modelGrades[t.model]) {
+                modelGrades[t.model] = { sum: 0, count: 0 };
+            }
+            modelGrades[t.model].sum += t.final_grade;
+            modelGrades[t.model].count += 1;
+        });
+        let bestModelName = "N/A";
+        let bestAvgGrade = -1;
+        Object.entries(modelGrades).forEach(([model, { sum, count }]) => {
+            const avg = sum / count;
+            if (avg > bestAvgGrade) {
+                bestAvgGrade = avg;
+                bestModelName = model;
+            }
+        });
+
+        // API cost and token totals for Claude Opus 4.8
+        const claudeTests = sampleTests.filter(t => t.model === "Claude Opus 4.8");
+        const totalApiCost = claudeTests.reduce((sum, t) => sum + t.cost, 0);
+        const totalInputTokens = claudeTests.reduce((sum, t) => sum + (t.inputTokens || 0), 0);
+        const totalOutputTokens = claudeTests.reduce((sum, t) => sum + (t.outputTokens || 0), 0);
+        const totalLocalRuntime = sampleTests.filter(t => t.modelType === "local").reduce((sum, t) => sum + t.time_taken, 0);
+
+        // Update hero summary
+        document.getElementById('totalTests').textContent = totalTests;
+        document.getElementById('avgTps').textContent = formatNumber(avgTokensPerSec);
+        document.getElementById('bestModel').textContent = bestModelName;
+        document.getElementById('totalApiCost').textContent = formatNumber(totalApiCost, 3);
+        document.getElementById('totalLocalRuntime').textContent = formatNumber(totalLocalRuntime, 2);
+
+        // ------------------------------------------------------------
+        // Head-to-Head Section (Qwen3.6 27B vs Claude Opus 4.8)
+        // ------------------------------------------------------------
+        const headToHeadSection = document.getElementById('headToHeadSection');
+        const winnerList = document.getElementById('winnerList');
+
+        // Find the specific test entries for these models
+        const qwenTest = sampleTests.find(t => t.model === "Qwen3.6 27B");
+        const claudeTest = sampleTests.find(t => t.model === "Claude Opus 4.8");
+
+        // If missing, create mock data for presentation
+        const qwen = qwenTest || {
+            model: "Qwen3.6 27B",
+            tokens_per_sec: 123,
+            quality_score: 85,
+            coding_score: 90,
+            creativity_score: 78,
+            instruction_following: 88,
+            final_grade: 85
+        };
+        const claude = claudeTest || {
+            model: "Claude Opus 4.8",
+            tokens_per_sec: 210,
+            quality_score: 92,
+            coding_score: 70,
+            creativity_score: 88,
+            instruction_following: 94,
+            final_grade: 91
+        };
+
+        // Render model cards
+        function renderModelCard(model) {
+            const card = document.createElement('div');
+            card.className = 'model-card';
+            const gradeLetter = getGradeLetter(model.final_grade || model.finalGrade);
+            card.innerHTML = `
+            <h3>${model.model}</h3>
+            <div class="meta">
+                <div class="meta-item">
+                    <div class="meta-label">Speed (t/s)</div>
+                    <div class="meta-value">${model.tokens_per_sec || model.speed}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Quality</div>
+                    <div class="meta-value">${model.quality_score || model.qualityScore}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Coding</div>
+                    <div class="meta-value">${model.coding_score || model.codingScore}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Creativity</div>
+                    <div class="meta-value">${model.creativity_score || model.creativityScore}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Instr. Follow</div>
+                    <div class="meta-value">${model.instruction_following || model.instructionFollowing}</div>
+                </div>
+            </div>
+            <div class="grade">${gradeLetter}</div>
+        `;
+            return card;
+        }
+
+        headToHeadSection.appendChild(renderModelCard(qwen));
+        headToHeadSection.appendChild(renderModelCard(claude));
+
+        // Determine winner per category
+        const categories = [
+            { key: 'tokens_per_sec', label: 'Speed (Tokens/s)' },
+            { key: 'quality_score', label: 'Quality Score' },
+            { key: 'coding_score', label: 'Coding Score' },
+            { key: 'creativity_score', label: 'Creativity Score' },
+            { key: 'instruction_following', label: 'Instruction Following' },
+            { key: 'final_grade', label: 'Final Grade' }
+        ];
+
+        categories.forEach(cat => {
+            const q = qwen[cat.key] !== undefined ? qwen[cat.key] : (qwen[cat.key.replace('_', '')] || 0);
+            const c = claude[cat.key] !== undefined ? claude[cat.key] : (claude[cat.key.replace('_', '')] || 0);
+            const winner = q > c ? qwen.model : (c > q ? claude.model : 'Tie');
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${cat.label}:</span> <span class="winner">${winner}</span>`;
+            winnerList.appendChild(li);
+        });
+
+        // ------------------------------------------------------------
+        // Prompt History (list all tests)
+        // ------------------------------------------------------------
+        const promptHistory = document.getElementById('promptHistory');
+        sampleTests.forEach(test => {
+            const entry = document.createElement('div');
+            entry.className = 'prompt-entry';
+            const statusClass = test.final_grade >= 75 ? 'success' : 'error';
+            const statusText = test.final_grade >= 75 ? 'Success' : 'Failed';
+            entry.innerHTML = `
+            <div class="prompt-header">
+                <div>
+                    <strong>${test.model}</strong> • ${test.date} • Score: ${test.final_grade}
+                </div>
+                <div>
+                    <span class="status ${statusClass}">${statusText}</span>
+                    <i class="fa-solid fa-chevron-down" style="margin-left:10px; opacity:0.6;"></i>
+                </div>
+            </div>
+            <div class="prompt-details">
+                <p><strong>Prompt:</strong></p>
+                <pre>${test.prompt}</pre>
+                <p><strong>Time:</strong> ${test.time_taken}s • <strong>Tokens/s:</strong> ${test.tokens_per_sec}</p>
+                <p><strong>Quality:</strong> ${test.quality_score} • <strong>Coding:</strong> ${test.coding_score}</p>
+            </div>
+        `;
+            // Expand/collapse logic
+            const header = entry.querySelector('.prompt-header');
+            header.addEventListener('click', () => {
+                const details = entry.querySelector('.prompt-details');
+                details.classList.toggle('expanded');
+                // Toggle icon rotation (optional)
+                const icon = header.querySelector('.fa-chevron-down');
+                if (details.classList.contains('expanded')) {
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    icon.style.transform = 'rotate(0)';
+                }
+            });
+            promptHistory.appendChild(entry);
+        });
+
+        // ------------------------------------------------------------
+        // Charts Initialization
+        // ------------------------------------------------------------
+        // Prepare chart data
+        const models = [...new Set(sampleTests.map(t => t.model))];
+        const tokensPerSecData = {
+            labels: models,
+            datasets: [{
+                label: 'Tokens/s',
+                data: models.map(m => sampleTests.find(t => t.model === m).tokens_per_sec),
+                backgroundColor: models.map((_, i) => i % 2 === 0 ? 'rgba(0, 255, 252, 0.7)' : 'rgba(188, 19, 254, 0.7)'),
+                borderColor: models.map((_, i) => i % 2 === 0 ? 'rgba(0, 255, 252, 1)' : 'rgba(188, 19, 254, 1)'),
+                borderWidth: 1
+            }]
+        };
+
+        const completionTimeData = {
+            labels: models,
+            datasets: [{
+                label: 'Time (s)',
+                data: models.map(m => sampleTests.find(t => t.model === m).time_taken),
+                backgroundColor: 'rgba(10, 255, 10, 0.6)',
+                borderColor: 'rgba(10, 255, 10, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const qualityScoreData = {
+            labels: models,
+            datasets: [{
+                label: 'Quality Score',
+                data: models.map(m => sampleTests.find(t => t.model === m).quality_score),
+                backgroundColor: 'rgba(255, 77, 77, 0.6)',
+                borderColor: 'rgba(255, 77, 77, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const costData = {
+            labels: models,
+            datasets: [{
+                label: 'Cost ($)',
+                data: models.map(m => sampleTests.find(t => t.model === m).cost),
+                backgroundColor: models.map(m => sampleTests.find(t => t.model === m).modelType === 'local' ? 'rgba(100,100,100,0.5)' : 'rgba(255, 195, 0, 0.7)'),
+                borderColor: models.map(m => sampleTests.find(t => t.model === m).modelType === 'local' ? 'rgba(100,100,100,1)' : 'rgba(255, 195, 0, 1)'),
+                borderWidth: 1
+            }]
+        };
+
+        // Chart instances
+        const chartTokensPerSec = new Chart(document.getElementById('chartTokensPerSec').getContext('2d'), {
+            type: 'bar',
+            data: tokensPerSecData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Tokens per Second by Model' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Tokens/s' }
+                    }
+                }
+            }
+        });
+
+        const chartCompletionTime = new Chart(document.getElementById('chartCompletionTime').getContext('2d'), {
+            type: 'bar',
+            data: completionTimeData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Completion Time by Model' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Seconds' }
+                    }
+                }
+            }
+        });
+
+        const chartQualityScore = new Chart(document.getElementById('chartQualityScore').getContext('2d'), {
+            type: 'bar',
+            data: qualityScoreData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Quality Score by Model' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Score (0-100)' }
+                    }
+                }
+            }
+        });
+
+        const chartCostComparison = new Chart(document.getElementById('chartCostComparison').getContext('2d'), {
+            type: 'bar',
+            data: costData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'API Cost by Model' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Cost ($)' }
+                    }
+                }
+            }
+        });
+
+        // ------------------------------------------------------------
+        // API Usage Panel
+        // ------------------------------------------------------------
+        document.getElementById('apiInputTokens').textContent = totalInputTokens;
+        document.getElementById('apiOutputTokens').textContent = totalOutputTokens;
+        document.getElementById('apiTotalSpend').textContent = formatNumber(totalApiCost, 3);
+
+        // ------------------------------------------------------------
+        // Hardware Monitor Live Simulation
+        // ------------------------------------------------------------
+        const hardwareUpdate = () => {
+            // Simulate minor changes
+            const gpuBase = Math.random() * 60 + 20; // 20-80%
+            const vramBase = Math.random() * 8 + 2; // 2-10 GB used
+            const tempBase = Math.random() * 30 + 40; // 40-70°C
+            const powerBase = Math.random() * 100 + 50; // 50-150W
+            document.getElementById('gpuUsage').textContent = `${Math.round(gpuBase)}%`;
+            document.getElementById('vramUsed').textContent = `${vramBase.toFixed(1)} GB / 24 GB`;
+            document.getElementById('temperature').textContent = `${Math.round(tempBase)}°C`;
+            document.getElementById('powerDraw').textContent = `${Math.round(powerBase)} W`;
+        };
+        hardwareUpdate();
+        setInterval(hardwareUpdate, 3000);
+
+        // ------------------------------------------------------------
+        // Tabs Switching
+        // ------------------------------------------------------------
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active tab buttons
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Show corresponding tab content
+                const tabId = btn.getAttribute('data-tab');
+                tabContents.forEach(tc => {
+                    tc.classList.remove('active');
+                    if (tc.id === `tab-${tabId}`) {
+                        tc.classList.add('active');
+                    }
+                });
+                // Resize charts to avoid display issues
+                setTimeout(() => {
+                    chartTokensPerSec.resize();
+                    chartCompletionTime.resize();
+                    chartQualityScore.resize();
+                    chartCostComparison.resize();
+                }, 100);
+            });
+        });
+
+        // ------------------------------------------------------------
+        // Search & Filter for Table
+        // ------------------------------------------------------------
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const tableBody = document.querySelector('#testsTable tbody');
+
+        // Render table rows
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            data.forEach(test => {
+                const row = document.createElement('tr');
+                const previewPrompt = test.prompt.split('\n')[0].slice(0, 60) + '...';
+                const statusClass = test.final_grade >= 75 ? 'status-success' : 'status-error';
+                const statusText = test.final_grade >= 75 ? 'Success' : 'Failed';
+                row.innerHTML = `
+                <td class="table-model">${test.model}</td>
+                <td>${test.date}</td>
+                <td>${previewPrompt}</td>
+                <td>${test.time_taken.toFixed(2)}</td>
+                <td class="table-score">${test.final_grade}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            `;
+                row.addEventListener('click', () => {
+                    // Expand row details (simple alert for demo)
+                    alert(`Full prompt for ${test.model}:\n${test.prompt}`);
+                });
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Sorting state
+        let sortColumn = '';
+        let sortAsc = true;
+
+        function sortTable(column) {
+            const rows = Array.from(tableBody.children);
+            rows.sort((a, b) => {
+                let aVal = a.children[column].textContent;
+                let bVal = b.children[column].textContent;
+                if (column === 3) { // time column - numeric
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                } else if (column === 4) { // score column - numeric
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                } else {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                if (aVal < bVal) return sortAsc ? -1 : 1;
+                if (aVal > bVal) return sortAsc ? 1 : -1;
+                return 0;
+            });
+            // Update header classes
+            document.querySelectorAll('th').forEach(th => th.classList.remove('asc', 'desc'));
+            const currentTh = document.querySelector(`th[data-sort="${column}"]`);
+            if (currentTh) {
+                currentTh.classList.add(sortAsc ? 'asc' : 'desc');
+            }
+            // Re-append sorted rows
+            rows.forEach(row => tableBody.appendChild(row));
+            // Flip sort direction for next click on same column
+            sortAsc = !sortAsc;
+        }
+
+        // Attach sort listeners
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const colIndex = Array.from(th.parentNode.children).indexOf(th);
+                // Map column indices to data keys
+                sortColumn = colIndex;
+                sortTable(colIndex);
+            });
+        });
+
+        // Filter by type
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.getAttribute('data-filter');
+                let filtered = [];
+                if (filter === 'local') {
+                    filtered = sampleTests.filter(t => t.modelType === 'local');
+                } else if (filter === 'frontier') {
+                    filtered = sampleTests.filter(t => t.modelType === 'frontier');
+                } else {
+                    filtered = sampleTests;
+                }
+                renderTable(filtered);
+                // Apply current search
+                applySearchFilter();
+            });
+        });
+
+        // Search filter
+        function applySearchFilter() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const currentFilter = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+            let filtered = sampleTests.filter(t => {
+                if (currentFilter === 'local' && t.modelType !== 'local') return false;
+                if (currentFilter === 'frontier' && t.modelType !== 'frontier') return false;
+                if (currentFilter === 'all') return true;
+                return true;
+            }).filter(t => {
+                const matchModel = t.model.toLowerCase().includes(searchTerm);
+                const matchPrompt = t.prompt.toLowerCase().includes(searchTerm);
+                return matchModel || matchPrompt;
+            });
+            renderTable(filtered);
+        }
+
+        searchInput.addEventListener('input', applySearchFilter);
+
+        // Initial render
+        renderTable(sampleTests);
+
+        // ------------------------------------------------------------
+        // Optional: Add a toggle to show/hide frontier vs local metrics (simple)
+        // ------------------------------------------------------------
+        // Could add a UI element, but we already have filter-buttons for the table.
+        // This is enough per requirements.
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Qwen3.7-30B-Open – Finally Open!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chart.js for benchmark chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg-secondary: #161b22;
+            --text: #c9d1d9;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --card-bg: #1c2128;
+            --border: #30363d;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Animated background canvas */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Content wrapper */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 6rem);
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #fff, #a3b3ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #8b949e;
+            max-width: 600px;
+        }
+
+        /* Model Card */
+        .section {
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        .model-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            animation: fadeInUp 0.8s ease-out;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .card-item {
+            text-align: center;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        .card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .card-label {
+            font-size: 0.9rem;
+            color: #8b949e;
+        }
+
+        /* Benchmark Chart */
+        .chart-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .chart-title {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            color: var(--accent);
+        }
+
+        /* Buttons */
+        .download-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            outline: none;
+            background: var(--accent);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn.secondary:hover {
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--accent);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .timeline-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            max-width: 40%;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .timeline-content::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            transform: rotate(45deg) translateY(-50%);
+        }
+
+        .timeline-item.left .timeline-content {
+            margin-right: auto;
+            text-align: right;
+        }
+
+        .timeline-item.left .timeline-content::before {
+            left: auto;
+            right: 100%;
+        }
+
+        .timeline-item.right {
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .timeline-item.right .timeline-content {
+            margin-left: auto;
+            text-align: left;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-bottom: 0.3rem;
+            display: block;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            animation: fadeIn 1s ease-out;
+            margin-top: 1rem;
+        }
+
+        .code-block code {
+            color: #c9d1d9;
+        }
+
+        /* Community Wall */
+        .wall {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .post {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #555;
+            object-fit: cover;
+        }
+
+        .post-user {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .post-time {
+            font-size: 0.75rem;
+            color: #8b949e;
+        }
+
+        .post-content {
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        /* Run Locally */
+        .vram-list {
+            list-style: none;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .vram-list li {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+            animation: slideIn 0.4s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .vram-list li i {
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            color: #6e7681;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        /* Responsive tweaks */
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 8px;
+            }
+
+            .timeline-content {
+                max-width: calc(100% - 40px);
+                margin-left: 40px !important;
+                text-align: left !important;
+            }
+
+            .timeline-content::before {
+                left: -12px !important;
+                right: auto !important;
+            }
+
+            .timeline-item.left .timeline-content {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Animated background canvas -->
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Qwen3.7-30B-Open is finally here</h1>
+            <p>The community can now stop refreshing Hugging Face every 11 seconds.</p>
+        </section>
+
+        <!-- Model Card -->
+        <section class="section" id="model-card">
+            <h2 class="section-title">Model Overview</h2>
+            <div class="model-card">
+                <div class="card-item">
+                    <i class="card-icon fa-solid fa-database"></i>
+                    <div class="card-value">30B</div>
+                    <div class="card-label">Parameters</div>
+                </div>
+                <div class="card-item">
+                    <i class="card-icon fa-solid fa-lock-open"></i>
+                    <div class="card-value">Open</div>
+                    <div class="card-label">Weights</div>
+                </div>
+                <div class="card-item">
+                    <i class="card-icon fa-solid fa-memo-pad"></i>
+                    <div class="card-value">128K</div>
+                    <div class="card-label">Context</div>
+                </div>
+                <div class="card-item">
+                    <i class="card-icon fa-solid fa-tools"></i>
+                    <div class="card-value">Tool Use</div>
+                    <div class="card-label">Enabled</div>
+                </div>
+                <div class="card-item">
+                    <i class="card-icon fa-solid fa-code"></i>
+                    <div class="card-value">Coding</div>
+                    <div class="card-label">Optimized</div>
+                </div>
+                <div class="card-item">
+                    <i class="card-icon fa-solid fa-lightbulb"></i>
+                    <div class="card-value">Reasoning</div>
+                    <div class="card-label">Strong</div>
+                </div>
+                <div class="card-item">
+                    <i class="card-icon fa-solid fa-microchip"></i>
+                    <div class="card-value">Local</div>
+                    <div class="card-label">Inference</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benchmarks -->
+        <section class="section" id="benchmarks">
+            <h2 class="section-title">Benchmarks vs Rivals</h2>
+            <div class="chart-wrapper">
+                <div class="chart-title">MMLU | TruthfulQA | GPQA | ARC</div>
+                <canvas id="benchmarkChart" height="250"></canvas>
+            </div>
+        </section>
+
+        <!-- Download -->
+        <section class="section" id="download">
+            <h2 class="section-title">Get Your Copy</h2>
+            <div class="download-buttons">
+                <a href="#" class="btn" onclick="alert('Starting HF download...')"><i class="fa-brands fa-hive"></i>
+                    Hugging Face</a>
+                <a href="#" class="btn secondary" onclick="alert('GGUF bundle preparing...')"><i
+                        class="fa-solid fa-file-arrow-down"></i> GGUF</a>
+                <a href="#" class="btn" onclick="alert('API token issued...')"><i class="fa-solid fa-cloud"></i> API</a>
+                <a href="#" class="btn secondary" onclick="alert('Torrent magnet fired up!')"><i
+                        class="fa-solid fa-download"></i> Torrent</a>
+            </div>
+        </section>
+
+        <!-- Timeline -->
+        <section class="section" id="timeline">
+            <h2 class="section-title">Release Timeline (Some Things Happened)</h2>
+            <div class="timeline">
+                <div class="timeline-item left">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2024-09-01</span>
+                        <p>Soon™</p>
+                    </div>
+                </div>
+                <div class="timeline-item right">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2024-10-15</span>
+                        <p>Final safety pass</p>
+                    </div>
+                </div>
+                <div class="timeline-item left">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2024-12-02</span>
+                        <p>Actually soon</p>
+                    </div>
+                </div>
+                <div class="timeline-item right">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2025-01-20</span>
+                        <p>We found one more eval</p>
+                    </div>
+                </div>
+                <div class="timeline-item left">
+                    <div class="timeline-content">
+                        <span class="timeline-date">2025-02-14</span>
+                        <p>Open Weight Friday 🎉</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Example -->
+        <section class="section" id="code">
+            <h2 class="section-title">Quick Start</h2>
+            <div class="code-block">
+                <pre><code># Install the model
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_id = "Qwen/Qwen3.7-30B-Open"
+model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto")
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+
+# Generate
+prompt = "Explain quantum computing in simple terms."
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+outputs = model.generate(**inputs, max_length=200)
+print(tokenizer.decode(outputs[0]))</code></pre>
+            </div>
+        </section>
+
+        <!-- Community Wall -->
+        <section class="section" id="community">
+            <h2 class="section-title">Community Reactions</h2>
+            <div class="wall">
+                <div class="post">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/150?img=1" class="post-avatar" alt="user">
+                        <div class="post-user">@llama_fan_2020</div>
+                        <div class="post-time">2h ago</div>
+                    </div>
+                    <div class="post-content">I thought this was a joke at first, but the model actually writes better
+                        code than my junior dev!</div>
+                </div>
+                <div class="post">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/150?img=2" class="post-avatar" alt="user">
+                        <div class="post-user">@tiny_neuron</div>
+                        <div class="post-time">4h ago</div>
+                    </div>
+                    <div class="post-content">Finally! I can stop my 11‑second timer. The model is live, but the servers
+                        are still in beta...</div>
+                </div>
+                <div class="post">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/150?img=3" class="post-avatar" alt="user">
+                        <div class="post-user">@eval_hunter</div>
+                        <div class="post-time">6h ago</div>
+                    </div>
+                    <div class="post-content">Tried it on my laptop. It hallucinated less than last week’s update. 🎉
+                    </div>
+                </div>
+                <div class="post">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/150?img=4" class="post-avatar" alt="user">
+                        <div class="post-user">@suspicious_cat</div>
+                        <div class="post-time">8h ago</div>
+                    </div>
+                    <div class="post-content">Only 30B params? I was promised 100B. Still works, though.</div>
+                </div>
+                <div class="post">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/150?img=5" class="post-avatar" alt="user">
+                        <div class="post-user">@gpu_guru</div>
+                        <div class="post-time">10h ago</div>
+                    </div>
+                    <div class="post-content">Running locally on dual 3090s, but the VRAM usage is insane. Worth it
+                        though! 💸</div>
+                </div>
+                <div class="post">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/150?img=6" class="post-avatar" alt="user">
+                        <div class="post-user">@noob_dev</div>
+                        <div class="post-time">12h ago</div>
+                    </div>
+                    <div class="post-content">How to install? The docs are… nonexistent. But the code snippet above
+                        works!</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Run Locally -->
+        <section class="section" id="run-locally">
+            <h2 class="section-title">Run It Locally</h2>
+            <p style="text-align:center; color:#8b949e; margin-bottom:1.5rem;">Recommended GPU VRAM for smooth
+                inference:</p>
+            <ul class="vram-list">
+                <li><i class="fa-solid fa-gpu-card"></i> 48 GB (single RTX 4090)</li>
+                <li><i class="fa-solid fa-stack-exchange"></i> 80 GB (dual RTX 3090)</li>
+                <li><i class="fa-solid fa-server"></i> 96 GB (single A100)</li>
+                <li><i class="fa-solid fa-cloud"></i> 128 GB (dual A100)</li>
+                <li><i class="fa-solid fa-microchip"></i> 16 GB (CPU only – expect slow)</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>© 2025 Qwen3.7-30B-Open – “We promise it's not a joke anymore”</p>
+        </footer>
+    </div>
+
+    <script>
+        // -----------------------------
+        // Animated Background (Canvas)
+        // -----------------------------
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.color = Math.random() > 0.5 ? '#58a6ff' : '#a3b3ff';
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + Math.floor(this.opacity * 255).toString(16).padStart(2, '0');
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.min(Math.floor((width * height) / 15000), 100);
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // -----------------------------
+        // Benchmark Chart
+        // -----------------------------
+        const chartData = {
+            labels: ['MMLU', 'TruthfulQA', 'GPQA', 'ARC'],
+            datasets: [
+                {
+                    label: 'Qwen3.7-30B-Open',
+                    data: [86, 78, 82, 90],
+                    backgroundColor: 'rgba(88,166,255,0.6)',
+                    borderColor: 'rgba(88,166,255,1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Llama-3.1-70B',
+                    data: [84, 73, 79, 85],
+                    backgroundColor: 'rgba(240, 185, 10,0.6)',
+                    borderColor: 'rgba(240,185,10,1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Claude-3.5',
+                    data: [88, 80, 85, 87],
+                    backgroundColor: 'rgba(255, 119, 29,0.6)',
+                    borderColor: 'rgba(255,119,29,1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Your Coping Mechanism',
+                    data: [30, 20, 25, 35],
+                    backgroundColor: 'rgba(120,120,120,0.5)',
+                    borderColor: '#777',
+                    borderWidth: 1
+                }
+            ]
+        };
+
+        const config = {
+            type: 'bar',
+            data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top', labels: { color: '#c9d1d9' } },
+                    title: { display: false }
+                },
+                scales: {
+                    x: {
+                        stacked: false,
+                        ticks: { color: '#8b949e' },
+                        grid: { color: '#30363d' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#8b949e' },
+                        grid: { color: '#30363d' }
+                    }
+                }
+            }
+        };
+
+        // Wait for Chart.js to load before creating chart
+        // (script tag is already placed before this code runs)
+        const chartCanvas = document.getElementById('benchmarkChart');
+        if (chartCanvas) {
+            new Chart(chartCanvas, config);
+        }
+
+        // -----------------------------
+        // Event Listeners
+        // -----------------------------
+        window.addEventListener('resize', () => {
+            resize();
+            initParticles();
+        });
+
+        // -----------------------------
+        // Init
+        // -----------------------------
+        resize();
+        initParticles();
+        animate();
+
+    </script>
+</body>
+
+</html>

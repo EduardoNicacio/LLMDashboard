@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Financial Results & Analysis Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Light theme variables */
+            --bg-light: #f6f8fa;
+            --bg-surface-light: #ffffff;
+            --text-light: #1c1e21;
+            --border-light: #d0d7de;
+            --accent-blue-light: #0366d6;
+            --accent-pink-light: #d73a49;
+            --neon-blue-light: #0056b3;
+            --neon-pink-light: #b31560;
+            --text-muted-light: #586069;
+        }
+
+        :root {
+            /* Dark theme variables */
+            --bg-dark: #0d1117;
+            --bg-surface-dark: #161b22;
+            --text-dark: #c9d1d9;
+            --border-dark: #30363d;
+            --accent-blue-dark: #58a6ff;
+            --accent-pink-dark: #ff5682;
+            --neon-blue-dark: #00f0ff;
+            --neon-pink-dark: #ff00aa;
+            --text-muted-dark: #8b949e;
+        }
+
+        /* Apply theme variables */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1e24 100%);
+            color: var(--text-dark);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.light {
+            background: linear-gradient(135deg, var(--bg-light) 0%, #e9edf2 100%);
+            color: var(--text-light);
+        }
+
+        /* Global helper classes */
+        .glass {
+            background: rgba(var(--bg-surface-dark), 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(var(--border-dark), 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+
+        body.light .glass {
+            background: rgba(var(--bg-surface-light), 0.8);
+            border-color: rgba(var(--border-light), 0.5);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .text-muted {
+            color: var(--text-muted-dark);
+        }
+
+        body.light .text-muted {
+            color: var(--text-muted-light);
+        }
+
+        /* Header & navigation */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+
+            @media (max-width: 600px) {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        .brand {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--neon-blue-dark);
+            letter-spacing: 1px;
+        }
+
+        body.light .brand {
+            color: var(--neon-blue-light);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--accent-blue-dark);
+            color: var(--text-dark);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        body.light .tab-btn {
+            border-color: var(--accent-blue-light);
+            color: var(--text-light);
+        }
+
+        .tab-btn:hover,
+        .tab-btn.active {
+            background: var(--accent-blue-dark);
+            color: #fff;
+            box-shadow: 0 0 8px var(--accent-blue-dark);
+        }
+
+        body.light .tab-btn:hover,
+        body.light .tab-btn.active {
+            background: var(--accent-blue-light);
+            box-shadow: 0 0 8px var(--accent-blue-light);
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: var(--text-dark);
+        }
+
+        body.light .theme-toggle {
+            color: var(--text-light);
+        }
+
+        /* View containers */
+        .view-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: 0 24px 40px;
+        }
+
+        .view-content.active-view {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Section styling */
+        .section {
+            @extend .glass;
+            padding: 24px;
+            margin: 24px 0;
+            border-radius: 12px;
+        }
+
+        .section h2 {
+            margin: 0 0 16px;
+            font-size: 1.4rem;
+            color: var(--neon-blue-dark);
+            text-shadow: 0 0 6px var(--neon-blue-dark);
+        }
+
+        body.light .section h2 {
+            color: var(--neon-blue-light);
+            text-shadow: none;
+        }
+
+        /* Cards */
+        .card {
+            @extend .glass;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 12px var(--neon-pink-dark);
+        }
+
+        body.light .card:hover {
+            box-shadow: 0 0 12px var(--neon-pink-light);
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 1.1rem;
+            color: var(--accent-pink-dark);
+        }
+
+        body.light .card h3 {
+            color: var(--accent-pink-light);
+        }
+
+        /* Hero summary */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+        }
+
+        .hero-card {
+            @extend .card;
+            text-align: center;
+        }
+
+        .hero-card .label {
+            font-size: 0.85rem;
+            color: var(--text-muted-dark);
+        }
+
+        body.light .hero-card .label {
+            color: var(--text-muted-light);
+        }
+
+        .hero-card .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--neon-blue-dark);
+        }
+
+        body.light .hero-card .value {
+            color: var(--neon-blue-light);
+        }
+
+        /* Comparison panel */
+        .comparison {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .comparison .card {
+            flex: 1 1 250px;
+        }
+
+        .comparison .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 0.95rem;
+        }
+
+        .comparison .val-AAPL {
+            color: var(--accent-blue-dark);
+        }
+
+        .comparison .val-MSFT {
+            color: var(--accent-pink-dark);
+        }
+
+        /* Company cards (list of metrics) */
+        .company-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .company-card {
+            @extend .card;
+        }
+
+        .company-card .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .company-card .ticker {
+            font-weight: 600;
+            color: var(--accent-blue-dark);
+        }
+
+        .company-card .score-bar {
+            height: 8px;
+            background: rgba(var(--border-dark), 0.5);
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .company-card .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-blue-dark), var(--neon-pink-dark));
+            width: 0%;
+            transition: width 1s ease;
+        }
+
+        body.light .company-card .score-fill {
+            background: linear-gradient(90deg, var(--neon-blue-light), var(--neon-pink-light));
+        }
+
+        /* Charts */
+        .chart-wrapper {
+            @extend .card;
+            position: relative;
+            height: 300px;
+            padding: 12px;
+        }
+
+        .chart-wrapper canvas {
+            max-height: 260px;
+            width: 100%;
+        }
+
+        /* Financial statement history */
+        .statement-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .statement-table th,
+        .statement-table td {
+            border: 1px solid var(--border-dark);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .statement-table th {
+            background: var(--bg-surface-dark);
+            color: var(--accent-blue-dark);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        body.light .statement-table th {
+            background: var(--bg-surface-light);
+            color: var(--accent-blue-light);
+            border-color: var(--border-light);
+        }
+
+        .statement-table tr:hover {
+            background: rgba(var(--accent-blue-dark), 0.1);
+        }
+
+        body.light .statement-table tr:hover {
+            background: rgba(var(--accent-blue-light), 0.1);
+        }
+
+        .statement-table .details {
+            background: var(--bg-surface-dark);
+        }
+
+        body.light .statement-table .details {
+            background: var(--bg-surface-light);
+        }
+
+        .expand-btn {
+            background: transparent;
+            border: none;
+            color: var(--neon-pink-dark);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .expand-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* Market data feed */
+        .feed-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-family: 'SFMono-Regular', Consolas, monospace;
+        }
+
+        .status.ok {
+            color: #3fb950;
+        }
+
+        .status.error {
+            color: #f85149;
+        }
+
+        /* API usage panel */
+        .usage-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        /* Winner breakdown */
+        .winner-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .winner-list li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .win {
+            color: #3fb950;
+            margin-left: 8px;
+        }
+
+        .loss {
+            color: #f85149;
+            margin-left: 8px;
+        }
+
+        /* Global controls (filters) */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls input,
+        .controls select {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-dark);
+            background: var(--bg-surface-dark);
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        body.light .controls input,
+        body.light .controls select {
+            border-color: var(--border-light);
+            background: var(--bg-surface-light);
+            color: var(--text-light);
+        }
+
+        #search-reports {
+            flex-grow: 1;
+        }
+
+        /* Reports table */
+        #reports-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        #reports-table th,
+        #reports-table td {
+            border: 1px solid var(--border-dark);
+            padding: 8px;
+            text-align: left;
+        }
+
+        #reports-table th {
+            background: var(--bg-surface-dark);
+            color: var(--accent-blue-dark);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        body.light #reports-table th {
+            background: var(--bg-surface-light);
+            color: var(--accent-blue-light);
+            border-color: var(--border-light);
+        }
+
+        #reports-table th:hover {
+            background: var(--accent-blue-dark);
+            color: #fff;
+        }
+
+        body.light #reports-table th:hover {
+            background: var(--accent-blue-light);
+            color: #fff;
+        }
+
+        /* Notes section */
+        .notes-section {
+            @extend .card;
+            padding: 16px;
+        }
+
+        .notes-section textarea {
+            width: 100%;
+            height: 150px;
+            resize: vertical;
+            margin-bottom: 12px;
+            background: var(--bg-surface-dark);
+            color: var(--text-dark);
+            border: 1px solid var(--border-dark);
+            border-radius: 4px;
+            padding: 8px;
+        }
+
+        body.light .notes-section textarea {
+            background: var(--bg-surface-light);
+            color: var(--text-light);
+            border-color: var(--border-light);
+        }
+
+        .notes-section button {
+            padding: 8px 16px;
+            background: var(--accent-blue-dark);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        body.light .notes-section button {
+            background: var(--accent-blue-light);
+        }
+
+        .notes-list {
+            margin-top: 12px;
+        }
+
+        .note-item {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-dark);
+            font-size: 0.9rem;
+        }
+
+        body.light .note-item {
+            border-color: var(--border-light);
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+
+            .hero-grid,
+            .comparison,
+            .company-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+            }
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="dark">
+    <!-- Header with navigation & theme toggle -->
+    <header class="header glass">
+        <div class="brand">FinDashboard</div>
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="summary">Summary</button>
+            <button class="tab-btn" data-tab="revenue">Revenue</button>
+            <button class="tab-btn" data-tab="profitability">Profitability</button>
+            <button class="tab-btn" data-tab="cashflow">Cash Flow</button>
+            <button class="tab-btn" data-tab="marketdata">Market Data</button>
+        </nav>
+        <div class="theme-toggle" id="theme-toggle" title="Toggle Light/Dark">
+            <i class="fa-solid fa-moon"></i>
+        </div>
+    </header>
+
+    <main>
+        <!-- ==================== VIEW: SUMMARY ==================== -->
+        <section id="view-summary" class="view-content active-view">
+
+            <!-- Hero Summary (latest data for both companies) -->
+            <section class="section hero-summary">
+                <h2>Hero Summary – Latest Metrics</h2>
+                <div class="hero-grid" id="hero-grid">
+                    <!-- JS will render cards here -->
+                </div>
+            </section>
+
+            <!-- Head‑to‑Head Comparison Panel -->
+            <section class="section comparison-panel">
+                <h2>Head‑to‑Head Comparison (Apple vs Microsoft)</h2>
+                <div class="comparison" id="comparison-panel">
+                    <!-- JS will render side‑by‑side cards -->
+                </div>
+            </section>
+
+            <!-- Company Cards (full metric list & health score) -->
+            <section class="section company-cards-wrap">
+                <h2>Company Metric Cards</h2>
+                <div class="company-cards" id="company-cards">
+                    <!-- JS will render cards -->
+                </div>
+            </section>
+
+            <!-- Interactive Charts -->
+            <section class="section charts-wrap">
+                <h2>Interactive Charts</h2>
+                <div class="charts-grid">
+                    <div class="chart-wrapper">
+                        <canvas id="chart-revenue-vs-netincome"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-ebitda-margin"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-fcf-vs-capx"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-stockprice-vs-marketcap"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-dividend-yield"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Financial Statement History (Expandable) -->
+            <section class="section statement-history">
+                <h2>Financial Statement History</h2>
+                <table class="statement-table" id="statement-history-table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Report</th>
+                            <th>Revenue</th>
+                            <th>Net Income</th>
+                            <th>EPS</th>
+                            <th>P/E</th>
+                            <th>Expand</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- JS will populate rows -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Market Data Feed Panel -->
+            <section class="section market-data-feed">
+                <h2>Market Data Feed</h2>
+                <div id="market-feed">
+                    <!-- JS will render feed items -->
+                </div>
+            </section>
+
+            <!-- API Usage Panel -->
+            <section class="section api-usage">
+                <h2>API Usage & Cost</h2>
+                <div id="api-usage">
+                    <!-- JS will render usage items -->
+                </div>
+            </section>
+
+            <!-- Winner Breakdown -->
+            <section class="section winner-breakdown">
+                <h2>Winner Breakdown</h2>
+                <ul class="winner-list" id="winner-list">
+                    <!-- JS will populate -->
+                </ul>
+            </section>
+
+            <!-- Searchable & Sortable Reports Table -->
+            <section class="section reports-table-section">
+                <h2>All Financial Reports</h2>
+                <div class="controls">
+                    <input type="text" id="search-reports" placeholder="Search reports...">
+                    <select id="filter-year">
+                        <option value="">All Years</option>
+                    </select>
+                    <select id="filter-quarter">
+                        <option value="">All Quarters</option>
+                        <option value="Q1">Q1</option>
+                        <option value="Q2">Q2</option>
+                        <option value="Q3">Q3</option>
+                        <option value="Q4">Q4</option>
+                    </select>
+                    <input type="number" id="filter-metric-threshold" placeholder="Metric threshold">
+                    <select id="filter-metric">
+                        <option value="revenue">Revenue</option>
+                        <option value="netIncome">Net Income</option>
+                        <option value="pe">P/E</option>
+                    </select>
+                    <button id="btn-apply-filters">Apply</button>
+                </div>
+                <table id="reports-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="company">Company</th>
+                            <th data-sort="year">Year</th>
+                            <th data-sort="quarter">Quarter</th>
+                            <th data-sort="revenue">Revenue</th>
+                            <th data-sort="netIncome">Net Income</th>
+                            <th data-sort="pe">P/E</th>
+                            <th data-sort="roe">ROE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Notes Section -->
+            <section class="section notes-section">
+                <h2>Analyst Notes</h2>
+                <textarea id="analyst-notes" placeholder="Add your observations, outlook..."></textarea>
+                <button id="btn-save-note">Save Note</button>
+                <div class="notes-list" id="notes-list">
+                    <!-- Saved notes appear here -->
+                </div>
+            </section>
+
+        </section>
+
+        <!-- ==================== VIEW: REVENUE ==================== -->
+        <section id="view-revenue" class="view-content">
+            <section class="section">
+                <h2>Revenue View</h2>
+                <p>Focus on revenue growth, trends and comparison.</p>
+                <!-- Example: a chart for revenue growth -->
+                <div class="chart-wrapper">
+                    <canvas id="chart-revenue-growth"></canvas>
+                </div>
+                <!-- Filter for statements -->
+                <div class="controls">
+                    <label>Company: <select id="rev-company">
+                            <option>Apple</option>
+                            <option>Microsoft</option>
+                        </select></label>
+                    <label>Year: <select id="rev-year">
+                            <option>All</option>
+                        </select></label>
+                    <label>Quarter: <select id="rev-quarter">
+                            <option>All</option>
+                            <option>Q1</option>
+                            <option>Q2</option>
+                            <option>Q3</option>
+                            <option>Q4</option>
+                        </select></label>
+                </div>
+                <table class="statement-table" id="revenue-history-table">
+                    <thead>
+                        <tr>
+                            <th>Report</th>
+                            <th>Revenue</th>
+                            <th>YoY Growth %</th>
+                            <th>Expand</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </section>
+        </section>
+
+        <!-- ==================== VIEW: PROFITABILITY ==================== -->
+        <section id="view-profitability" class="view-content">
+            <section class="section">
+                <h2>Profitability View</h2>
+                <p>EBITDA margin, ROE, Net Income trends.</p>
+                <div class="chart-wrapper">
+                    <canvas id="chart-roe-trend"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart-netincome-trend"></canvas>
+                </div>
+                <div class="controls">
+                    <label>Company: <select id="prof-company">
+                            <option>Apple</option>
+                            <option>Microsoft</option>
+                        </select></label>
+                </div>
+                <table class="statement-table" id="profitability-history-table">
+                    <thead>
+                        <tr>
+                            <th>Report</th>
+                            <th>EBITDA Margin %</th>
+                            <th>ROE %</th>
+                            <th>Net Income</th>
+                            <th>Expand</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </section>
+        </section>
+
+        <!-- ==================== VIEW: CASH FLOW ==================== -->
+        <section id="view-cashflow" class="view-content">
+            <section class="section">
+                <h2>Cash Flow View</h2>
+                <p>Free cash flow, capital expenditures, dividend yield.</p>
+                <div class="chart-wrapper">
+                    <canvas id="chart-fcf-trend"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart-dividend-yield-trend"></canvas>
+                </div>
+                <div class="controls">
+                    <label>Company: <select id="cash-company">
+                            <option>Apple</option>
+                            <option>Microsoft</option>
+                        </select></label>
+                </div>
+                <table class="statement-table" id="cashflow-history-table">
+                    <thead>
+                        <tr>
+                            <th>Report</th>
+                            <th>Free Cash Flow</th>
+                            <th>CapEx</th>
+                            <th>Yield %</th>
+                            <th>Expand</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </section>
+        </section>
+
+        <!-- ==================== VIEW: MARKET DATA ==================== -->
+        <section id="view-marketdata" class="view-content">
+            <section class="section">
+                <h2>Market Data & Feeds</h2>
+                <p>Real‑time status of data providers, latency and last update.</p>
+                <div id="marketdata-panels">
+                    <!-- JS will render panels here -->
+                </div>
+            </section>
+        </section>
+
+    </main>
+
+    <script>
+        /* -------------------------------------------------------------
+         * DATA DEFINITIONS
+         * ----------------------------------------------------------- */
+        // Simulated financial data for Apple and Microsoft
+        const companiesData = [
+            {
+                id: 'aapl',
+                name: 'Apple Inc.',
+                ticker: 'AAPL',
+                // Latest snapshot metrics
+                revenue: 394328000000,
+                netIncome: 99803000000,
+                eps: 6.15,
+                pe: 28.5,
+                roe: 0.34,
+                de: 2.6,
+                marketCap: 2850000000000,
+                beta: 1.2,
+                dividendYield: 0.0065,
+                revenueGrowth: 0.08,
+                ebitdaMargin: 0.28,
+                freeCashFlowYield: 0.07,
+                cashAndEquivalents: 34481000000,
+                totalAssets: 351000000000,
+                totalLiabilities: 274000000000,
+                // Weighted health score (out of 100)
+                score: 86,
+                // Historical reports (mix of annual and quarterly)
+                reports: [
+                    {
+                        year: 2020, quarter: null, revenue: 265595000000, netIncome: 57411000000, eps: 2.55, pe: 36.5, roe: 0.28, de: 2.5,
+                        ebitda: 125000000000, freeCashFlow: 70000000000, capitalExpenditures: 15000000000,
+                        dividendYield: 0.008, beta: 1.2, cashAndEquivalents: 38000000000, totalAssets: 338000000000, totalLiabilities: 260000000000,
+                        segmentRevenue: { product: 130000000000, services: 135595000000 },
+                        sga: 53000000000, interestExpense: 2000000000
+                    },
+                    {
+                        year: 2021, quarter: null, revenue: 365817000000, netIncome: 94680000000, eps: 5.61, pe: 22.3, roe: 0.33, de: 2.7,
+                        ebitda: 138000000000, freeCashFlow: 95000000000, capitalExpenditures: 20000000000,
+                        dividendYield: 0.009, beta: 1.2, cashAndEquivalents: 34000000000, totalAssets: 352000000000, totalLiabilities: 270000000000,
+                        segmentRevenue: { product: 160000000000, services: 205817000000 },
+                        sga: 55000000000, interestExpense: 2500000000
+                    },
+                    {
+                        year: 2022, quarter: null, revenue: 394328000000, netIncome: 99803000000, eps: 6.15, pe: 28.5, roe: 0.34, de: 2.6,
+                        ebitda: 150000000000, freeCashFlow: 100000000000, capitalExpenditures: 22000000000,
+                        dividendYield: 0.0065, beta: 1.2, cashAndEquivalents: 34481000000, totalAssets: 351000000000, totalLiabilities: 274000000000,
+                        segmentRevenue: { product: 176000000000, services: 218328000000 },
+                        sga: 58000000000, interestExpense: 2700000000
+                    },
+                    {
+                        year: 2023, quarter: 'Q1', revenue: 117940000000, netIncome: 30620000000, eps: 1.52, pe: 27.8, roe: 0.28, de: 2.4,
+                        ebitda: 45000000000, freeCashFlow: 25000000000, capitalExpenditures: 8000000000,
+                        dividendYield: 0.007, beta: 1.2, cashAndEquivalents: 33000000000, totalAssets: 348000000000, totalLiabilities: 265000000000,
+                        segmentRevenue: { product: 55000000000, services: 62940000000 },
+                        sga: 17000000000, interestExpense: 800000000
+                    },
+                    // Add a few more quarterly snapshots for richer data
+                    {
+                        year: 2023, quarter: 'Q2', revenue: 122420000000, netIncome: 33215000000, eps: 1.70, pe: 26.9, roe: 0.30, de: 2.3,
+                        ebitda: 48000000000, freeCashFlow: 27000000000, capitalExpenditures: 7500000000,
+                        dividendYield: 0.007, beta: 1.2, cashAndEquivalents: 33500000000, totalAssets: 350000000000, totalLiabilities: 267000000000,
+                        segmentRevenue: { product: 58000000000, services: 64420000000 },
+                        sga: 18000000000, interestExpense: 850000000
+                    },
+                    {
+                        year: 2024, quarter: 'Q1', revenue: 124300000000, netIncome: 35500000000, eps: 1.89, pe: 25.5, roe: 0.32, de: 2.2,
+                        ebitda: 50000000000, freeCashFlow: 30000000000, capitalExpenditures: 7800000000,
+                        dividendYield: 0.007, beta: 1.2, cashAndEquivalents: 34000000000, totalAssets: 352000000000, totalLiabilities: 270000000000,
+                        segmentRevenue: { product: 60000000000, services: 64300000000 },
+                        sga: 18500000000, interestExpense: 900000000
+                    }
+                ]
+            },
+            {
+                id: 'msft',
+                name: 'Microsoft Corp.',
+                ticker: 'MSFT',
+                revenue: 211253000000,
+                netIncome: 72210000000,
+                eps: 9.12,
+                pe: 33.5,
+                roe: 0.38,
+                de: 0.6,
+                marketCap: 2500000000000,
+                beta: 1.1,
+                dividendYield: 0.0075,
+                revenueGrowth: 0.12,
+                ebitdaMargin: 0.45,
+                freeCashFlowYield: 0.09,
+                cashAndEquivalents: 134000000000,
+                totalAssets: 410000000000,
+                totalLiabilities: 190000000000,
+                score: 92,
+                reports: [
+                    {
+                        year: 2020, quarter: null, revenue: 143150000000, netIncome: 44360000000, eps: 2.15, pe: 31.0, roe: 0.31, de: 0.4,
+                        ebitda: 70000000000, freeCashFlow: 45000000000, capitalExpenditures: 10000000000,
+                        dividendYield: 0.006, beta: 1.1, cashAndEquivalents: 44000000000, totalAssets: 258000000000, totalLiabilities: 115000000000,
+                        segmentRevenue: { cloud: 120000000000, productivity: 23150000000 },
+                        sga: 45000000000, interestExpense: 1500000000
+                    },
+                    {
+                        year: 2021, quarter: null, revenue: 168088000000, netIncome: 61272000000, eps: 4.86, pe: 27.5, roe: 0.35, de: 0.5,
+                        ebitda: 85000000000, freeCashFlow: 60000000000, capitalExpenditures: 12000000000,
+                        dividendYield: 0.007, beta: 1.1, cashAndEquivalents: 48000000000, totalAssets: 284000000000, totalLiabilities: 130000000000,
+                        segmentRevenue: { cloud: 140000000000, productivity: 28088000000 },
+                        sga: 50000000000, interestExpense: 1700000000
+                    },
+                    {
+                        year: 2022, quarter: null, revenue: 198270000000, netIncome: 72420000000, eps: 9.62, pe: 33.5, roe: 0.38, de: 0.6,
+                        ebitda: 105000000000, freeCashFlow: 80000000000, capitalExpenditures: 13000000000,
+                        dividendYield: 0.0075, beta: 1.1, cashAndEquivalents: 55000000000, totalAssets: 340000000000, totalLiabilities: 150000000000,
+                        segmentRevenue: { cloud: 170000000000, productivity: 28270000000 },
+                        sga: 55000000000, interestExpense: 1800000000
+                    },
+                    {
+                        year: 2023, quarter: 'Q1', revenue: 52250000000, netIncome: 15380000000, eps: 1.83, pe: 31.5, roe: 0.34, de: 0.55,
+                        ebitda: 22000000000, freeCashFlow: 18000000000, capitalExpenditures: 4000000000,
+                        dividendYield: 0.008, beta: 1.1, cashAndEquivalents: 60000000000, totalAssets: 340000000000, totalLiabilities: 150000000000,
+                        segmentRevenue: { cloud: 38000000000, productivity: 14250000000 },
+                        sga: 15000000000, interestExpense: 600000000
+                    },
+                    {
+                        year: 2023, quarter: 'Q2', revenue: 56250000000, netIncome: 16180000000, eps: 2.01, pe: 30.5, roe: 0.36, de: 0.5,
+                        ebitda: 24500000000, freeCashFlow: 19500000000, capitalExpenditures: 4200000000,
+                        dividendYield: 0.008, beta: 1.1, cashAndEquivalents: 62000000000, totalAssets: 345000000000, totalLiabilities: 155000000000,
+                        segmentRevenue: { cloud: 40000000000, productivity: 16250000000 },
+                        sga: 15800000000, interestExpense: 620000000
+                    },
+                    {
+                        year: 2024, quarter: 'Q1', revenue: 61500000000, netIncome: 17800000000, eps: 2.32, pe: 29.5, roe: 0.37, de: 0.48,
+                        ebitda: 30000000000, freeCashFlow: 22000000000, capitalExpenditures: 4500000000,
+                        dividendYield: 0.0075, beta: 1.1, cashAndEquivalents: 66000000000, totalAssets: 350000000000, totalLiabilities: 160000000000,
+                        segmentRevenue: { cloud: 42000000000, productivity: 19500000000 },
+                        sga: 16500000000, interestExpense: 680000000
+                    }
+                ]
+            }
+        ];
+
+        // UI State
+        const state = {
+            activeView: 'summary',
+            theme: 'dark',
+            selectedCompany: 'aapl', // default for many controls
+            filters: {
+                year: '',
+                quarter: '',
+                metric: '',
+                metricThreshold: null,
+                search: ''
+            }
+        };
+
+        // Helper: format currency
+        const fmtCurr = (v) => `$${(v / 1e9).toFixed(1)}B`;
+        const fmtPct = (v) => `${(v * 100).toFixed(2)}%`;
+        const fmtNum = (v) => v.toLocaleString();
+
+        // -------------------------------------------------------------
+        // THEME TOGGLE
+        // -------------------------------------------------------------
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.body.classList.contains('dark');
+            if (isDark) {
+                document.body.classList.remove('dark');
+                document.body.classList.add('light');
+                themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                state.theme = 'light';
+            } else {
+                document.body.classList.remove('light');
+                document.body.classList.add('dark');
+                themeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                state.theme = 'dark';
+            }
+        });
+
+        // -------------------------------------------------------------
+        // TAB NAVIGATION
+        // -------------------------------------------------------------
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active class
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const view = btn.getAttribute('data-tab');
+                // Switch view sections
+                document.querySelectorAll('.view-content').forEach(sec => sec.classList.remove('active-view'));
+                const target = document.getElementById(`view-${view}`);
+                if (target) target.classList.add('active-view');
+                state.activeView = view;
+                // Refresh data depending on view
+                refreshView(view);
+            });
+        });
+
+        // -------------------------------------------------------------
+        // REFRESH VIEW CONTENT (re‑render charts/tables based on view)
+        // -------------------------------------------------------------
+        function refreshView(view) {
+            switch (view) {
+                case 'summary':
+                    renderHeroSummary();
+                    renderComparisonPanel();
+                    renderCompanyCards();
+                    initCharts(); // all main charts
+                    renderStatementHistory(); // full table
+                    renderMarketFeed();
+                    renderAPIUsage();
+                    renderWinnerBreakdown();
+                    renderReportsTable();
+                    break;
+                case 'revenue':
+                    // Render revenue specific chart & table
+                    initChartRevenueGrowth();
+                    renderRevenueHistoryTable();
+                    break;
+                case 'profitability':
+                    initChartROETrend();
+                    initChartNetIncomeTrend();
+                    renderProfitabilityHistoryTable();
+                    break;
+                case 'cashflow':
+                    initChartFCFTrend();
+                    initChartDividendYieldTrend();
+                    renderCashflowHistoryTable();
+                    break;
+                case 'marketdata':
+                    renderMarketDataPanels();
+                    break;
+            }
+        }
+
+        // -------------------------------------------------------------
+        // HERO SUMMARY (latest metrics for both companies)
+        // -------------------------------------------------------------
+        function renderHeroSummary() {
+            const container = document.getElementById('hero-grid');
+            container.innerHTML = '';
+            companiesData.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'card hero-card';
+                card.innerHTML = `
+                    <div class="label">${c.name} (${c.ticker})</div>
+                    <div class="metric-row"><span class="label">Revenue</span><span class="value">${fmtCurr(c.revenue)}</span></div>
+                    <div class="metric-row"><span class="label">Net Income</span><span class="value">${fmtCurr(c.netIncome)}</span></div>
+                    <div class="metric-row"><span class="label">EPS</span><span class="value">${c.eps.toFixed(2)}</span></div>
+                    <div class="metric-row"><span class="label">P/E</span><span class="value">${c.pe.toFixed(2)}</span></div>
+                    <div class="metric-row"><span class="label">ROE</span><span class="value">${fmtPct(c.roe)}</span></div>
+                    <div class="metric-row"><span class="label">D/E</span><span class="value">${c.de.toFixed(2)}</span></div>
+                    <div class="metric-row"><span class="label">Market Cap</span><span class="value">${fmtCurr(c.marketCap)}</span></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // -------------------------------------------------------------
+        // HEAD‑TO‑HEAD COMPARISON PANEL
+        // -------------------------------------------------------------
+        function renderComparisonPanel() {
+            const container = document.getElementById('comparison-panel');
+            container.innerHTML = '';
+            const metrics = [
+                { key: 'revenueGrowth', label: 'Revenue Growth %', format: v => fmtPct(v) },
+                { key: 'ebitdaMargin', label: 'EBITDA Margin %', format: v => fmtPct(v) },
+                { key: 'freeCashFlowYield', label: 'Free Cash Flow Yield %', format: v => fmtPct(v) },
+                { key: 'dividendYield', label: 'Dividend Yield %', format: v => fmtPct(v) },
+                { key: 'beta', label: 'Beta', format: v => v.toFixed(2) }
+            ];
+            metrics.forEach(m => {
+                const apple = companiesData.find(c => c.id === 'aapl');
+                const msft = companiesData.find(c => c.id === 'msft');
+                const card = document.createElement('div');
+                card.className = 'card comparison-card';
+                card.innerHTML = `
+                    <h3>${m.label}</h3>
+                    <div class="metric"><span>Apple</span><span class="val-AAPL">${m.format(apple[m.key])}</span></div>
+                    <div class="metric"><span>Microsoft</span><span class="val-MSFT">${m.format(msft[m.key])}</span></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // -------------------------------------------------------------
+        // COMPANY CARDS (full metric list + health score)
+        // -------------------------------------------------------------
+        function renderCompanyCards() {
+            const container = document.getElementById('company-cards');
+            container.innerHTML = '';
+            companiesData.forEach(c => {
+                const scorePercent = c.score; // out of 100
+                const card = document.createElement('div');
+                card.className = 'card company-card';
+                card.innerHTML = `
+                    <div class="company-header">
+                        <span>${c.name} (${c.ticker})</span>
+                        <span class="score">Score: ${scorePercent}/100</span>
+                    </div>
+                    <div class="metric-list">
+                        <div class="metric"><span>Revenue</span><span>${fmtCurr(c.revenue)}</span></div>
+                        <div class="metric"><span>Operating Income</span><span>${fmtCurr(c.netIncome * 0.9)}</span></div>
+                        <div class="metric"><span>Net Income</span><span>${fmtCurr(c.netIncome)}</span></div>
+                        <div class="metric"><span>EPS</span><span>${c.eps.toFixed(2)}</span></div>
+                        <div class="metric"><span>P/E</span><span>${c.pe.toFixed(2)}</span></div>
+                        <div class="metric"><span>ROE</span><span>${fmtPct(c.roe)}</span></div>
+                        <div class="metric"><span>D/E</span><span>${c.de.toFixed(2)}</span></div>
+                        <div class="metric"><span>Total Assets</span><span>${fmtCurr(c.totalAssets)}</span></div>
+                        <div class="metric"><span>Total Liabilities</span><span>${fmtCurr(c.totalLiabilities)}</span></div>
+                        <div class="metric"><span>Cash & Equivalents</span><span>${fmtCurr(c.cashAndEquivalents)}</span></div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-fill" style="width: ${scorePercent}%;"></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // -------------------------------------------------------------
+        // STATEMENT HISTORY (expandable rows)
+        // -------------------------------------------------------------
+        function renderStatementHistory() {
+            const tbody = document.querySelector('#statement-history-table tbody');
+            tbody.innerHTML = '';
+            companiesData.forEach(company => {
+                company.reports.forEach(r => {
+                    const row = document.createElement('tr');
+                    const reportLabel = r.quarter ? `${r.year} ${r.quarter}` : r.year;
+                    row.innerHTML = `
+                        <td>${company.name}</td>
+                        <td>${reportLabel}</td>
+                        <td>${fmtCurr(r.revenue)}</td>
+                        <td>${fmtCurr(r.netIncome)}</td>
+                        <td>${r.eps.toFixed(2)}</td>
+                        <td>${r.pe.toFixed(2)}</td>
+                        <td>
+                            <button class="expand-btn" data-company="${company.id}" data-year="${r.year}" data-quarter="${r.quarter || ''}"> [+]</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+
+                    // Expandable detail row
+                    const detailRow = document.createElement('tr');
+                    detailRow.className = 'details';
+                    detailRow.style.display = 'none';
+                    detailRow.innerHTML = `
+                        <td colspan="7">
+                            <ul>
+                                <li>Segment Revenue: ${Object.entries(r.segmentRevenue || {}).map(([k, v]) => `${k}: ${fmtCurr(v)}`).join(', ')}</li>
+                                <li>SG&A: ${fmtCurr(r.sga || 0)}</li>
+                                <li>Interest Expense: ${fmtCurr(r.interestExpense || 0)}</li>
+                                <li>EBITDA: ${fmtCurr(r.ebitda || 0)}</li>
+                                <li>Free Cash Flow: ${fmtCurr(r.freeCashFlow || 0)}</li>
+                                <li>CapEx: ${fmtCurr(r.capitalExpenditures || 0)}</li>
+                            </ul>
+                        </td>
+                    `;
+                    tbody.appendChild(detailRow);
+
+                    // Expand/collapse logic
+                    row.querySelector('.expand-btn').addEventListener('click', () => {
+                        if (detailRow.style.display === 'none') {
+                            detailRow.style.display = 'table-row';
+                            row.querySelector('.expand-btn').textContent = '[-]';
+                        } else {
+                            detailRow.style.display = 'none';
+                            row.querySelector('.expand-btn').textContent = '[+]';
+                        }
+                    });
+                });
+            });
+        }
+
+        // -------------------------------------------------------------
+        // MARKET DATA FEED (simulated)
+        // -------------------------------------------------------------
+        const providers = [
+            { id: 'bloomberg', name: 'Bloomberg API', latency: null, status: 'Connected', last: null },
+            { id: 'alpha', name: 'Alpha Vantage', latency: null, status: 'Disconnected', last: null },
+            { id: 'quick', name: 'QuickFX', latency: null, status: 'Connected', last: null }
+        ];
+
+        function updateMarketFeed() {
+            const container = document.getElementById('market-feed');
+            container.innerHTML = '';
+            providers.forEach(p => {
+                const lat = p.latency === null ? '—' : `${p.latency} ms`;
+                const statusCls = p.status === 'Connected' ? 'ok' : 'error';
+                const div = document.createElement('div');
+                div.className = 'feed-item';
+                div.innerHTML = `
+                    <span>${p.name}</span>
+                    <span class="${statusCls}">${p.status} (${lat})</span>
+                `;
+                container.appendChild(div);
+                // Simulate occasional latency changes
+                if (Math.random() > 0.5) {
+                    p.latency = Math.floor(Math.random() * 200) + 50;
+                }
+                p.last = new Date().toLocaleTimeString();
+            });
+            // Add timestamps
+            const ts = document.createElement('div');
+            ts.style.cssText = 'font-size:0.85rem; color: var(--text-muted-dark); margin-top:8px;';
+            ts.textContent = `Last update: ${new Date().toLocaleString()}`;
+            container.appendChild(ts);
+        }
+
+        // Start periodic feed update
+        setInterval(updateMarketFeed, 5000);
+        updateMarketFeed(); // initial
+
+        // -------------------------------------------------------------
+        // API USAGE PANEL (simulated)
+        // -------------------------------------------------------------
+        const apiUsage = [
+            { provider: 'Bloomberg', calls: 0, costPerCall: 0.05, totalCost: 0 },
+            { provider: 'Alpha Vantage', calls: 0, costPerCall: 0.001, totalCost: 0 },
+            { provider: 'QuickFX', calls: 0, costPerCall: 0.02, totalCost: 0 }
+        ];
+
+        // Simulate call increments (random) every few seconds
+        setInterval(() => {
+            const p = apiUsage[Math.floor(Math.random() * apiUsage.length)];
+            p.calls += 1;
+            p.totalCost = p.calls * p.costPerCall;
+            renderAPIUsage();
+        }, 8000);
+
+        function renderAPIUsage() {
+            const container = document.getElementById('api-usage');
+            container.innerHTML = '';
+            apiUsage.forEach(u => {
+                const div = document.createElement('div');
+                div.className = 'usage-item';
+                div.innerHTML = `
+                    <span>${u.provider}</span>
+                    <span>Calls: ${u.calls} | Total Cost: $${u.totalCost.toFixed(2)}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+        renderAPIUsage(); // initial
+
+        // -------------------------------------------------------------
+        // WINNER BREAKDOWN
+        // -------------------------------------------------------------
+        function renderWinnerBreakdown() {
+            const list = document.getElementById('winner-list');
+            list.innerHTML = '';
+            const apple = companiesData.find(c => c.id === 'aapl');
+            const msft = companiesData.find(c => c.id === 'msft');
+
+            const categories = [
+                { key: 'revenueGrowth', label: 'Revenue Growth', higherBetter: true },
+                { key: 'roe', label: 'ROE', higherBetter: true },
+                { key: 'de', label: 'Debt‑to‑Equity', higherBetter: false }, // lower is better
+                { key: 'pe', label: 'P/E Ratio', higherBetter: false }, // lower is better
+                { key: 'dividendYield', label: 'Dividend Yield', higherBetter: true },
+                { key: 'beta', label: 'Beta', higherBetter: false } // lower is better
+            ];
+
+            categories.forEach(cat => {
+                const aVal = apple[cat.key];
+                const mVal = msft[cat.key];
+                let winner = null;
+                if (cat.higherBetter) {
+                    winner = aVal > mVal ? 'Apple' : aVal < mVal ? 'Microsoft' : 'Tie';
+                } else {
+                    winner = aVal < mVal ? 'Apple' : aVal > mVal ? 'Microsoft' : 'Tie';
+                }
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${cat.label}: ${winner === 'Tie' ? 'Tie' : winner + ' wins'}</span>
+                                 <span class="${winner === 'Apple' ? 'win' : winner === 'Microsoft' ? 'win' : 'loss'}">
+                                    ${winner !== 'Tie' ? (winner === 'Apple' ? '↑' : '↓') : '—'}
+                                 </span>`;
+                list.appendChild(li);
+            });
+        }
+
+        // -------------------------------------------------------------
+        // REPORTS TABLE (searchable, sortable, filterable)
+        // -------------------------------------------------------------
+        function renderReportsTable() {
+            const tbody = document.querySelector('#reports-table tbody');
+            const yearsSet = new Set();
+            tbody.innerHTML = '';
+            companiesData.forEach(company => {
+                company.reports.forEach(r => {
+                    const year = r.year;
+                    const quarter = r.quarter || '';
+                    yearsSet.add(year);
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = company.name;
+                    row.insertCell().textContent = year;
+                    row.insertCell().textContent = quarter || '—';
+                    row.insertCell().textContent = fmtCurr(r.revenue);
+                    row.insertCell().textContent = fmtCurr(r.netIncome);
+                    row.insertCell().textContent = r.pe.toFixed(2);
+                    row.insertCell().textContent = `${(r.roe * 100).toFixed(2)}%`;
+                });
+            });
+
+            // Populate year filter
+            const selYear = document.getElementById('filter-year');
+            selYear.innerHTML = '<option value="">All Years</option>';
+            Array.from(yearsSet).sort().reverse().forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                selYear.appendChild(opt);
+            });
+
+            // Sorting logic
+            let asc = true;
+            document.querySelectorAll('#reports-table th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.getAttribute('data-sort');
+                    const tbody = th.closest('table').tBodies[0];
+                    const rows = Array.from(tbody.rows);
+                    rows.sort((r1, r2) => {
+                        const a = r1.cells[th.cellIndex].textContent;
+                        const b = r2.cells[th.cellIndex].textContent;
+                        // numeric or date conversion
+                        let av = a, bv = b;
+                        if (key === 'year' || key === 'revenue' || key === 'netIncome' || key === 'pe' || key === 'roe') {
+                            av = parseFloat(a.replace(/[^0-9.-]+/g, "")) || 0;
+                            bv = parseFloat(b.replace(/[^0-9.-]+/g, "")) || 0;
+                        }
+                        return (av - bv) * (asc ? 1 : -1);
+                    });
+                    rows.forEach(r => tbody.appendChild(r));
+                    asc = !asc;
+                });
+            });
+
+            // Filter logic
+            const btnFilter = document.getElementById('btn-apply-filters');
+            btnFilter.addEventListener('click', () => {
+                const search = document.getElementById('search-reports').value.toLowerCase();
+                const year = document.getElementById('filter-year').value;
+                const quarter = document.getElementById('filter-quarter').value;
+                const metric = document.getElementById('filter-metric').value;
+                const thresh = parseFloat(document.getElementById('filter-metric-threshold').value);
+                const rows = tbody.parentNode.children[1].rows; // tbody rows
+                Array.from(rows).forEach(r => {
+                    let show = true;
+                    // search
+                    const text = r.textContent.toLowerCase();
+                    if (search && !text.includes(search)) show = false;
+                    // year
+                    if (year && !r.cells[2].textContent.includes(year)) show = false;
+                    // quarter
+                    if (quarter && r.cells[3].textContent.toLowerCase() !== quarter.toLowerCase() && quarter !== 'All') show = false;
+                    // metric threshold
+                    if (thresh && metric) {
+                        let cellIdx = 4;
+                        if (metric === 'revenue') cellIdx = 4;
+                        else if (metric === 'netIncome') cellIdx = 5;
+                        else if (metric === 'pe') cellIdx = 6;
+                        const cellVal = parseFloat(r.cells[cellIdx].textContent.replace(/[^0-9.-]+/g, "")) || 0;
+                        if (cellVal < thresh) show = false;
+                    }
+                    r.style.display = show ? '' : 'none';
+                });
+            });
+        }
+
+        // -------------------------------------------------------------
+        // NOTES SECTION
+        // -------------------------------------------------------------
+        const txtNotes = document.getElementById('analyst-notes');
+        const btnSaveNote = document.getElementById('btn-save-note');
+        const notesList = document.getElementById('notes-list');
+
+        function loadNotes() {
+            const saved = JSON.parse(localStorage.getItem('analystNotes') || '[]');
+            notesList.innerHTML = '';
+            saved.forEach((n, idx) => {
+                const div = document.createElement('div');
+                div.className = 'note-item';
+                div.innerHTML = `<strong>${new Date(n.ts).toLocaleString()}:</strong> ${n.text}`;
+                notesList.appendChild(div);
+            });
+        }
+
+        btnSaveNote.addEventListener('click', () => {
+            const text = txtNotes.value.trim();
+            if (!text) return;
+            const notes = JSON.parse(localStorage.getItem('analystNotes') || '[]');
+            notes.push({ text, ts: Date.now() });
+            localStorage.setItem('analystNotes', JSON.stringify(notes));
+            txtNotes.value = '';
+            loadNotes();
+        });
+        loadNotes();
+
+        // -------------------------------------------------------------
+        // CHART INITIALISATION (Summary view)
+        // -------------------------------------------------------------
+        let charts = {};
+
+        function initCharts() {
+            // 1. Revenue vs Net Income (line)
+            const revData = companiesData.map(c => c.revenue);
+            const netData = companiesData.map(c => c.netIncome);
+            const years = [2020, 2021, 2022, 2023, 2024];
+            const ctx1 = document.getElementById('chart-revenue-vs-netincome').getContext('2d');
+            if (charts.chart1) charts.chart1.destroy();
+            charts.chart1 = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: revData,
+                            borderColor: '#58a6ff',
+                            backgroundColor: 'rgba(88,166,255,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Net Income',
+                            data: netData,
+                            borderColor: '#ff5682',
+                            backgroundColor: 'rgba(255,86,130,0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 2. EBITDA Margin Trend (line)
+            const apple = companiesData.find(c => c.id === 'aapl');
+            const msft = companiesData.find(c => c.id === 'msft');
+            const ebitdaMarginData = [apple.roe, msft.roe]; // placeholder using ROE as margin
+            const ctx2 = document.getElementById('chart-ebitda-margin').getContext('2d');
+            if (charts.chart2) charts.chart2.destroy();
+            charts.chart2 = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['Apple', 'Microsoft'],
+                    datasets: [{
+                        label: 'EBITDA Margin %',
+                        data: ebitdaMarginData.map(v => v * 100),
+                        backgroundColor: '#00f0ff',
+                        borderColor: '#00f0ff',
+                        fill: false,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 3. Free Cash Flow vs CapEx (bar)
+            const ctx3 = document.getElementById('chart-fcf-vs-capx').getContext('2d');
+            if (charts.chart3) charts.chart3.destroy();
+            charts.chart3 = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: ['Apple', 'Microsoft'],
+                    datasets: [
+                        {
+                            label: 'Free Cash Flow',
+                            data: [apple.revenue * 0.15, msft.revenue * 0.12], // placeholder
+                            backgroundColor: '#3fb950'
+                        },
+                        {
+                            label: 'CapEx',
+                            data: [apple.revenue * 0.05, msft.revenue * 0.04], // placeholder
+                            backgroundColor: '#d73a49'
+                        }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 4. Stock Price vs Market Cap (line with dual y-axes)
+            const ctx4 = document.getElementById('chart-stockprice-vs-marketcap').getContext('2d');
+            if (charts.chart4) charts.chart4.destroy();
+            charts.chart4 = new Chart(ctx4, {
+                type: 'line',
+                data: {
+                    labels: ['Apple', 'Microsoft'],
+                    datasets: [
+                        {
+                            label: 'Stock Price ($)',
+                            data: [150, 330],
+                            borderColor: '#ffa500',
+                            yAxisID: 'y',
+                            fill: false
+                        },
+                        {
+                            label: 'Market Cap (B $)',
+                            data: [2850, 2500],
+                            borderColor: '#8b949e',
+                            yAxisID: 'y2',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Stock Price ($)' } },
+                        y2: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Market Cap (B $)' }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+
+            // 5. Dividend Yield Comparison (bar)
+            const ctx5 = document.getElementById('chart-dividend-yield').getContext('2d');
+            if (charts.chart5) charts.chart5.destroy();
+            charts.chart5 = new Chart(ctx5, {
+                type: 'bar',
+                data: {
+                    labels: ['Apple', 'Microsoft'],
+                    datasets: [{
+                        label: 'Dividend Yield %',
+                        data: [apple.dividendYield * 100, msft.dividendYield * 100],
+                        backgroundColor: ['#00f0ff', '#ff00aa']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // -------------------------------------------------------------
+        // VIEW-SPECIFIC CHARTS
+        // -------------------------------------------------------------
+        function initChartRevenueGrowth() {
+            const ctx = document.getElementById('chart-revenue-growth').getContext('2d');
+            const labels = [];
+            const appleRev = [];
+            const msftRev = [];
+            // Build aggregated yearly revenue from reports
+            const yearsSet = new Set();
+            companiesData.forEach(c => c.reports.forEach(r => yearsSet.add(r.year)));
+            const years = Array.from(yearsSet).sort();
+            companiesData.forEach(c => {
+                c.reports.forEach(r => {
+                    if (!yearsSet.has(r.year)) return;
+                    if (c.id === 'aapl') appleRev.push(r.revenue);
+                    if (c.id === 'msft') msftRev.push(r.revenue);
+                });
+            });
+            // Ensure each year has a value; for simplicity just map to 5 years
+            const appleMap = {};
+            const msftMap = {};
+            companiesData.forEach(c => c.reports.forEach(r => {
+                if (c.id === 'aapl') appleMap[r.year] = r.revenue;
+                if (c.id === 'msft') msftMap[r.year] = r.revenue;
+            }));
+            labels.length = 0; appleRev.length = 0; msftRev.length = 0;
+            years.forEach(y => {
+                labels.push(y);
+                appleRev.push(appleMap[y] || 0);
+                msftRev.push(msftMap[y] || 0);
+            });
+            if (charts.revGrowth) charts.revGrowth.destroy();
+            charts.revGrowth = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Apple', data: appleRev, borderColor: '#58a6ff', fill: false },
+                        { label: 'Microsoft', data: msftRev, borderColor: '#ff5682', fill: false }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function initChartROETrend() {
+            const ctx = document.getElementById('chart-roe-trend').getContext('2d');
+            const labels = [];
+            const appleRoe = [];
+            const msftRoe = [];
+            const yearsSet = new Set();
+            companiesData.forEach(c => c.reports.forEach(r => yearsSet.add(r.year)));
+            const years = Array.from(yearsSet).sort();
+            companiesData.forEach(c => {
+                c.reports.forEach(r => {
+                    if (c.id === 'aapl') appleRoe.push(r.roe * 100);
+                    if (c.id === 'msft') msftRoe.push(r.roe * 100);
+                });
+            });
+            // To align, just take the last N per company (reports are sorted)
+            const appleRoeArr = appleRoe.slice(-years.length);
+            const msftRoeArr = msftRoe.slice(-years.length);
+            if (charts.roeTrend) charts.roeTrend.destroy();
+            charts.roeTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: 'Apple ROE %', data: appleRoeArr, borderColor: '#58a6ff', fill: false },
+                        { label: 'Microsoft ROE %', data: msftRoeArr, borderColor: '#ff5682', fill: false }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function initChartNetIncomeTrend() {
+            const ctx = document.getElementById('chart-netincome-trend').getContext('2d');
+            const labels = [];
+            const appleNI = [];
+            const msftNI = [];
+            const yearsSet = new Set();
+            companiesData.forEach(c => c.reports.forEach(r => yearsSet.add(r.year)));
+            const years = Array.from(yearsSet).sort();
+            companiesData.forEach(c => {
+                c.reports.forEach(r => {
+                    if (c.id === 'aapl') appleNI.push(r.netIncome);
+                    if (c.id === 'msft') msftNI.push(r.netIncome);
+                });
+            });
+            const appleNIArr = appleNI.slice(-years.length);
+            const msftNIArr = msftNI.slice(-years.length);
+            if (charts.netIncomeTrend) charts.netIncomeTrend.destroy();
+            charts.netIncomeTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: 'Apple Net Income', data: appleNIArr, borderColor: '#58a6ff', fill: false },
+                        { label: 'Microsoft Net Income', data: msftNIArr, borderColor: '#ff5682', fill: false }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function initChartFCFTrend() {
+            const ctx = document.getElementById('chart-fcf-trend').getContext('2d');
+            const labels = [];
+            const appleFCF = [];
+            const msftFCF = [];
+            const yearsSet = new Set();
+            companiesData.forEach(c => c.reports.forEach(r => yearsSet.add(r.year)));
+            const years = Array.from(yearsSet).sort();
+            companiesData.forEach(c => {
+                c.reports.forEach(r => {
+                    if (c.id === 'aapl') appleFCF.push(r.freeCashFlow);
+                    if (c.id === 'msft') msftFCF.push(r.freeCashFlow);
+                });
+            });
+            const appleFCFArr = appleFCF.slice(-years.length);
+            const msftFCFArr = msftFCF.slice(-years.length);
+            if (charts.fcfTrend) charts.fcfTrend.destroy();
+            charts.fcfTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: 'Apple FCF', data: appleFCFArr, borderColor: '#58a6ff', fill: false },
+                        { label: 'Microsoft FCF', data: msftFCFArr, borderColor: '#ff5682', fill: false }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function initChartDividendYieldTrend() {
+            const ctx = document.getElementById('chart-dividend-yield-trend').getContext('2d');
+            const labels = [];
+            const appleDY = [];
+            const msftDY = [];
+            const yearsSet = new Set();
+            companiesData.forEach(c => c.reports.forEach(r => yearsSet.add(r.year)));
+            const years = Array.from(yearsSet).sort();
+            companiesData.forEach(c => {
+                c.reports.forEach(r => {
+                    if (c.id === 'aapl') appleDY.push(r.dividendYield * 100);
+                    if (c.id === 'msft') msftDY.push(r.dividendYield * 100);
+                });
+            });
+            const appleDYarr = appleDY.slice(-years.length);
+            const msftDYarr = msftDY.slice(-years.length);
+            if (charts.divYieldTrend) charts.divYieldTrend.destroy();
+            charts.divYieldTrend = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: 'Apple Dividend %', data: appleDYarr, backgroundColor: '#00f0ff' },
+                        { label: 'Microsoft Dividend %', data: msftDYarr, backgroundColor: '#ff00aa' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // -------------------------------------------------------------
+        // VIEW-SPECIFIC HISTORY TABLES
+        // -------------------------------------------------------------
+        function renderRevenueHistoryTable() {
+            const tbody = document.querySelector('#revenue-history-table tbody');
+            tbody.innerHTML = '';
+            const selCompany = document.getElementById('rev-company').value.toLowerCase();
+            const selYear = document.getElementById('rev-year').value;
+            const selQuarter = document.getElementById('rev-quarter').value;
+            companiesData.forEach(c => {
+                if (c.name.toLowerCase() !== selCompany) return;
+                c.reports.forEach(r => {
+                    if (selYear && r.year !== +selYear) return;
+                    if (selQuarter && r.quarter !== selQuarter) return;
+                    const row = tbody.insertRow();
+                    const reportLabel = r.quarter ? `${r.year} ${r.quarter}` : r.year;
+                    const growth = r.year > 2020 ? ((r.revenue - (c.reports.find(p => p.year === r.year - 1)?.revenue || 0)) / (c.reports.find(p => p.year === r.year - 1)?.revenue || 1)) * 100 : 0;
+                    row.insertCell().textContent = reportLabel;
+                    row.insertCell().textContent = fmtCurr(r.revenue);
+                    row.insertCell().textContent = growth.toFixed(2) + '%';
+                    const expandBtn = document.createElement('button');
+                    expandBtn.textContent = '[+]';
+                    expandBtn.className = 'expand-btn';
+                    expandBtn.addEventListener('click', () => {
+                        const detail = row.insertCell();
+                        detail.colSpan = 4;
+                        detail.innerHTML = `<ul>
+                            <li>EBITDA: ${fmtCurr(r.ebitda || 0)}</li>
+                            <li>CapEx: ${fmtCurr(r.capitalExpenditures || 0)}</li>
+                            <li>FCF: ${fmtCurr(r.freeCashFlow || 0)}</li>
+                        </ul>`;
+                        expandBtn.textContent = '[-]';
+                        expandBtn.replaceWith(expandBtn); // dummy
+                    });
+                    const expandCell = row.insertCell();
+                    expandCell.appendChild(expandBtn);
+                });
+            });
+        }
+
+        function renderProfitabilityHistoryTable() {
+            const tbody = document.querySelector('#profitability-history-table tbody');
+            tbody.innerHTML = '';
+            const selCompany = document.getElementById('prof-company').value.toLowerCase();
+            companiesData.forEach(c => {
+                if (c.name.toLowerCase() !== selCompany) return;
+                c.reports.forEach(r => {
+                    const row = tbody.insertRow();
+                    const reportLabel = r.quarter ? `${r.year} ${r.quarter}` : r.year;
+                    row.insertCell().textContent = reportLabel;
+                    row.insertCell().textContent = fmtPct(r.ebitdaMargin || 0);
+                    row.insertCell().textContent = fmtPct(r.roe || 0);
+                    row.insertCell().textContent = fmtCurr(r.netIncome);
+                    const expandBtn = document.createElement('button');
+                    expandBtn.textContent = '[+]';
+                    expandBtn.className = 'expand-btn';
+                    expandBtn.addEventListener('click', () => {
+                        const detail = row.insertCell();
+                        detail.colSpan = 5;
+                        detail.innerHTML = `<ul>
+                            <li>Revenue: ${fmtCurr(r.revenue)}</li>
+                            <li>Net Income: ${fmtCurr(r.netIncome)}</li>
+                            <li>EPS: ${r.eps}</li>
+                        </ul>`;
+                    });
+                    row.insertCell().appendChild(expandBtn);
+                });
+            });
+        }
+
+        function renderCashflowHistoryTable() {
+            const tbody = document.querySelector('#cashflow-history-table tbody');
+            tbody.innerHTML = '';
+            const selCompany = document.getElementById('cash-company').value.toLowerCase();
+            companiesData.forEach(c => {
+                if (c.name.toLowerCase() !== selCompany) return;
+                c.reports.forEach(r => {
+                    const row = tbody.insertRow();
+                    const reportLabel = r.quarter ? `${r.year} ${r.quarter}` : r.year;
+                    row.insertCell().textContent = reportLabel;
+                    row.insertCell().textContent = fmtCurr(r.freeCashFlow);
+                    row.insertCell().textContent = fmtCurr(r.capitalExpenditures);
+                    row.insertCell().textContent = fmtPct(r.dividendYield || 0);
+                    const expandBtn = document.createElement('button');
+                    expandBtn.textContent = '[+]';
+                    expandBtn.className = 'expand-btn';
+                    expandBtn.addEventListener('click', () => {
+                        const detail = row.insertCell();
+                        detail.colSpan = 5;
+                        detail.innerHTML = `<ul>
+                            <li>Operating Cash Flow: ${fmtCurr(r.freeCashFlow + r.capitalExpenditures)}</li>
+                            <li>CapEx: ${fmtCurr(r.capitalExpenditures)}</li>
+                        </ul>`;
+                    });
+                    row.insertCell().appendChild(expandBtn);
+                });
+            });
+        }
+
+        // -------------------------------------------------------------
+        // VIEW: MARKET DATA PANELS (additional widgets)
+        // -------------------------------------------------------------
+        function renderMarketDataPanels() {
+            const container = document.getElementById('marketdata-panels');
+            container.innerHTML = '';
+            // Example: a table of latest quotes
+            const table = document.createElement('table');
+            table.className = 'statement-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Current Price ($)</th>
+                        <th>Market Cap ($)</th>
+                        <th>Volume</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Apple Inc.</td>
+                        <td>150.00</td>
+                        <td>${fmtCurr(2850000000000)}</td>
+                        <td>52,345,678</td>
+                    </tr>
+                    <tr>
+                        <td>Microsoft Corp.</td>
+                        <td>330.00</td>
+                        <td>${fmtCurr(2500000000000)}</td>
+                        <td>38,921,045</td>
+                    </tr>
+                </tbody>
+            `;
+            container.appendChild(table);
+        }
+
+        // -------------------------------------------------------------
+        // FILTERS / UI EVENT BINDINGS
+        // -------------------------------------------------------------
+        // Revenue view filters
+        document.getElementById('rev-company').addEventListener('change', () => refreshView('revenue'));
+        document.getElementById('rev-year').addEventListener('change', () => refreshView('revenue'));
+        document.getElementById('rev-quarter').addEventListener('change', () => refreshView('revenue'));
+
+        // Profitability view filters
+        document.getElementById('prof-company').addEventListener('change', () => refreshView('profitability'));
+
+        // Cash flow view filters
+        document.getElementById('cash-company').addEventListener('change', () => refreshView('cashflow'));
+
+        // -------------------------------------------------------------
+        // INITIAL RENDER (when page loads)
+        // -------------------------------------------------------------
+        // Init charts for summary view
+        initCharts();
+
+        // Populate revenue view's year dropdown
+        const revYearSel = document.getElementById('rev-year');
+        const yearsSet = new Set();
+        companiesData.forEach(c => c.reports.forEach(r => yearsSet.add(r.year)));
+        revYearSel.innerHTML = '<option value="">All Years</option>';
+        Array.from(yearsSet).sort().reverse().forEach(y => {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            revYearSel.appendChild(opt);
+        });
+
+        // Initial render of view-specific tables
+        renderRevenueHistoryTable();
+        renderProfitabilityHistoryTable();
+        renderCashflowHistoryTable();
+
+        // Done
+    </script>
+</body>
+
+</html>
