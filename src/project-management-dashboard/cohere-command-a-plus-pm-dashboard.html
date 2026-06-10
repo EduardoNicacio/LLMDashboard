@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Command Center</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        /* CSS Variables for Themes */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #bf00ff;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        html.dark {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --accent-cyan: #00f0ff;
+            --accent-purple: #bf00ff;
+            --glass-bg: rgba(30, 41, 59, 0.8);
+            --glass-border: rgba(30, 41, 59, 0.5);
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: var(--glass-bg);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        html.dark .glass-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Neon Glow */
+        .glow-cyan {
+            box-shadow: 0 0 20px var(--accent-cyan), 0 0 40px var(--accent-cyan);
+        }
+
+        .glow-purple {
+            box-shadow: 0 0 20px var(--accent-purple), 0 0 40px var(--accent-purple);
+        }
+
+        /* Chart Colors */
+        .chart-line-1 {
+            border-color: var(--accent-cyan);
+            backgroundColor: rgba(0, 240, 255, 0.1);
+        }
+
+        .chart-line-2 {
+            border-color: var(--accent-purple);
+            backgroundColor: rgba(191, 0, 255, 0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-enter {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+
+        /* Details/Summary Styling */
+        details summary {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+        }
+
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details summary:hover {
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        details[open] summary {
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        /* Table Row Hover */
+        tbody tr:hover {
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        html.dark tbody tr:hover {
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        /* Tabs */
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--accent-cyan);
+        }
+
+        /* Gauge */
+        .gauge {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .gauge svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .gauge .circle {
+            stroke: var(--accent-cyan);
+            stroke-width: 6;
+            fill: none;
+        }
+
+        .gauge .circle-bg {
+            stroke: #334155;
+            stroke-width: 6;
+            fill: none;
+        }
+
+        .gauge .text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-cyan);
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #334155;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-fill-cyan {
+            background: linear-gradient(90deg, var(--accent-cyan), #00b4d8);
+        }
+
+        .progress-fill-purple {
+            background: linear-gradient(90deg, var(--accent-purple), #9b51e0);
+        }
+
+        /* Status Badges */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .badge-warning {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+        .badge-danger {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .badge-info {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .badge-neutral {
+            background: #94a3b8;
+            color: #fff;
+        }
+
+        /* Card Hover */
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        /* Transition for Theme Toggle */
+        #theme-toggle {
+            transition: transform 0.3s ease;
+        }
+
+        #theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Loader */
+        .loader {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--accent-cyan);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header
+        class="sticky top-0 z-50 glass-panel border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div
+                class="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-purple-500">
+                PM Command Center
+            </div>
+            <nav class="hidden md:flex gap-6">
+                <button class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors"
+                    data-view="summary">Summary</button>
+                <button class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors"
+                    data-view="projects">Projects</button>
+                <button class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors"
+                    data-view="timeline">Timeline</button>
+                <button class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors"
+                    data-view="resources">Resources</button>
+                <button class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors"
+                    data-view="risks">Risks</button>
+                <button class="tab-btn px-4 py-2 rounded-lg font-medium transition-colors"
+                    data-view="operations">Operations</button>
+            </nav>
+        </div>
+        <div class="flex items-center gap-6">
+            <!-- Theme Toggle -->
+            <button id="theme-toggle"
+                class="p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-cyan-500 dark:hover:bg-cyan-500 transition-colors"
+                onclick="toggleTheme()">
+                <svg id="theme-icon" class="w-5 h-5 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 0118 0z">
+                    </path>
+                </svg>
+            </button>
+            <!-- Agile/Waterfall Toggle -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Agile</span>
+                <button
+                    class="relative inline-flex items-center h-6 w-11 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors focus:outline-none"
+                    id="agile-toggle" onclick="toggleAgileMode()">
+                    <span
+                        class="inline-block h-4 w-4 rounded-full bg-white dark:bg-gray-300 shadow transform transition-transform ml-0.5"></span>
+                </button>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Waterfall</span>
+            </div>
+            <!-- View Mode Toggle -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Portfolio</span>
+                <button
+                    class="relative inline-flex items-center h-6 w-11 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors focus:outline-none"
+                    id="view-toggle" onclick="toggleViewMode()">
+                    <span
+                        class="inline-block h-4 w-4 rounded-full bg-white dark:bg-gray-300 shadow transform transition-transform ml-0.5"></span>
+                </button>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Project</span>
+            </div>
+            <!-- Reporting Period Toggle -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Quarterly</span>
+                <button
+                    class="relative inline-flex items-center h-6 w-11 rounded-full bg-gray-300 dark:bg-gray-700 transition-colors focus:outline-none"
+                    id="period-toggle" onclick="togglePeriod()">
+                    <span
+                        class="inline-block h-4 w-4 rounded-full bg-white dark:bg-gray-300 shadow transform transition-transform ml-0.5"></span>
+                </button>
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Monthly</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-6 space-y-8">
+        <!-- Summary View -->
+        <section id="view-summary" class="space-y-6">
+            <!-- Hero Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-panel p-6 rounded-2xl animate-enter">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Active Projects</p>
+                            <p class="text-2xl font-bold mt-2" id="summary-active-projects">12</p>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-full bg-cyan-100 dark:bg-cyan-900 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter" style="animation-delay: 0.1s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Completed Projects</p>
+                            <p class="text-2xl font-bold mt-2" id="summary-completed">8</p>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter" style="animation-delay: 0.2s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Portfolio Health Score</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="gauge">
+                                    <svg viewBox="0 0 36 36">
+                                        <path class="circle-bg"
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path class="circle" stroke-dasharray="75, 100"
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                    <div class="text">85%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter" style="animation-delay: 0.3s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Budget Utilization</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-cyan-500 to-purple-500 w-[78%]"></div>
+                                </div>
+                                <span class="text-xs font-medium">78%</span>
+                            </div>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-panel p-6 rounded-2xl animate-enter">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">On-Time Delivery Rate</p>
+                    <p class="text-2xl font-bold mt-2 text-cyan-500">92%</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter" style="animation-delay: 0.1s">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Team Members</p>
+                    <p class="text-2xl font-bold mt-2">145</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter" style="animation-delay: 0.2s">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Projected Annual Spend</p>
+                    <p class="text-2xl font-bold mt-2">$12.4M</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter" style="animation-delay: 0.3s">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Open Risks</p>
+                    <p class="text-2xl font-bold mt-2 text-red-500">12</p>
+                </div>
+            </div>
+
+            <!-- Head-to-Head Comparison -->
+            <div class="glass-panel p-6 rounded-2xl animate-enter">
+                <h2 class="text-xl font-bold mb-6">Head-to-Head: Mobile Platform Modernization vs Customer Analytics
+                    Initiative</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Project 1 -->
+                    <div class="glass-card p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4">
+                            <div
+                                class="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-4">Mobile Platform Modernization</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Schedule Progress</span>
+                                    <span>78%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-fill-cyan w-[78%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Budget Variance</span>
+                                    <span>-2%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-fill-purple w-[98%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Task Completion</span>
+                                    <span>85%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-fill-cyan w-[85%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Risk Score</span>
+                                    <span class="text-red-500">Medium</span>
+                                </div>
+                                <div class="flex gap-1 mt-1">
+                                    <div class="w-6 h-2 bg-red-500 rounded"></div>
+                                    <div class="w-6 h-2 bg-red-500 rounded"></div>
+                                    <div class="w-6 h-2 bg-gray-600 rounded"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Resource Utilization</span>
+                                    <span>92%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-fill-cyan w-[92%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Stakeholder Satisfaction</span>
+                                    <span>4.2/5</span>
+                                </div>
+                                <div class="flex gap-1 mt-1">
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                    <div class="w-4 h-2 bg-gray-600 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Project 2 -->
+                    <div class="glass-card p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4">
+                            <div
+                                class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-4">Customer Analytics Initiative</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Schedule Progress</span>
+                                    <span>65%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-fill-purple w-[65%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Budget Variance</span>
+                                    <span>+5%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-fill-cyan w-[95%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Task Completion</span>
+                                    <span>72%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-fill-purple w-[72%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Risk Score</span>
+                                    <span class="text-yellow-500">Low</span>
+                                </div>
+                                <div class="flex gap-1 mt-1">
+                                    <div class="w-6 h-2 bg-yellow-500 rounded"></div>
+                                    <div class="w-6 h-2 bg-gray-600 rounded"></div>
+                                    <div class="w-6 h-2 bg-gray-600 rounded"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Resource Utilization</span>
+                                    <span>78%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill progress-fill-cyan w-[78%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                    <span>Stakeholder Satisfaction</span>
+                                    <span>4.5/5</span>
+                                </div>
+                                <div class="flex gap-1 mt-1">
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                    <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-panel p-6 rounded-2xl animate-enter">
+                    <h3 class="text-lg font-semibold mb-4">Project Completion Trend</h3>
+                    <canvas id="chart-completion-trend"></canvas>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter">
+                    <h3 class="text-lg font-semibold mb-4">Budget vs Actual Spend</h3>
+                    <canvas id="chart-budget-actual"></canvas>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter">
+                    <h3 class="text-lg font-semibold mb-4">Team Velocity & Sprint Throughput</h3>
+                    <canvas id="chart-velocity"></canvas>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter">
+                    <h3 class="text-lg font-semibold mb-4">Resource Allocation by Department</h3>
+                    <canvas id="chart-resource-allocation"></canvas>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter">
+                    <h3 class="text-lg font-semibold mb-4">Open Risks by Severity</h3>
+                    <canvas id="chart-risks"></canvas>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter">
+                    <h3 class="text-lg font-semibold mb-4">Milestone Completion Progress</h3>
+                    <canvas id="chart-milestones"></canvas>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl animate-enter lg:col-span-2">
+                    <h3 class="text-lg font-semibold mb-4">Planned vs Actual Timeline</h3>
+                    <canvas id="chart-timeline"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects View -->
+        <section id="view-projects" class="space-y-6 hidden">
+            <!-- Filters -->
+            <div class="glass-panel p-4 rounded-2xl flex flex-wrap gap-4 items-center">
+                <input type="text" id="filter-project" placeholder="Filter by project name..."
+                    class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <select id="filter-status"
+                    class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    <option value="">All Status</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Completed">Completed</option>
+                </select>
+                <select id="filter-owner"
+                    class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    <option value="">All Owner</option>
+                    <!-- populated dynamically -->
+                </select>
+                <button onclick="applyFilters()"
+                    class="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors">Apply
+                    Filter</button>
+            </div>
+
+            <!-- Project Cards -->
+            <div id="project-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards generated by JS -->
+            </div>
+
+            <!-- Project Table -->
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-lg font-semibold mb-4">Project Details</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-300 dark:border-gray-600">
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Project</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Status</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Completion</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Budget</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Actual Spend</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Health</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="project-table-body">
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline View -->
+        <section id="view-timeline" class="space-y-6 hidden">
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-lg font-semibold mb-4">Project Timeline</h3>
+                <div id="timeline-container" class="relative">
+                    <!-- Timeline items generated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Resources View -->
+        <section id="view-resources" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h3 class="text-lg font-semibold mb-4">Team Workload</h3>
+                    <canvas id="chart-team-workload"></canvas>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h3 class="text-lg font-semibold mb-4">Resource Utilization Table</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-300 dark:border-gray-600">
+                                    <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Team Member</th>
+                                    <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Utilization</th>
+                                    <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Capacity</th>
+                                    <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Availability</th>
+                                    <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Overtime Risk</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resource-table-body">
+                                <!-- Rows generated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Risks View -->
+        <section id="view-risks" class="space-y-6 hidden">
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-lg font-semibold mb-4">Active Risks</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-300 dark:border-gray-600">
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Risk</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Severity</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Probability</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Impact</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Mitigation</th>
+                                <th class="p-3 font-medium text-gray-600 dark:text-gray-400">Owner</th>
+                            </tr>
+                        </thead>
+                        <tbody id="risks-table-body">
+                            <!-- Rows generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-lg font-semibold mb-4">Risk Distribution</h3>
+                <canvas id="chart-risk-distribution"></canvas>
+            </div>
+        </section>
+
+        <!-- Operations View -->
+        <section id="view-operations" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h3 class="text-lg font-semibold mb-4">Integration Status</h3>
+                    <div id="integration-status" class="space-y-3">
+                        <!-- Items generated by JS -->
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h3 class="text-lg font-semibold mb-4">API Usage & Automation</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Workflow Executions</p>
+                            <p class="text-2xl font-bold" id="api-workflow">1,247</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Automation Success Rate</p>
+                            <p class="text-2xl font-bold text-green-500">98.4%</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Estimated API Cost</p>
+                            <p class="text-2xl font-bold">$2,340</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Total Automation Savings</p>
+                            <p class="text-2xl font-bold text-cyan-500">$45,670</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div class="w-2 h-2 rounded-full bg-cyan-500"></div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium">Jira sync completed</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">2 min ago</p>
+                        </div>
+                        <span class="text-xs text-gray-600 dark:text-gray-400">Latency: 120ms</span>
+                    </div>
+                    <!-- More items -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Winner Breakdown -->
+        <section class="glass-panel p-6 rounded-2xl animate-enter">
+            <h2 class="text-xl font-bold mb-6">Winner Breakdown</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Mobile Platform Modernization</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                <span>Schedule Adherence</span>
+                                <span>78%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-fill-cyan w-[78%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                <span>Budget Control</span>
+                                <span>-2% variance</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-fill-purple w-[98%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                <span>Team Productivity</span>
+                                <span>85% tasks done</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-fill-cyan w-[85%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                <span>Delivery Quality</span>
+                                <span>4.2/5</span>
+                            </div>
+                            <div class="flex gap-1 mt-1">
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                <div class="w-4 h-2 bg-gray-600 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Customer Analytics Initiative</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                <span>Schedule Adherence</span>
+                                <span>65%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-fill-purple w-[65%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                <span>Budget Control</span>
+                                <span>+5% variance</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-fill-cyan w-[95%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                <span>Team Productivity</span>
+                                <span>72% tasks done</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill progress-fill-purple w-[72%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                <span>Delivery Quality</span>
+                                <span>4.5/5</span>
+                            </div>
+                            <div class="flex gap-1 mt-1">
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                                <div class="w-4 h-2 bg-cyan-500 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div
+                class="mt-6 p-4 rounded-lg bg-gradient-to-r from-cyan-50 to-purple-50 dark:from-cyan-900/20 dark:to-purple-900/20">
+                <p class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                    <strong>Winner:</strong> Mobile Platform Modernization excels in schedule adherence and budget
+                    control, while Customer Analytics Initiative leads in stakeholder satisfaction. Overall, Mobile
+                    Platform Modernization has a higher portfolio health score (78 vs 65), making it the winner.
+                </p>
+            </div>
+        </section>
+
+        <!-- Notes & Executive Commentary -->
+        <section class="glass-panel p-6 rounded-2xl">
+            <h2 class="text-xl font-bold mb-4">Executive Commentary & Notes</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Add
+                        Observation</label>
+                    <input type="text" id="note-title" placeholder="Title..."
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-2">
+                    <textarea id="note-content" placeholder="Enter your note..."
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 min-h-[100px]"></textarea>
+                </div>
+                <button onclick="addNote()"
+                    class="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors">Add
+                    Note</button>
+                <div id="notes-list" class="mt-4 space-y-3">
+                    <!-- Notes generated by JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- JavaScript -->
+    <script>
+        // --- Data Model ---
+        const initialData = {
+            projects: [
+                {
+                    id: 1,
+                    name: "Mobile Platform Modernization",
+                    status: "In Progress",
+                    completion: 78,
+                    budget: 5000000,
+                    actualSpend: 3900000,
+                    remainingBudget: 1100000,
+                    teamSize: 12,
+                    milestoneCount: 8,
+                    openRisks: 5,
+                    blockedTasks: 2,
+                    projectedCompletion: "2024-06-30",
+                    healthScore: 78,
+                    type: "Flagship",
+                    department: "Product",
+                    owner: "Alice Johnson",
+                    fiscalYear: 2024,
+                    quarter: "Q2",
+                    agile: false,
+                    milestones: [
+                        { id: 101, name: "Phase 1: Discovery", dueDate: "2023-11-30", status: "Completed", completion: 100 },
+                        { id: 102, name: "Phase 2: Design", dueDate: "2024-01-15", status: "In Progress", completion: 60 },
+                        { id: 103, name: "Phase 3: Development", dueDate: "2024-03-31", status: "In Progress", completion: 30 },
+                        { id: 104, name: "Phase 4: Testing", dueDate: "2024-05-15", status: "Not Started", completion: 0 },
+                        { id: 105, name: "Phase 5: Deployment", dueDate: "2024-06-30", status: "Not Started", completion: 0 },
+                    ],
+                    tasks: [
+                        { id: 1001, milestoneId: 102, name: "Create UI mockups", owner: "Alice", status: "In Progress", blockers: [], dependencies: [], comments: 3 },
+                        { id: 1002, milestoneId: 102, name: "Define API contracts", owner: "Bob", status: "Completed", blockers: [], dependencies: [], comments: 0 },
+                        { id: 1003, milestoneId: 103, name: "Implement authentication module", owner: "Charlie", status: "In Progress", blockers: ["Waiting for security review"], dependencies: ["API contracts"], comments: 1 },
+                        { id: 1004, milestoneId: 103, name: "Set up CI/CD pipeline", owner: "Dave", status: "Completed", blockers: [], dependencies: [], comments: 0 },
+                        { id: 1005, milestoneId: 104, name: "Write unit tests", owner: "Eve", status: "Not Started", blockers: [], dependencies: ["Implementation"], comments: 0 },
+                    ],
+                    risks: [
+                        { id: 1, description: "Third-party API integration delay", severity: "High", probability: 0.4, impact: 8, mitigation: "Alternate vendor identified", owner: "Alice" },
+                        { id: 2, description: "Scope creep due to stakeholder requests", severity: "Medium", probability: 0.6, impact: 5, mitigation: "Change control process enforced", owner: "Bob" },
+                        { id: 3, description: "Resource bottleneck in Q1", severity: "Medium", probability: 0.3, impact: 6, mitigation: "Contractors onboarded", owner: "Charlie" },
+                        { id: 4, description: "Legacy system integration issues", severity: "High", probability: 0.5, impact: 9, mitigation: "Prototype integration underway", owner: "Dave" },
+                        { id: 5, description: "Budget overrun risk", severity: "Medium", probability: 0.2, impact: 7, mitigation: "Contingency fund allocated", owner: "Eve" },
+                    ],
+                },
+                {
+                    id: 2,
+                    name: "Customer Analytics Initiative",
+                    status: "In Progress",
+                    completion: 65,
+                    budget: 4500000,
+                    actualSpend: 3150000,
+                    remainingBudget: 1350000,
+                    teamSize: 9,
+                    milestoneCount: 7,
+                    openRisks: 3,
+                    blockedTasks: 1,
+                    projectedCompletion: "2024-07-31",
+                    healthScore: 72,
+                    type: "Flagship",
+                    department: "Analytics",
+                    owner: "Mark Smith",
+                    fiscalYear: 2024,
+                    quarter: "Q2",
+                    agile: true,
+                    milestones: [
+                        { id: 201, name: "Data Ingestion Setup", dueDate: "2023-12-15", status: "Completed", completion: 100 },
+                        { id: 202, name: "Model Development", dueDate: "2024-02-28", status: "In Progress", completion: 70 },
+                        { id: 203, name: "Dashboard Prototype", dueDate: "2024-04-30", status: "In Progress", completion: 40 },
+                        { id: 204, name: "User Acceptance Testing", dueDate: "2024-06-30", status: "Not Started", completion: 0 },
+                        { id: 205, name: "Production Rollout", dueDate: "2024-07-31", status: "Not Started", completion: 0 },
+                    ],
+                    tasks: [
+                        { id: 2001, milestoneId: 202, name: "Feature engineering", owner: "Mark", status: "In Progress", blockers: [], dependencies: [], comments: 2 },
+                        { id: 2002, milestoneId: 202, name: "Model training", owner: "Lisa", status: "In Progress", blockers: ["GPU resource limit"], dependencies: ["Feature engineering"], comments: 1 },
+                        { id: 2003, milestoneId: 203, name: "Wireframe design", owner: "Nancy", status: "Completed", blockers: [], dependencies: [], comments: 0 },
+                        { id: 2004, milestoneId: 203, name: "Integrate with data pipeline", owner: "Tom", status: "In Progress", blockers: [], dependencies: ["Data ingestion"], comments: 0 },
+                    ],
+                    risks: [
+                        { id: 1, description: "Data privacy compliance", severity: "High", probability: 0.3, impact: 9, mitigation: "Legal review in progress", owner: "Mark" },
+                        { id: 2, description: "Model accuracy below threshold", severity: "Medium", probability: 0.4, impact: 6, mitigation: "A/B testing planned", owner: "Lisa" },
+                        { id: 3, description: "Stakeholder misalignment", severity: "Low", probability: 0.2, impact: 3, mitigation: "Weekly sync meetings", owner: "Nancy" },
+                    ],
+                },
+                {
+                    id: 3,
+                    name: "Internal Tools Revamp",
+                    status: "On Hold",
+                    completion: 45,
+                    budget: 800000,
+                    actualSpend: 360000,
+                    remainingBudget: 440000,
+                    teamSize: 4,
+                    milestoneCount: 5,
+                    openRisks: 2,
+                    blockedTasks: 0,
+                    projectedCompletion: "2024-09-30",
+                    healthScore: 68,
+                    type: "Support",
+                    department: "Operations",
+                    owner: "Sara Lee",
+                    fiscalYear: 2024,
+                    quarter: "Q3",
+                    agile: true,
+                    milestones: [
+                        { id: 301, name: "Requirements Gathering", dueDate: "2023-10-31", status: "Completed", completion: 100 },
+                        { id: 302, name: "Design", dueDate: "2023-11-30", status: "Completed", completion: 100 },
+                        { id: 303, name: "Development", dueDate: "2024-02-29", status: "In Progress", completion: 20 },
+                        { id: 304, name: "Testing", dueDate: "2024-05-31", status: "Not Started", completion: 0 },
+                    ],
+                    tasks: [],
+                    risks: [
+                        { id: 1, description: "Vendor license renewal", severity: "Medium", probability: 0.5, impact: 5, mitigation: "Renewal request submitted", owner: "Sara" },
+                    ],
+                },
+                {
+                    id: 4,
+                    name: "Cloud Migration Project",
+                    status: "Completed",
+                    completion: 100,
+                    budget: 3200000,
+                    actualSpend: 3150000,
+                    remainingBudget: 50000,
+                    teamSize: 8,
+                    milestoneCount: 6,
+                    openRisks: 0,
+                    blockedTasks: 0,
+                    projectedCompletion: "2023-12-31",
+                    healthScore: 95,
+                    type: "Flagship",
+                    department: "Infrastructure",
+                    owner: "Mike Ross",
+                    fiscalYear: 2023,
+                    quarter: "Q4",
+                    agile: false,
+                    milestones: [],
+                    tasks: [],
+                    risks: [],
+                },
+                {
+                    id: 5,
+                    name: "HR Portal Enhancement",
+                    status: "In Progress",
+                    completion: 30,
+                    budget: 600000,
+                    actualSpend: 180000,
+                    remainingBudget: 420000,
+                    teamSize: 3,
+                    milestoneCount: 4,
+                    openRisks: 1,
+                    blockedTasks: 1,
+                    projectedCompletion: "2024-04-30",
+                    healthScore: 75,
+                    type: "Support",
+                    department: "HR",
+                    owner: "Emily Clark",
+                    fiscalYear: 2024,
+                    quarter: "Q1",
+                    agile: true,
+                    milestones: [],
+                    tasks: [],
+                    risks: [],
+                },
+            ],
+            teamMembers: [
+                { id: 1, name: "Alice Johnson", role: "Project Manager", department: "Product", utilization: 92, capacity: 100, availability: 8, overtime: false, status: "Active" },
+                { id: 2, name: "Bob Smith", role: "Lead Developer", department: "Product", utilization: 85, capacity: 100, availability: 15, overtime: false, status: "Active" },
+                { id: 3, name: "Charlie Brown", role: "DevOps Engineer", department: "Product", utilization: 78, capacity: 100, availability: 22, overtime: false, status: "Active" },
+                { id: 4, name: "Dave Wilson", role: "QA Lead", department: "Product", utilization: 90, capacity: 100, availability: 10, overtime: true, status: "Active" },
+                { id: 5, name: "Eve Adams", role: "Business Analyst", department: "Product", utilization: 70, capacity: 100, availability: 30, overtime: false, status: "Active" },
+                { id: 6, name: "Mark Smith", role: "Data Scientist", department: "Analytics", utilization: 88, capacity: 100, availability: 12, overtime: false, status: "Active" },
+                { id: 7, name: "Lisa Chen", role: "ML Engineer", department: "Analytics", utilization: 95, utilization: 95, capacity: 100, availability: 5, overtime: true, status: "Active" },
+                { id: 8, name: "Nancy Lee", role: "UX Designer", department: "Analytics", utilization: 65, capacity: 100, availability: 35, overtime: false, status: "Active" },
+                { id: 9, name: "Tom Harris", role: "Integration Engineer", department: "Analytics", utilization: 80, capacity: 100, availability: 20, overtime: false, status: "Active" },
+                { id: 10, name: "Sara Lee", role: "Project Manager", department: "Operations", utilization: 75, capacity: 100, availability: 25, overtime: false, status: "Active" },
+                { id: 11, name: "Mike Ross", role: "Infrastructure Lead", department: "Infrastructure", utilization: 60, capacity: 100, availability: 40, overtime: false, status: "Active" },
+                { id: 12, name: "Emily Clark", role: "HR Specialist", department: "HR", utilization: 50, capacity: 100, availability: 50, overtime: false, status: "Active" },
+            ],
+            integrations: [
+                { name: "Jira", status: "Connected", latency: 120, lastSync: "2024-01-15 14:32" },
+                { name: "Azure DevOps", status: "Connected", latency: 85, lastSync: "2024-01-15 14:28" },
+                { name: "GitHub", status: "Connected", latency: 45, lastSync: "2024-01-15 14:30" },
+                { name: "Slack", status: "Connected", latency: 30, lastSync: "2024-01-15 14:31" },
+                { name: "Microsoft Teams", status: "Connected", latency: 60, lastSync: "2024-01-15 14:29" },
+                { name: "ServiceNow", status: "Disconnected", latency: null, lastSync: "2023-12-20" },
+            ],
+            notes: [
+                { id: 1, title: "Q1 Review", content: "All projects on track. Cloud Migration completed successfully. Budget variance within 2%.", date: "2024-01-10" },
+                { id: 2, title: "Risk Alert", content: "Mobile Platform facing integration delay with legacy system. Mitigation plan activated.", date: "2024-01-12" },
+                { id: 3, title: "Team Update", content: "Lisa Chen overtime due to model training sprint. Consider additional GPU resources.", date: "2024-01-14" },
+            ],
+        };
+
+        // State Management
+        let state = {
+            theme: localStorage.getItem('theme') || 'light',
+            currentView: localStorage.getItem('currentView') || 'summary',
+            agileMode: localStorage.getItem('agileMode') === 'true',
+            viewMode: localStorage.getItem('viewMode') || 'portfolio', // portfolio, program, project
+            period: localStorage.getItem('period') || 'quarterly', // quarterly, monthly, weekly
+            filters: {},
+            sortConfig: { column: 'completion', direction: 'desc' },
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme(state.theme);
+            renderView(state.currentView);
+            renderCharts();
+            renderProjectCards();
+            renderProjectTable();
+            renderTimeline();
+            renderResourceTable();
+            renderRisksTable();
+            renderIntegrationStatus();
+            renderNotes();
+            initTabs();
+        });
+
+        // --- Theme Management ---
+        function toggleTheme() {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', state.theme);
+            applyTheme(state.theme);
+            // Update chart colors
+            renderCharts();
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            const icon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                icon.setAttribute('d', 'M20 8.69V4h-4.69L12 0 4.69 4H0v4.69L12 20 20 8.69zm-2 5.53L12 13.93 4 8.69V6h16v2.69z');
+            } else {
+                icon.setAttribute('d', 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z');
+            }
+        }
+
+        // --- View Management ---
+        function renderView(view) {
+            // Hide all sections
+            document.querySelectorAll('section[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            const activeSection = document.getElementById(`view-${view}`);
+            if (activeSection) activeSection.classList.remove('hidden');
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+            state.currentView = view;
+            localStorage.setItem('currentView', view);
+            // Re-render components that depend on view
+            if (view === 'summary') {
+                updateSummaryMetrics();
+            } else if (view === 'projects') {
+                applyFilters();
+            } else if (view === 'timeline') {
+                renderTimeline();
+            } else if (view === 'resources') {
+                renderResourceTable();
+            } else if (view === 'risks') {
+                renderRisksTable();
+            }
+        }
+
+        function initTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => renderView(btn.dataset.view));
+            });
+        }
+
+        // --- Agile/Waterfall Toggle ---
+        function toggleAgileMode() {
+            const btn = document.getElementById('agile-toggle');
+            const label = btn.querySelector('span:first-child');
+            const isAgile = !state.agileMode;
+            state.agileMode = isAgile;
+            localStorage.setItem('agileMode', isAgile);
+            // Update label text
+            label.textContent = isAgile ? 'Agile' : 'Waterfall';
+            // Toggle visual
+            if (isAgile) {
+                btn.classList.add('bg-cyan-500');
+                btn.querySelector('span:last-child').style.transform = 'translateX(100%)';
+            } else {
+                btn.classList.remove('bg-cyan-500');
+                btn.querySelector('span:last-child').style.transform = 'translateX(0)';
+            }
+            // Re-render charts and tables that depend on mode
+            if (state.currentView === 'projects') {
+                renderProjectCards();
+                renderProjectTable();
+            }
+        }
+
+        // --- View Mode Toggle ---
+        function toggleViewMode() {
+            const btn = document.getElementById('view-toggle');
+            const labels = btn.querySelectorAll('span');
+            const modes = ['Portfolio', 'Program', 'Individual Project'];
+            const currentIndex = Array.from(labels).findIndex(span => span.textContent === state.viewMode);
+            const nextIndex = (currentIndex + 1) % modes.length;
+            state.viewMode = modes[nextIndex];
+            localStorage.setItem('viewMode', state.viewMode);
+            // Update label text
+            labels.forEach((span, idx) => {
+                span.textContent = modes[(idx + nextIndex) % modes.length];
+            });
+            // Toggle visual
+            const knob = btn.querySelector('span:last-child');
+            const offset = nextIndex * 33.33; // approximate
+            knob.style.transform = `translateX(${offset}%)`;
+            // Re-render components
+            renderProjectCards();
+            renderProjectTable();
+        }
+
+        // --- Period Toggle ---
+        function togglePeriod() {
+            const btn = document.getElementById('period-toggle');
+            const labels = btn.querySelectorAll('span');
+            const periods = ['Quarterly', 'Monthly', 'Weekly'];
+            const currentIndex = Array.from(labels).findIndex(span => span.textContent === state.period);
+            const nextIndex = (currentIndex + 1) % periods.length;
+            state.period = periods[nextIndex];
+            localStorage.setItem('period', state.period);
+            // Update label text
+            labels.forEach((span, idx) => {
+                span.textContent = periods[(idx + nextIndex) % periods.length];
+            });
+            // Toggle visual
+            const knob = btn.querySelector('span:last-child');
+            const offset = nextIndex * 33.33;
+            knob.style.transform = `translateX(${offset}%)`;
+            // Re-render charts
+            renderCharts();
+        }
+
+        // --- Data Filtering & Sorting ---
+        function applyFilters() {
+            const projectFilter = document.getElementById('filter-project').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+            const ownerFilter = document.getElementById('filter-owner').value;
+            state.filters = { project: projectFilter, status: statusFilter, owner: ownerFilter };
+
+            const filteredProjects = initialData.projects.filter(p => {
+                return (projectFilter ? p.name.toLowerCase().includes(projectFilter) : true) &&
+                    (statusFilter ? p.status === statusFilter : true) &&
+                    (ownerFilter ? p.owner === ownerFilter : true);
+            });
+
+            // Update owners dropdown
+            const ownerSet = new Set(initialData.projects.map(p => p.owner));
+            const ownerSelect = document.getElementById('filter-owner');
+            ownerSelect.innerHTML = '<option value="">All Owner</option>';
+            ownerSet.forEach(owner => {
+                const option = document.createElement('option');
+                option.value = owner;
+                option.textContent = owner;
+                ownerSelect.appendChild(option);
+            });
+
+            // Update state
+            state.filteredProjects = filteredProjects;
+            renderProjectCards();
+            renderProjectTable();
+        }
+
+        function sortTable(column) {
+            if (state.sortConfig.column === column) {
+                state.sortConfig.direction = state.sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.sortConfig.column = column;
+                state.sortConfig.direction = 'asc';
+            }
+            renderProjectTable();
+        }
+
+        // --- Render Components ---
+        function renderProjectCards() {
+            const container = document.getElementById('project-cards');
+            container.innerHTML = '';
+            const projectsToShow = state.filteredProjects || initialData.projects;
+
+            projectsToShow.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'glass-card p-6 relative overflow-hidden animate-enter';
+                card.style.animationDelay = `${Math.random() * 0.2}s`;
+                card.innerHTML = `
+          <div class="absolute top-0 right-0 p-4">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">${project.name}</h3>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm text-gray-600 dark:text-gray-400">${project.department}</span>
+            <span class="badge ${project.status === 'Completed' ? 'badge-success' : project.status === 'On Hold' ? 'badge-warning' : 'badge-info'}">${project.status}</span>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <span>Completion</span>
+                <span>${project.completion}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill progress-fill-cyan w-[${project.completion}%]"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <span>Budget</span>
+                <span>$${(project.budget / 1000000).toFixed(1)}M</span>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <span>Health Score</span>
+                <span class="${project.healthScore >= 80 ? 'text-green-500' : project.healthScore >= 70 ? 'text-yellow-500' : 'text-red-500'}">${project.healthScore}</span>
+              </div>
+            </div>
+            <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <button onclick="expandProject(${project.id})" class="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">View Details &rarr;</button>
+            </div>
+          </div>
+        `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderProjectTable() {
+            const tbody = document.getElementById('project-table-body');
+            tbody.innerHTML = '';
+            const projectsToShow = state.filteredProjects || initialData.projects;
+            const sorted = projectsToShow.slice().sort((a, b) => {
+                const valA = a[state.sortConfig.column];
+                const valB = b[state.sortConfig.column];
+                if (typeof valA === 'string') {
+                    return state.sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+                return state.sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+            });
+
+            sorted.forEach(project => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800';
+                row.innerHTML = `
+          <td class="p-3">${project.name}</td>
+          <td class="p-3"><span class="badge ${project.status === 'Completed' ? 'badge-success' : project.status === 'On Hold' ? 'badge-warning' : 'badge-info'}">${project.status}</span></td>
+          <td class="p-3">${project.completion}%</td>
+          <td class="p-3">$${(project.budget / 1000000).toFixed(1)}M</td>
+          <td class="p-3">$${(project.actualSpend / 1000000).toFixed(1)}M</td>
+          <td class="p-3">
+            <div class="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-cyan-500 to-purple-500 w-[${project.healthScore}%]"></div>
+            </div>
+          </td>
+          <td class="p-3">
+            <button onclick="expandProject(${project.id})" class="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">Details</button>
+          </td>
+        `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function expandProject(id) {
+            const project = initialData.projects.find(p => p.id === id);
+            if (!project) return;
+            // Show detailed modal or expand row
+            alert(`Project: ${project.name}\nStatus: ${project.status}\nCompletion: ${project.completion}%\nBudget: $${(project.budget / 1000000).toFixed(1)}M\nActual Spend: $${(project.actualSpend / 1000000).toFixed(1)}M\nRemaining: $${(project.remainingBudget / 1000000).toFixed(1)}M\nTeam Size: ${project.teamSize}\nMilestones: ${project.milestoneCount}\nOpen Risks: ${project.openRisks}\nBlocked Tasks: ${project.blockedTasks}\nProjected Completion: ${project.projectedCompletion}\nHealth Score: ${project.healthScore}`);
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            container.innerHTML = '';
+            const projectsToShow = state.filteredProjects || initialData.projects;
+
+            // Simple timeline visualization
+            const timeline = document.createElement('div');
+            timeline.className = 'relative pl-8';
+            timeline.innerHTML = '<div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500"></div>';
+            projectsToShow.forEach((project, idx) => {
+                const item = document.createElement('div');
+                item.className = 'relative mb-8 pl-4';
+                item.innerHTML = `
+          <div class="absolute left-[-8px] top-2 w-4 h-4 rounded-full bg-cyan-500 border-4 border-white dark:border-gray-800"></div>
+          <div class="glass-card p-4 rounded-lg">
+            <h4 class="font-semibold">${project.name}</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Completion: ${project.completion}%</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500">Due: ${project.projectedCompletion}</p>
+            <details class="mt-2">
+              <summary class="text-xs text-cyan-600 dark:text-cyan-400 cursor-pointer">Milestones</summary>
+              <ul class="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                ${project.milestones.map(m => `<li>• ${m.name} (${m.status})</li>`).join('')}
+              </ul>
+            </details>
+          </div>
+        `;
+                timeline.appendChild(item);
+            });
+            container.appendChild(timeline);
+        }
+
+        function renderResourceTable() {
+            const tbody = document.getElementById('resource-table-body');
+            tbody.innerHTML = '';
+            const members = initialData.teamMembers;
+
+            members.forEach(member => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 dark:border-gray-700';
+                const overtimeClass = member.overtime ? 'text-red-500' : 'text-gray-600 dark:text-gray-400';
+                row.innerHTML = `
+          <td class="p-3">${member.name}</td>
+          <td class="p-3">${member.utilization}%</td>
+          <td class="p-3">${member.capacity}%</td>
+          <td class="p-3">${member.availability}%</td>
+          <td class="p-3"><span class="${overtimeClass}">${member.overtime ? 'Yes' : 'No'}</span></td>
+        `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderRisksTable() {
+            const tbody = document.getElementById('risks-table-body');
+            tbody.innerHTML = '';
+            const risks = initialData.projects.flatMap(p => p.risks);
+
+            risks.forEach(risk => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 dark:border-gray-700';
+                const severityColor = risk.severity === 'High' ? 'badge-danger' : risk.severity === 'Medium' ? 'badge-warning' : 'badge-neutral';
+                row.innerHTML = `
+          <td class="p-3">${risk.description}</td>
+          <td class="p-3"><span class="badge ${severityColor}">${risk.severity}</span></td>
+          <td class="p-3">${(risk.probability * 100).toFixed(0)}%</td>
+          <td class="p-3">${risk.impact}</td>
+          <td class="p-3">${risk.mitigation}</td>
+          <td class="p-3">${risk.owner}</td>
+        `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderIntegrationStatus() {
+            const container = document.getElementById('integration-status');
+            container.innerHTML = '';
+            initialData.integrations.forEach(integration => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800';
+                const statusColor = integration.status === 'Connected' ? 'bg-green-500' : 'bg-yellow-500';
+                const statusText = integration.status === 'Connected' ? 'Connected' : 'Disconnected';
+                item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full ${statusColor}"></div>
+            <span class="font-medium">${integration.name}</span>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-gray-600 dark:text-gray-400">Latency: ${integration.latency}ms</div>
+            <div class="text-xs text-gray-500 dark:text-gray-500">Last Sync: ${integration.lastSync}</div>
+          </div>
+        `;
+                container.appendChild(item);
+            });
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notes-list');
+            container.innerHTML = '';
+            initialData.notes.forEach(note => {
+                const item = document.createElement('div');
+                item.className = 'p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border-l-4 border-cyan-500';
+                item.innerHTML = `
+          <h5 class="font-semibold text-sm">${note.title}</h5>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${note.content}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">${note.date}</p>
+        `;
+                container.appendChild(item);
+            });
+        }
+
+        function addNote() {
+            const title = document.getElementById('note-title').value;
+            const content = document.getElementById('note-content').value;
+            if (!title || !content) return;
+            const newNote = {
+                id: initialData.notes.length + 1,
+                title,
+                content,
+                date: new Date().toLocaleDateString(),
+            };
+            initialData.notes.push(newNote);
+            renderNotes();
+            document.getElementById('note-title').value = '';
+            document.getElementById('note-content').value = '';
+        }
+
+        // --- Charts ---
+        function renderCharts() {
+            const ctx1 = document.getElementById('chart-completion-trend').getContext('2d');
+            const ctx2 = document.getElementById('chart-budget-actual').getContext('2d');
+            const ctx3 = document.getElementById('chart-velocity').getContext('2d');
+            const ctx4 = document.getElementById('chart-resource-allocation').getContext('2d');
+            const ctx5 = document.getElementById('chart-risks').getContext('2d');
+            const ctx6 = document.getElementById('chart-milestones').getContext('2d');
+            const ctx7 = document.getElementById('chart-timeline').getContext('2d');
+            const ctx8 = document.getElementById('chart-team-workload').getContext('2d');
+            const ctx9 = document.getElementById('chart-risk-distribution').getContext('2d');
+
+            // Generate synthetic time series based on period
+            const periods = { quarterly: 4, monthly: 12, weekly: 52 };
+            const dataPoints = periods[state.period] || 12;
+            const labels = Array.from({ length: dataPoints }, (_, i) => {
+                const date = new Date();
+                date.setMonth(date.getMonth() - dataPoints + i);
+                return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            });
+
+            // Chart 1: Project Completion Trend
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Mobile Platform',
+                            data: generateTrend(78, dataPoints, 0.02),
+                            borderColor: 'rgb(0, 240, 255)',
+                            backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(0, 240, 255, 0.8)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        },
+                        {
+                            label: 'Customer Analytics',
+                            data: generateTrend(65, dataPoints, 0.03),
+                            borderColor: 'rgb(191, 0, 255)',
+                            backgroundColor: 'rgba(191, 0, 255, 0.1)',
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(191, 0, 255, 0.8)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { display: false },
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                    },
+                },
+            });
+
+            // Chart 2: Budget vs Actual
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Mobile Platform', 'Customer Analytics', 'Internal Tools', 'Cloud Migration', 'HR Portal'],
+                    datasets: [
+                        {
+                            label: 'Budget',
+                            data: [5000000, 4500000, 800000, 3200000, 600000],
+                            backgroundColor: 'rgba(0, 240, 255, 0.2)',
+                            borderColor: 'rgba(0, 240, 255, 0.8)',
+                            borderWidth: 1,
+                        },
+                        {
+                            label: 'Actual',
+                            data: [3900000, 3150000, 360000, 3150000, 180000],
+                            backgroundColor: 'rgba(191, 0, 255, 0.2)',
+                            borderColor: 'rgba(191, 0, 255, 0.8)',
+                            borderWidth: 1,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => `$${(value / 1000000).toFixed(1)}M`,
+                                color: state.theme === 'dark' ? '#94a3b8' : '#64748b',
+                            },
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                    },
+                },
+            });
+
+            // Chart 3: Team Velocity (Agile only)
+            new Chart(ctx3, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Velocity (Story Points)',
+                            data: generateTrend(45, dataPoints, 0.5),
+                            borderColor: 'rgb(0, 240, 255)',
+                            backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(0, 240, 255, 0.8)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        },
+                        {
+                            label: 'Sprint Throughput',
+                            data: generateTrend(38, dataPoints, 0.4),
+                            borderColor: 'rgb(191, 0, 255)',
+                            backgroundColor: 'rgba(191, 0, 255, 0.1)',
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(191, 0, 255, 0.8)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { display: false },
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                    },
+                },
+            });
+
+            // Chart 4: Resource Allocation by Department
+            const deptData = {
+                labels: ['Product', 'Analytics', 'Operations', 'Infrastructure', 'HR'],
+                datasets: [
+                    {
+                        label: 'Allocated Hours',
+                        data: [1200, 800, 400, 600, 200],
+                        backgroundColor: [
+                            'rgba(0, 240, 255, 0.6)',
+                            'rgba(191, 0, 255, 0.6)',
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(255, 205, 86, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                        ],
+                        borderColor: [
+                            'rgba(0, 240, 255, 1)',
+                            'rgba(191, 0, 255, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(54, 162, 235, 1)',
+                        ],
+                        borderWidth: 1,
+                    },
+                ],
+            };
+            new Chart(ctx4, {
+                type: 'pie',
+                data: deptData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                },
+            });
+
+            // Chart 5: Open Risks by Severity
+            new Chart(ctx5, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [
+                        {
+                            data: [8, 10, 4],
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                            ],
+                            borderColor: [
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(245, 158, 11, 1)',
+                                'rgba(16, 185, 129, 1)',
+                            ],
+                            borderWidth: 2,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                },
+            });
+
+            // Chart 6: Milestone Completion Progress
+            new Chart(ctx6, {
+                type: 'bar',
+                data: {
+                    labels: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5'],
+                    datasets: [
+                        {
+                            label: 'Mobile Platform',
+                            data: [100, 60, 30, 0, 0],
+                            backgroundColor: 'rgba(0, 240, 255, 0.6)',
+                            borderColor: 'rgba(0, 240, 255, 1)',
+                            borderWidth: 1,
+                        },
+                        {
+                            label: 'Customer Analytics',
+                            data: [100, 70, 40, 0, 0],
+                            backgroundColor: 'rgba(191, 0, 255, 0.6)',
+                            borderColor: 'rgba(191, 0, 255, 1)',
+                            borderWidth: 1,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                    },
+                },
+            });
+
+            // Chart 7: Planned vs Actual Timeline
+            new Chart(ctx7, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Planned',
+                            data: [
+                                { x: 0, y: 0 },
+                                { x: 1, y: 25 },
+                                { x: 2, y: 50 },
+                                { x: 3, y: 75 },
+                                { x: 4, y: 100 },
+                            ],
+                            backgroundColor: 'rgba(0, 240, 255, 0.3)',
+                            borderColor: 'rgba(0, 240, 255, 0.8)',
+                            borderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                        },
+                        {
+                            label: 'Actual',
+                            data: [
+                                { x: 0, y: 0 },
+                                { x: 1, y: 30 },
+                                { x: 2, y: 55 },
+                                { x: 3, y: 70 },
+                                { x: 4, y: 85 },
+                            ],
+                            backgroundColor: 'rgba(191, 0, 255, 0.3)',
+                            borderColor: 'rgba(191, 0, 255, 0.8)',
+                            borderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false },
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { display: true, text: 'Sprint' },
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: 'Completion %' },
+                            ticks: { color: state.theme === 'dark' ? '#94a3b8' : '#64748b' },
+                        },
+                    },
+                },
+            });
+
+            // Chart 8: Team Workload
+            new Chart(ctx8, {
+                type: 'radar',
+                data: {
+                    labels: ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Mark', 'Lisa', 'Nancy', 'Tom', 'Sara'],
+                    datasets: [
+                        {
+                            label: 'Utilization',
+                            data: [92, 85, 78, 90, 70, 88, 95, 65, 80, 75],
+                            backgroundColor: 'rgba(0, 240, 255, 0.2)',
+                            borderColor: 'rgba(0, 240, 255, 0.8)',
+                            pointBackgroundColor: 'rgba(0, 240, 255, 0.8)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scale: {
+                        ticks: {
+                            beginAtZero: true,
+                            max: 100,
+                            stepSize: 20,
+                        },
+                        pointLabels: {
+                            fontSize: 12,
+                            fontColor: state.theme === 'dark' ? '#94a3b8' : '#64748b',
+                        },
+                        gridLines: {
+                            color: state.theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                        },
+                        angleLines: {
+                            color: state.theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                        },
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                },
+            });
+
+            // Chart 9: Risk Distribution (Gauge style)
+            new Chart(ctx9, {
+                type: 'pie',
+                data: {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [
+                        {
+                            data: [8, 10, 4],
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.8)',
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                            ],
+                            borderColor: [
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(245, 158, 11, 1)',
+                                'rgba(16, 185, 129, 1)',
+                            ],
+                            borderWidth: 2,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                        },
+                    },
+                },
+            });
+        }
+
+        function generateTrend(base, length, variance) {
+            const trend = [];
+            let current = base;
+            for (let i = 0; i < length; i++) {
+                current += (Math.random() - 0.5) * variance * 100;
+                trend.push(Math.max(0, Math.min(100, current)));
+            }
+            return trend;
+        }
+
+        // --- Update Summary Metrics ---
+        function updateSummaryMetrics() {
+            const projects = state.filteredProjects || initialData.projects;
+            const active = projects.filter(p => p.status === 'In Progress').length;
+            const completed = projects.filter(p => p.status === 'Completed').length;
+            const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
+            const totalActual = projects.reduce((sum, p) => sum + p.actualSpend, 0);
+            const utilization = (totalActual / totalBudget) * 100;
+            const healthScore = projects.reduce((sum, p) => sum + p.healthScore, 0) / projects.length;
+            const teamMembers = initialData.teamMembers.length;
+            const annualSpend = totalBudget * 12 / 1000000; // in millions
+
+            document.getElementById('summary-active-projects').textContent = active;
+            document.getElementById('summary-completed').textContent = completed;
+            // Update gauge visually
+            const gaugePath = document.querySelector('.gauge svg path.circle');
+            const dashArray = 75 * (healthScore / 100);
+            gaugePath.setAttribute('stroke-dasharray', `${dashArray}, 100`);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            // Ensure charts render after theme change
+            renderCharts();
+        });
+
+    </script>
+</body>
+
+</html>

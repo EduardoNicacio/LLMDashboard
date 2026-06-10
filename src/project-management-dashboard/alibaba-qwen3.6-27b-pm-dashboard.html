@@ -1,0 +1,3624 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Command Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --transition-speed: 0.4s;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1a2235;
+            --bg-card: rgba(26, 34, 53, 0.85);
+            --bg-card-hover: rgba(36, 48, 72, 0.9);
+            --bg-glass: rgba(17, 24, 39, 0.7);
+            --bg-glass-border: rgba(99, 102, 241, 0.15);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-tertiary: #06b6d4;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-info: #3b82f6;
+            --border-color: rgba(99, 102, 241, 0.12);
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --glow-primary: rgba(99, 102, 241, 0.3);
+            --glow-success: rgba(16, 185, 129, 0.3);
+            --glow-warning: rgba(245, 158, 11, 0.3);
+            --glow-danger: rgba(239, 68, 68, 0.3);
+            --chart-grid: rgba(148, 163, 184, 0.1);
+            --scrollbar-track: #1a2235;
+            --scrollbar-thumb: #374151;
+            --input-bg: rgba(30, 41, 59, 0.8);
+            --overlay-bg: rgba(0, 0, 0, 0.6);
+            --neon-blue: #00d4ff;
+            --neon-purple: #a855f7;
+            --neon-green: #22d3ee;
+            --neon-pink: #ec4899;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-card-hover: rgba(248, 250, 252, 0.95);
+            --bg-glass: rgba(255, 255, 255, 0.75);
+            --bg-glass-border: rgba(99, 102, 241, 0.2);
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-primary: #4f46e5;
+            --accent-secondary: #7c3aed;
+            --accent-tertiary: #0891b2;
+            --accent-success: #059669;
+            --accent-warning: #d97706;
+            --accent-danger: #dc2626;
+            --accent-info: #2563eb;
+            --border-color: rgba(148, 163, 184, 0.2);
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --glow-primary: rgba(79, 70, 229, 0.15);
+            --glow-success: rgba(5, 150, 105, 0.15);
+            --glow-warning: rgba(217, 119, 6, 0.15);
+            --glow-danger: rgba(220, 38, 38, 0.15);
+            --chart-grid: rgba(148, 163, 184, 0.2);
+            --scrollbar-track: #e2e8f0;
+            --scrollbar-thumb: #94a3b8;
+            --input-bg: rgba(241, 245, 249, 0.9);
+            --overlay-bg: rgba(0, 0, 0, 0.3);
+            --neon-blue: #0284c7;
+            --neon-purple: #7c3aed;
+            --neon-green: #0d9488;
+            --neon-pink: #db2777;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-primary);
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: all var(--transition-speed) ease;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px var(--glow-primary);
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .logo-subtitle {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 12px;
+        }
+
+        .nav-section-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            padding: 12px 12px 6px;
+            font-weight: 700;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 2px;
+            user-select: none;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+            color: var(--accent-primary);
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+        }
+
+        .nav-item .nav-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item .nav-badge {
+            margin-left: auto;
+            background: var(--accent-danger);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .user-profile:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .breadcrumb {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .top-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .top-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            box-shadow: 0 0 15px var(--glow-primary);
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            border-radius: 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .theme-toggle .toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+
+        [data-theme="light"] .theme-toggle .toggle-thumb {
+            left: 26px;
+            background: var(--accent-warning);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* View Panels */
+        .view-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 32px var(--shadow-color), 0 0 20px var(--glow-primary);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Summary */
+        .hero-section {
+            margin-bottom: 24px;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .hero-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .hero-card.purple::before {
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .hero-card.green::before {
+            background: linear-gradient(90deg, var(--accent-success), var(--accent-tertiary));
+        }
+
+        .hero-card.blue::before {
+            background: linear-gradient(90deg, var(--accent-info), var(--accent-tertiary));
+        }
+
+        .hero-card.orange::before {
+            background: linear-gradient(90deg, var(--accent-warning), var(--accent-danger));
+        }
+
+        .hero-card.cyan::before {
+            background: linear-gradient(90deg, var(--accent-tertiary), var(--accent-info));
+        }
+
+        .hero-card.pink::before {
+            background: linear-gradient(90deg, var(--neon-pink), var(--accent-secondary));
+        }
+
+        .hero-card.teal::before {
+            background: linear-gradient(90deg, var(--neon-green), var(--accent-success));
+        }
+
+        .hero-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px var(--shadow-color);
+        }
+
+        .hero-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .hero-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .hero-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-trend {
+            font-size: 11px;
+            margin-top: 6px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .hero-trend.up {
+            color: var(--accent-success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .hero-trend.down {
+            color: var(--accent-danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            margin-top: 24px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .icon {
+            font-size: 18px;
+        }
+
+        /* Comparison Panel */
+        .comparison-panel {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: start;
+            margin-bottom: 24px;
+        }
+
+        .comparison-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-card:hover {
+            box-shadow: 0 8px 32px var(--shadow-color);
+        }
+
+        .comparison-card.winner {
+            border-color: var(--accent-success);
+            box-shadow: 0 0 30px var(--glow-success);
+        }
+
+        .comparison-vs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--accent-primary);
+            text-shadow: 0 0 20px var(--glow-primary);
+            padding-top: 60px;
+        }
+
+        .comparison-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comparison-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .comparison-metric:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-metric-label {
+            color: var(--text-secondary);
+        }
+
+        .comparison-metric-value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .comparison-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .comparison-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        /* Project Cards */
+        .project-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px var(--shadow-color);
+            border-color: var(--accent-primary);
+        }
+
+        .project-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .project-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .project-status {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .status-on-track {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+        }
+
+        .status-at-risk {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
+        }
+
+        .status-off-track {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+        }
+
+        .status-completed {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-info);
+        }
+
+        .project-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .project-metric {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .project-metric-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .project-health-bar {
+            margin-top: 12px;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .project-health-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s ease;
+        }
+
+        .health-excellent {
+            background: linear-gradient(90deg, var(--accent-success), var(--accent-tertiary));
+        }
+
+        .health-good {
+            background: linear-gradient(90deg, var(--accent-info), var(--accent-success));
+        }
+
+        .health-fair {
+            background: linear-gradient(90deg, var(--accent-warning), var(--accent-info));
+        }
+
+        .health-poor {
+            background: linear-gradient(90deg, var(--accent-danger), var(--accent-warning));
+        }
+
+        /* Charts */
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover {
+            box-shadow: 0 8px 32px var(--shadow-color);
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 250px;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .table-toolbar {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            width: 250px;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px var(--glow-primary);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-select:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .filter-select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+        .data-table th:hover {
+            color: var(--accent-primary);
+        }
+
+        .data-table th .sort-icon {
+            margin-left: 4px;
+            font-size: 10px;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .data-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .data-table tr.expandable {
+            cursor: pointer;
+        }
+
+        .data-table .expand-icon {
+            transition: transform 0.3s ease;
+            display: inline-block;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .data-table .expand-icon.expanded {
+            transform: rotate(90deg);
+            color: var(--accent-primary);
+        }
+
+        .detail-row td {
+            background: var(--bg-tertiary) !important;
+            padding: 0 !important;
+        }
+
+        .detail-content {
+            padding: 16px 20px;
+            display: none;
+        }
+
+        .detail-content.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+
+            to {
+                opacity: 1;
+                max-height: 500px;
+            }
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .detail-item {
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .detail-item-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .detail-item-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Timeline */
+        .timeline-container {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+            border-radius: 1px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .timeline-item:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 20px var(--shadow-color);
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -26px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            border: 2px solid var(--bg-primary);
+            box-shadow: 0 0 10px var(--glow-primary);
+        }
+
+        .timeline-dot.completed {
+            background: var(--accent-success);
+            box-shadow: 0 0 10px var(--glow-success);
+        }
+
+        .timeline-dot.in-progress {
+            background: var(--accent-warning);
+            box-shadow: 0 0 10px var(--glow-warning);
+        }
+
+        .timeline-dot.upcoming {
+            background: var(--accent-info);
+        }
+
+        .timeline-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .timeline-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .timeline-details {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .timeline-details.show {
+            display: block;
+        }
+
+        /* Risk Cards */
+        .risk-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+        }
+
+        .risk-card.critical {
+            border-left-color: var(--accent-danger);
+        }
+
+        .risk-card.high {
+            border-left-color: var(--accent-warning);
+        }
+
+        .risk-card.medium {
+            border-left-color: var(--accent-info);
+        }
+
+        .risk-card.low {
+            border-left-color: var(--accent-success);
+        }
+
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .risk-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .risk-severity {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .risk-severity.critical {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+        }
+
+        .risk-severity.high {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
+        }
+
+        .risk-severity.medium {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-info);
+        }
+
+        .risk-severity.low {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+        }
+
+        .risk-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .risk-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Integration Status */
+        .integration-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .integration-card:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .integration-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .integration-info {
+            flex: 1;
+        }
+
+        .integration-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .integration-status {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.online {
+            background: var(--accent-success);
+            box-shadow: 0 0 8px var(--glow-success);
+        }
+
+        .status-dot.warning {
+            background: var(--accent-warning);
+            box-shadow: 0 0 8px var(--glow-warning);
+        }
+
+        .status-dot.offline {
+            background: var(--accent-danger);
+            box-shadow: 0 0 8px var(--glow-danger);
+        }
+
+        .integration-latency {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        /* Toggle Controls */
+        .toggle-group {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 3px;
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 2px 8px var(--glow-primary);
+        }
+
+        .toggle-btn:hover:not(.active) {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        /* Notes Section */
+        .notes-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .note-input-area {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .note-textarea {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .note-textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px var(--glow-primary);
+        }
+
+        .note-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .note-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            align-self: flex-end;
+        }
+
+        .note-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px var(--glow-primary);
+        }
+
+        .note-item {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .note-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .note-author {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .note-date {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .note-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Winner Breakdown */
+        .winner-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .winner-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .winner-criteria {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .winner-criterion {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .winner-criterion-icon {
+            font-size: 20px;
+        }
+
+        .winner-criterion-info {
+            flex: 1;
+        }
+
+        .winner-criterion-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .winner-criterion-winner {
+            font-size: 11px;
+            color: var(--accent-success);
+            font-weight: 600;
+        }
+
+        .winner-criterion-bar {
+            display: flex;
+            gap: 2px;
+            margin-top: 6px;
+        }
+
+        .winner-bar-segment {
+            height: 4px;
+            border-radius: 2px;
+            flex: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comparison-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-vs {
+                padding: 8px 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .table-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+        }
+
+        /* Animations */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px var(--glow-primary);
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--glow-primary);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-danger);
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-info);
+        }
+
+        /* Workload bars */
+        .workload-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .workload-bar-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            width: 120px;
+            flex-shrink: 0;
+        }
+
+        .workload-bar-track {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .workload-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .workload-bar-value {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+            width: 40px;
+            text-align: right;
+        }
+
+        /* API Panel */
+        .api-stat {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .api-stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .api-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tab content transitions */
+        .tab-content {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            display: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            border: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Sparkline mini chart */
+        .mini-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 30px;
+        }
+
+        .mini-chart-bar {
+            width: 4px;
+            border-radius: 2px;
+            background: var(--accent-primary);
+            transition: height 0.5s ease;
+            opacity: 0.7;
+        }
+
+        .mini-chart-bar:hover {
+            opacity: 1;
+        }
+
+        /* Loading shimmer */
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-card) 50%, var(--bg-tertiary) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">PM</div>
+                <div>
+                    <div class="logo-text">Command Center</div>
+                    <div class="logo-subtitle">Enterprise PMO</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main Views</div>
+                <div class="nav-item active" data-view="summary" onclick="switchView('summary')">
+                    <span class="nav-icon">📊</span> Summary Dashboard
+                </div>
+                <div class="nav-item" data-view="projects" onclick="switchView('projects')">
+                    <span class="nav-icon">📁</span> Projects
+                </div>
+                <div class="nav-item" data-view="timeline" onclick="switchView('timeline')">
+                    <span class="nav-icon">📅</span> Timeline
+                </div>
+                <div class="nav-item" data-view="resources" onclick="switchView('resources')">
+                    <span class="nav-icon">👥</span> Resources
+                </div>
+                <div class="nav-item" data-view="risks" onclick="switchView('risks')">
+                    <span class="nav-icon">⚠️</span> Risk Management
+                    <span class="nav-badge">5</span>
+                </div>
+                <div class="nav-item" data-view="operations" onclick="switchView('operations')">
+                    <span class="nav-icon">⚙️</span> Operations
+                </div>
+                <div class="nav-section-title" style="margin-top:16px">Controls</div>
+                <div class="nav-item" onclick="toggleReportingMode()">
+                    <span class="nav-icon">🔄</span> <span id="reportingModeLabel">Agile Mode</span>
+                </div>
+                <div class="nav-item" onclick="toggleViewScope()">
+                    <span class="nav-icon">🔭</span> <span id="viewScopeLabel">Portfolio View</span>
+                </div>
+                <div class="nav-item" onclick="toggleReportingPeriod()">
+                    <span class="nav-icon">📆</span> <span id="reportingPeriodLabel">Quarterly</span>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">JD</div>
+                    <div class="user-info">
+                        <div class="user-name">Jane Doe</div>
+                        <div class="user-role">Senior PMO Director</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="mobile-menu-btn"
+                        onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+                    <div>
+                        <div class="page-title" id="pageTitle">Summary Dashboard</div>
+                        <div class="breadcrumb" id="breadcrumb">Home / Summary Dashboard</div>
+                    </div>
+                </div>
+                <div class="top-bar-right">
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-period="quarterly"
+                            onclick="setReportingPeriod('quarterly', this)">Quarterly</button>
+                        <button class="toggle-btn" data-period="monthly"
+                            onclick="setReportingPeriod('monthly', this)">Monthly</button>
+                        <button class="toggle-btn" data-period="weekly"
+                            onclick="setReportingPeriod('weekly', this)">Weekly</button>
+                    </div>
+                    <button class="top-btn" onclick="exportDashboard()" title="Export">📥</button>
+                    <button class="top-btn" onclick="refreshData()" title="Refresh">🔄</button>
+                    <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                        <div class="toggle-thumb" id="themeThumb">🌙</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+
+                <!-- ==================== SUMMARY VIEW ==================== -->
+                <div class="view-panel active" id="view-summary">
+                    <!-- Hero Summary -->
+                    <div class="hero-section">
+                        <div class="hero-grid">
+                            <div class="hero-card purple">
+                                <div class="hero-icon">📁</div>
+                                <div class="hero-value" id="heroActiveProjects">12</div>
+                                <div class="hero-label">Active Projects</div>
+                                <div class="hero-trend up">↑ 3 this quarter</div>
+                            </div>
+                            <div class="hero-card green">
+                                <div class="hero-icon">✅</div>
+                                <div class="hero-value" id="heroCompleted">28</div>
+                                <div class="hero-label">Completed Projects</div>
+                                <div class="hero-trend up">↑ 12% vs last year</div>
+                            </div>
+                            <div class="hero-card blue">
+                                <div class="hero-icon">💚</div>
+                                <div class="hero-value" id="heroHealthScore">87%</div>
+                                <div class="hero-label">Portfolio Health</div>
+                                <div class="hero-trend up">↑ 5 pts</div>
+                            </div>
+                            <div class="hero-card orange">
+                                <div class="hero-icon">💰</div>
+                                <div class="hero-value" id="heroBudgetUtil">73%</div>
+                                <div class="hero-label">Budget Utilization</div>
+                                <div class="hero-trend down">↓ 2% over budget</div>
+                            </div>
+                            <div class="hero-card cyan">
+                                <div class="hero-icon">⏱️</div>
+                                <div class="hero-value" id="heroOnTime">82%</div>
+                                <div class="hero-label">On-Time Delivery</div>
+                                <div class="hero-trend up">↑ 4% improvement</div>
+                            </div>
+                            <div class="hero-card pink">
+                                <div class="hero-icon">👥</div>
+                                <div class="hero-value" id="heroTeamSize">147</div>
+                                <div class="hero-label">Team Members</div>
+                                <div class="hero-trend up">↑ 12 new hires</div>
+                            </div>
+                            <div class="hero-card teal">
+                                <div class="hero-icon">📈</div>
+                                <div class="hero-value" id="heroAnnualSpend">$4.2M</div>
+                                <div class="hero-label">Projected Annual Spend</div>
+                                <div class="hero-trend down">↓ 8% under forecast</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Panel -->
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">⚔️</span> Flagship Project Comparison</div>
+                    </div>
+                    <div class="comparison-panel">
+                        <div class="comparison-card winner" id="compCard1">
+                            <div class="comparison-name">📱 Mobile Platform Modernization</div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Schedule Progress</span>
+                                <span class="comparison-metric-value">78%</span>
+                            </div>
+                            <div class="comparison-bar">
+                                <div class="comparison-bar-fill"
+                                    style="width:78%;background:linear-gradient(90deg,var(--accent-success),var(--accent-tertiary))">
+                                </div>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Budget Variance</span>
+                                <span class="comparison-metric-value" style="color:var(--accent-success)">-3.2%</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Task Completion</span>
+                                <span class="comparison-metric-value">84%</span>
+                            </div>
+                            <div class="comparison-bar">
+                                <div class="comparison-bar-fill"
+                                    style="width:84%;background:linear-gradient(90deg,var(--accent-primary),var(--accent-secondary))">
+                                </div>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Risk Score</span>
+                                <span class="comparison-metric-value" style="color:var(--accent-success)">Low
+                                    (2.1)</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Resource Utilization</span>
+                                <span class="comparison-metric-value">91%</span>
+                            </div>
+                            <div class="comparison-bar">
+                                <div class="comparison-bar-fill"
+                                    style="width:91%;background:linear-gradient(90deg,var(--accent-info),var(--accent-primary))">
+                                </div>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Stakeholder Satisfaction</span>
+                                <span class="comparison-metric-value">4.6/5.0</span>
+                            </div>
+                        </div>
+                        <div class="comparison-vs">VS</div>
+                        <div class="comparison-card" id="compCard2">
+                            <div class="comparison-name">📊 Customer Analytics Initiative</div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Schedule Progress</span>
+                                <span class="comparison-metric-value">65%</span>
+                            </div>
+                            <div class="comparison-bar">
+                                <div class="comparison-bar-fill"
+                                    style="width:65%;background:linear-gradient(90deg,var(--accent-warning),var(--accent-info))">
+                                </div>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Budget Variance</span>
+                                <span class="comparison-metric-value" style="color:var(--accent-warning)">+5.8%</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Task Completion</span>
+                                <span class="comparison-metric-value">71%</span>
+                            </div>
+                            <div class="comparison-bar">
+                                <div class="comparison-bar-fill"
+                                    style="width:71%;background:linear-gradient(90deg,var(--accent-primary),var(--accent-secondary))">
+                                </div>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Risk Score</span>
+                                <span class="comparison-metric-value" style="color:var(--accent-warning)">Medium
+                                    (4.3)</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Resource Utilization</span>
+                                <span class="comparison-metric-value">76%</span>
+                            </div>
+                            <div class="comparison-bar">
+                                <div class="comparison-bar-fill"
+                                    style="width:76%;background:linear-gradient(90deg,var(--accent-info),var(--accent-primary))">
+                                </div>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-metric-label">Stakeholder Satisfaction</span>
+                                <span class="comparison-metric-value">3.9/5.0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Winner Breakdown -->
+                    <div class="winner-section">
+                        <div class="winner-title">🏆 Winner Breakdown — Mobile Platform Modernization</div>
+                        <div class="winner-criteria">
+                            <div class="winner-criterion">
+                                <div class="winner-criterion-icon">📅</div>
+                                <div class="winner-criterion-info">
+                                    <div class="winner-criterion-label">Schedule Adherence</div>
+                                    <div class="winner-criterion-winner">Mobile Platform: 78% vs 65%</div>
+                                </div>
+                            </div>
+                            <div class="winner-criterion">
+                                <div class="winner-criterion-icon">💰</div>
+                                <div class="winner-criterion-info">
+                                    <div class="winner-criterion-label">Budget Control</div>
+                                    <div class="winner-criterion-winner">Mobile Platform: -3.2% vs +5.8%</div>
+                                </div>
+                            </div>
+                            <div class="winner-criterion">
+                                <div class="winner-criterion-icon">⚡</div>
+                                <div class="winner-criterion-info">
+                                    <div class="winner-criterion-label">Team Productivity</div>
+                                    <div class="winner-criterion-winner">Mobile Platform: 91% vs 76% utilization</div>
+                                </div>
+                            </div>
+                            <div class="winner-criterion">
+                                <div class="winner-criterion-icon">✨</div>
+                                <div class="winner-criterion-info">
+                                    <div class="winner-criterion-label">Delivery Quality</div>
+                                    <div class="winner-criterion-winner">Mobile Platform: 98.2% pass rate</div>
+                                </div>
+                            </div>
+                            <div class="winner-criterion">
+                                <div class="winner-criterion-icon">🤝</div>
+                                <div class="winner-criterion-info">
+                                    <div class="winner-criterion-label">Stakeholder Satisfaction</div>
+                                    <div class="winner-criterion-winner">Mobile Platform: 4.6 vs 3.9</div>
+                                </div>
+                            </div>
+                            <div class="winner-criterion">
+                                <div class="winner-criterion-icon">💚</div>
+                                <div class="winner-criterion-info">
+                                    <div class="winner-criterion-label">Overall Health</div>
+                                    <div class="winner-criterion-winner">Mobile Platform: 92 vs 74</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 1 -->
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">📈</span> Portfolio Analytics</div>
+                    </div>
+                    <div class="grid-3" style="margin-bottom:16px">
+                        <div class="chart-container">
+                            <div class="chart-title">📊 Project Completion Trend</div>
+                            <div class="chart-wrapper"><canvas id="chartCompletion"></canvas></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">💰 Budget vs Actual Spend</div>
+                            <div class="chart-wrapper"><canvas id="chartBudget"></canvas></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">⚡ Team Velocity & Sprint Throughput</div>
+                            <div class="chart-wrapper"><canvas id="chartVelocity"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 2 -->
+                    <div class="grid-3" style="margin-bottom:16px">
+                        <div class="chart-container">
+                            <div class="chart-title">👥 Resource Allocation by Department</div>
+                            <div class="chart-wrapper"><canvas id="chartResources"></canvas></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">⚠️ Open Risks by Severity</div>
+                            <div class="chart-wrapper"><canvas id="chartRisks"></canvas></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">🎯 Milestone Completion Progress</div>
+                            <div class="chart-wrapper"><canvas id="chartMilestones"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 3 -->
+                    <div class="grid-2" style="margin-bottom:16px">
+                        <div class="chart-container">
+                            <div class="chart-title">📅 Planned vs Actual Timeline Performance</div>
+                            <div class="chart-wrapper"><canvas id="chartTimeline"></canvas></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">📊 Portfolio Health Distribution</div>
+                            <div class="chart-wrapper"><canvas id="chartHealth"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Project Cards -->
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">📁</span> Active Projects Overview</div>
+                    </div>
+                    <div class="grid-3" id="projectCardsContainer" style="margin-bottom:24px"></div>
+
+                    <!-- Notes Section -->
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">📝</span> Executive Commentary</div>
+                    </div>
+                    <div class="notes-section">
+                        <div class="note-input-area">
+                            <textarea class="note-textarea" id="noteInput"
+                                placeholder="Add observations, delivery updates, concerns, lessons learned, or future outlook..."></textarea>
+                            <button class="note-btn" onclick="addNote()">Add Note</button>
+                        </div>
+                        <div id="notesContainer"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== PROJECTS VIEW ==================== -->
+                <div class="view-panel" id="view-projects">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">📁</span> All Projects</div>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" onclick="setProjectFilter('all', this)">All</button>
+                            <button class="toggle-btn" onclick="setProjectFilter('active', this)">Active</button>
+                            <button class="toggle-btn" onclick="setProjectFilter('at-risk', this)">At Risk</button>
+                            <button class="toggle-btn" onclick="setProjectFilter('completed', this)">Completed</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <input type="text" class="search-input" id="projectSearch"
+                                placeholder="🔍 Search projects..." oninput="filterProjects()">
+                            <div class="filter-group">
+                                <select class="filter-select" id="filterTeam" onchange="filterProjects()">
+                                    <option value="">All Teams</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Data Science">Data Science</option>
+                                    <option value="Product">Product</option>
+                                    <option value="DevOps">DevOps</option>
+                                    <option value="Security">Security</option>
+                                    <option value="QA">QA</option>
+                                </select>
+                                <select class="filter-select" id="filterStatus" onchange="filterProjects()">
+                                    <option value="">All Statuses</option>
+                                    <option value="On Track">On Track</option>
+                                    <option value="At Risk">At Risk</option>
+                                    <option value="Off Track">Off Track</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                                <select class="filter-select" id="filterDept" onchange="filterProjects()">
+                                    <option value="">All Departments</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Operations">Operations</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Marketing">Marketing</option>
+                                </select>
+                                <select class="filter-select" id="filterFY" onchange="filterProjects()">
+                                    <option value="">All Fiscal Years</option>
+                                    <option value="FY2024">FY2024</option>
+                                    <option value="FY2025">FY2025</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="overflow-x:auto">
+                            <table class="data-table" id="projectsTable">
+                                <thead>
+                                    <tr>
+                                        <th onclick="sortTable('projectsTable',0)">Project <span
+                                                class="sort-icon">↕</span></th>
+                                        <th onclick="sortTable('projectsTable',1)">Status <span
+                                                class="sort-icon">↕</span></th>
+                                        <th onclick="sortTable('projectsTable',2)">Completion <span
+                                                class="sort-icon">↕</span></th>
+                                        <th onclick="sortTable('projectsTable',3)">Budget <span
+                                                class="sort-icon">↕</span></th>
+                                        <th onclick="sortTable('projectsTable',4)">Actual Spend <span
+                                                class="sort-icon">↕</span></th>
+                                        <th onclick="sortTable('projectsTable',5)">Remaining <span
+                                                class="sort-icon">↕</span></th>
+                                        <th onclick="sortTable('projectsTable',6)">Team Size <span
+                                                class="sort-icon">↕</span></th>
+                                        <th onclick="sortTable('projectsTable',7)">Health Score <span
+                                                class="sort-icon">↕</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projectsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== TIMELINE VIEW ==================== -->
+                <div class="view-panel" id="view-timeline">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">📅</span> Project Timeline & Milestones</div>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" onclick="setTimelineFilter('all', this)">All
+                                Projects</button>
+                            <button class="toggle-btn" onclick="setTimelineFilter('mobile', this)">Mobile
+                                Platform</button>
+                            <button class="toggle-btn" onclick="setTimelineFilter('analytics', this)">Analytics</button>
+                            <button class="toggle-btn" onclick="setTimelineFilter('cloud', this)">Cloud
+                                Migration</button>
+                        </div>
+                    </div>
+                    <div class="timeline-container" id="timelineContainer">
+                        <div class="timeline-line"></div>
+                    </div>
+
+                    <div class="section-header" style="margin-top:32px">
+                        <div class="section-title"><span class="icon">📋</span> Sprint & Milestone History</div>
+                    </div>
+                    <div class="table-container">
+                        <div style="overflow-x:auto">
+                            <table class="data-table" id="milestonesTable">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Milestone / Sprint</th>
+                                        <th>Project</th>
+                                        <th>Planned Date</th>
+                                        <th>Actual Date</th>
+                                        <th>Status</th>
+                                        <th>Owner</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="milestonesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== RESOURCES VIEW ==================== -->
+                <div class="view-panel" id="view-resources">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">👥</span> Team Workload & Capacity</div>
+                    </div>
+                    <div class="grid-2" style="margin-bottom:16px">
+                        <div class="glass-card">
+                            <div class="chart-title">📊 Resource Utilization by Team Member</div>
+                            <div id="workloadBars"></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">📈 Capacity vs Demand</div>
+                            <div class="chart-wrapper"><canvas id="chartCapacity"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="grid-4" style="margin-bottom:16px">
+                        <div class="api-stat">
+                            <div class="api-stat-value" style="color:var(--accent-success)">89%</div>
+                            <div class="api-stat-label">Avg Utilization</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-value" style="color:var(--accent-warning)">147</div>
+                            <div class="api-stat-label">Total Resources</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-value" style="color:var(--accent-danger)">8</div>
+                            <div class="api-stat-label">Overtime Risk</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-value" style="color:var(--accent-info)">12</div>
+                            <div class="api-stat-label">Open Positions</div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <input type="text" class="search-input" placeholder="🔍 Search team members..."
+                                oninput="filterTeamTable(this.value)">
+                            <div class="filter-group">
+                                <select class="filter-select" onchange="filterTeamByDept(this.value)">
+                                    <option value="">All Departments</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Data Science">Data Science</option>
+                                    <option value="Product">Product</option>
+                                    <option value="DevOps">DevOps</option>
+                                    <option value="Security">Security</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="overflow-x:auto">
+                            <table class="data-table" id="teamTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Department</th>
+                                        <th>Role</th>
+                                        <th>Utilization</th>
+                                        <th>Capacity</th>
+                                        <th>Availability</th>
+                                        <th>Overtime Risk</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teamTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== RISKS VIEW ==================== -->
+                <div class="view-panel" id="view-risks">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">⚠️</span> Risk Management</div>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" onclick="setRiskFilter('all', this)">All</button>
+                            <button class="toggle-btn" onclick="setRiskFilter('critical', this)">Critical</button>
+                            <button class="toggle-btn" onclick="setRiskFilter('high', this)">High</button>
+                            <button class="toggle-btn" onclick="setRiskFilter('medium', this)">Medium</button>
+                            <button class="toggle-btn" onclick="setRiskFilter('low', this)">Low</button>
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-bottom:16px">
+                        <div class="chart-container">
+                            <div class="chart-title">📊 Risk Distribution</div>
+                            <div class="chart-wrapper"><canvas id="chartRiskDist"></canvas></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">📈 Risk Trend (Last 6 Months)</div>
+                            <div class="chart-wrapper"><canvas id="chartRiskTrend"></canvas></div>
+                        </div>
+                    </div>
+                    <div id="riskCardsContainer" style="margin-bottom:24px"></div>
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <input type="text" class="search-input" placeholder="🔍 Search risks..."
+                                oninput="filterRisks(this.value)">
+                        </div>
+                        <div style="overflow-x:auto">
+                            <table class="data-table" id="risksTable">
+                                <thead>
+                                    <tr>
+                                        <th>Risk ID</th>
+                                        <th>Description</th>
+                                        <th>Severity</th>
+                                        <th>Probability</th>
+                                        <th>Impact</th>
+                                        <th>Mitigation Status</th>
+                                        <th>Owner</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="risksTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== OPERATIONS VIEW ==================== -->
+                <div class="view-panel" id="view-operations">
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">🔗</span> Integrations Status</div>
+                    </div>
+                    <div class="grid-3" style="margin-bottom:24px" id="integrationsContainer"></div>
+
+                    <div class="section-header">
+                        <div class="section-title"><span class="icon">🤖</span> API Usage & Automation</div>
+                    </div>
+                    <div class="grid-4" style="margin-bottom:16px">
+                        <div class="api-stat">
+                            <div class="api-stat-value" style="color:var(--accent-primary)">24,847</div>
+                            <div class="api-stat-label">Workflow Executions</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-value" style="color:var(--accent-success)">98.7%</div>
+                            <div class="api-stat-label">Automation Success</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-value" style="color:var(--accent-warning)">1,203</div>
+                            <div class="api-stat-label">Webhook Calls (24h)</div>
+                        </div>
+                        <div class="api-stat">
+                            <div class="api-stat-value" style="color:var(--accent-tertiary)">$12,450</div>
+                            <div class="api-stat-label">Est. API Costs (MTD)</div>
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-bottom:16px">
+                        <div class="chart-container">
+                            <div class="chart-title">📊 API Call Volume (Last 7 Days)</div>
+                            <div class="chart-wrapper"><canvas id="chartAPI"></canvas></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">📈 Automation Savings Over Time</div>
+                            <div class="chart-wrapper"><canvas id="chartSavings"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="api-stat" style="text-align:left;padding:20px">
+                        <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:8px">💡 Total
+                            Automation Savings</div>
+                        <div style="font-size:28px;font-weight:800;color:var(--accent-success)">$342,000</div>
+                        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Estimated annual savings from
+                            automated workflows, reducing manual effort by ~1,200 hours</div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ==================== DATA MODEL ====================
+        const projectsData = [
+            { id: 'PRJ-001', name: 'Mobile Platform Modernization', status: 'On Track', completion: 78, budget: 850000, actualSpend: 642000, teamSize: 24, milestones: 18, openRisks: 2, blockedTasks: 1, projectedDate: '2025-03-15', healthScore: 92, department: 'Technology', team: 'Engineering', owner: 'Sarah Chen', fy: 'FY2025', quarter: 'Q1' },
+            { id: 'PRJ-002', name: 'Customer Analytics Initiative', status: 'At Risk', completion: 65, budget: 620000, actualSpend: 485000, teamSize: 18, milestones: 14, openRisks: 4, blockedTasks: 3, projectedDate: '2025-04-30', healthScore: 74, department: 'Technology', team: 'Data Science', owner: 'Marcus Johnson', fy: 'FY2025', quarter: 'Q1' },
+            { id: 'PRJ-003', name: 'Cloud Infrastructure Migration', status: 'On Track', completion: 52, budget: 1200000, actualSpend: 580000, teamSize: 32, milestones: 22, openRisks: 3, blockedTasks: 2, projectedDate: '2025-06-30', healthScore: 85, department: 'Technology', team: 'DevOps', owner: 'Priya Patel', fy: 'FY2025', quarter: 'Q2' },
+            { id: 'PRJ-004', name: 'Enterprise Security Overhaul', status: 'On Track', completion: 41, budget: 480000, actualSpend: 175000, teamSize: 15, milestones: 12, openRisks: 1, blockedTasks: 0, projectedDate: '2025-05-15', healthScore: 88, department: 'Technology', team: 'Security', owner: 'David Kim', fy: 'FY2025', quarter: 'Q2' },
+            { id: 'PRJ-005', name: 'AI-Powered Support Chatbot', status: 'At Risk', completion: 33, budget: 350000, actualSpend: 145000, teamSize: 12, milestones: 10, openRisks: 5, blockedTasks: 4, projectedDate: '2025-07-01', healthScore: 62, department: 'Technology', team: 'Engineering', owner: 'Lisa Wang', fy: 'FY2025', quarter: 'Q2' },
+            { id: 'PRJ-006', name: 'Supply Chain Optimization', status: 'On Track', completion: 89, budget: 540000, actualSpend: 478000, teamSize: 16, milestones: 15, openRisks: 1, blockedTasks: 0, projectedDate: '2025-02-28', healthScore: 91, department: 'Operations', team: 'Product', owner: 'Robert Martinez', fy: 'FY2024', quarter: 'Q4' },
+            { id: 'PRJ-007', name: 'Digital Marketing Platform', status: 'Completed', completion: 100, budget: 290000, actualSpend: 275000, teamSize: 10, milestones: 8, openRisks: 0, blockedTasks: 0, projectedDate: '2024-12-15', healthScore: 95, department: 'Marketing', team: 'Product', owner: 'Emily Foster', fy: 'FY2024', quarter: 'Q4' },
+            { id: 'PRJ-008', name: 'Financial Reporting Automation', status: 'On Track', completion: 67, budget: 380000, actualSpend: 245000, teamSize: 11, milestones: 9, openRisks: 2, blockedTasks: 1, projectedDate: '2025-04-15', healthScore: 83, department: 'Finance', team: 'Engineering', owner: 'James Wilson', fy: 'FY2025', quarter: 'Q1' },
+            { id: 'PRJ-009', name: 'HR System Modernization', status: 'Off Track', completion: 28, budget: 420000, actualSpend: 198000, teamSize: 14, milestones: 11, openRisks: 6, blockedTasks: 5, projectedDate: '2025-08-30', healthScore: 45, department: 'Operations', team: 'Engineering', owner: 'Amanda Torres', fy: 'FY2025', quarter: 'Q3' },
+            { id: 'PRJ-010', name: 'Data Lake Implementation', status: 'On Track', completion: 55, budget: 720000, actualSpend: 365000, teamSize: 20, milestones: 16, openRisks: 2, blockedTasks: 1, projectedDate: '2025-05-30', healthScore: 86, department: 'Technology', team: 'Data Science', owner: 'Kevin Zhang', fy: 'FY2025', quarter: 'Q2' },
+            { id: 'PRJ-011', name: 'Customer Portal Redesign', status: 'On Track', completion: 72, budget: 310000, actualSpend: 215000, teamSize: 9, milestones: 7, openRisks: 1, blockedTasks: 0, projectedDate: '2025-03-01', healthScore: 89, department: 'Marketing', team: 'Product', owner: 'Nicole Brown', fy: 'FY2025', quarter: 'Q1' },
+            { id: 'PRJ-012', name: 'API Gateway Migration', status: 'At Risk', completion: 45, budget: 260000, actualSpend: 135000, teamSize: 8, milestones: 6, openRisks: 3, blockedTasks: 2, projectedDate: '2025-04-10', healthScore: 68, department: 'Technology', team: 'DevOps', owner: 'Tom Anderson', fy: 'FY2025', quarter: 'Q1' },
+        ];
+
+        const milestonesData = [
+            { id: 'MS-001', name: 'Sprint 12 — Core UI Components', project: 'Mobile Platform Modernization', plannedDate: '2025-01-15', actualDate: '2025-01-14', status: 'Completed', owner: 'Sarah Chen', tasks: ['Implement new navigation component', 'Build responsive grid system', 'Add dark mode support', 'Performance optimization'], blockers: [], dependencies: ['MS-000'], comments: 'Delivered ahead of schedule with all acceptance criteria met.' },
+            { id: 'MS-002', name: 'Sprint 13 — API Integration Layer', project: 'Mobile Platform Modernization', plannedDate: '2025-01-29', actualDate: '2025-01-30', status: 'Completed', owner: 'Sarah Chen', tasks: ['GraphQL endpoint implementation', 'WebSocket real-time updates', 'Error handling middleware', 'Rate limiting configuration'], blockers: ['Third-party API rate limits'], dependencies: ['MS-001'], comments: 'Minor delay due to API rate limiting issues, resolved with vendor.' },
+            { id: 'MS-003', name: 'Sprint 14 — Push Notification System', project: 'Mobile Platform Modernization', plannedDate: '2025-02-12', actualDate: null, status: 'In Progress', owner: 'Sarah Chen', tasks: ['Firebase Cloud Messaging integration', 'Notification preference engine', 'A/B testing framework', 'Analytics tracking'], blockers: [], dependencies: ['MS-002'], comments: 'On track for delivery.' },
+            { id: 'MS-004', name: 'Data Pipeline v2.0', project: 'Customer Analytics Initiative', plannedDate: '2025-01-20', actualDate: '2025-01-25', status: 'Completed', owner: 'Marcus Johnson', tasks: ['ETL pipeline redesign', 'Real-time streaming setup', 'Data quality checks', 'Schema migration'], blockers: ['Legacy data format issues'], dependencies: [], comments: 'Completed 5 days late due to data quality issues in legacy systems.' },
+            { id: 'MS-005', name: 'ML Model Training Phase 2', project: 'Customer Analytics Initiative', plannedDate: '2025-02-15', actualDate: null, status: 'At Risk', owner: 'Marcus Johnson', tasks: ['Feature engineering', 'Model training & validation', 'Hyperparameter tuning', 'Model deployment'], blockers: ['GPU cluster availability', 'Data labeling delays'], dependencies: ['MS-004'], comments: 'At risk due to resource constraints and data labeling bottlenecks.' },
+            { id: 'MS-006', name: 'Cloud Region 1 Migration', project: 'Cloud Infrastructure Migration', plannedDate: '2025-02-01', actualDate: '2025-01-30', status: 'Completed', owner: 'Priya Patel', tasks: ['Database migration', 'Application deployment', 'DNS cutover', 'Monitoring setup'], blockers: [], dependencies: [], comments: 'Successful migration with zero downtime.' },
+            { id: 'MS-007', name: 'Cloud Region 2 Migration', project: 'Cloud Infrastructure Migration', plannedDate: '2025-03-15', actualDate: null, status: 'Planned', owner: 'Priya Patel', tasks: ['Pre-migration assessment', 'Network configuration', 'Application testing', 'Rollback plan'], blockers: [], dependencies: ['MS-006'], comments: 'Planning phase complete, execution scheduled.' },
+            { id: 'MS-008', name: 'Zero Trust Architecture Phase 1', project: 'Enterprise Security Overhaul', plannedDate: '2025-02-28', actualDate: null, status: 'In Progress', owner: 'David Kim', tasks: ['Identity provider setup', 'MFA enforcement', 'Network segmentation', 'Access policy definition'], blockers: [], dependencies: [], comments: 'On schedule, all milestones met so far.' },
+            { id: 'MS-009', name: 'Chatbot NLP Engine v1', project: 'AI-Powered Support Chatbot', plannedDate: '2025-01-31', actualDate: '2025-02-10', status: 'Completed', owner: 'Lisa Wang', tasks: ['Intent recognition model', 'Entity extraction', 'Dialogue management', 'Response generation'], blockers: ['Training data quality'], dependencies: [], comments: 'Delivered 10 days late, model accuracy at 87%.' },
+            { id: 'MS-010', name: 'Chatbot Integration with CRM', project: 'AI-Powered Support Chatbot', plannedDate: '2025-03-01', actualDate: null, status: 'At Risk', owner: 'Lisa Wang', tasks: ['CRM API integration', 'User context passing', 'Ticket auto-creation', 'Escalation workflow'], blockers: ['CRM API documentation gaps', 'Authentication issues'], dependencies: ['MS-009'], comments: 'Blocked by CRM integration challenges.' },
+        ];
+
+        const risksData = [
+            { id: 'RSK-001', description: 'Key developer attrition in Mobile Platform team', severity: 'Critical', probability: 0.7, impact: 0.9, mitigationStatus: 'In Progress', owner: 'Sarah Chen', project: 'Mobile Platform Modernization' },
+            { id: 'RSK-002', description: 'Third-party API dependency for analytics pipeline', severity: 'High', probability: 0.6, impact: 0.8, mitigationStatus: 'Mitigated', owner: 'Marcus Johnson', project: 'Customer Analytics Initiative' },
+            { id: 'RSK-003', description: 'Cloud migration data loss during cutover', severity: 'Critical', probability: 0.3, impact: 1.0, mitigationStatus: 'In Progress', owner: 'Priya Patel', project: 'Cloud Infrastructure Migration' },
+            { id: 'RSK-004', description: 'Security compliance deadline extension', severity: 'Medium', probability: 0.5, impact: 0.6, mitigationStatus: 'Monitoring', owner: 'David Kim', project: 'Enterprise Security Overhaul' },
+            { id: 'RSK-005', description: 'AI model accuracy below threshold', severity: 'High', probability: 0.65, impact: 0.75, mitigationStatus: 'In Progress', owner: 'Lisa Wang', project: 'AI-Powered Support Chatbot' },
+            { id: 'RSK-006', description: 'HR system vendor contract renewal delay', severity: 'High', probability: 0.55, impact: 0.7, mitigationStatus: 'Escalated', owner: 'Amanda Torres', project: 'HR System Modernization' },
+            { id: 'RSK-007', description: 'Budget overrun on cloud infrastructure', severity: 'Medium', probability: 0.4, impact: 0.65, mitigationStatus: 'Monitoring', owner: 'Priya Patel', project: 'Cloud Infrastructure Migration' },
+            { id: 'RSK-008', description: 'Data privacy regulation changes', severity: 'Medium', probability: 0.35, impact: 0.8, mitigationStatus: 'Monitoring', owner: 'David Kim', project: 'Enterprise Security Overhaul' },
+            { id: 'RSK-009', description: 'Supply chain vendor consolidation risk', severity: 'Low', probability: 0.2, impact: 0.4, mitigationStatus: 'Mitigated', owner: 'Robert Martinez', project: 'Supply Chain Optimization' },
+            { id: 'RSK-010', description: 'API gateway performance degradation', severity: 'High', probability: 0.5, impact: 0.7, mitigationStatus: 'In Progress', owner: 'Tom Anderson', project: 'API Gateway Migration' },
+        ];
+
+        const teamData = [
+            { name: 'Sarah Chen', department: 'Engineering', role: 'Tech Lead', utilization: 94, capacity: 'Full', availability: 'Available', overtimeRisk: 'Low', status: 'Active' },
+            { name: 'Marcus Johnson', department: 'Data Science', role: 'ML Engineer', utilization: 88, capacity: 'Full', availability: 'Available', overtimeRisk: 'Medium', status: 'Active' },
+            { name: 'Priya Patel', department: 'DevOps', role: 'Cloud Architect', utilization: 96, capacity: 'Full', availability: 'Available', overtimeRisk: 'High', status: 'Active' },
+            { name: 'David Kim', department: 'Security', role: 'Security Lead', utilization: 82, capacity: 'Full', availability: 'Available', overtimeRisk: 'Low', status: 'Active' },
+            { name: 'Lisa Wang', department: 'Engineering', role: 'AI Engineer', utilization: 91, capacity: 'Full', availability: 'Available', overtimeRisk: 'Medium', status: 'Active' },
+            { name: 'Robert Martinez', department: 'Product', role: 'Product Manager', utilization: 78, capacity: 'Full', availability: 'Available', overtimeRisk: 'Low', status: 'Active' },
+            { name: 'Emily Foster', department: 'Product', role: 'UX Lead', utilization: 75, capacity: 'Full', availability: 'Available', overtimeRisk: 'Low', status: 'Active' },
+            { name: 'James Wilson', department: 'Engineering', role: 'Backend Dev', utilization: 85, capacity: 'Full', availability: 'Available', overtimeRisk: 'Medium', status: 'Active' },
+            { name: 'Amanda Torres', department: 'Engineering', role: 'Full Stack Dev', utilization: 97, capacity: 'Full', availability: 'Available', overtimeRisk: 'High', status: 'Active' },
+            { name: 'Kevin Zhang', department: 'Data Science', role: 'Data Engineer', utilization: 83, capacity: 'Full', availability: 'Available', overtimeRisk: 'Low', status: 'Active' },
+            { name: 'Nicole Brown', department: 'Product', role: 'Frontend Dev', utilization: 79, capacity: 'Full', availability: 'Available', overtimeRisk: 'Low', status: 'Active' },
+            { name: 'Tom Anderson', department: 'DevOps', role: 'SRE Engineer', utilization: 92, capacity: 'Full', availability: 'Available', overtimeRisk: 'High', status: 'Active' },
+        ];
+
+        const integrationsData = [
+            { name: 'Jira', icon: '🔷', color: '#0052CC', status: 'online', latency: '45ms', lastSync: '2 min ago' },
+            { name: 'Azure DevOps', icon: '🟣', color: '#0078D4', status: 'online', latency: '62ms', lastSync: '5 min ago' },
+            { name: 'GitHub', icon: '⚫', color: '#333', status: 'online', latency: '38ms', lastSync: '1 min ago' },
+            { name: 'Slack', icon: '🟠', color: '#E01E5A', status: 'online', latency: '28ms', lastSync: '30 sec ago' },
+            { name: 'Microsoft Teams', icon: '🔵', color: '#5B5FC7', status: 'warning', latency: '180ms', lastSync: '15 min ago' },
+            { name: 'Confluence', icon: '🔷', color: '#0065FF', status: 'online', latency: '55ms', lastSync: '8 min ago' },
+            { name: 'ServiceNow', icon: '🟡', color: '#511A6E', status: 'online', latency: '72ms', lastSync: '3 min ago' },
+            { name: 'SAP ERP', icon: '🔴', color: '#F0AB00', status: 'offline', latency: '—', lastSync: '2 hours ago' },
+            { name: 'Tableau', icon: '🟠', color: '#E67E22', status: 'online', latency: '41ms', lastSync: '4 min ago' },
+        ];
+
+        const notesData = [
+            { author: 'Jane Doe', date: '2025-01-28 09:15', text: 'Mobile Platform Modernization is performing exceptionally well. The team has consistently delivered ahead of schedule. Recommend recognizing the team in the next all-hands meeting.' },
+            { author: 'Marcus Johnson', date: '2025-01-27 14:30', text: 'Customer Analytics Initiative is facing headwinds with data labeling. We need to allocate additional resources or consider automated labeling solutions. Escalating to PMO for budget review.' },
+            { author: 'Priya Patel', date: '2025-01-26 11:00', text: 'Cloud Region 1 migration completed successfully with zero downtime. Lessons learned: pre-migration testing should be extended by 2 days for complex environments. Documenting for Region 2.' },
+            { author: 'David Kim', date: '2025-01-25 16:45', text: 'Security compliance audit scheduled for March. All critical controls are in place. Recommend starting documentation review 2 weeks early to avoid last-minute issues.' },
+        ];
+
+        // ==================== STATE ====================
+        let currentView = 'summary';
+        let currentTheme = 'dark';
+        let reportingMode = 'agile';
+        let viewScope = 'portfolio';
+        let reportingPeriod = 'quarterly';
+        let charts = {};
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPreferences();
+            renderAll();
+        });
+
+        function loadPreferences() {
+            const savedTheme = localStorage.getItem('pmcc-theme');
+            const savedView = localStorage.getItem('pmcc-view');
+            const savedMode = localStorage.getItem('pmcc-mode');
+            const savedScope = localStorage.getItem('pmcc-scope');
+            const savedPeriod = localStorage.getItem('pmcc-period');
+
+            if (savedTheme) {
+                currentTheme = savedTheme;
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                updateThemeIcon();
+            }
+            if (savedView) switchView(savedView);
+            if (savedMode) {
+                reportingMode = savedMode;
+                document.getElementById('reportingModeLabel').textContent = reportingMode === 'agile' ? 'Agile Mode' : 'Waterfall Mode';
+            }
+            if (savedScope) {
+                viewScope = savedScope;
+                document.getElementById('viewScopeLabel').textContent = viewScope.charAt(0).toUpperCase() + viewScope.slice(1) + ' View';
+            }
+            if (savedPeriod) {
+                reportingPeriod = savedPeriod;
+                document.getElementById('reportingPeriodLabel').textContent = reportingPeriod.charAt(0).toUpperCase() + reportingPeriod.slice(1);
+            }
+        }
+
+        function savePreferences() {
+            localStorage.setItem('pmcc-theme', currentTheme);
+            localStorage.setItem('pmcc-view', currentView);
+            localStorage.setItem('pmcc-mode', reportingMode);
+            localStorage.setItem('pmcc-scope', viewScope);
+            localStorage.setItem('pmcc-period', reportingPeriod);
+        }
+
+        // ==================== THEME ====================
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            updateThemeIcon();
+            savePreferences();
+            setTimeout(() => {
+                destroyAllCharts();
+                createAllCharts();
+            }, 100);
+        }
+
+        function updateThemeIcon() {
+            const thumb = document.getElementById('themeThumb');
+            thumb.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+        }
+
+        // ==================== VIEW SWITCHING ====================
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('view-' + view).classList.add('active');
+            document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.remove('active'));
+            document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.add('active');
+
+            const titles = {
+                summary: 'Summary Dashboard',
+                projects: 'Projects',
+                timeline: 'Timeline',
+                resources: 'Resources',
+                risks: 'Risk Management',
+                operations: 'Operations'
+            };
+            document.getElementById('pageTitle').textContent = titles[view] || view;
+            document.getElementById('breadcrumb').textContent = 'Home / ' + (titles[view] || view);
+
+            savePreferences();
+
+            // Create charts for the current view
+            setTimeout(() => {
+                destroyAllCharts();
+                createAllCharts();
+            }, 100);
+        }
+
+        // ==================== TOGGLES ====================
+        function toggleReportingMode() {
+            reportingMode = reportingMode === 'agile' ? 'waterfall' : 'agile';
+            document.getElementById('reportingModeLabel').textContent = reportingMode === 'agile' ? 'Agile Mode' : 'Waterfall Mode';
+            savePreferences();
+        }
+
+        function toggleViewScope() {
+            const scopes = ['portfolio', 'program', 'project'];
+            const idx = scopes.indexOf(viewScope);
+            viewScope = scopes[(idx + 1) % scopes.length];
+            document.getElementById('viewScopeLabel').textContent = viewScope.charAt(0).toUpperCase() + viewScope.slice(1) + ' View';
+            savePreferences();
+        }
+
+        function toggleReportingPeriod() {
+            const periods = ['quarterly', 'monthly', 'weekly'];
+            const idx = periods.indexOf(reportingPeriod);
+            reportingPeriod = periods[(idx + 1) % periods.length];
+            document.getElementById('reportingPeriodLabel').textContent = reportingPeriod.charAt(0).toUpperCase() + reportingPeriod.slice(1);
+            savePreferences();
+        }
+
+        function setReportingPeriod(period, btn) {
+            reportingPeriod = period;
+            document.querySelectorAll('.toggle-btn[data-period]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('reportingPeriodLabel').textContent = period.charAt(0).toUpperCase() + period.slice(1);
+            savePreferences();
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
+        function renderAll() {
+            renderProjectCards();
+            renderProjectsTable();
+            renderTimeline();
+            renderMilestonesTable();
+            renderWorkloadBars();
+            renderTeamTable();
+            renderRiskCards();
+            renderRisksTable();
+            renderIntegrations();
+            renderNotes();
+            createAllCharts();
+        }
+
+        function renderProjectCards() {
+            const container = document.getElementById('projectCardsContainer');
+            const activeProjects = projectsData.filter(p => p.status !== 'Completed');
+            container.innerHTML = activeProjects.map(p => {
+                const remaining = p.budget - p.actualSpend;
+                const healthClass = p.healthScore >= 85 ? 'health-excellent' : p.healthScore >= 70 ? 'health-good' : p.healthScore >= 55 ? 'health-fair' : 'health-poor';
+                const statusClass = p.status === 'On Track' ? 'status-on-track' : p.status === 'At Risk' ? 'status-at-risk' : 'status-off-track';
+                return `
+      <div class="project-card" onclick="expandProjectDetail('${p.id}')">
+        <div class="project-card-header">
+          <div class="project-name">${p.name}</div>
+          <span class="project-status ${statusClass}">${p.status}</span>
+        </div>
+        <div class="project-metrics">
+          <div class="project-metric">
+            <div class="project-metric-value">${p.completion}%</div>
+            <div>Completion</div>
+          </div>
+          <div class="project-metric">
+            <div class="project-metric-value">$${(p.budget / 1000).toFixed(0)}K</div>
+            <div>Budget</div>
+          </div>
+          <div class="project-metric">
+            <div class="project-metric-value">$${(p.actualSpend / 1000).toFixed(0)}K</div>
+            <div>Actual Spend</div>
+          </div>
+          <div class="project-metric">
+            <div class="project-metric-value">$${(remaining / 1000).toFixed(0)}K</div>
+            <div>Remaining</div>
+          </div>
+          <div class="project-metric">
+            <div class="project-metric-value">${p.teamSize}</div>
+            <div>Team Size</div>
+          </div>
+          <div class="project-metric">
+            <div class="project-metric-value">${p.milestones}</div>
+            <div>Milestones</div>
+          </div>
+          <div class="project-metric">
+            <div class="project-metric-value">${p.openRisks}</div>
+            <div>Open Risks</div>
+          </div>
+          <div class="project-metric">
+            <div class="project-metric-value">${p.blockedTasks}</div>
+            <div>Blocked Tasks</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;color:var(--text-muted)">Projected: ${p.projectedDate}</span>
+          <span style="font-size:12px;font-weight:700;color:${p.healthScore >= 85 ? 'var(--accent-success)' : p.healthScore >= 70 ? 'var(--accent-info)' : 'var(--accent-warning)'}">Health: ${p.healthScore}</span>
+        </div>
+        <div class="project-health-bar">
+          <div class="project-health-fill ${healthClass}" style="width:${p.healthScore}%"></div>
+        </div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        function renderProjectsTable() {
+            const tbody = document.getElementById('projectsTableBody');
+            tbody.innerHTML = projectsData.map(p => {
+                const remaining = p.budget - p.actualSpend;
+                const statusClass = p.status === 'On Track' ? 'status-on-track' : p.status === 'At Risk' ? 'status-at-risk' : p.status === 'Off Track' ? 'status-off-track' : 'status-completed';
+                return `
+      <tr class="expandable" onclick="toggleRowDetail(this, '${p.id}')" data-project-id="${p.id}">
+        <td><span class="expand-icon">▶</span> <strong>${p.name}</strong><br><span style="font-size:11px;color:var(--text-muted)">${p.id}</span></td>
+        <td><span class="project-status ${statusClass}">${p.status}</span></td>
+        <td><strong>${p.completion}%</strong></td>
+        <td>$${(p.budget / 1000).toFixed(0)}K</td>
+        <td>$${(p.actualSpend / 1000).toFixed(0)}K</td>
+        <td>$${(remaining / 1000).toFixed(0)}K</td>
+        <td>${p.teamSize}</td>
+        <td><strong style="color:${p.healthScore >= 85 ? 'var(--accent-success)' : p.healthScore >= 70 ? 'var(--accent-info)' : 'var(--accent-warning)'}">${p.healthScore}</strong></td>
+      </tr>
+      <tr class="detail-row" data-detail-for="${p.id}">
+        <td colspan="8">
+          <div class="detail-content" id="detail-${p.id}">
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-item-label">Owner</div><div class="detail-item-value">${p.owner}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Department</div><div class="detail-item-value">${p.department}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Team</div><div class="detail-item-value">${p.team}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Fiscal Year</div><div class="detail-item-value">${p.fy}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Quarter</div><div class="detail-item-value">${p.quarter}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Projected Completion</div><div class="detail-item-value">${p.projectedDate}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Budget Variance</div><div class="detail-item-value" style="color:${p.actualSpend <= p.budget ? 'var(--accent-success)' : 'var(--accent-danger)'}">${((p.actualSpend - p.budget) / p.budget * 100).toFixed(1)}%</div></div>
+              <div class="detail-item"><div class="detail-item-label">Open Risks</div><div class="detail-item-value">${p.openRisks}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Blocked Tasks</div><div class="detail-item-value">${p.blockedTasks}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Milestone Count</div><div class="detail-item-value">${p.milestones}</div></div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+            }).join('');
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineContainer');
+            const existingLine = container.querySelector('.timeline-line');
+            container.innerHTML = '<div class="timeline-line"></div>';
+
+            const allItems = [
+                ...milestonesData.map(m => ({ ...m, type: 'milestone' })),
+                ...projectsData.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    plannedDate: p.projectedDate,
+                    actualDate: null,
+                    status: p.status,
+                    owner: p.owner,
+                    type: 'project',
+                    desc: `Budget: $${(p.budget / 1000).toFixed(0)}K | Completion: ${p.completion}% | Health: ${p.healthScore}`
+                }))
+            ].sort((a, b) => new Date(a.plannedDate) - new Date(b.plannedDate));
+
+            allItems.forEach(item => {
+                const dotClass = item.status === 'Completed' ? 'completed' : item.status === 'In Progress' ? 'in-progress' : 'upcoming';
+                container.innerHTML += `
+      <div class="timeline-item" onclick="toggleTimelineDetail(this)">
+        <div class="timeline-dot ${dotClass}"></div>
+        <div class="timeline-date">${item.plannedDate}${item.actualDate ? ' → ' + item.actualDate : ''}</div>
+        <div class="timeline-title">${item.name}</div>
+        <div class="timeline-desc">${item.desc || (item.project || '')}</div>
+        <div class="timeline-details">
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:8px">
+            <strong>Owner:</strong> ${item.owner}<br>
+            <strong>Status:</strong> ${item.status}<br>
+            ${item.tasks ? '<strong>Tasks:</strong> ' + item.tasks.join(', ') + '<br>' : ''}
+            ${item.blockers && item.blockers.length ? '<strong>Blockers:</strong> ' + item.blockers.join(', ') + '<br>' : ''}
+            ${item.comments ? '<strong>Notes:</strong> ' + item.comments : ''}
+          </div>
+        </div>
+      </div>
+    `;
+            });
+        }
+
+        function renderMilestonesTable() {
+            const tbody = document.getElementById('milestonesTableBody');
+            tbody.innerHTML = milestonesData.map(m => {
+                const statusClass = m.status === 'Completed' ? 'status-completed' : m.status === 'In Progress' ? 'status-on-track' : m.status === 'At Risk' ? 'status-at-risk' : 'status-on-track';
+                return `
+      <tr class="expandable" onclick="toggleMilestoneDetail(this, '${m.id}')">
+        <td><span class="expand-icon">▶</span></td>
+        <td><strong>${m.name}</strong></td>
+        <td>${m.project}</td>
+        <td>${m.plannedDate}</td>
+        <td>${m.actualDate || '—'}</td>
+        <td><span class="project-status ${statusClass}">${m.status}</span></td>
+        <td>${m.owner}</td>
+      </tr>
+      <tr class="detail-row" data-detail-for="${m.id}">
+        <td colspan="7">
+          <div class="detail-content" id="detail-${m.id}">
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-item-label">Tasks</div><div class="detail-item-value">${m.tasks.join(', ')}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Blockers</div><div class="detail-item-value">${m.blockers.length ? m.blockers.join(', ') : 'None'}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Dependencies</div><div class="detail-item-value">${m.dependencies.join(', ') || 'None'}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Comments</div><div class="detail-item-value">${m.comments}</div></div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+            }).join('');
+        }
+
+        function renderWorkloadBars() {
+            const container = document.getElementById('workloadBars');
+            container.innerHTML = teamData.map(t => {
+                const color = t.utilization >= 90 ? 'var(--accent-danger)' : t.utilization >= 80 ? 'var(--accent-warning)' : 'var(--accent-success)';
+                return `
+      <div class="workload-bar">
+        <div class="workload-bar-label">${t.name}</div>
+        <div class="workload-bar-track">
+          <div class="workload-bar-fill" style="width:${t.utilization}%;background:${color}"></div>
+        </div>
+        <div class="workload-bar-value">${t.utilization}%</div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        function renderTeamTable() {
+            const tbody = document.getElementById('teamTableBody');
+            tbody.innerHTML = teamData.map(t => {
+                const utilColor = t.utilization >= 90 ? 'var(--accent-danger)' : t.utilization >= 80 ? 'var(--accent-warning)' : 'var(--accent-success)';
+                const riskBadge = t.overtimeRisk === 'High' ? 'badge-danger' : t.overtimeRisk === 'Medium' ? 'badge-warning' : 'badge-success';
+                return `
+      <tr>
+        <td><strong>${t.name}</strong></td>
+        <td>${t.department}</td>
+        <td>${t.role}</td>
+        <td><strong style="color:${utilColor}">${t.utilization}%</strong></td>
+        <td>${t.capacity}</td>
+        <td>${t.availability}</td>
+        <td><span class="badge ${riskBadge}">${t.overtimeRisk}</span></td>
+        <td><span class="badge badge-success">${t.status}</span></td>
+      </tr>
+    `;
+            }).join('');
+        }
+
+        function renderRiskCards() {
+            const container = document.getElementById('riskCardsContainer');
+            container.innerHTML = risksData.map(r => {
+                const sevClass = r.severity.toLowerCase();
+                return `
+      <div class="risk-card ${sevClass}">
+        <div class="risk-header">
+          <div class="risk-title">${r.description}</div>
+          <span class="risk-severity ${sevClass}">${r.severity}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">${r.project}</div>
+        <div class="risk-meta">
+          <span>📊 Probability: ${(r.probability * 100).toFixed(0)}%</span>
+          <span>💥 Impact: ${(r.impact * 100).toFixed(0)}%</span>
+          <span>🛡️ ${r.mitigationStatus}</span>
+          <span>👤 ${r.owner}</span>
+        </div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        function renderRisksTable() {
+            const tbody = document.getElementById('risksTableBody');
+            tbody.innerHTML = risksData.map(r => {
+                const sevClass = r.severity.toLowerCase();
+                return `
+      <tr>
+        <td><strong>${r.id}</strong></td>
+        <td>${r.description}</td>
+        <td><span class="risk-severity ${sevClass}">${r.severity}</span></td>
+        <td>${(r.probability * 100).toFixed(0)}%</td>
+        <td>${(r.impact * 100).toFixed(0)}%</td>
+        <td>${r.mitigationStatus}</td>
+        <td>${r.owner}</td>
+      </tr>
+    `;
+            }).join('');
+        }
+
+        function renderIntegrations() {
+            const container = document.getElementById('integrationsContainer');
+            container.innerHTML = integrationsData.map(i => `
+    <div class="integration-card">
+      <div class="integration-icon" style="background:${i.color}">${i.icon}</div>
+      <div class="integration-info">
+        <div class="integration-name">${i.name}</div>
+        <div class="integration-status">
+          <span class="status-dot ${i.status}"></span>
+          <span style="color:var(--text-secondary);font-size:11px">${i.status === 'online' ? 'Connected' : i.status === 'warning' ? 'Degraded' : 'Disconnected'}</span>
+        </div>
+      </div>
+      <div class="integration-latency">
+        <div>${i.latency}</div>
+        <div style="font-size:10px;margin-top:2px">Last sync: ${i.lastSync}</div>
+      </div>
+    </div>
+  `).join('');
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesContainer');
+            container.innerHTML = notesData.map(n => `
+    <div class="note-item">
+      <div class="note-item-header">
+        <span class="note-author">${n.author}</span>
+        <span class="note-date">${n.date}</span>
+      </div>
+      <div class="note-text">${n.text}</div>
+    </div>
+  `).join('');
+        }
+
+        // ==================== CHARTS ====================
+        function getChartColors() {
+            const isDark = currentTheme === 'dark';
+            return {
+                gridColor: isDark ? 'rgba(148,163,184,0.1)' : 'rgba(148,163,184,0.2)',
+                textColor: isDark ? '#94a3b8' : '#475569',
+                tooltipBg: isDark ? 'rgba(17,24,39,0.95)' : 'rgba(255,255,255,0.95)',
+                tooltipText: isDark ? '#f1f5f9' : '#1e293b',
+                tooltipBorder: isDark ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)',
+            };
+        }
+
+        function destroyAllCharts() {
+            Object.values(charts).forEach(c => { if (c) c.destroy(); });
+            charts = {};
+        }
+
+        function createAllCharts() {
+            createCompletionChart();
+            createBudgetChart();
+            createVelocityChart();
+            createResourcesChart();
+            createRisksChart();
+            createMilestonesChart();
+            createTimelineChart();
+            createHealthChart();
+            createCapacityChart();
+            createRiskDistChart();
+            createRiskTrendChart();
+            createAPIChart();
+            createSavingsChart();
+        }
+
+        function createCompletionChart() {
+            const ctx = document.getElementById('chartCompletion');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.completion = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Projects Completed',
+                        data: [2, 3, 4, 3, 5, 4, 6, 5, 7, 4, 6, 8],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99,102,241,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                    }, {
+                        label: 'On Track',
+                        data: [8, 9, 10, 9, 11, 10, 12, 11, 12, 11, 12, 12],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function createBudgetChart() {
+            const ctx = document.getElementById('chartBudget');
+            if (!ctx) return;
+            const colors = getChartColors();
+            const projectNames = projectsData.slice(0, 6).map(p => p.name.split(' ').slice(0, 2).join(' '));
+            charts.budget = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: projectNames,
+                    datasets: [{
+                        label: 'Budget',
+                        data: projectsData.slice(0, 6).map(p => p.budget / 1000),
+                        backgroundColor: 'rgba(99,102,241,0.6)',
+                        borderColor: '#6366f1',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                    }, {
+                        label: 'Actual Spend',
+                        data: projectsData.slice(0, 6).map(p => p.actualSpend / 1000),
+                        backgroundColor: 'rgba(139,92,246,0.6)',
+                        borderColor: '#8b5cf6',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                            callbacks: { label: (ctx) => ctx.dataset.label + ': $' + ctx.parsed.y + 'K' }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 9 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 }, callback: v => '$' + v + 'K' } }
+                    }
+                }
+            });
+        }
+
+        function createVelocityChart() {
+            const ctx = document.getElementById('chartVelocity');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.velocity = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5', 'Sprint 6', 'Sprint 7', 'Sprint 8'],
+                    datasets: [{
+                        label: 'Story Points Completed',
+                        data: [34, 42, 38, 51, 47, 55, 52, 58],
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6,182,212,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#06b6d4',
+                        pointRadius: 4,
+                    }, {
+                        label: 'Story Points Planned',
+                        data: [40, 45, 42, 50, 48, 52, 55, 55],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139,92,246,0.05)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#8b5cf6',
+                        pointRadius: 4,
+                        borderDash: [5, 5],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function createResourcesChart() {
+            const ctx = document.getElementById('chartResources');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.resources = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Engineering', 'Data Science', 'Product', 'DevOps', 'Security', 'QA'],
+                    datasets: [{
+                        data: [52, 28, 24, 18, 15, 10],
+                        backgroundColor: [
+                            'rgba(99,102,241,0.8)',
+                            'rgba(139,92,246,0.8)',
+                            'rgba(6,182,212,0.8)',
+                            'rgba(16,185,129,0.8)',
+                            'rgba(245,158,11,0.8)',
+                            'rgba(239,68,68,0.8)',
+                        ],
+                        borderWidth: 2,
+                        borderColor: currentTheme === 'dark' ? '#111827' : '#ffffff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: colors.textColor, font: { size: 11 }, padding: 12 }
+                        },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    }
+                }
+            });
+        }
+
+        function createRisksChart() {
+            const ctx = document.getElementById('chartRisks');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.risks = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [2, 3, 3, 2],
+                        backgroundColor: [
+                            'rgba(239,68,68,0.6)',
+                            'rgba(245,158,11,0.6)',
+                            'rgba(59,130,246,0.6)',
+                            'rgba(16,185,129,0.6)',
+                        ],
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        r: {
+                            grid: { color: colors.gridColor },
+                            ticks: { color: colors.textColor, backdropColor: 'transparent', font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createMilestonesChart() {
+            const ctx = document.getElementById('chartMilestones');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.milestones = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: projectsData.slice(0, 8).map(p => p.name.split(' ').slice(0, 2).join(' ')),
+                    datasets: [{
+                        label: 'Completed',
+                        data: projectsData.slice(0, 8).map(p => Math.round(p.milestones * p.completion / 100)),
+                        backgroundColor: 'rgba(16,185,129,0.7)',
+                        borderRadius: 4,
+                    }, {
+                        label: 'Remaining',
+                        data: projectsData.slice(0, 8).map(p => p.milestones - Math.round(p.milestones * p.completion / 100)),
+                        backgroundColor: 'rgba(148,163,184,0.3)',
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 9 } } },
+                        y: { stacked: true, grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function createTimelineChart() {
+            const ctx = document.getElementById('chartTimeline');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.timeline = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mobile Platform', 'Analytics', 'Cloud Migration', 'Security', 'Chatbot', 'Supply Chain', 'HR System', 'Data Lake'],
+                    datasets: [{
+                        label: 'Planned (days)',
+                        data: [180, 200, 240, 150, 210, 160, 270, 190],
+                        backgroundColor: 'rgba(99,102,241,0.5)',
+                        borderRadius: 4,
+                    }, {
+                        label: 'Actual (days)',
+                        data: [175, 210, 235, 148, 195, 155, 240, 185],
+                        backgroundColor: 'rgba(139,92,246,0.5)',
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function createHealthChart() {
+            const ctx = document.getElementById('chartHealth');
+            if (!ctx) return;
+            const colors = getChartColors();
+            const healthCounts = { 'Excellent (90+)': 0, 'Good (70-89)': 0, 'Fair (50-69)': 0, 'Poor (<50)': 0 };
+            projectsData.forEach(p => {
+                if (p.healthScore >= 90) healthCounts['Excellent (90+)']++;
+                else if (p.healthScore >= 70) healthCounts['Good (70-89)']++;
+                else if (p.healthScore >= 50) healthCounts['Fair (50-69)']++;
+                else healthCounts['Poor (<50)']++;
+            });
+            charts.health = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(healthCounts),
+                    datasets: [{
+                        data: Object.values(healthCounts),
+                        backgroundColor: [
+                            'rgba(16,185,129,0.8)',
+                            'rgba(59,130,246,0.8)',
+                            'rgba(245,158,11,0.8)',
+                            'rgba(239,68,68,0.8)',
+                        ],
+                        borderWidth: 2,
+                        borderColor: currentTheme === 'dark' ? '#111827' : '#ffffff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: colors.textColor, font: { size: 11 }, padding: 12 } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCapacityChart() {
+            const ctx = document.getElementById('chartCapacity');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.capacity = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+                    datasets: [{
+                        label: 'Capacity',
+                        data: [140, 142, 145, 147, 147, 148, 147, 147],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99,102,241,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                    }, {
+                        label: 'Demand',
+                        data: [120, 125, 130, 128, 135, 140, 138, 142],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245,158,11,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function createRiskDistChart() {
+            const ctx = document.getElementById('chartRiskDist');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.riskDist = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        label: 'Active Risks',
+                        data: [2, 3, 3, 2],
+                        backgroundColor: [
+                            'rgba(239,68,68,0.7)',
+                            'rgba(245,158,11,0.7)',
+                            'rgba(59,130,246,0.7)',
+                            'rgba(16,185,129,0.7)',
+                        ],
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 11 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 }, stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        function createRiskTrendChart() {
+            const ctx = document.getElementById('chartRiskTrend');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.riskTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
+                    datasets: [{
+                        label: 'Open Risks',
+                        data: [8, 7, 9, 6, 10, 10],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239,68,68,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                    }, {
+                        label: 'Mitigated',
+                        data: [3, 4, 5, 6, 4, 5],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function createAPIChart() {
+            const ctx = document.getElementById('chartAPI');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.api = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'API Calls',
+                        data: [3200, 3800, 4100, 3900, 3500, 1800, 1200],
+                        backgroundColor: 'rgba(99,102,241,0.6)',
+                        borderColor: '#6366f1',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function createSavingsChart() {
+            const ctx = document.getElementById('chartSavings');
+            if (!ctx) return;
+            const colors = getChartColors();
+            charts.savings = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Cumulative Savings ($)',
+                        data: [15000, 32000, 55000, 78000, 105000, 138000, 175000, 210000, 248000, 285000, 315000, 342000],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.15)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: colors.textColor, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: colors.tooltipBg,
+                            titleColor: colors.tooltipText,
+                            bodyColor: colors.tooltipText,
+                            borderColor: colors.tooltipBorder,
+                            borderWidth: 1,
+                            callbacks: { label: (ctx) => '$' + ctx.parsed.y.toLocaleString() }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 } } },
+                        y: { grid: { color: colors.gridColor }, ticks: { color: colors.textColor, font: { size: 10 }, callback: v => '$' + (v / 1000) + 'K' } }
+                    }
+                }
+            });
+        }
+
+        // ==================== INTERACTIONS ====================
+        function toggleRowDetail(row, id) {
+            const detailRow = row.nextElementSibling;
+            const detailContent = document.getElementById('detail-' + id);
+            const expandIcon = row.querySelector('.expand-icon');
+
+            if (detailContent.classList.contains('show')) {
+                detailContent.classList.remove('show');
+                expandIcon.classList.remove('expanded');
+            } else {
+                // Close all other details
+                document.querySelectorAll('.detail-content.show').forEach(d => d.classList.remove('show'));
+                document.querySelectorAll('.expand-icon.expanded').forEach(e => e.classList.remove('expanded'));
+                detailContent.classList.add('show');
+                expandIcon.classList.add('expanded');
+            }
+        }
+
+        function toggleMilestoneDetail(row, id) {
+            toggleRowDetail(row, id);
+        }
+
+        function toggleTimelineDetail(item) {
+            const details = item.querySelector('.timeline-details');
+            if (details) {
+                details.classList.toggle('show');
+            }
+        }
+
+        function expandProjectDetail(id) {
+            switchView('projects');
+            setTimeout(() => {
+                const row = document.querySelector(`tr[data-project-id="${id}"]`);
+                if (row) toggleRowDetail(row, id);
+            }, 200);
+        }
+
+        function filterProjects() {
+            const search = document.getElementById('projectSearch').value.toLowerCase();
+            const team = document.getElementById('filterTeam').value;
+            const status = document.getElementById('filterStatus').value;
+            const dept = document.getElementById('filterDept').value;
+            const fy = document.getElementById('filterFY').value;
+
+            const rows = document.querySelectorAll('#projectsTableBody tr.expandable');
+            rows.forEach((row, i) => {
+                const project = projectsData[i];
+                if (!project) return;
+                const matchSearch = !search || project.name.toLowerCase().includes(search) || project.id.toLowerCase().includes(search);
+                const matchTeam = !team || project.team === team;
+                const matchStatus = !status || project.status === status;
+                const matchDept = !dept || project.department === dept;
+                const matchFY = !fy || project.fy === fy;
+
+                const show = matchSearch && matchTeam && matchStatus && matchDept && matchFY;
+                row.style.display = show ? '' : 'none';
+                const detailRow = row.nextElementSibling;
+                if (detailRow) detailRow.style.display = show ? '' : 'none';
+            });
+        }
+
+        function setProjectFilter(filter, btn) {
+            btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const rows = document.querySelectorAll('#projectsTableBody tr.expandable');
+            rows.forEach((row, i) => {
+                const project = projectsData[i];
+                if (!project) return;
+                let show = true;
+                if (filter === 'active') show = project.status === 'On Track' || project.status === 'At Risk' || project.status === 'Off Track';
+                else if (filter === 'at-risk') show = project.status === 'At Risk' || project.status === 'Off Track';
+                else if (filter === 'completed') show = project.status === 'Completed';
+                row.style.display = show ? '' : 'none';
+                const detailRow = row.nextElementSibling;
+                if (detailRow) detailRow.style.display = show ? '' : 'none';
+            });
+        }
+
+        function sortTable(tableId, colIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.expandable'));
+
+            rows.sort((a, b) => {
+                const aText = a.cells[colIndex].textContent.trim();
+                const bText = b.cells[colIndex].textContent.trim();
+                const aNum = parseFloat(aText.replace(/[^0-9.-]/g, ''));
+                const bNum = parseFloat(bText.replace(/[^0-9.-]/g, ''));
+                if (!isNaN(aNum) && !isNaN(bNum)) return aNum - bNum;
+                return aText.localeCompare(bText);
+            });
+
+            rows.forEach(row => {
+                tbody.appendChild(row);
+                const detailRow = row.nextElementSibling;
+                if (detailRow && detailRow.classList.contains('detail-row')) {
+                    tbody.appendChild(detailRow);
+                }
+            });
+        }
+
+        function filterRisks(search) {
+            const rows = document.querySelectorAll('#risksTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(search.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        function setRiskFilter(severity, btn) {
+            btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const rows = document.querySelectorAll('#risksTableBody tr');
+            rows.forEach(row => {
+                if (severity === 'all') {
+                    row.style.display = '';
+                } else {
+                    const sevCell = row.cells[2];
+                    if (sevCell) {
+                        row.style.display = sevCell.textContent.toLowerCase() === severity ? '' : 'none';
+                    }
+                }
+            });
+
+            // Also filter risk cards
+            const cards = document.querySelectorAll('#riskCardsContainer .risk-card');
+            cards.forEach(card => {
+                if (severity === 'all') {
+                    card.style.display = '';
+                } else {
+                    card.style.display = card.classList.contains(severity) ? '' : 'none';
+                }
+            });
+        }
+
+        function setTimelineFilter(filter, btn) {
+            btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const items = document.querySelectorAll('.timeline-item');
+            items.forEach(item => {
+                if (filter === 'all') {
+                    item.style.display = '';
+                } else {
+                    const title = item.querySelector('.timeline-title').textContent.toLowerCase();
+                    if (filter === 'mobile') item.style.display = title.includes('mobile') || title.includes('sprint') ? '' : 'none';
+                    else if (filter === 'analytics') item.style.display = title.includes('analytics') || title.includes('data pipeline') || title.includes('ml model') ? '' : 'none';
+                    else if (filter === 'cloud') item.style.display = title.includes('cloud') ? '' : 'none';
+                }
+            });
+        }
+
+        function filterTeamTable(search) {
+            const rows = document.querySelectorAll('#teamTableBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(search.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        function filterTeamByDept(dept) {
+            const rows = document.querySelectorAll('#teamTableBody tr');
+            rows.forEach(row => {
+                if (!dept) {
+                    row.style.display = '';
+                } else {
+                    const deptCell = row.cells[1];
+                    row.style.display = deptCell && deptCell.textContent === dept ? '' : 'none';
+                }
+            });
+        }
+
+        function addNote() {
+            const input = document.getElementById('noteInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5);
+            notesData.unshift({ author: 'Jane Doe', date: dateStr, text: text });
+            input.value = '';
+            renderNotes();
+        }
+
+        function exportDashboard() {
+            alert('Dashboard export initiated. In production, this would generate a PDF/Excel report with all current data and filters applied.');
+        }
+
+        function refreshData() {
+            const btn = event.target;
+            btn.style.animation = 'pulse 0.5s ease';
+            setTimeout(() => {
+                btn.style.animation = '';
+                renderAll();
+            }, 500);
+        }
+    </script>
+</body>
+
+</html>

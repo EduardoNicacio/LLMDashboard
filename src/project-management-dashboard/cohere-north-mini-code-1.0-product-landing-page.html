@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Project Management Command Center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f5f7fa;
+            --bg-darker: #eef1f5;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --text: #333;
+            --text-muted: #666;
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --border: rgba(0, 0, 0, 0.1);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --neon-primary: #00d4ff;
+            --neon-secondary: #ff6b6b;
+            --neon-success: #51cf66;
+            --neon-warning: #fcc419;
+            --transition-speed: 0.3s;
+        }
+
+        html.dark {
+            --bg: #0f172a;
+            --bg-darker: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--bg-darker) 100%);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            transition: background var(--transition-speed), color var(--transition-speed);
+            padding: 0;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .branding {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* Navigation */
+        .app-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 0.6rem 1.2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary-dark);
+        }
+
+        /* Main content */
+        .app-main {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .view-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Hero Summary */
+        .hero-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 1.2rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .hero-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .hero-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Head-to-head comparison */
+        .head-to-head {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .project-comparison-card {
+            flex: 1;
+            min-width: 280px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 2px solid var(--primary);
+            padding: 1rem;
+        }
+
+        .project-comparison-card h4 {
+            margin-bottom: 0.8rem;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .comparison-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .metric-value.positive {
+            color: var(--neon-success);
+        }
+
+        .metric-value.negative {
+            color: var(--neon-secondary);
+        }
+
+        .metric-value.neutral {
+            color: var(--neon-warning);
+        }
+
+        /* Project cards */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .project-card {
+            border-left: 4px solid var(--primary);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .project-card.expanded {
+            border-left-color: var(--neon-primary);
+        }
+
+        .project-card .status-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .status-active {
+            background: var(--neon-success);
+        }
+
+        .status-completed {
+            background: var(--primary);
+        }
+
+        .status-onhold {
+            background: var(--neon-warning);
+        }
+
+        .project-card h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.3rem 0;
+            font-size: 0.9rem;
+        }
+
+        .metric-label-small {
+            color: var(--text-muted);
+        }
+
+        .project-health {
+            margin-top: 0.5rem;
+            height: 6px;
+            background: var(--bg-darker);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .health-bar {
+            height: 100%;
+            background: var(--neon-success);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--primary);
+            opacity: 0.5;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -1.5rem;
+            top: 0.3rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid var(--bg);
+        }
+
+        .timeline-phase {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .timeline-details {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .timeline-item.expanded .timeline-details {
+            max-height: 500px;
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: var(--bg-darker);
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-table th:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(128, 128, 128, 0.05);
+        }
+
+        .data-table .status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #fff;
+        }
+
+        .status-open {
+            background: var(--neon-secondary);
+        }
+
+        .status mitigated {
+            background: var(--neon-success);
+        }
+
+        .status-pending {
+            background: var(--neon-warning);
+        }
+
+        /* Controls */
+        .controls-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .controls-bar select,
+        .controls-bar input {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .controls-bar label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Chart containers */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        /* Resource panel */
+        .resource-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            background: var(--bg-darker);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .resource-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .resource-util {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .risk-high {
+            color: var(--neon-secondary);
+        }
+
+        .risk-medium {
+            color: var(--neon-warning);
+        }
+
+        .risk-low {
+            color: var(--neon-success);
+        }
+
+        /* Integration status */
+        .integration-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            background: var(--bg-darker);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .integration-status {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #fff;
+        }
+
+        .status-online {
+            background: var(--neon-success);
+        }
+
+        .status-degraded {
+            background: var(--neon-warning);
+        }
+
+        .status-offline {
+            background: var(--neon-secondary);
+        }
+
+        /* Winner breakdown */
+        .winner-box {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #fff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .winner-box h3 {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Notes */
+        .notes-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text);
+            resize: vertical;
+        }
+
+        /* Toggles */
+        .toggle-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .toggle-btn {
+            padding: 0.5rem 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary-dark);
+        }
+
+        .toggle-btn:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* Footer */
+        .app-footer {
+            margin-top: auto;
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Utilities */
+        .flex {
+            display: flex;
+        }
+
+        .gap-1 {
+            gap: 0.5rem;
+        }
+
+        .mt-1 {
+            margin-top: 0.5rem;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.5rem;
+        }
+
+        .p-1 {
+            padding: 0.5rem;
+        }
+
+        .rounded {
+            border-radius: 8px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="branding">
+                <i class="fas fa-tasks"></i>
+                <h1>Project Command Center</h1>
+            </div>
+            <div class="header-controls">
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <nav class="app-nav">
+            <button class="nav-btn active" data-view="summary">Summary</button>
+            <button class="nav-btn" data-view="projects">Projects</button>
+            <button class="nav-btn" data-view="timeline">Timeline</button>
+            <button class="nav-btn" data-view="resources">Resources</button>
+            <button class="nav-btn" data-view="risks">Risks</button>
+            <button class="nav-btn" data-view="operations">Operations</button>
+        </nav>
+
+        <main class="app-main">
+            <!-- Summary View -->
+            <section id="view-summary" class="view-content">
+                <div class="controls-bar animate-fade-in">
+                    <label>Agile/Waterfall:</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-toggle="agile">Agile</button>
+                        <button class="toggle-btn" data-toggle="waterfall">Waterfall</button>
+                    </div>
+                    <label>Project View:</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-viewmode="portfolio">Portfolio</button>
+                        <button class="toggle-btn" data-viewmode="program">Program</button>
+                        <button class="toggle-btn" data-viewmode="individual">Individual</button>
+                    </div>
+                    <label>Reporting Period:</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-period="quarterly">Quarterly</button>
+                        <button class="toggle-btn" data-period="monthly">Monthly</button>
+                        <button class="toggle-btn" data-period="weekly">Weekly</button>
+                    </div>
+                </div>
+
+                <div class="hero-summary animate-fade-in">
+                    <div class="hero-card">
+                        <h3>Total Active Projects</h3>
+                        <div class="hero-value" id="hero-active-projects">0</div>
+                        <div class="hero-sub">vs <span id="hero-completed-projects">0</span> completed</div>
+                    </div>
+                    <div class="hero-card">
+                        <h3>Portfolio Health Score</h3>
+                        <div class="hero-value" id="hero-health-score">0%</div>
+                        <div class="hero-sub">Overall health</div>
+                    </div>
+                    <div class="hero-card">
+                        <h3>Budget Utilization</h3>
+                        <div class="hero-value" id="hero-budget-util">0%</div>
+                        <div class="hero-sub">Used of total budget</div>
+                    </div>
+                    <div class="hero-card">
+                        <h3>On‑Time Delivery Rate</h3>
+                        <div class="hero-value" id="hero-ontime-rate">0%</div>
+                        <div class="hero-sub">Projects on schedule</div>
+                    </div>
+                    <div class="hero-card">
+                        <h3>Total Team Members</h3>
+                        <div class="hero-value" id="hero-team-members">0</div>
+                        <div class="hero-sub">Active members</div>
+                    </div>
+                    <div class="hero-card">
+                        <h3>Projected Annual Spend</h3>
+                        <div class="hero-value">$<span id="hero-projected-spend">0</span></div>
+                        <div class="hero-sub">Annual budget forecast</div>
+                    </div>
+                </div>
+
+                <div class="head-to-head card animate-fade-in">
+                    <h2 className="card-title"><i class="fas fa-balance-scale"></i> Head‑to‑Head Comparison</h2>
+                    <div class="head-to-head" id="head-to-head-container">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <div class="chart-container animate-fade-in">
+                    <canvas id="completion-trend-chart"></canvas>
+                </div>
+
+                <div class="chart-container animate-fade-in">
+                    <canvas id="budget-vs-actual-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Projects View -->
+            <section id="view-projects" class="view-content hidden">
+                <div class="controls-bar animate-fade-in">
+                    <label>Filters:</label>
+                    <select id="filter-project">
+                        <option value="">All Projects</option>
+                    </select>
+                    <select id="filter-team">
+                        <option value="">All Teams</option>
+                    </select>
+                    <select id="filter-department">
+                        <option value="">All Departments</option>
+                    </select>
+                    <select id="filter-owner">
+                        <option value="">All Owners</option>
+                    </select>
+                    <select id="filter-status">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Completed">Completed</option>
+                        <option value="On Hold">On Hold</option>
+                    </select>
+                    <select id="filter-fiscal-year">
+                        <option value="">All Fiscal Years</option>
+                    </select>
+                    <select id="filter-quarter">
+                        <option value="">All Quarters</option>
+                    </select>
+                    <input type="text" id="filter-search" placeholder="Search...">
+                </div>
+
+                <div class="projects-grid" id="projects-grid">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="chart-container animate-fade-in">
+                    <canvas id="resource-allocation-chart"></canvas>
+                </div>
+
+                <div class="chart-container animate-fade-in">
+                    <canvas id="open-risks-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Timeline View -->
+            <section id="view-timeline" class="view-content hidden">
+                <div class="controls-bar animate-fade-in">
+                    <label>View:</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-timeline-mode="project">Project Timeline</button>
+                        <button class="toggle-btn" data-timeline-mode="milestone">Milestone View</button>
+                    </div>
+                </div>
+
+                <div class="timeline" id="timeline-container">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Resources View -->
+            <section id="view-resources" class="view-content hidden">
+                <div class="card animate-fade-in">
+                    <h2 className="card-title"><i class="fas fa-users"></i> Team Workload</h2>
+                    <div id="team-workload-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="chart-container animate-fade-in">
+                    <canvas id="team-velocity-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Risks View -->
+            <section id="view-risks" class="view-content hidden">
+                <div class="card animate-fade-in">
+                    <h2 className="card-title"><i class="fas fa-exclamation-triangle"></i> Active Risks</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Risk Description</th>
+                                <th>Severity</th>
+                                <th>Probability (1‑5)</th>
+                                <th>Impact (1‑5)</th>
+                                <th>Owner</th>
+                                <th>Mitigation Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="risks-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="chart-container animate-fade-in">
+                    <canvas id="milestone-progress-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Operations View -->
+            <section id="view-operations" class="view-content hidden">
+                <div class="card animate-fade-in">
+                    <h2 className="card-title"><i class="fas fa-plug"></i> Integrations Status</h2>
+                    <div id="integrations-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="card animate-fade-in">
+                    <h2 className="card-title"><i class="fas fa-code"></i> API Usage & Automation</h2>
+                    <div class="metric-row">
+                        <span class="metric-label-small">Workflow Executions:</span>
+                        <span id="api-workflow-executions">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label-small">Successful Executions:</span>
+                        <span id="api-successful-executions">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label-small">Webhook Calls:</span>
+                        <span id="api-webhook-calls">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label-small">Success Rate:</span>
+                        <span id="api-success-rate">0%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label-small">Estimated API Cost:</span>
+                        <span id="api-estimated-cost">$0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label-small">Automation Savings:</span>
+                        <span id="api-savings">$0</span>
+                    </div>
+                </div>
+
+                <div class="winner-box animate-fade-in">
+                    <h3><i class="fas fa-trophy"></i> Winner Breakdown</h3>
+                    <p id="winner-breakdown-text">Loading...</p>
+                </div>
+
+                <div class="card animate-fade-in">
+                    <h2 className="card-title"><i class="fas fa-edit"></i> Notes & Executive Commentary</h2>
+                    <textarea class="notes-textarea" id="exec-notes"
+                        placeholder="Add observations, delivery updates, concerns, lessons learned, future outlook..."></textarea>
+                </div>
+
+                <div class="chart-container animate-fade-in">
+                    <canvas id="planned-vs-actual-chart"></canvas>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>&copy; 2024 Project Management Command Center — Powered by Enterprise Data</p>
+        </footer>
+    </div>
+
+    <script>
+        // --------------------
+        // DATA GENERATION
+        // --------------------
+        function generateRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateDateOffset(daysFromNow) {
+            const d = new Date();
+            d.setDate(d.getDate() + daysFromNow);
+            return d.toISOString().split('T')[0];
+        }
+
+        // Generate projects
+        const projects = [];
+        const projectNames = [
+            "Mobile Platform Modernization",
+            "Customer Analytics Initiative",
+            "Supply Chain Optimization",
+            "Enterprise Resource Planning Upgrade",
+            "AI-Powered Chatbot Deployment",
+            "Cybersecurity Enhancement",
+            "Cloud Migration Project",
+            "New CRM Implementation",
+            "Data Lake Construction",
+            "IoT Integration Platform"
+        ];
+        const departments = ["Engineering", "Operations", "Sales", "Marketing", "HR", "Finance"];
+        const owners = ["Alice Johnson", "Bob Martinez", "Carol Liu", "David Kim", "Eva Rodriguez", "Frank O'Connor"];
+        const statuses = ["Active", "Completed", "On Hold"];
+
+        for (let i = 1; i <= 10; i++) {
+            const name = projectNames[i - 1];
+            const status = statuses[generateRandomInt(0, statuses.length - 1)];
+            const budget = generateRandomInt(500000, 5000000) * 1000;
+            const actualSpend = generateRandomInt(0, budget) * 1000;
+            const completionPct = status === "Completed" ? 100 : generateRandomInt(10, 95);
+            const scheduleProgressPct = generateRandomInt(completionPct - 10, completionPct + 20);
+            const budgetVariancePct = ((actualSpend - budget) / budget * 100).toFixed(1);
+            const teamSize = generateRandomInt(3, 20);
+            const milestoneCount = generateRandomInt(5, 15);
+            const openRisks = generateRandomInt(0, 8);
+            const blockedTasks = generateRandomInt(0, 5);
+            const projectedCompletionDate = generateDateOffset(generateRandomInt(30, 365));
+            const healthScore = status === "Completed" ? 100 : generateRandomInt(30, 100);
+            const riskScore = generateRandomInt(0, 50);
+            const resourceUtilizationPct = generateRandomInt(60, 120);
+            const stakeholderSatisfactionScore = generateRandomInt(70, 100);
+            const owner = owners[generateRandomInt(0, owners.length - 1)];
+            const department = departments[generateRandomInt(0, departments.length - 1)];
+            const fiscalYear = 2024 - generateRandomInt(0, 2);
+            const quarter = generateRandomInt(1, 4);
+            const phases = ["Planning", "Design", "Development", "Testing", "Deployment"];
+            const milestones = [];
+            for (let m = 1; m <= milestoneCount; m++) {
+                const completed = Math.random() > 0.3 || status === "Completed";
+                milestones.push({
+                    name: `Milestone ${m}`,
+                    dueDate: generateDateOffset(m * 30),
+                    completed,
+                    tasks: []
+                });
+            }
+            const risks = [];
+            for (let r = 1; r <= openRisks; r++) {
+                const severity = ["High", "Medium", "Low"][generateRandomInt(0, 2)];
+                const probability = generateRandomInt(1, 5);
+                const impact = generateRandomInt(1, 5);
+                const mitigationStatus = Math.random() > 0.5;
+                risks.push({
+                    description: `Risk ${r}: ${severity} impact scenario`,
+                    severity,
+                    probability,
+                    impactScore: impact,
+                    mitigationStatus,
+                    owner: owners[generateRandomInt(0, owners.length - 1)]
+                });
+            }
+            const tasks = [];
+            for (let t = 1; t <= generateRandomInt(5, 30); t++) {
+                tasks.push({
+                    id: t,
+                    name: `Task ${t}`,
+                    status: ["Completed", "In Progress", "Blocked"][generateRandomInt(0, 2)],
+                    owner: owners[generateRandomInt(0, owners.length - 1)],
+                    estimatedHours: generateRandomInt(1, 40)
+                });
+            }
+
+            projects.push({
+                id: i,
+                name,
+                status,
+                completionPct,
+                budget,
+                actualSpend,
+                remainingBudget: budget - actualSpend,
+                teamSize,
+                milestoneCount,
+                openRisks,
+                blockedTasks,
+                projectedCompletionDate,
+                healthScore,
+                scheduleProgressPct,
+                budgetVariancePct,
+                taskCompletionPct: tasks.filter(t => t.status === "Completed").length / tasks.length * 100,
+                riskScore,
+                resourceUtilizationPct,
+                stakeholderSatisfactionScore,
+                owner,
+                department,
+                fiscalYear,
+                quarter,
+                phases,
+                milestones,
+                risks,
+                tasks
+            });
+        }
+
+        // Select two flagship projects for head-to-head
+        const flagshipProjects = projects.filter(p => p.name.includes("Mobile Platform Modernization") || p.name.includes("Customer Analytics Initiative"));
+        const flagship1 = flagshipProjects[0];
+        const flagship2 = flagshipProjects[1];
+
+        // Generate teams
+        const teams = [];
+        const teamNames = ["Frontend Team", "Backend Team", "DevOps Team", "Data Science Team", "QA Team", "Product Team"];
+        for (let i = 0; i < teamNames.length; i++) {
+            const members = generateRandomInt(2, 8);
+            const capacity = members * 160; // hours per month
+            const currentUtilization = generateRandomInt(50, 150);
+            const availability = Math.max(0, 100 - currentUtilization);
+            const overtimeRisk = currentUtilization > 120;
+            const status = overtimeRisk ? "Overloaded" : (currentUtilization > 80 ? "Utilized" : "Available");
+            teams.push({
+                id: `team-${i}`,
+                name: teamNames[i],
+                members,
+                capacity,
+                currentUtilization,
+                availability,
+                overtimeRisk,
+                status
+            });
+        }
+
+        // Integrations
+        const integrations = [
+            { name: "Jira", status: "Online", latency: 120, lastSync: "2024-08-14T10:23:45Z" },
+            { name: "Azure DevOps", status: "Degraded", latency: 850, lastSync: "2024-08-14T09:45:12Z" },
+            { name: "GitHub", status: "Online", latency: 90, lastSync: "2024-08-14T10:30:01Z" },
+            { name: "Slack", status: "Online", latency: 60, lastSync: "2024-08-14T10:15:33Z" },
+            { name: "Microsoft Teams", status: "Offline", latency: null, lastSync: "2024-08-14T08:05:22Z" },
+            { name: "Confluence", status: "Online", latency: 200, lastSync: "2024-08-14T09:58:44Z" }
+        ];
+
+        // API Usage
+        const apiUsage = {
+            workflowExecutions: generateRandomInt(5000, 15000),
+            successfulExecutions: generateRandomInt(4800, 14800),
+            webhookCalls: generateRandomInt(2000, 8000),
+            estimatedCost: generateRandomInt(2000, 8000) * 10,
+            automationSavings: generateRandomInt(5000, 20000) * 100
+        };
+
+        // Helper: update hero summary numbers based on filtered projects
+        function updateHeroMetrics(projList) {
+            const active = projList.filter(p => p.status === "Active").length;
+            const completed = projList.filter(p => p.status === "Completed").length;
+            const totalBudget = projList.reduce((sum, p) => sum + p.budget, 0);
+            const totalSpend = projList.reduce((sum, p) => sum + p.actualSpend, 0);
+            const budgetUtilization = totalBudget ? ((totalSpend / totalBudget) * 100).toFixed(1) : 0;
+            const onTime = projList.filter(p => p.scheduleProgressPct >= p.completionPct).length;
+            const onTimeRate = projList.length ? ((onTime / projList.length) * 100).toFixed(1) : 0;
+            const totalTeamMembers = projList.reduce((sum, p) => sum + p.teamSize, 0);
+            const projectedAnnualSpend = totalBudget * 1.2; // assume 20% increase
+
+            // Portfolio health score: average of healthScore
+            const healthScore = projList.length ? (projList.reduce((sum, p) => sum + p.healthScore, 0) / projList.length).toFixed(1) : 0;
+
+            document.getElementById('hero-active-projects').textContent = active;
+            document.getElementById('hero-completed-projects').textContent = completed;
+            document.getElementById('hero-health-score').textContent = healthScore + '%';
+            document.getElementById('hero-budget-util').textContent = budgetUtilization + '%';
+            document.getElementById('hero-ontime-rate').textContent = onTimeRate + '%';
+            document.getElementById('hero-team-members').textContent = totalTeamMembers;
+            document.getElementById('hero-projected-spend').textContent = '$' + projectedAnnualSpend.toLocaleString();
+        }
+
+        // --------------------
+        // APP STATE
+        // --------------------
+        const app = {
+            data: {
+                projects,
+                teams,
+                integrations,
+                apiUsage,
+                flagship1,
+                flagship2
+            },
+            state: {
+                view: 'summary', // current view
+                darkMode: false,
+                filters: {
+                    project: '',
+                    team: '',
+                    department: '',
+                    owner: '',
+                    status: '',
+                    fiscalYear: '',
+                    quarter: '',
+                    search: ''
+                },
+                sort: { column: null, direction: 'asc' },
+                agileWaterfall: 'agile',
+                projectView: 'portfolio',
+                reportingPeriod: 'quarterly'
+            },
+            charts: {},
+            init() {
+                // Load preferences
+                const storedTheme = localStorage.getItem('darkMode');
+                if (storedTheme !== null) {
+                    app.state.darkMode = storedTheme === 'true';
+                }
+                const storedView = localStorage.getItem('currentView');
+                if (storedView) app.state.view = storedView;
+
+                // Apply theme
+                this.applyTheme();
+
+                // Bind UI events
+                this.bindEvents();
+
+                // Render current view
+                this.renderView(app.state.view);
+            },
+
+            applyTheme() {
+                const html = document.documentElement;
+                if (app.state.darkMode) {
+                    html.classList.add('dark');
+                } else {
+                    html.classList.remove('dark');
+                }
+                localStorage.setItem('darkMode', app.state.darkMode.toString());
+                // Update chart colors? Will be refreshed on re-render.
+                this.updateCharts();
+            },
+
+            bindEvents() {
+                // Theme toggle
+                const themeBtn = document.getElementById('theme-toggle');
+                themeBtn.addEventListener('click', () => {
+                    app.state.darkMode = !app.state.darkMode;
+                    app.applyTheme();
+                });
+
+                // Navigation
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const view = e.currentTarget.getAttribute('data-view');
+                        app.state.view = view;
+                        localStorage.setItem('currentView', view);
+                        app.renderView(view);
+                    });
+                });
+
+                // Filter controls
+                document.getElementById('filter-project').addEventListener('change', e => {
+                    app.state.filters.project = e.target.value;
+                    app.applyFiltersAndRender();
+                });
+                document.getElementById('filter-team').addEventListener('change', e => {
+                    app.state.filters.team = e.target.value;
+                    app.applyFiltersAndRender();
+                });
+                document.getElementById('filter-department').addEventListener('change', e => {
+                    app.state.filters.department = e.target.value;
+                    app.applyFiltersAndRender();
+                });
+                document.getElementById('filter-owner').addEventListener('change', e => {
+                    app.state.filters.owner = e.target.value;
+                    app.applyFiltersAndRender();
+                });
+                document.getElementById('filter-status').addEventListener('change', e => {
+                    app.state.filters.status = e.target.value;
+                    app.applyFiltersAndRender();
+                });
+                document.getElementById('filter-fiscal-year').addEventListener('change', e => {
+                    app.state.filters.fiscalYear = e.target.value;
+                    app.applyFiltersAndRender();
+                });
+                document.getElementById('filter-quarter').addEventListener('change', e => {
+                    app.state.filters.quarter = e.target.value;
+                    app.applyFiltersAndRender();
+                });
+                document.getElementId('filter-search')?.addEventListener('input', e => {
+                    app.state.filters.search = e.target.value.toLowerCase();
+                    app.applyFiltersAndRender();
+                });
+
+                // Agile/Waterfall toggles
+                document.querySelectorAll('[data-toggle]').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        const mode = e.currentTarget.getAttribute('data-toggle');
+                        app.state.agileWaterfall = mode;
+                        document.querySelectorAll('[data-toggle]').forEach(b => b.classList.remove('active'));
+                        e.currentTarget.classList.add('active');
+                        app.renderView(app.state.view);
+                    });
+                });
+
+                // Project view toggles
+                document.querySelectorAll('[data-viewmode]').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        const mode = e.currentTarget.getAttribute('data-viewmode');
+                        app.state.projectView = mode;
+                        document.querySelectorAll('[data-viewmode]').forEach(b => b.classList.remove('active'));
+                        e.currentTarget.classList.add('active');
+                        app.renderView(app.state.view);
+                    });
+                });
+
+                // Reporting period toggles
+                document.querySelectorAll('[data-period]').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        const period = e.currentTarget.getAttribute('data-period');
+                        app.state.reportingPeriod = period;
+                        document.querySelectorAll('[data-period]').forEach(b => b.classList.remove('active'));
+                        e.currentTarget.classList.add('active');
+                        app.renderView(app.state.view);
+                    });
+                });
+
+                // Timeline mode toggles
+                document.querySelectorAll('[data-timeline-mode]').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        const mode = e.currentTarget.getAttribute('data-timeline-mode');
+                        // toggle timeline view (could add separate state but not used heavily)
+                        const containers = document.querySelectorAll('.timeline-item');
+                        // just re-render timeline
+                        app.renderTimeline();
+                    });
+                });
+
+                // Table sorting (delegated)
+                document.querySelectorAll('.data-table th').forEach(th => {
+                    th.addEventListener('click', () => {
+                        const column = th.textContent.trim().toLowerCase().replace(' ', '_');
+                        if (app.state.sort.column === column) {
+                            app.state.sort.direction = app.state.sort.direction === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            app.state.sort.column = column;
+                            app.state.sort.direction = 'asc';
+                        }
+                        app.applyFiltersAndRender();
+                    });
+                });
+
+                // Expand/collapse project cards
+                document.addEventListener('click', e => {
+                    const card = e.target.closest('.project-card');
+                    if (card) {
+                        card.classList.toggle('expanded');
+                    }
+                    const timelineItem = e.target.closest('.timeline-item');
+                    if (timelineItem) {
+                        timelineItem.classList.toggle('expanded');
+                    }
+                });
+            },
+
+            renderView(view) {
+                // Hide all views
+                document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+                // Show requested view
+                const target = document.getElementById(`view-${view}`);
+                if (target) target.classList.remove('hidden');
+
+                // Update navigation buttons
+                document.queryAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                const activeBtn = document.querySelector(`.nav-btn[data-view="${view}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+
+                // Render content based on view
+                switch (view) {
+                    case 'summary':
+                        this.renderSummary();
+                        break;
+                    case 'projects':
+                        this.renderProjects();
+                        break;
+                    case 'timeline':
+                        this.renderTimeline();
+                        break;
+                    case 'resources':
+                        this.renderResources();
+                        break;
+                    case 'risks':
+                        this.renderRisks();
+                        break;
+                    case 'operations':
+                        this.renderOperations();
+                        break;
+                }
+
+                // Persist view
+                localStorage.setItem('currentView', view);
+            },
+
+            renderSummary() {
+                // Update hero metrics with filtered projects (based on current filters)
+                const filtered = this.getFilteredProjects();
+                updateHeroMetrics(filtered);
+
+                // Render head-to-head comparison
+                this.renderHeadToHead();
+
+                // Render charts
+                this.renderCharts();
+            },
+
+            renderHeadToHead() {
+                const container = document.getElementById('head-to-head-container');
+                container.innerHTML = '';
+
+                const p1 = app.data.flagship1;
+                const p2 = app.data.flagship2;
+
+                const createCard = (project, label) => {
+                    const healthColor = project.healthScore >= 80 ? 'positive' : (project.healthScore >= 60 ? 'neutral' : 'negative');
+                    return `
+                        <div class="project-comparison-card">
+                            <h4>${label}: ${project.name}</h4>
+                            <div class="comparison-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">Schedule Progress</span>
+                                    <span class="metric-value">${project.scheduleProgressPct}%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Budget Variance</span>
+                                    <span class="metric-value ${project.budgetVariancePct <= 0 ? 'positive' : 'negative'}">${project.budgetVariancePct}%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Task Completion</span>
+                                    <span class="metric-value">${project.taskCompletionPct.toFixed(1)}%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Risk Score</span>
+                                    <span class="metric-value">${project.riskScore}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Resource Utilization</span>
+                                    <span class="metric-value">${project.resourceUtilizationPct}%</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Stakeholder Satisfaction</span>
+                                    <span class="metric-value">${project.stakeholderSatisfactionScore}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                };
+
+                container.innerHTML = createCard(p1, "Project A") + createCard(p2, "Project B");
+
+                // Winner breakdown text
+                const winner = p1.healthScore >= p2.healthScore ? p1.name : p2.name;
+                document.getElementById('winner-breakdown-text').textContent = `${winner} outperformed the other in overall health score and stakeholder satisfaction.`;
+            },
+
+            getFilteredProjects() {
+                let list = app.data.projects;
+
+                if (app.state.filters.project) {
+                    list = list.filter(p => p.id == app.state.filters.project);
+                }
+                if (app.state.filters.team) {
+                    // Assuming project.owner maps to team; simplistic mapping
+                    list = list.filter(p => p.owner.includes(app.state.filters.team));
+                }
+                if (app.state.filters.department) {
+                    list = list.filter(p => p.department === app.state.filters.department);
+                }
+                if (app.state.filters.owner) {
+                    list = list.filter(p => p.owner === app.state.filters.owner);
+                }
+                if (app.state.filters.status) {
+                    list = list.filter(p => p.status === app.state.filters.status);
+                }
+                if (app.state.filters.fiscalYear) {
+                    list = list.filter(p => p.fiscalYear.toString() === app.state.filters.fiscalYear);
+                }
+                if (app.state.filters.quarter) {
+                    list = list.filter(p => p.quarter.toString() === app.state.filters.quarter);
+                }
+                if (app.state.filters.search) {
+                    const term = app.state.filters.search;
+                    list = list.filter(p => p.name.toLowerCase().includes(term) || p.owner.toLowerCase().includes(term));
+                }
+
+                // Apply sorting if needed (only for tables)
+                if (app.state.sort.column) {
+                    list.sort((a, b) => {
+                        const valA = a[app.state.sort.column];
+                        const valB = b[app.state.sort.column];
+                        if (typeof valA === 'number' && typeof valB === 'number') {
+                            return app.state.sort.direction === 'asc' ? valA - valB : valB - valA;
+                        } else {
+                            const strA = String(valA).toLowerCase();
+                            const strB = String(valB).toLowerCase();
+                            return app.state.sort.direction === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
+                        }
+                    });
+                }
+
+                return list;
+            },
+
+            applyFiltersAndRender() {
+                const filtered = this.getFilteredProjects();
+                // Re-render based on current view
+                switch (app.state.view) {
+                    case 'summary':
+                        this.renderSummary();
+                        break;
+                    case 'projects':
+                        this.renderProjects();
+                        break;
+                    case 'timeline':
+                        this.renderTimeline();
+                        break;
+                    case 'resources':
+                        this.renderResources();
+                        break;
+                    case 'risks':
+                        this.renderRisks();
+                        break;
+                    case 'operations':
+                        this.renderOperations();
+                        break;
+                }
+            },
+
+            renderProjects() {
+                const container = document.getElementById('projects-grid');
+                container.innerHTML = '';
+
+                const filtered = this.getFilteredProjects();
+
+                // Populate filter options
+                const projectSelect = document.getElementById('filter-project');
+                projectSelect.innerHTML = '<option value="">All Projects</option>' + filtered.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+                filtered.forEach(project => {
+                    const healthPercent = project.healthScore;
+                    const statusClass = project.status.toLowerCase().replace(' ', '-');
+
+                    const card = `
+                        <div class="project-card card" data-id="${project.id}">
+                            <span class="status-badge status-${statusClass}">${project.status}</span>
+                            <h3>${project.name}</h3>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Completion</span>
+                                <span>${project.completionPct}%</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Budget</span>
+                                <span>$${project.budget.toLocaleString()}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Actual Spend</span>
+                                <span>$${project.actualSpend.toLocaleString()}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Remaining Budget</span>
+                                <span>$${project.remainingBudget.toLocaleString()}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Team Size</span>
+                                <span>${project.teamSize}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Milestones</span>
+                                <span>${project.milestoneCount}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Open Risks</span>
+                                <span>${project.openRisks}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Blocked Tasks</span>
+                                <span>${project.blockedTasks}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Projected Completion</span>
+                                <span>${project.projectedCompletionDate}</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label-small">Health Score</span>
+                                <span>${project.healthScore}</span>
+                            </div>
+                            <div class="project-health">
+                                <div class="health-bar" style="width: ${healthPercent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', card);
+                });
+
+                // Update charts
+                this.renderCharts();
+            },
+
+            renderTimeline() {
+                const container = document.getElementById('timeline-container');
+                container.innerHTML = '';
+
+                const filtered = this.getFilteredProjects();
+
+                filtered.forEach(project => {
+                    const phaseItems = project.phases.map((phase, idx) => {
+                        const milestone = project.milestones[idx] || { name: `Milestone ${idx + 1}`, completed: false, dueDate: '' };
+                        return `
+                            <div class="timeline-item">
+                                <div class="timeline-phase">${phase}</div>
+                                <div class="timeline-date">${milestone.dueDate || 'N/A'}</div>
+                                <div class="timeline-details">
+                                    <p><strong>Milestone:</strong> ${milestone.name} ${milestone.completed ? '(Completed)' : '(In Progress)'}</p>
+                                    <p><strong>Tasks:</strong> ${project.tasks.filter(t => t.status === 'Completed').length} completed of ${project.tasks.length}</p>
+                                    <p><strong>Owner:</strong> ${project.owner}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="card">
+                            <h3>${project.name}</h3>
+                            <div class="timeline">
+                                ${phaseItems}
+                            </div>
+                        </div>
+                    `);
+                });
+            },
+
+            renderResources() {
+                const container = document.getElementById('team-workload-list');
+                container.innerHTML = '';
+
+                app.data.teams.forEach(team => {
+                    const utilPercent = team.currentUtilization;
+                    const utilColor = utilPercent > 120 ? 'var(--neon-secondary)' : (utilPercent > 80 ? 'var(--neon-warning)' : 'var(--neon-success)');
+                    const item = `
+                        <div class="resource-item">
+                            <div class="resource-info">
+                                <h4>${team.name}</h4>
+                                <p>${team.members} members, ${team.capacity} hrs capacity</p>
+                            </div>
+                            <div class="resource-util" style="color: ${utilColor};">
+                                Utilization: ${utilPercent}%
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', item);
+                });
+
+                this.renderCharts();
+            },
+
+            renderRisks() {
+                const tbody = document.getElementById('risks-table-body');
+                tbody.innerHTML = '';
+
+                const allRisks = app.data.projects.flatMap(p => p.risks.map(r => ({ ...r, project: p.name })));
+                allRisks.forEach(risk => {
+                    const severityClass = risk.severity.toLowerCase();
+                    const row = `
+                        <tr>
+                            <td>${risk.project}</td>
+                            <td>${risk.description}</td>
+                            <td><span class="status ${severityClass}">${risk.severity}</span></td>
+                            <td>${risk.probability}</td>
+                            <td>${risk.impactScore}</td>
+                            <td>${risk.owner}</td>
+                            <td><span class="status ${risk.mitigationStatus ? 'mitigated' : 'pending'}">${risk.mitigationStatus ? 'Mitigated' : 'Pending'}</span></td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+
+                this.renderCharts();
+            },
+
+            renderOperations() {
+                // Integrations list
+                const integrationsContainer = document.getElementById('integrations-list');
+                integrationsContainer.innerHTML = '';
+                app.data.integrations.forEach(int => {
+                    const statusClass = `status-${int.status.toLowerCase()}`;
+                    const statusText = int.status.charAt(0).toUpperCase() + int.status.slice(1);
+                    const item = `
+                        <div class="integration-item">
+                            <div>${int.name}</div>
+                            <div>
+                                <span class="integration-status ${statusClass}">${statusText}</span>
+                                ${int.latency ? `<span style="margin-left:0.5rem; font-size:0.85rem;">Latency: ${int.latency}ms</span>` : ''}
+                                <span style="margin-left:0.5rem; font-size:0.85rem;">Last Sync: ${new Date(int.lastSync).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                    integrationsContainer.insertAdjacentHTML('beforeend', item);
+                });
+
+                // API usage metrics (already displayed in HTML)
+                const successRate = app.data.apiUsage.successfulExecutions / app.data.apiUsage.workflowExecutions * 100;
+                document.getElementById('api-workflow-executions').textContent = app.data.apiUsage.workflowExecutions.toLocaleString();
+                document.getElementById('api-successful-executions').textContent = app.data.apiUsage.successfulExecutions.toLocaleString();
+                document.getElementById('api-webhook-calls').textContent = app.data.apiUsage.webhookCalls.toLocaleString();
+                document.getElementById('api-success-rate').textContent = successRate.toFixed(1) + '%';
+                document.getElementById('api-estimated-cost').textContent = '$' + app.data.apiUsage.estimatedCost.toLocaleString();
+                document.getElementById('api-savings').textContent = '$' + app.data.apiUsage.automationSavings.toLocaleString();
+
+                // Winner breakdown already updated in renderHeadToHead, but we can keep.
+                // Notes - maybe save to localStorage, but for now just placeholder.
+                const notesText = localStorage.getItem('execNotes') || '';
+                document.getElementById('exec-notes').value = notesText;
+                document.getElementById('exec-notes').addEventListener('input', e => {
+                    localStorage.setItem('execNotes', e.target.value);
+                });
+
+                this.renderCharts();
+            },
+
+            renderCharts() {
+                // Chart.js configurations
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? '#e2e8f0' : '#333';
+                const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                const neonPrimary = isDark ? '#38bdf8' : '#4f46e5';
+                const neonSecondary = isDark ? '#fb923c' : '#ff6b6b';
+                const neonSuccess = isDark ? '#4ade80' : '#51cf66';
+
+                // Chart 1: Project completion trend over time (line)
+                const completionCtx = document.getElementById('completion-trend-chart');
+                if (completionCtx) {
+                    const filtered = this.getFilteredProjects();
+                    const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+                    const data = filtered.map(p => p.completionPct);
+                    if (app.charts.completionTrend) app.charts.completionTrend.destroy();
+                    app.charts.completionTrend = new Chart(completionCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: filtered.map((p, idx) => ({
+                                label: p.name,
+                                data: data.map(val => val),
+                                borderColor: [neonPrimary, neonSecondary, neonSuccess, '#a78bfa', '#fbbf24'][idx % 5],
+                                backgroundColor: 'rgba(0,0,0,0)',
+                                tension: 0.3,
+                                pointBackgroundColor: [neonPrimary, neonSecondary, neonSuccess, '#a78bfa', '#fbbf24'][idx % 5],
+                                pointBorderColor: isDark ? '#0f172a' : '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4
+                            }))
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top', labels: { color: textColor } },
+                                title: { display: true, text: 'Project Completion Trend (%)', color: textColor }
+                            },
+                            scales: {
+                                x: { grid: { color: gridColor }, ticks: { color: textColor } },
+                                y: { grid: { color: gridColor }, ticks: { color: textColor }, min: 0, max: 100 }
+                            }
+                        }
+                    });
+                }
+
+                // Chart 2: Budget vs actual spend (bar)
+                const budgetCtx = document.getElementById('budget-vs-actual-chart');
+                if (budgetCtx) {
+                    const filtered = this.getFilteredProjects();
+                    if (app.charts.budgetVsActual) app.charts.budgetVsActual.destroy();
+                    app.charts.budgetVsActual = new Chart(budgetCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: filtered.map(p => p.name),
+                            datasets: [{
+                                label: 'Budget',
+                                data: filtered.map(p => p.budget / 1000000), // millions
+                                backgroundColor: neonPrimary
+                            }, {
+                                label: 'Actual Spend',
+                                data: filtered.map(p => p.actualSpend / 1000000),
+                                backgroundColor: neonSecondary
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { labels: { color: textColor } },
+                                title: { display: true, text: 'Budget vs Actual Spend (Millions $)', color: textColor }
+                            },
+                            scales: {
+                                x: { grid: { color: gridColor }, ticks: { color: textColor, maxRotation: 45 } },
+                                y: { grid: { color: gridColor }, ticks: { color: textColor } }
+                            }
+                        }
+                    });
+                }
+
+                // Chart 3: Team velocity and sprint throughput (line)
+                const velocityCtx = document.getElementById('team-velocity-chart');
+                if (velocityCtx) {
+                    const labels = ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5'];
+                    const data = Array.from({ length: 5 }, () => generateRandomInt(20, 80));
+                    if (app.charts.velocity) app.charts.velocity.destroy();
+                    app.charts.velocity = new Chart(velocityCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Story Points Completed',
+                                data,
+                                borderColor: neonSuccess,
+                                backgroundColor: 'rgba(0,0,0,0)',
+                                tension: 0.3,
+                                pointBackgroundColor: neonSuccess,
+                                pointBorderColor: isDark ? '#0f172a' : '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { labels: { color: textColor } },
+                                title: { display: true, text: 'Team Velocity (Story Points)', color: textColor }
+                            },
+                            scales: {
+                                x: { grid: { color: gridColor }, ticks: { color: textColor } },
+                                y: { grid: { color: gridColor }, ticks: { color: textColor } }
+                            }
+                        }
+                    });
+                }
+
+                // Chart 4: Resource allocation by department (pie)
+                const resourceCtx = document.getElementById('resource-allocation-chart');
+                if (resourceCtx) {
+                    const deptSum = {};
+                    filtered.forEach(p => {
+                        deptSum[p.department] = (deptSum[p.department] || 0) + p.teamSize;
+                    });
+                    const labels = Object.keys(deptSum);
+                    const data = Object.values(deptSum);
+                    if (app.charts.resourceAlloc) app.charts.resourceAlloc.destroy();
+                    app.charts.resourceAlloc = new Chart(resourceCtx.getContext('2d'), {
+                        type: 'pie',
+                        data: {
+                            labels,
+                            datasets: [{
+                                data,
+                                backgroundColor: [neonPrimary, neonSecondary, neonSuccess, '#a78bfa', '#fbbf24', '#fdba74']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'right', labels: { color: textColor } },
+                                title: { display: true, text: 'Resource Allocation by Department', color: textColor }
+                            }
+                        }
+                    });
+                }
+
+                // Chart 5: Open risks by severity (bar)
+                const risksCtx = document.getElementById('open-risks-chart');
+                if (r && isksCtx) {
+                    const severityCounts = { High: 0, Medium: 0, Low: 0 };
+                    filtered.forEach(p => {
+                        p.risks.forEach(r => {
+                            severityCounts[r.severity] = (severityCounts[r.severity] || 0) + 1;
+                        });
+                    });
+                    if (app.charts.openRisks) app.charts.openRisks.destroy();
+                    app.charts.openRisks = new Chart(risksCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(severityCounts),
+                            datasets: [{
+                                label: 'Open Risks',
+                                data: Object.values(severityCounts),
+                                backgroundColor: [neonSecondary, neonWarning, neonSuccess]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: 'Open Risks by Severity', color: textColor }
+                            },
+                            scales: {
+                                x: { grid: { color: gridColor }, ticks: { color: textColor } },
+                                y: { grid: { color: gridColor }, ticks: { color: textColor }, beginAtZero: true }
+                            }
+                        }
+                    });
+                }
+
+                // Chart 6: Milestone completion progress (doughnut)
+                const milestoneCtx = document.getElementById('milestone-progress-chart');
+                if (milestoneCtx) {
+                    const completed = filtered.reduce((sum, p) => sum + p.milestones.filter(m => m.completed).length, 0);
+                    const total = filtered.reduce((sum, p) => sum + p.milestones.length, 0);
+                    if (app.charts.milestoneProgress) app.charts.milestoneProgress.destroy();
+                    app.charts.milestoneProgress = new Chart(milestoneCtx.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Completed', 'Pending'],
+                            datasets: [{
+                                data: [completed, total - completed],
+                                backgroundColor: [neonSuccess, gridColor]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: textColor } },
+                                title: { display: true, text: 'Milestone Completion', color: textColor }
+                            }
+                        }
+                    });
+                }
+
+                // Chart 7: Planned vs actual timeline performance (bar)
+                const plannedCtx = document.getElementById('planned-vs-actual-chart');
+                if (plannedCtx) {
+                    const labels = filtered.map(p => p.name);
+                    const planned = labels.map(() => generateRandomInt(80, 120));
+                    const actual = labels.map(() => generateRandomInt(70, 110));
+                    if (app.charts.plannedVsActual) app.charts.plannedVsActual.destroy();
+                    app.charts.plannedVsActual = new Chart(plannedCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Planned',
+                                data: planned,
+                                backgroundColor: neonPrimary
+                            }, {
+                                label: 'Actual',
+                                data: actual,
+                                backgroundColor: neonSecondary
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { labels: { color: textColor } },
+                                title: { display: true, text: 'Planned vs Actual Timeline Performance (%)', color: textColor }
+                            },
+                            scales: {
+                                x: { grid: { color: gridColor }, ticks: { color: textColor, maxRotation: 45 } },
+                                y: { grid: { color: gridColor }, ticks: { color: textColor }, min: 0, max: 120 }
+                            }
+                        }
+                    });
+                }
+            },
+
+            updateCharts() {
+                // Re-create all charts with updated theme
+                this.renderCharts();
+            }
+        };
+
+        // Initialize app
+        app.init();
+
+        // Populate fiscal year and quarter filter options
+        const fiscalYearSelect = document.getElementById('filter-fiscal-year');
+        const quarterSelect = document.getElementById('filter-quarter');
+        for (let y = 2022; y <= 2025; y++) {
+            fiscalYearSelect.append(`<option value="${y}">${y}</option>`);
+        }
+        for (let q = 1; q <= 4; q++) {
+            quarterSelect.append(`<option value="${q}">Q${q}</option>`);
+        }
+
+        // Populate team filter options (using owners? simplistic)
+        const teamSelect = document.getElementById('filter-team');
+        app.data.owners = [...new Set(app.data.projects.map(p => p.owner))];
+        teamSelect.innerHTML = '<option value="">All Teams</option>' + app.data.owners.map(o => `<option value="${o}">${o}</option>`).join('');
+
+        // Populate department filter
+        const deptSet = new Set(app.data.projects.map(p => p.department));
+        const deptSelect = document.getElementById('filter-department');
+        deptSelect.innerHTML = '<option value="">All Departments</option>' + Array.from(deptSet).map(d => `<option value="${d}">${d}</option>`).join('');
+
+        // Populate owner filter
+        const ownerSelect = document.getElementById('filter-owner');
+        ownerSelect.innerHTML = '<option value="">All Owners</option>' + app.data.owners.map(o => `<option value="${o}">${o}</option>`).join('');
+
+        // Initial render
+        app.renderView(app.state.view);
+    </script>
+</body>
+
+</html>

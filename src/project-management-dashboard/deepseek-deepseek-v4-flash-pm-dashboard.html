@@ -1,0 +1,3045 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            --font-mono: 'JetBrains Mono', monospace
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background .4s ease, color .4s ease
+        }
+
+        :root {
+            --neon-cyan: #00e5ff;
+            --neon-green: #00e676;
+            --neon-purple: #b388ff;
+            --neon-orange: #ff9100;
+            --neon-pink: #ff4081;
+            --neon-yellow: #ffd600;
+            --neon-red: #ff1744;
+            --neon-blue: #448aff;
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+            --transition: all .3s cubic-bezier(.4, 0, .2, 1)
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #080c18;
+            --bg-secondary: #0d1230;
+            --bg-tertiary: #111638;
+            --bg-card: rgba(13, 18, 48, 0.75);
+            --bg-card-hover: rgba(20, 28, 76, 0.85);
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --text-primary: #e8eaf6;
+            --text-secondary: #9fa8da;
+            --text-tertiary: #5c6bc0;
+            --accent-cyan: #00e5ff;
+            --accent-green: #00e676;
+            --accent-purple: #b388ff;
+            --accent-orange: #ff9100;
+            --accent-pink: #ff4081;
+            --accent-yellow: #ffd600;
+            --accent-red: #ff1744;
+            --accent-blue: #448aff;
+            --chart-grid: rgba(255, 255, 255, 0.06);
+            --chart-text: #9fa8da;
+            --card-border: rgba(255, 255, 255, 0.06);
+            --card-bg: rgba(13, 18, 48, 0.7);
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --input-focus: rgba(0, 229, 255, 0.3);
+            --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+            --scrollbar-track: rgba(255, 255, 255, 0.03);
+            --shadow-glow: 0 0 20px rgba(0, 229, 255, 0.1);
+            --sidebar-bg: rgba(8, 12, 24, 0.95);
+            --topbar-bg: rgba(8, 12, 24, 0.85);
+            --hover-bg: rgba(255, 255, 255, 0.05);
+            --active-bg: rgba(0, 229, 255, 0.1);
+            --badge-bg: rgba(255, 255, 255, 0.08);
+            --table-stripe: rgba(255, 255, 255, 0.02);
+            --tooltip-bg: rgba(13, 18, 48, 0.95);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f2f8;
+            --bg-secondary: #e8eaf6;
+            --bg-tertiary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.85);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            --text-tertiary: #7a7aaa;
+            --accent-cyan: #0091ea;
+            --accent-green: #00a844;
+            --accent-purple: #7c4dff;
+            --accent-orange: #e65100;
+            --accent-pink: #d50059;
+            --accent-yellow: #f9a825;
+            --accent-red: #d50000;
+            --accent-blue: #2962ff;
+            --chart-grid: rgba(0, 0, 0, 0.08);
+            --chart-text: #4a4a6a;
+            --card-border: rgba(0, 0, 0, 0.06);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --input-border: rgba(0, 0, 0, 0.15);
+            --input-focus: rgba(0, 145, 234, 0.25);
+            --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+            --scrollbar-track: rgba(0, 0, 0, 0.05);
+            --shadow-glow: 0 4px 20px rgba(0, 145, 234, 0.1);
+            --sidebar-bg: rgba(255, 255, 255, 0.95);
+            --topbar-bg: rgba(255, 255, 255, 0.9);
+            --hover-bg: rgba(0, 0, 0, 0.05);
+            --active-bg: rgba(0, 145, 234, 0.1);
+            --badge-bg: rgba(0, 0, 0, 0.06);
+            --table-stripe: rgba(0, 0, 0, 0.02);
+            --tooltip-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 3px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary)
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+            overflow: hidden
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 68px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 4px;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            flex-shrink: 0;
+            transition: var(--transition)
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3)
+        }
+
+        .nav-item {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            font-size: 18px
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+            background: var(--hover-bg)
+        }
+
+        .nav-item.active {
+            background: var(--active-bg);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.15)
+        }
+
+        .nav-item .tooltip {
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--tooltip-bg);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s;
+            box-shadow: var(--glass-shadow);
+            border: 1px solid var(--card-border);
+            font-weight: 500
+        }
+
+        .nav-item:hover .tooltip {
+            opacity: 1
+        }
+
+        .nav-spacer {
+            flex: 1
+        }
+
+        .nav-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px
+        }
+
+        /* Main */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0
+        }
+
+        /* Top Bar */
+        .topbar {
+            height: 60px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--topbar-bg);
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(20px);
+            flex-shrink: 0;
+            transition: var(--transition)
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1
+        }
+
+        .topbar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary)
+        }
+
+        .topbar-subtitle {
+            font-size: 12px;
+            color: var(--text-tertiary)
+        }
+
+        .topbar-center {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            transition: var(--transition)
+        }
+
+        .control-group:hover {
+            border-color: var(--text-tertiary)
+        }
+
+        .control-group label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--text-tertiary)
+        }
+
+        .control-group select {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 4px 4px 0;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit
+        }
+
+        .control-group select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary)
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit
+        }
+
+        .btn:hover {
+            background: var(--hover-bg);
+            border-color: var(--text-tertiary)
+        }
+
+        .btn-icon {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px
+        }
+
+        .btn-icon:hover {
+            background: var(--hover-bg);
+            border-color: var(--text-tertiary)
+        }
+
+        .btn-icon.active {
+            background: var(--active-bg);
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan)
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #fff;
+            border: none;
+            box-shadow: 0 0 16px rgba(0, 229, 255, 0.2)
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 24px rgba(0, 229, 255, 0.35);
+            transform: translateY(-1px)
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            transition: var(--transition)
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn .4s ease
+        }
+
+        .view.active {
+            display: block
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: var(--transition);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden
+        }
+
+        .card:hover {
+            border-color: rgba(var(--accent-cyan), 0.2);
+            box-shadow: var(--shadow-glow)
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0;
+            transition: opacity .3s
+        }
+
+        .card:hover::before {
+            opacity: 1
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2
+        }
+
+        .card-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px
+        }
+
+        .card-grid {
+            display: grid;
+            gap: 16px
+        }
+
+        /* Hero Summary */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px
+        }
+
+        .hero-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 16px;
+            transition: var(--transition);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden
+        }
+
+        .hero-card:hover {
+            border-color: rgba(var(--accent-cyan), 0.15);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow)
+        }
+
+        .hero-card .icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            margin-bottom: 10px
+        }
+
+        .hero-card .h-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2
+        }
+
+        .hero-card .h-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+            font-weight: 500
+        }
+
+        .hero-card .h-change {
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px
+        }
+
+        /* Section */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section-title i {
+            color: var(--accent-cyan);
+            font-size: 18px
+        }
+
+        .section-subtitle {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 400
+        }
+
+        /* Head to Head */
+        .h2h-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .h2h-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: var(--transition)
+        }
+
+        .h2h-card.winner {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 24px rgba(0, 229, 255, 0.12)
+        }
+
+        .h2h-card.loser {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 24px rgba(255, 145, 0, 0.08)
+        }
+
+        .h2h-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border)
+        }
+
+        .h2h-badge {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--badge-bg);
+            color: var(--text-tertiary)
+        }
+
+        .h2h-badge.win {
+            background: rgba(0, 229, 255, 0.15);
+            color: var(--accent-cyan)
+        }
+
+        .h2h-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            flex: 1
+        }
+
+        .h2h-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .h2h-metric {
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: var(--glass-bg);
+            border: 1px solid var(--card-border)
+        }
+
+        .h2h-metric-label {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: .3px
+        }
+
+        .h2h-metric-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 2px
+        }
+
+        .h2h-metric-bar {
+            height: 3px;
+            border-radius: 2px;
+            margin-top: 4px;
+            background: var(--badge-bg);
+            overflow: hidden
+        }
+
+        .h2h-metric-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s ease
+        }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 16px;
+            transition: var(--transition)
+        }
+
+        .chart-card .chart-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 12px
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: 220px
+        }
+
+        .chart-canvas-wrap canvas {
+            width: 100% !important;
+            height: 100% !important
+        }
+
+        .chart-card:hover {
+            border-color: rgba(var(--accent-cyan), 0.15);
+            box-shadow: var(--shadow-glow)
+        }
+
+        /* Projects */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px
+        }
+
+        .project-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 16px;
+            transition: var(--transition);
+            cursor: pointer
+        }
+
+        .project-card:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-2px)
+        }
+
+        .project-card .p-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px
+        }
+
+        .project-card .p-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            flex: 1
+        }
+
+        .project-card .p-status {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .p-status.critical {
+            background: rgba(255, 23, 68, 0.15);
+            color: var(--accent-red)
+        }
+
+        .p-status.high {
+            background: rgba(255, 145, 0, 0.15);
+            color: var(--accent-orange)
+        }
+
+        .p-status.medium {
+            background: rgba(255, 214, 0, 0.15);
+            color: var(--accent-yellow)
+        }
+
+        .p-status.low {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--accent-green)
+        }
+
+        .p-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--badge-bg);
+            overflow: hidden;
+            margin: 8px 0
+        }
+
+        .p-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease
+        }
+
+        .p-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 11px
+        }
+
+        .p-meta-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0
+        }
+
+        .p-meta-label {
+            color: var(--text-tertiary)
+        }
+
+        .p-meta-value {
+            color: var(--text-primary);
+            font-weight: 600
+        }
+
+        .p-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .4s ease;
+            margin-top: 0
+        }
+
+        .p-details.open {
+            max-height: 800px;
+            margin-top: 12px
+        }
+
+        /* Tables */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            border: 1px solid var(--card-border)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        thead {
+            background: var(--glass-bg)
+        }
+
+        th {
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none
+        }
+
+        th:hover {
+            color: var(--text-primary)
+        }
+
+        th i {
+            margin-left: 4px;
+            font-size: 10px
+        }
+
+        td {
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--text-primary)
+        }
+
+        tr {
+            background: var(--bg-card);
+            transition: background .2s
+        }
+
+        tr:nth-child(even) {
+            background: var(--table-stripe)
+        }
+
+        tr:hover {
+            background: var(--hover-bg)
+        }
+
+        tr.expandable {
+            cursor: pointer
+        }
+
+        tr.detail-row {
+            display: none
+        }
+
+        tr.detail-row.open {
+            display: table-row
+        }
+
+        tr.detail-row td {
+            padding: 12px 12px 12px 32px;
+            background: var(--glass-bg)
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 8px 0
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--card-border)
+        }
+
+        .tl-item {
+            position: relative;
+            padding: 0 0 20px 44px
+        }
+
+        .tl-item:last-child {
+            padding-bottom: 0
+        }
+
+        .tl-dot {
+            position: absolute;
+            left: 10px;
+            top: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-cyan);
+            background: var(--bg-primary);
+            z-index: 1
+        }
+
+        .tl-dot.completed {
+            background: var(--accent-green);
+            border-color: var(--accent-green)
+        }
+
+        .tl-dot.at-risk {
+            background: var(--accent-orange);
+            border-color: var(--accent-orange)
+        }
+
+        .tl-dot.delayed {
+            background: var(--accent-red);
+            border-color: var(--accent-red)
+        }
+
+        .tl-content {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            transition: var(--transition)
+        }
+
+        .tl-content:hover {
+            border-color: var(--accent-cyan)
+        }
+
+        .tl-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 13px
+        }
+
+        .tl-date {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px
+        }
+
+        .tl-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            display: none
+        }
+
+        .tl-desc.open {
+            display: block
+        }
+
+        /* Integrations */
+        .int-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 24px
+        }
+
+        .int-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition)
+        }
+
+        .int-card:hover {
+            border-color: var(--accent-cyan)
+        }
+
+        .int-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0
+        }
+
+        .int-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .int-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary)
+        }
+
+        .int-status {
+            font-size: 10px;
+            font-weight: 500;
+            margin-top: 1px
+        }
+
+        .int-status.online {
+            color: var(--accent-green)
+        }
+
+        .int-status.offline {
+            color: var(--accent-red)
+        }
+
+        .int-status.warning {
+            color: var(--accent-orange)
+        }
+
+        .int-latency {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            margin-top: 1px
+        }
+
+        .int-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .int-dot.online {
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green)
+        }
+
+        .int-dot.offline {
+            background: var(--accent-red);
+            box-shadow: 0 0 8px var(--accent-red)
+        }
+
+        .int-dot.warning {
+            background: var(--accent-orange);
+            box-shadow: 0 0 8px var(--accent-orange)
+        }
+
+        /* Risks */
+        .risks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .risk-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            transition: var(--transition)
+        }
+
+        .risk-card:hover {
+            border-color: var(--accent-cyan)
+        }
+
+        .risk-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px
+        }
+
+        .risk-severity {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .risk-severity.critical {
+            background: rgba(255, 23, 68, 0.2);
+            color: var(--accent-red)
+        }
+
+        .risk-severity.high {
+            background: rgba(255, 145, 0, 0.2);
+            color: var(--accent-orange)
+        }
+
+        .risk-severity.medium {
+            background: rgba(255, 214, 0, 0.2);
+            color: var(--accent-yellow)
+        }
+
+        .risk-severity.low {
+            background: rgba(0, 230, 118, 0.2);
+            color: var(--accent-green)
+        }
+
+        .risk-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1
+        }
+
+        .risk-prob {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px
+        }
+
+        .risk-prob-bar {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--badge-bg);
+            overflow: hidden
+        }
+
+        .risk-prob-fill {
+            height: 100%;
+            border-radius: 2px
+        }
+
+        .risk-owner {
+            font-size: 11px;
+            color: var(--text-tertiary)
+        }
+
+        .risk-mitigation {
+            font-size: 11px;
+            color: var(--accent-green);
+            margin-top: 4px
+        }
+
+        /* Team workload */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .team-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            transition: var(--transition)
+        }
+
+        .team-card:hover {
+            border-color: var(--accent-cyan)
+        }
+
+        .team-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .team-count {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-weight: 400
+        }
+
+        .team-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 11px
+        }
+
+        .team-stat-label {
+            color: var(--text-tertiary)
+        }
+
+        .team-stat-value {
+            font-weight: 600;
+            color: var(--text-primary)
+        }
+
+        .team-util-bar {
+            height: 5px;
+            border-radius: 3px;
+            background: var(--badge-bg);
+            overflow: hidden;
+            margin: 6px 0
+        }
+
+        .team-util-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease
+        }
+
+        /* Notes */
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .note-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            transition: var(--transition)
+        }
+
+        .note-item:hover {
+            border-color: var(--accent-cyan)
+        }
+
+        .note-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px
+        }
+
+        .note-author {
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-primary)
+        }
+
+        .note-date {
+            font-size: 10px;
+            color: var(--text-tertiary)
+        }
+
+        .note-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5
+        }
+
+        .note-tags {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+            flex-wrap: wrap
+        }
+
+        .note-tag {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+            background: var(--badge-bg);
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: .3px
+        }
+
+        /* API Usage */
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 10px;
+            margin-bottom: 24px
+        }
+
+        .api-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            text-align: center;
+            transition: var(--transition)
+        }
+
+        .api-card:hover {
+            border-color: var(--accent-cyan)
+        }
+
+        .api-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-primary)
+        }
+
+        .api-label {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: .3px
+        }
+
+        .api-icon {
+            font-size: 20px;
+            margin-bottom: 6px;
+            color: var(--accent-cyan)
+        }
+
+        /* Filters bar */
+        .filters-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+            align-items: center
+        }
+
+        .filters-bar select,
+        .filters-bar input {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition)
+        }
+
+        .filters-bar select:hover,
+        .filters-bar input:hover {
+            border-color: var(--text-tertiary)
+        }
+
+        .filters-bar select:focus,
+        .filters-bar input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px var(--input-focus)
+        }
+
+        .filters-bar input::placeholder {
+            color: var(--text-tertiary)
+        }
+
+        .filter-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: .3px
+        }
+
+        /* Responsive */
+        @media(max-width:1024px) {
+            .hero-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr))
+            }
+
+            .h2h-grid {
+                grid-template-columns: 1fr
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:768px) {
+            .sidebar {
+                width: 56px;
+                padding: 12px 0
+            }
+
+            .nav-item {
+                width: 36px;
+                height: 36px;
+                font-size: 15px
+            }
+
+            .topbar {
+                padding: 0 12px;
+                flex-wrap: wrap;
+                height: auto;
+                padding: 8px 12px;
+                gap: 8px
+            }
+
+            .topbar-center {
+                flex-wrap: wrap
+            }
+
+            .control-group {
+                padding: 2px 6px
+            }
+
+            .control-group select {
+                font-size: 11px
+            }
+
+            .content {
+                padding: 12px
+            }
+
+            .hero-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr
+            }
+
+            .h2h-metrics {
+                grid-template-columns: 1fr
+            }
+
+            .risks-grid {
+                grid-template-columns: 1fr
+            }
+
+            .team-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:480px) {
+            .hero-grid {
+                grid-template-columns: 1fr
+            }
+
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch
+            }
+        }
+
+        /* Glow effects */
+        .glow-cyan {
+            box-shadow: 0 0 16px rgba(0, 229, 255, 0.15)
+        }
+
+        .glow-green {
+            box-shadow: 0 0 16px rgba(0, 230, 118, 0.15)
+        }
+
+        .glow-purple {
+            box-shadow: 0 0 16px rgba(179, 136, 255, 0.15)
+        }
+
+        .glow-orange {
+            box-shadow: 0 0 16px rgba(255, 145, 0, 0.15)
+        }
+
+        .glow-pink {
+            box-shadow: 0 0 16px rgba(255, 64, 129, 0.15)
+        }
+
+        /* Animations */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0
+            }
+
+            100% {
+                background-position: 200% 0
+            }
+        }
+
+        .loading {
+            background: linear-gradient(90deg, var(--card-bg) 25%, var(--hover-bg) 50%, var(--card-bg) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite
+        }
+
+        /* Winner breakdown */
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px
+        }
+
+        .winner-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            transition: var(--transition)
+        }
+
+        .winner-card:hover {
+            border-color: var(--accent-cyan)
+        }
+
+        .winner-category {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 6px
+        }
+
+        .winner-result {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .winner-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary)
+        }
+
+        .winner-score {
+            font-size: 12px;
+            color: var(--text-secondary)
+        }
+
+        .winner-bar {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--badge-bg);
+            overflow: hidden;
+            margin-top: 4px
+        }
+
+        .winner-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s ease
+        }
+
+        .winner-trophy {
+            color: var(--accent-yellow);
+            font-size: 16px
+        }
+
+        /* Health Score */
+        .health-ring {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0
+        }
+
+        .health-ring svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg)
+        }
+
+        .health-ring svg circle {
+            fill: none;
+            stroke-width: 4;
+            stroke: var(--badge-bg)
+        }
+
+        .health-ring svg circle.progress {
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease
+        }
+
+        .health-value {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-primary);
+            z-index: 1
+        }
+
+        /* View toggle */
+        .view-toggle {
+            display: flex;
+            background: var(--input-bg);
+            border-radius: 8px;
+            padding: 2px;
+            border: 1px solid var(--input-border)
+        }
+
+        .view-toggle-btn {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+            font-family: inherit
+        }
+
+        .view-toggle-btn.active {
+            background: var(--active-bg);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.1)
+        }
+
+        .view-toggle-btn:hover:not(.active) {
+            color: var(--text-primary)
+        }
+
+        /* Winner highlight styling */
+        .winner-crown {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            font-size: 18px;
+            color: var(--accent-yellow);
+            filter: drop-shadow(0 0 6px rgba(255, 214, 0, 0.5))
+        }
+    </style>
+</head>
+
+<body data-theme="dark">
+    <div class="app">
+        <nav class="sidebar">
+            <div class="logo"><i class="fas fa-diagram-project"></i></div>
+            <div class="nav-item active" data-view="summary" onclick="switchView('summary')"><i
+                    class="fas fa-chart-pie"></i><span class="tooltip">Summary</span></div>
+            <div class="nav-item" data-view="projects" onclick="switchView('projects')"><i
+                    class="fas fa-folder-open"></i><span class="tooltip">Projects</span></div>
+            <div class="nav-item" data-view="timeline" onclick="switchView('timeline')"><i
+                    class="fas fa-timeline"></i><span class="tooltip">Timeline</span></div>
+            <div class="nav-item" data-view="resources" onclick="switchView('resources')"><i
+                    class="fas fa-users"></i><span class="tooltip">Resources</span></div>
+            <div class="nav-item" data-view="risks" onclick="switchView('risks')"><i class="fas fa-shield"></i><span
+                    class="tooltip">Risks</span></div>
+            <div class="nav-item" data-view="operations" onclick="switchView('operations')"><i
+                    class="fas fa-cogs"></i><span class="tooltip">Operations</span></div>
+            <div class="nav-spacer"></div>
+            <div class="nav-bottom">
+                <div class="nav-item" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i><span
+                        class="tooltip">Theme</span></div>
+            </div>
+        </nav>
+
+        <div class="main">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <span class="topbar-title">Command Center</span>
+                    <span class="topbar-subtitle" id="viewSubtitle">Portfolio Overview</span>
+                </div>
+                <div class="topbar-center">
+                    <div class="control-group">
+                        <label>View</label>
+                        <div class="view-toggle" id="viewModeToggle">
+                            <span class="view-toggle-btn active" data-mode="portfolio"
+                                onclick="setViewMode('portfolio')">Portfolio</span>
+                            <span class="view-toggle-btn" data-mode="program"
+                                onclick="setViewMode('program')">Program</span>
+                            <span class="view-toggle-btn" data-mode="project"
+                                onclick="setViewMode('project')">Project</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Method</label>
+                        <div class="view-toggle" id="methodToggle">
+                            <span class="view-toggle-btn active" data-method="agile"
+                                onclick="setMethod('agile')">Agile</span>
+                            <span class="view-toggle-btn" data-method="waterfall"
+                                onclick="setMethod('waterfall')">Waterfall</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Period</label>
+                        <select id="periodSelect" onchange="setPeriod(this.value)">
+                            <option value="quarterly">Quarterly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="btn-icon" onclick="toggleTheme()" id="themeToggleBtn"><i
+                            class="fas fa-moon"></i></button>
+                    <button class="btn btn-primary" onclick="refreshData()"><i class="fas fa-sync-alt"></i>
+                        Refresh</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- ========== SUMMARY VIEW ========== -->
+                <div class="view active" id="view-summary">
+                    <div class="hero-grid" id="heroGrid"></div>
+
+                    <div class="section-title"><i class="fas fa-swords"></i> Head-to-Head: Flagship Projects</div>
+                    <div class="h2h-grid" id="h2hGrid"></div>
+
+                    <div class="section-title"><i class="fas fa-chart-line"></i> Portfolio Analytics</div>
+                    <div class="charts-grid" id="chartsGrid1"></div>
+
+                    <div class="charts-grid" id="chartsGrid2"></div>
+
+                    <div class="section-title"><i class="fas fa-trophy"></i> Winner Breakdown</div>
+                    <div class="winner-grid" id="winnerGrid"></div>
+
+                    <div class="section-title"><i class="fas fa-comment"></i> Executive Notes & Commentary</div>
+                    <div class="notes-list" id="notesList"></div>
+                </div>
+
+                <!-- ========== PROJECTS VIEW ========== -->
+                <div class="view" id="view-projects">
+                    <div class="filters-bar" id="projectFilters">
+                        <span class="filter-label">Filters:</span>
+                        <select id="filterProject" onchange="applyProjectFilters()">
+                            <option value="">All Projects</option>
+                        </select>
+                        <select id="filterStatus" onchange="applyProjectFilters()">
+                            <option value="">All Status</option>
+                        </select>
+                        <select id="filterDept" onchange="applyProjectFilters()">
+                            <option value="">All Departments</option>
+                        </select>
+                        <select id="filterOwner" onchange="applyProjectFilters()">
+                            <option value="">All Owners</option>
+                        </select>
+                        <input type="text" id="searchProjects" placeholder="Search projects..."
+                            oninput="applyProjectFilters()" style="flex:1;min-width:120px">
+                    </div>
+                    <div class="projects-grid" id="projectsGrid"></div>
+                    <div class="section-title" style="margin-top:24px"><i class="fas fa-table"></i> Project Records
+                    </div>
+                    <div class="table-wrap" id="projectsTableWrap"></div>
+                </div>
+
+                <!-- ========== TIMELINE VIEW ========== -->
+                <div class="view" id="view-timeline">
+                    <div class="filters-bar">
+                        <span class="filter-label">Filter:</span>
+                        <select id="tlFilterProject" onchange="renderTimeline()">
+                            <option value="">All Projects</option>
+                        </select>
+                        <select id="tlFilterQuarter" onchange="renderTimeline()">
+                            <option value="">All Quarters</option>
+                            <option value="Q1">Q1</option>
+                            <option value="Q2">Q2</option>
+                            <option value="Q3">Q3</option>
+                            <option value="Q4">Q4</option>
+                        </select>
+                    </div>
+                    <div class="section-title"><i class="fas fa-timeline"></i> Project Timeline & Milestones</div>
+                    <div id="timelineContainer"></div>
+                    <div class="section-title" style="margin-top:24px"><i class="fas fa-list-check"></i> Milestone
+                        Records</div>
+                    <div class="table-wrap" id="milestonesTableWrap"></div>
+                </div>
+
+                <!-- ========== RESOURCES VIEW ========== -->
+                <div class="view" id="view-resources">
+                    <div class="section-title"><i class="fas fa-users"></i> Team Workload & Capacity</div>
+                    <div class="team-grid" id="teamGrid"></div>
+                    <div class="section-title" style="margin-top:24px"><i class="fas fa-chart-bar"></i> Resource
+                        Allocation</div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-title">Allocation by Department</div>
+                            <div class="chart-canvas-wrap"><canvas id="chartDeptRes"></canvas></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-title">Team Velocity</div>
+                            <div class="chart-canvas-wrap"><canvas id="chartVelocityRes"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== RISKS VIEW ========== -->
+                <div class="view" id="view-risks">
+                    <div class="filters-bar">
+                        <span class="filter-label">Filter:</span>
+                        <select id="riskSeverityFilter" onchange="renderRisks()">
+                            <option value="">All Severities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <select id="riskProjectFilter" onchange="renderRisks()">
+                            <option value="">All Projects</option>
+                        </select>
+                    </div>
+                    <div class="section-title"><i class="fas fa-shield"></i> Risk Register</div>
+                    <div class="risks-grid" id="risksGrid"></div>
+                    <div class="section-title" style="margin-top:24px"><i class="fas fa-chart-pie"></i> Risk
+                        Distribution</div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-title">Open Risks by Severity</div>
+                            <div class="chart-canvas-wrap"><canvas id="chartRiskRsk"></canvas></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-title">Risk Impact vs Probability</div>
+                            <div class="chart-canvas-wrap"><canvas id="chartImpactRsk"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== OPERATIONS VIEW ========== -->
+                <div class="view" id="view-operations">
+                    <div class="section-title"><i class="fas fa-plug"></i> Integration Status</div>
+                    <div class="int-grid" id="integrationsGrid"></div>
+                    <div class="section-title" style="margin-top:24px"><i class="fas fa-robot"></i> API Usage &
+                        Automation</div>
+                    <div class="api-grid" id="apiGrid"></div>
+                    <div class="section-title" style="margin-top:24px"><i class="fas fa-clock"></i> Recent Automation
+                        Activity</div>
+                    <div class="table-wrap" id="automationTableWrap"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // DATA
+        // ============================================================
+        const PROJECTS = [
+            { id: 1, name: "Mobile Platform Modernization", status: "In Progress", completion: 85, budget: 2400000, actualSpend: 2040000, teamSize: 24, milestones: 8, openRisks: 4, blockedTasks: 2, projectedCompletion: "2026-09-15", healthScore: 82, dept: "Engineering", owner: "Sarah Chen", priority: "Critical", fy: "FY2026", quarter: "Q3", methodology: "Agile", phase: "Execution", desc: "Complete rebuild of mobile banking platform with React Native. Phase 1 (core features) at 95%. Phase 2 (analytics & notifications) at 72%. Final UAT scheduled for August." },
+            { id: 2, name: "Customer Analytics Initiative", status: "In Progress", completion: 72, budget: 1800000, actualSpend: 1380000, teamSize: 18, milestones: 6, openRisks: 3, blockedTasks: 1, projectedCompletion: "2026-11-01", healthScore: 78, dept: "Data", owner: "Mike Torres", priority: "High", fy: "FY2026", quarter: "Q3", methodology: "Agile", phase: "Execution", desc: "Building unified customer analytics platform with real-time segmentation. Data pipeline at 80%. ML models at 65%." },
+            { id: 3, name: "Cloud Infrastructure Migration", status: "In Progress", completion: 45, budget: 3100000, actualSpend: 1400000, teamSize: 28, milestones: 7, openRisks: 6, blockedTasks: 4, projectedCompletion: "2027-01-30", healthScore: 55, dept: "Infrastructure", owner: "Priya Patel", priority: "Critical", fy: "FY2026", quarter: "Q3", methodology: "Waterfall", phase: "Execution", desc: "Migration of on-prem infrastructure to Azure. Phase 1 (compute) at 90%. Phase 2 (databases) at 40%. Phase 3 (legacy) at 15%. Dependency delays on legacy system decommission." },
+            { id: 4, name: "ERP System Upgrade", status: "In Progress", completion: 60, budget: 4200000, actualSpend: 2500000, teamSize: 32, milestones: 9, openRisks: 5, blockedTasks: 3, projectedCompletion: "2026-12-15", healthScore: 65, dept: "IT", owner: "James Wilson", priority: "High", fy: "FY2026", quarter: "Q3", methodology: "Waterfall", phase: "Execution", desc: "SAP S/4HANA upgrade across 12 business units. Core financials module at 85%. Supply chain module at 55%. HR module at 40%." },
+            { id: 5, name: "Data Lake & Analytics Hub", status: "In Progress", completion: 35, budget: 2700000, actualSpend: 900000, teamSize: 20, milestones: 5, openRisks: 3, blockedTasks: 1, projectedCompletion: "2027-03-15", healthScore: 60, dept: "Data", owner: "Lisa Chang", priority: "Medium", fy: "FY2026", quarter: "Q3", methodology: "Agile", phase: "Planning", desc: "Enterprise data lake on Databricks with unified governance. Data ingestion framework at 50%. Governance layer at 20%." },
+            { id: 6, name: "Cybersecurity Enhancement", status: "In Progress", completion: 90, budget: 1500000, actualSpend: 1350000, teamSize: 14, milestones: 4, openRisks: 2, blockedTasks: 0, projectedCompletion: "2026-08-01", healthScore: 90, dept: "Security", owner: "Alex Rivera", priority: "Critical", fy: "FY2026", quarter: "Q3", methodology: "Agile", phase: "Execution", desc: "Zero trust architecture implementation. MFA rollout at 100%. Endpoint protection at 95%. SIEM integration at 85%. Final penetration testing in progress." },
+            { id: 7, name: "Digital Workplace Transformation", status: "In Progress", completion: 55, budget: 2900000, actualSpend: 1600000, teamSize: 22, milestones: 6, openRisks: 4, blockedTasks: 2, projectedCompletion: "2026-10-30", healthScore: 68, dept: "IT", owner: "Emma Thompson", priority: "High", fy: "FY2026", quarter: "Q3", methodology: "Agile", phase: "Execution", desc: "Microsoft 365 modernization with Viva suite integration. Teams deployment at 90%. Viva Connections at 60%. SharePoint migration at 45%." }
+        ];
+
+        const RISKS = [
+            { id: 1, project: 1, title: "Third-party API deprecation risk", severity: "critical", probability: 65, impact: 85, owner: "Sarah Chen", mitigation: "Working with vendor on extended support timeline. Fallback to in-house solution in development.", status: "Active" },
+            { id: 2, project: 1, title: "iOS build pipeline instability", severity: "high", probability: 40, impact: 70, owner: "David Kim", mitigation: "CI/CD migration to GitHub Actions in progress. Parallel build environment configured.", status: "Active" },
+            { id: 3, project: 2, title: "Data privacy compliance gaps", severity: "critical", probability: 50, impact: 90, owner: "Mike Torres", mitigation: "Legal review underway. Implementing data masking layer. Target compliance by end of Q3.", status: "Active" },
+            { id: 4, project: 2, title: "ML model accuracy below threshold", severity: "high", probability: 35, impact: 65, owner: "Anna Li", mitigation: "Additional training data acquisition approved. Model retraining scheduled for next sprint.", status: "Active" },
+            { id: 5, project: 3, title: "Legacy system decommission delay", severity: "critical", probability: 75, impact: 88, owner: "Priya Patel", mitigation: "Executive escalation submitted. Parallel run extended by 2 months. Contingency budget allocated.", status: "Active" },
+            { id: 6, project: 3, title: "Network bandwidth constraints", severity: "high", probability: 55, impact: 60, owner: "Raj Singh", mitigation: "Azure ExpressRoute upgrade scheduled. Data compression pipeline implemented.", status: "Active" },
+            { id: 7, project: 3, title: "Database migration data loss risk", severity: "medium", probability: 25, impact: 80, owner: "Maria Garcia", mitigation: "Full backup strategy validated. Dry-run migrations completed for 3 of 8 databases.", status: "Active" },
+            { id: 8, project: 4, title: "Business unit adoption resistance", severity: "high", probability: 60, impact: 75, owner: "James Wilson", mitigation: "Change management program launched. Executive sponsors assigned per business unit.", status: "Active" },
+            { id: 9, project: 4, title: "Custom module compatibility issues", severity: "medium", probability: 40, impact: 60, owner: "Tom Chen", mitigation: "Custom code audit completed. 340 of 450 custom objects compatible. Remediation plan in progress.", status: "Active" },
+            { id: 10, project: 5, title: "Data quality from source systems", severity: "high", probability: 70, impact: 65, owner: "Lisa Chang", mitigation: "Data profiling tool deployed. Source system owners engaged for cleanup. Quality thresholds defined.", status: "Active" },
+            { id: 11, project: 6, title: "Penetration test critical findings", severity: "critical", probability: 30, impact: 95, owner: "Alex Rivera", mitigation: "Immediate remediation plan for critical findings. Additional security review scheduled.", status: "Active" },
+            { id: 12, project: 6, title: "Endpoint coverage gaps", severity: "medium", probability: 20, impact: 50, owner: "Nina Patel", mitigation: "Asset discovery tool deployed. Remaining 45 endpoints scheduled for next week.", status: "Active" },
+            { id: 13, project: 7, title: "User adoption below target", severity: "high", probability: 55, impact: 70, owner: "Emma Thompson", mitigation: "Training program expansion approved. Departmental champions identified. Adoption tracking dashboard live.", status: "Active" },
+            { id: 14, project: 7, title: "SharePoint migration data integrity", severity: "medium", probability: 35, impact: 55, owner: "Jake Lee", mitigation: "Migration validation toolkit deployed. Spot checks on 20% of migrated sites passing.", status: "Active" }
+        ];
+
+        const TEAMS = [
+            { name: "Mobile Platform Engineering", members: 14, allocated: 91, capacity: 120, availability: 9, overtimeRisk: "High", status: "At Capacity", dept: "Engineering" },
+            { name: "Data Science & Analytics", members: 10, allocated: 76, capacity: 100, availability: 24, overtimeRisk: "Low", status: "Available", dept: "Data" },
+            { name: "Cloud Infrastructure", members: 18, allocated: 88, capacity: 140, availability: 16, overtimeRisk: "Medium", status: "Near Capacity", dept: "Infrastructure" },
+            { name: "Enterprise IT", members: 22, allocated: 82, capacity: 176, availability: 32, overtimeRisk: "Low", status: "Available", dept: "IT" },
+            { name: "Security Operations", members: 8, allocated: 72, capacity: 64, availability: 8, overtimeRisk: "Medium", status: "Near Capacity", dept: "Security" },
+            { name: "DevOps & Platform", members: 12, allocated: 95, capacity: 96, availability: 5, overtimeRisk: "High", status: "At Capacity", dept: "Engineering" },
+            { name: "Quality Assurance", members: 16, allocated: 78, capacity: 128, availability: 28, overtimeRisk: "Low", status: "Available", dept: "Engineering" },
+            { name: "Product Management", members: 9, allocated: 85, capacity: 72, availability: 8, overtimeRisk: "Medium", status: "Near Capacity", dept: "Product" }
+        ];
+
+        const MILESTONES = [
+            { id: 1, project: 1, name: "Phase 1: Core Banking Features", due: "2026-06-15", status: "Completed", completion: 100, owner: "Sarah Chen", desc: "Account management, transfers, bill pay" },
+            { id: 2, project: 1, name: "Phase 2: Analytics & Insights", due: "2026-08-01", status: "In Progress", completion: 72, owner: "David Kim", desc: "Spending analytics, budget tracking, notifications" },
+            { id: 3, project: 1, name: "Phase 3: Payment Integration", due: "2026-09-01", status: "Pending", completion: 0, owner: "Lisa Park", desc: "Apple Pay, Google Pay, P2P payments" },
+            { id: 4, project: 1, name: "UAT & Launch Preparation", due: "2026-09-15", status: "Pending", completion: 0, owner: "Sarah Chen", desc: "User acceptance testing, app store submission" },
+            { id: 5, project: 2, name: "Data Pipeline Infrastructure", due: "2026-07-15", status: "Completed", completion: 100, owner: "Anna Li", desc: "Real-time data ingestion from 12 sources" },
+            { id: 6, project: 2, name: "Customer Segmentation Engine", due: "2026-09-01", status: "In Progress", completion: 65, owner: "Mike Torres", desc: "ML-driven segmentation with 15 attributes" },
+            { id: 7, project: 2, name: "Predictive Analytics Module", due: "2026-10-15", status: "Pending", completion: 0, owner: "Anna Li", desc: "Churn prediction, lifetime value modeling" },
+            { id: 8, project: 3, name: "Compute Migration", due: "2026-07-01", status: "Completed", completion: 100, owner: "Raj Singh", desc: "Azure VM migration of 200+ workloads" },
+            { id: 9, project: 3, name: "Database Migration", due: "2026-09-15", status: "In Progress", completion: 40, owner: "Maria Garcia", desc: "SQL Server to Azure SQL, Oracle to PostgreSQL" },
+            { id: 10, project: 3, name: "Legacy Decommission", due: "2026-11-30", status: "In Progress", completion: 15, owner: "Priya Patel", desc: "Retire 45 legacy servers, data archival" },
+            { id: 11, project: 4, name: "Financials Module", due: "2026-09-01", status: "In Progress", completion: 85, owner: "Tom Chen", desc: "GL, AP, AR, fixed assets in S/4HANA" },
+            { id: 12, project: 4, name: "Supply Chain Module", due: "2026-10-15", status: "In Progress", completion: 55, owner: "James Wilson", desc: "Procurement, inventory, warehouse management" },
+            { id: 13, project: 4, name: "HR Module", due: "2026-11-30", status: "In Progress", completion: 40, owner: "Amy Davis", desc: "Payroll, time management, personnel admin" },
+            { id: 14, project: 5, name: "Data Lake Foundation", due: "2026-08-01", status: "Completed", completion: 100, owner: "Lisa Chang", desc: "Databricks workspace, catalog setup, ingestion framework" },
+            { id: 15, project: 5, name: "Governance & Quality", due: "2026-10-01", status: "Pending", completion: 0, owner: "Mark Lee", desc: "Data catalog, lineage tracking, quality rules" },
+            { id: 16, project: 6, name: "MFA Implementation", due: "2026-06-01", status: "Completed", completion: 100, owner: "Alex Rivera", desc: "MFA for all 3,200 employees" },
+            { id: 17, project: 6, name: "Endpoint Protection", due: "2026-07-15", status: "Completed", completion: 100, owner: "Nina Patel", desc: "EDR deployment on all endpoints" },
+            { id: 18, project: 6, name: "SIEM Integration", due: "2026-08-01", status: "In Progress", completion: 85, owner: "Alex Rivera", desc: "Splunk integration, custom dashboards, alert tuning" },
+            { id: 19, project: 7, name: "Teams & Collaboration", due: "2026-08-01", status: "Completed", completion: 100, owner: "Emma Thompson", desc: "Teams phone, meetings, collaboration policies" },
+            { id: 20, project: 7, name: "Viva Platform", due: "2026-09-15", status: "In Progress", completion: 60, owner: "Jake Lee", desc: "Viva Connections, Insights, Learning modules" },
+            { id: 21, project: 7, name: "SharePoint Migration", due: "2026-10-30", status: "In Progress", completion: 45, owner: "Jake Lee", desc: "Migration of 340 site collections to SharePoint Online" }
+        ];
+
+        const TASKS = [
+            { id: 1, milestone: 1, name: "Account management UI", owner: "Chris Park", status: "Done", blocker: null, dependency: null, comment: "Completed ahead of schedule" },
+            { id: 2, milestone: 1, name: "Transfer engine API", owner: "Lisa Park", status: "Done", blocker: null, dependency: null, comment: "Integration tests passing" },
+            { id: 3, milestone: 1, name: "Bill pay notifications", owner: "Tom Kim", status: "Done", blocker: null, dependency: null, comment: "SMS and email verified" },
+            { id: 4, milestone: 2, name: "Spending insights engine", owner: "David Kim", status: "In Progress", blocker: "Data pipeline latency", dependency: "Data pipeline team", comment: "Working through performance issues" },
+            { id: 5, milestone: 2, name: "Budget alert system", owner: "Nina Wu", status: "In Progress", blocker: null, dependency: "Spending insights", comment: "UI mockups approved" },
+            { id: 6, milestone: 6, name: "Customer scoring model", owner: "Anna Li", status: "In Progress", blocker: "Training data quality", dependency: "Data pipeline", comment: "Need cleaner transaction data" },
+            { id: 7, milestone: 6, name: "Segment API endpoint", owner: "Mike Torres", status: "Done", blocker: null, dependency: null, comment: "Endpoint deployed to staging" },
+            { id: 8, milestone: 9, name: "SQL Server migration script", owner: "Maria Garcia", status: "In Progress", blocker: "Storage capacity", dependency: "Compute migration", comment: "60% of databases migrated" },
+            { id: 9, milestone: 9, name: "Data validation framework", owner: "Raj Singh", status: "In Progress", blocker: null, dependency: null, comment: "Validation passing at 99.7%" },
+            { id: 10, milestone: 11, name: "General ledger conversion", owner: "Tom Chen", status: "Done", blocker: null, dependency: null, comment: "All 12 subsidiaries converted" },
+            { id: 11, milestone: 11, name: "AP automation module", owner: "Amy Davis", status: "In Progress", blocker: "Vendor data cleanup", dependency: "GL conversion", comment: "Vendor portal integration in progress" },
+            { id: 12, milestone: 18, name: "Splunk dashboard setup", owner: "Alex Rivera", status: "In Progress", blocker: null, dependency: "SIEM data sources", comment: "Security operations dashboards live" },
+            { id: 13, milestone: 20, name: "Viva Insights rollout", owner: "Emma Thompson", status: "In Progress", blocker: "License allocation", dependency: "Teams deployment", comment: "Personal insights enabled for pilot group" },
+            { id: 14, milestone: 21, name: "Site collection migration", owner: "Jake Lee", status: "In Progress", blocker: null, dependency: null, comment: "155 of 340 site collections migrated" }
+        ];
+
+        const INTEGRATIONS = [
+            { name: "Jira Cloud", icon: "fab fa-jira", color: "#0052cc", status: "online", latency: 45, lastSync: "2026-06-09T14:32:00Z" },
+            { name: "Azure DevOps", icon: "fab fa-microsoft", color: "#0078d7", status: "online", latency: 62, lastSync: "2026-06-09T14:30:00Z" },
+            { name: "GitHub Enterprise", icon: "fab fa-github", color: "#fff", status: "online", latency: 38, lastSync: "2026-06-09T14:31:00Z" },
+            { name: "Slack", icon: "fab fa-slack", color: "#4a154b", status: "online", latency: 28, lastSync: "2026-06-09T14:33:00Z" },
+            { name: "Microsoft Teams", icon: "fab fa-microsoft", color: "#6264a7", status: "online", latency: 51, lastSync: "2026-06-09T14:29:00Z" },
+            { name: "ServiceNow", icon: "fas fa-ticket", color: "#82b542", status: "warning", latency: 230, lastSync: "2026-06-09T13:45:00Z" },
+            { name: "Confluence", icon: "fab fa-atlassian", color: "#0052cc", status: "online", latency: 33, lastSync: "2026-06-09T14:30:00Z" },
+            { name: "Datadog", icon: "fas fa-chart-simple", color: "#632ca6", status: "online", latency: 55, lastSync: "2026-06-09T14:28:00Z" },
+            { name: "PagerDuty", icon: "fas fa-bell", color: "#06ac38", status: "offline", latency: 0, lastSync: "2026-06-09T12:15:00Z" },
+            { name: "Sentry", icon: "fas fa-bug", color: "#fb4226", status: "online", latency: 42, lastSync: "2026-06-09T14:30:00Z" }
+        ];
+
+        const AUTOMATION_LOGS = [
+            { workflow: "Sprint Report Generator", runs: 142, success: 98.6, cost: 320, savings: 4800, lastRun: "2026-06-09T14:00:00Z" },
+            { workflow: "Deploy Pipeline", runs: 87, success: 94.3, cost: 210, savings: 6200, lastRun: "2026-06-09T13:45:00Z" },
+            { workflow: "Incident Response", runs: 56, success: 100, cost: 180, savings: 8900, lastRun: "2026-06-09T12:30:00Z" },
+            { workflow: "Budget Sync", runs: 180, success: 99.4, cost: 95, savings: 3400, lastRun: "2026-06-09T14:30:00Z" },
+            { workflow: "Resource Allocation", runs: 64, success: 92.2, cost: 150, savings: 5200, lastRun: "2026-06-09T11:00:00Z" },
+            { workflow: "Risk Assessment", runs: 28, success: 96.4, cost: 75, savings: 2800, lastRun: "2026-06-09T10:00:00Z" },
+            { workflow: "Compliance Audit", runs: 12, success: 100, cost: 240, savings: 7200, lastRun: "2026-06-08T08:00:00Z" }
+        ];
+
+        const NOTES = [
+            { author: "Sarah Chen", date: "2026-06-07", text: "Mobile Platform Modernization is tracking well for Phase 1 completion. Need to accelerate Phase 2 to absorb the API deprecation impact. Recommended adding 2 developers to the analytics stream.", tags: ["update", "mobile", "resources"] },
+            { author: "Mike Torres", date: "2026-06-06", text: "Customer Analytics Initiative hit a milestone with the data pipeline completion. ML model accuracy is below target - working with Anna on additional training data. Privacy compliance needs legal review before Q3 close.", tags: ["risk", "data", "ml"] },
+            { author: "Priya Patel", date: "2026-06-08", text: "Cloud Migration is facing critical dependency on legacy decommissioning. Executive escalation submitted. If approved, we should see timeline recovery by end of Q3. Budget contingency activated.", tags: ["risk", "critical", "infrastructure"] },
+            { author: "James Wilson", date: "2026-06-05", text: "ERP Upgrade: Financials module conversion for all 12 subsidiaries complete. Supply chain module testing reveals integration gaps with legacy warehouse systems. HR module on track for November.", tags: ["erp", "progress", "integration"] },
+            { author: "Emma Thompson", date: "2026-06-09", text: "Digital Workplace: Teams deployment at 90%. User adoption metrics below target - launching expanded training program next week. SharePoint migration velocity improving after initial bottlenecks.", tags: ["adoption", "training", "migration"] },
+            { author: "Alex Rivera", date: "2026-06-04", text: "Cybersecurity Enhancement: MFA completed for all employees. Penetration test findings being addressed - 2 critical, 4 high severity items. Endpoint coverage at 95%. On track for August completion.", tags: ["security", "completion", "testing"] }
+        ];
+
+        const COMPLETION_TREND = [
+            { month: "Jan", mobile: 55, analytics: 45, cloud: 18, erp: 30, datalake: 10, cyber: 40, workplace: 25 },
+            { month: "Feb", mobile: 60, analytics: 48, cloud: 22, erp: 35, datalake: 14, cyber: 48, workplace: 30 },
+            { month: "Mar", mobile: 65, analytics: 52, cloud: 26, erp: 40, datalake: 18, cyber: 55, workplace: 35 },
+            { month: "Apr", mobile: 70, analytics: 58, cloud: 30, erp: 45, datalake: 22, cyber: 65, workplace: 40 },
+            { month: "May", mobile: 78, analytics: 65, cloud: 36, erp: 52, datalake: 28, cyber: 78, workplace: 48 },
+            { month: "Jun", mobile: 85, analytics: 72, cloud: 45, erp: 60, datalake: 35, cyber: 90, workplace: 55 }
+        ];
+
+        const BUDGET_DATA = [
+            { name: "Mobile Platform", budget: 2400000, actual: 2040000 },
+            { name: "Customer Analytics", budget: 1800000, actual: 1380000 },
+            { name: "Cloud Migration", budget: 3100000, actual: 1400000 },
+            { name: "ERP Upgrade", budget: 4200000, actual: 2500000 },
+            { name: "Data Lake", budget: 2700000, actual: 900000 },
+            { name: "Cybersecurity", budget: 1500000, actual: 1350000 },
+            { name: "Digital Workplace", budget: 2900000, actual: 1600000 }
+        ];
+
+        const VELOCITY_DATA = [
+            { sprint: "S1", committed: 34, completed: 28, carried: 6 },
+            { sprint: "S2", committed: 32, completed: 30, carried: 2 },
+            { sprint: "S3", committed: 36, completed: 31, carried: 5 },
+            { sprint: "S4", committed: 30, completed: 27, carried: 3 },
+            { sprint: "S5", committed: 38, completed: 33, carried: 5 },
+            { sprint: "S6", committed: 35, completed: 32, carried: 3 },
+            { sprint: "S7", committed: 40, completed: 35, carried: 5 },
+            { sprint: "S8", committed: 36, completed: 34, carried: 2 }
+        ];
+
+        const TIMELINE_PHASES = [
+            { project: 1, phase: "Discovery", start: "2026-01-01", end: "2026-03-01", completed: 100 },
+            { project: 1, phase: "Phase 1: Core", start: "2026-03-01", end: "2026-06-15", completed: 100 },
+            { project: 1, phase: "Phase 2: Analytics", start: "2026-06-01", end: "2026-08-01", completed: 72 },
+            { project: 1, phase: "Phase 3: Payments", start: "2026-08-01", end: "2026-09-01", completed: 0 },
+            { project: 1, phase: "UAT & Launch", start: "2026-09-01", end: "2026-09-15", completed: 0 },
+            { project: 2, phase: "Data Pipeline", start: "2026-03-01", end: "2026-07-15", completed: 100 },
+            { project: 2, phase: "Segmentation Engine", start: "2026-07-01", end: "2026-09-01", completed: 65 },
+            { project: 2, phase: "Predictive Analytics", start: "2026-09-01", end: "2026-10-15", completed: 0 },
+            { project: 2, phase: "Dashboard & Reports", start: "2026-10-01", end: "2026-11-01", completed: 0 },
+            { project: 3, phase: "Compute Migration", start: "2026-02-01", end: "2026-07-01", completed: 100 },
+            { project: 3, phase: "Database Migration", start: "2026-06-01", end: "2026-09-15", completed: 40 },
+            { project: 3, phase: "Legacy Decommission", start: "2026-09-01", end: "2026-11-30", completed: 15 },
+            { project: 3, phase: "Optimization", start: "2026-11-01", end: "2027-01-30", completed: 0 },
+            { project: 4, phase: "Planning & Blueprint", start: "2026-01-01", end: "2026-03-15", completed: 100 },
+            { project: 4, phase: "Financials Module", start: "2026-03-15", end: "2026-09-01", completed: 85 },
+            { project: 4, phase: "Supply Chain Module", start: "2026-07-01", end: "2026-10-15", completed: 55 },
+            { project: 4, phase: "HR Module", start: "2026-09-01", end: "2026-11-30", completed: 40 },
+            { project: 4, phase: "Go-Live & Support", start: "2026-11-01", end: "2026-12-15", completed: 0 },
+            { project: 5, phase: "Foundation", start: "2026-04-01", end: "2026-08-01", completed: 100 },
+            { project: 5, phase: "Governance", start: "2026-08-01", end: "2026-10-01", completed: 0 },
+            { project: 5, phase: "Analytics Apps", start: "2026-10-01", end: "2026-12-15", completed: 0 },
+            { project: 5, phase: "Enterprise Rollout", start: "2026-12-01", end: "2027-03-15", completed: 0 },
+            { project: 6, phase: "MFA Rollout", start: "2026-03-01", end: "2026-06-01", completed: 100 },
+            { project: 6, phase: "Endpoint Protection", start: "2026-05-01", end: "2026-07-15", completed: 100 },
+            { project: 6, phase: "SIEM Integration", start: "2026-07-01", end: "2026-08-01", completed: 85 },
+            { project: 6, phase: "Final Validation", start: "2026-07-15", end: "2026-08-01", completed: 80 },
+            { project: 7, phase: "Teams Deployment", start: "2026-03-01", end: "2026-08-01", completed: 100 },
+            { project: 7, phase: "Viva Platform", start: "2026-07-01", end: "2026-09-15", completed: 60 },
+            { project: 7, phase: "SharePoint Migration", start: "2026-08-01", end: "2026-10-30", completed: 45 },
+            { project: 7, phase: "User Adoption", start: "2026-09-01", end: "2026-10-30", completed: 30 }
+        ];
+
+        // ============================================================
+        // STATE
+        // ============================================================
+        let state = {
+            theme: 'dark',
+            view: 'summary',
+            viewMode: 'portfolio',
+            method: 'agile',
+            period: 'quarterly',
+            projectFilters: { project: '', status: '', dept: '', owner: '', search: '' },
+            expandedProjects: new Set(),
+            expandedMilestones: new Set()
+        };
+
+        // Load from localStorage
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('pmcc_state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    Object.assign(state, parsed);
+                    state.expandedProjects = new Set(parsed.expandedProjects || []);
+                    state.expandedMilestones = new Set(parsed.expandedMilestones || []);
+                }
+            } catch (e) { }
+        }
+
+        function saveState() {
+            try {
+                const toSave = { ...state, expandedProjects: [...state.expandedProjects], expandedMilestones: [...state.expandedMilestones] };
+                localStorage.setItem('pmcc_state', JSON.stringify(toSave));
+            } catch (e) { }
+        }
+
+        // ============================================================
+        // THEME
+        // ============================================================
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', state.theme);
+            document.getElementById('themeBtn').innerHTML = `<i class="fas fa-${state.theme === 'dark' ? 'moon' : 'sun'}"></i><span class="tooltip">Theme</span>`;
+            document.getElementById('themeToggleBtn').innerHTML = `<i class="fas fa-${state.theme === 'dark' ? 'moon' : 'sun'}"></i>`;
+            saveState();
+            updateAllCharts();
+        }
+
+        function applyTheme() {
+            document.body.setAttribute('data-theme', state.theme);
+            document.getElementById('themeBtn').innerHTML = `<i class="fas fa-${state.theme === 'dark' ? 'moon' : 'sun'}"></i><span class="tooltip">Theme</span>`;
+            document.getElementById('themeToggleBtn').innerHTML = `<i class="fas fa-${state.theme === 'dark' ? 'moon' : 'sun'}"></i>`;
+        }
+
+        // ============================================================
+        // VIEWS
+        // ============================================================
+        function switchView(view) {
+            state.view = view;
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+            const subtitles = { summary: 'Portfolio Overview', projects: 'Project Portfolio', timeline: 'Delivery Timeline', resources: 'Resource Management', risks: 'Risk Management', operations: 'System Operations' };
+            document.getElementById('viewSubtitle').textContent = subtitles[view] || '';
+            saveState();
+            if (view === 'summary') renderSummary();
+            else if (view === 'projects') renderProjects();
+            else if (view === 'timeline') renderTimeline();
+            else if (view === 'resources') renderResources();
+            else if (view === 'risks') renderRisks();
+            else if (view === 'operations') renderOperations();
+        }
+
+        function setViewMode(mode) {
+            state.viewMode = mode;
+            document.querySelectorAll('#viewModeToggle .view-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+            saveState();
+            renderSummary();
+        }
+
+        function setMethod(method) {
+            state.method = method;
+            document.querySelectorAll('#methodToggle .view-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.method === method));
+            saveState();
+            renderSummary();
+        }
+
+        function setPeriod(period) {
+            state.period = period;
+            saveState();
+            renderSummary();
+        }
+
+        // ============================================================
+        // FORMATTERS
+        // ============================================================
+        function fmtCurrency(n) { return '$' + (n / 1000).toFixed(0) + 'K'; }
+        function fmtFullCurrency(n) { return '$' + n.toLocaleString(); }
+        function fmtDate(d) { const dt = new Date(d); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+        function fmtShortDate(d) { const dt = new Date(d); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+        function pct(n) { return n + '%'; }
+
+        // ============================================================
+        // RENDER SUMMARY
+        // ============================================================
+        function renderSummary() {
+            renderHero();
+            renderH2H();
+            renderCharts();
+            renderWinnerBreakdown();
+            renderNotes();
+        }
+
+        function renderHero() {
+            const totalBudget = PROJECTS.reduce((s, p) => s + p.budget, 0);
+            const totalSpend = PROJECTS.reduce((s, p) => s + p.actualSpend, 0);
+            const totalTeam = PROJECTS.reduce((s, p) => s + p.teamSize, 0);
+            const onTime = PROJECTS.filter(p => {
+                const projected = new Date(p.projectedCompletion);
+                const now = new Date('2026-09-01');
+                return p.completion >= 80 && projected <= now || p.completion >= 90;
+            }).length;
+            const onTimeRate = Math.round((onTime / PROJECTS.length) * 100);
+            const avgHealth = Math.round(PROJECTS.reduce((s, p) => s + p.healthScore, 0) / PROJECTS.length);
+            const projectedAnnual = Math.round(totalSpend * (12 / 7));
+
+            const heroes = [
+                { icon: 'fa-diagram-project', color: 'var(--accent-cyan)', bg: 'rgba(0,229,255,0.1)', value: PROJECTS.length, label: 'Active Projects', change: '+3 this quarter' },
+                { icon: 'fa-check-circle', color: 'var(--accent-green)', bg: 'rgba(0,230,118,0.1)', value: 48, label: 'Completed Projects', change: '+12 vs last FY' },
+                { icon: 'fa-heart-pulse', color: 'var(--accent-purple)', bg: 'rgba(179,136,255,0.1)', value: avgHealth + '%', label: 'Portfolio Health', change: avgHealth >= 70 ? 'Stable' : 'Needs attention' },
+                { icon: 'fa-coins', color: 'var(--accent-yellow)', bg: 'rgba(255,214,0,0.1)', value: Math.round((totalSpend / totalBudget) * 100) + '%', label: 'Budget Utilization', change: fmtFullCurrency(totalSpend) + ' of ' + fmtFullCurrency(totalBudget) },
+                { icon: 'fa-clock', color: 'var(--accent-cyan)', bg: 'rgba(0,229,255,0.1)', value: onTimeRate + '%', label: 'On-Time Delivery', change: 'Target: 85%' },
+                { icon: 'fa-user-group', color: 'var(--accent-pink)', bg: 'rgba(255,64,129,0.1)', value: totalTeam, label: 'Total Team Members', change: 'Across ' + PROJECTS.length + ' projects' },
+                { icon: 'fa-chart-line', color: 'var(--accent-orange)', bg: 'rgba(255,145,0,0.1)', value: fmtFullCurrency(projectedAnnual), label: 'Projected Annual Spend', change: 'vs ' + fmtFullCurrency(totalBudget) + ' budgeted' }
+            ];
+
+            const grid = document.getElementById('heroGrid');
+            grid.innerHTML = heroes.map(h => `
+    <div class="hero-card">
+      <div class="icon-wrap" style="background:${h.bg};color:${h.color}"><i class="fas ${h.icon}"></i></div>
+      <div class="h-value">${h.value}</div>
+      <div class="h-label">${h.label}</div>
+      <div class="h-change" style="color:${h.color}">${h.change}</div>
+    </div>
+  `).join('');
+        }
+
+        function renderH2H() {
+            const p1 = PROJECTS[0], p2 = PROJECTS[1];
+            const p1Metrics = [
+                { label: 'Schedule Progress', value: '82%', fill: 82, color: 'var(--accent-cyan)' },
+                { label: 'Budget Variance', value: '-8.5%', fill: 65, color: 'var(--accent-red)' },
+                { label: 'Task Completion', value: '78%', fill: 78, color: 'var(--accent-green)' },
+                { label: 'Risk Score', value: '32/100', fill: 32, color: 'var(--accent-orange)' },
+                { label: 'Resource Utilization', value: '91%', fill: 91, color: 'var(--accent-purple)' },
+                { label: 'Stakeholder Satisfaction', value: '4.2/5', fill: 84, color: 'var(--accent-yellow)' }
+            ];
+            const p2Metrics = [
+                { label: 'Schedule Progress', value: '68%', fill: 68, color: 'var(--accent-cyan)' },
+                { label: 'Budget Variance', value: '+4.2%', fill: 82, color: 'var(--accent-green)' },
+                { label: 'Task Completion', value: '65%', fill: 65, color: 'var(--accent-green)' },
+                { label: 'Risk Score', value: '45/100', fill: 45, color: 'var(--accent-orange)' },
+                { label: 'Resource Utilization', value: '76%', fill: 76, color: 'var(--accent-purple)' },
+                { label: 'Stakeholder Satisfaction', value: '4.5/5', fill: 90, color: 'var(--accent-yellow)' }
+            ];
+
+            const grid = document.getElementById('h2hGrid');
+            const p1Wins = 3, p2Wins = 3;
+
+            grid.innerHTML = `
+    <div class="h2h-card winner" style="position:relative">
+      <i class="fas fa-crown winner-crown"></i>
+      <div class="h2h-header">
+        <span class="h2h-badge win">Winner</span>
+        <span class="h2h-name">${p1.name}</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">Score: 83</span>
+      </div>
+      <div class="h2h-metrics">
+        ${p1Metrics.map(m => `
+          <div class="h2h-metric">
+            <div class="h2h-metric-label">${m.label}</div>
+            <div class="h2h-metric-value">${m.value}</div>
+            <div class="h2h-metric-bar"><div class="h2h-metric-bar-fill" style="width:${m.fill}%;background:${m.color}"></div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="h2h-card loser" style="position:relative">
+      <span class="h2h-badge" style="position:absolute;top:20px;right:20px">Runner Up</span>
+      <div class="h2h-header">
+        <span class="h2h-badge">Contender</span>
+        <span class="h2h-name">${p2.name}</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">Score: 74</span>
+      </div>
+      <div class="h2h-metrics">
+        ${p2Metrics.map(m => `
+          <div class="h2h-metric">
+            <div class="h2h-metric-label">${m.label}</div>
+            <div class="h2h-metric-value">${m.value}</div>
+            <div class="h2h-metric-bar"><div class="h2h-metric-bar-fill" style="width:${m.fill}%;background:${m.color}"></div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+        }
+
+        // ============================================================
+        // CHARTS
+        // ============================================================
+        let chartInstances = {};
+
+        function getChartColors() {
+            const isDark = state.theme === 'dark';
+            return {
+                grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+                text: isDark ? '#9fa8da' : '#4a4a6a',
+                cyan: isDark ? '#00e5ff' : '#0091ea',
+                green: isDark ? '#00e676' : '#00a844',
+                purple: isDark ? '#b388ff' : '#7c4dff',
+                orange: isDark ? '#ff9100' : '#e65100',
+                pink: isDark ? '#ff4081' : '#d50059',
+                yellow: isDark ? '#ffd600' : '#f9a825',
+                red: isDark ? '#ff1744' : '#d50000',
+                blue: isDark ? '#448aff' : '#2962ff'
+            };
+        }
+
+        function createOrUpdateChart(id, config) {
+            if (chartInstances[id]) {
+                chartInstances[id].destroy();
+            }
+            const ctx = document.getElementById(id);
+            if (!ctx) return;
+            const c = getChartColors();
+            const mergedConfig = JSON.parse(JSON.stringify(config));
+            // Apply theme colors to scales
+            if (mergedConfig.options?.scales) {
+                Object.values(mergedConfig.options.scales).forEach(scale => {
+                    if (scale.grid) scale.grid.color = c.grid;
+                    if (scale.ticks) scale.ticks.color = c.text;
+                });
+            }
+            if (mergedConfig.options?.plugins?.legend?.labels) {
+                mergedConfig.options.plugins.legend.labels.color = c.text;
+            }
+            chartInstances[id] = new Chart(ctx, mergedConfig);
+        }
+
+        function renderCharts() {
+            const c = getChartColors();
+
+            // Chart 1: Completion Trend
+            createOrUpdateChart('chartTrend', {
+                type: 'line', data: {
+                    labels: COMPLETION_TREND.map(d => d.month),
+                    datasets: [
+                        { label: 'Mobile Platform', data: COMPLETION_TREND.map(d => d.mobile), borderColor: c.cyan, backgroundColor: c.cyan + '30', fill: true, tension: .4, pointRadius: 3 },
+                        { label: 'Customer Analytics', data: COMPLETION_TREND.map(d => d.analytics), borderColor: c.green, backgroundColor: c.green + '30', fill: true, tension: .4, pointRadius: 3 },
+                        { label: 'Cloud Migration', data: COMPLETION_TREND.map(d => d.cloud), borderColor: c.orange, backgroundColor: c.orange + '30', fill: true, tension: .4, pointRadius: 3 },
+                        { label: 'ERP Upgrade', data: COMPLETION_TREND.map(d => d.erp), borderColor: c.purple, backgroundColor: c.purple + '30', fill: true, tension: .4, pointRadius: 3 },
+                        { label: 'Cybersecurity', data: COMPLETION_TREND.map(d => d.cyber), borderColor: c.green, backgroundColor: c.green + '20', fill: true, tension: .4, pointRadius: 3 },
+                        { label: 'Digital Workplace', data: COMPLETION_TREND.map(d => d.workplace), borderColor: c.pink, backgroundColor: c.pink + '30', fill: true, tension: .4, pointRadius: 3 }
+                    ]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
+                    scales: { x: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } }, y: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } }, beginAtZero: true, max: 100 } }
+                }
+            });
+
+            // Chart 2: Budget vs Actual
+            createOrUpdateChart('chartBudget', {
+                type: 'bar', data: {
+                    labels: BUDGET_DATA.map(d => d.name),
+                    datasets: [
+                        { label: 'Budget', data: BUDGET_DATA.map(d => d.budget / 1000), backgroundColor: c.cyan + '60', borderColor: c.cyan, borderWidth: 1, borderRadius: 4 },
+                        { label: 'Actual Spend', data: BUDGET_DATA.map(d => d.actual / 1000), backgroundColor: c.orange + '60', borderColor: c.orange, borderWidth: 1, borderRadius: 4 }
+                    ]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
+                    scales: { x: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 9 } } }, y: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 }, callback: v => '$' + v + 'K' } } }
+                }
+            });
+
+            // Chart 3: Velocity
+            createOrUpdateChart('chartVelocity', {
+                type: 'bar', data: {
+                    labels: VELOCITY_DATA.map(d => d.sprint),
+                    datasets: [
+                        { label: 'Committed', data: VELOCITY_DATA.map(d => d.committed), backgroundColor: c.cyan + '60', borderColor: c.cyan, borderWidth: 1, borderRadius: 4 },
+                        { label: 'Completed', data: VELOCITY_DATA.map(d => d.completed), backgroundColor: c.green + '60', borderColor: c.green, borderWidth: 1, borderRadius: 4 }
+                    ]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
+                    scales: { x: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } }, y: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } } }
+                }
+            });
+
+            // Chart 4: Dept Allocation
+            createOrUpdateChart('chartDept', {
+                type: 'doughnut', data: {
+                    labels: ['Engineering', 'Data', 'Infrastructure', 'IT', 'Security', 'Product'],
+                    datasets: [{
+                        data: [38, 22, 18, 28, 10, 9],
+                        backgroundColor: [c.cyan, c.green, c.orange, c.purple, c.pink, c.yellow],
+                        borderColor: state.theme === 'dark' ? '#080c18' : '#f0f2f8',
+                        borderWidth: 2
+                    }]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 }, color: c.text } } }
+                }
+            });
+
+            // Chart 5: Risk Severity
+            const sevCounts = { critical: 0, high: 0, medium: 0, low: 0 };
+            RISKS.forEach(r => sevCounts[r.severity]++);
+            createOrUpdateChart('chartRisk', {
+                type: 'doughnut', data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [sevCounts.critical, sevCounts.high, sevCounts.medium, sevCounts.low],
+                        backgroundColor: [c.red, c.orange, c.yellow, c.green],
+                        borderColor: state.theme === 'dark' ? '#080c18' : '#f0f2f8',
+                        borderWidth: 2
+                    }]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 }, color: c.text } } }
+                }
+            });
+
+            // Chart 6: Milestone Progress
+            const msCompleted = MILESTONES.filter(m => m.status === 'Completed').length;
+            const msInProgress = MILESTONES.filter(m => m.status === 'In Progress').length;
+            const msPending = MILESTONES.filter(m => m.status === 'Pending').length;
+            createOrUpdateChart('chartMilestones', {
+                type: 'doughnut', data: {
+                    labels: ['Completed', 'In Progress', 'Pending'],
+                    datasets: [{
+                        data: [msCompleted, msInProgress, msPending],
+                        backgroundColor: [c.green, c.cyan, c.yellow],
+                        borderColor: state.theme === 'dark' ? '#080c18' : '#f0f2f8',
+                        borderWidth: 2
+                    }]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 }, color: c.text } } }
+                }
+            });
+
+            // Chart 7: Planned vs Actual Timeline
+            const timelineLabels = ['Mobile', 'Analytics', 'Cloud Migration', 'ERP', 'Data Lake', 'Cyber', 'Workplace'];
+            const plannedMonths = [9, 8, 12, 12, 11, 6, 8];
+            const actualMonths = [8.5, 7, 7.5, 9, 5, 5.5, 7];
+            createOrUpdateChart('chartTimeline', {
+                type: 'bar', data: {
+                    labels: timelineLabels,
+                    datasets: [
+                        { label: 'Planned (months)', data: plannedMonths, backgroundColor: c.cyan + '60', borderColor: c.cyan, borderWidth: 1, borderRadius: 4 },
+                        { label: 'Actual (months)', data: actualMonths, backgroundColor: c.green + '60', borderColor: c.green, borderWidth: 1, borderRadius: 4 }
+                    ]
+                }, options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
+                    scales: { x: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } }, y: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 9 } } } }
+                }
+            });
+
+            // Risk Impact chart
+            createOrUpdateChart('chartRiskImpact', {
+                type: 'scatter', data: {
+                    datasets: RISKS.filter(r => r.status === 'Active').map(r => ({
+                        label: r.title.substring(0, 20) + '...',
+                        data: [{ x: r.probability, y: r.impact }],
+                        backgroundColor: r.severity === 'critical' ? c.red : r.severity === 'high' ? c.orange : r.severity === 'medium' ? c.yellow : c.green,
+                        pointRadius: 7,
+                        pointBorderColor: state.theme === 'dark' ? '#080c18' : '#f0f2f8',
+                        pointBorderWidth: 2
+                    }))
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ctx.raw.x + '% prob, ' + ctx.raw.y + '% impact' } }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Probability (%)', color: c.text, font: { size: 10 } }, min: 0, max: 100, grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } },
+                        y: { title: { display: true, text: 'Impact (%)', color: c.text, font: { size: 10 } }, min: 0, max: 100, grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function updateAllCharts() {
+            const curView = state.view;
+            if (curView === 'summary') renderCharts();
+            else if (curView === 'resources') renderResourceCharts();
+            else if (curView === 'risks') renderRiskCharts();
+        }
+
+        // ============================================================
+        // CHARTS GRID SETUP
+        // ============================================================
+        function setupChartsGrid() {
+            document.getElementById('chartsGrid1').innerHTML = `
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-line" style="color:var(--accent-cyan);margin-right:6px"></i>Project Completion Trend</div><div class="chart-canvas-wrap"><canvas id="chartTrend"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-coins" style="color:var(--accent-green);margin-right:6px"></i>Budget vs Actual Spend</div><div class="chart-canvas-wrap"><canvas id="chartBudget"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-gauge-high" style="color:var(--accent-purple);margin-right:6px"></i>Team Velocity & Sprint Throughput</div><div class="chart-canvas-wrap"><canvas id="chartVelocity"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-building" style="color:var(--accent-orange);margin-right:6px"></i>Resource Allocation by Department</div><div class="chart-canvas-wrap"><canvas id="chartDept"></canvas></div></div>
+  `;
+            document.getElementById('chartsGrid2').innerHTML = `
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-shield" style="color:var(--accent-red);margin-right:6px"></i>Open Risks by Severity</div><div class="chart-canvas-wrap"><canvas id="chartRisk"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-flag-checkered" style="color:var(--accent-green);margin-right:6px"></i>Milestone Completion Progress</div><div class="chart-canvas-wrap"><canvas id="chartMilestones"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-calendar" style="color:var(--accent-cyan);margin-right:6px"></i>Planned vs Actual Timeline Performance</div><div class="chart-canvas-wrap"><canvas id="chartTimeline"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title"><i class="fas fa-bullseye" style="color:var(--accent-pink);margin-right:6px"></i>Risk Impact vs Probability Matrix</div><div class="chart-canvas-wrap"><canvas id="chartRiskImpact"></canvas></div></div>
+  `;
+        }
+
+        // ============================================================
+        // WINNER BREAKDOWN
+        // ============================================================
+        function renderWinnerBreakdown() {
+            const p1 = PROJECTS[0], p2 = PROJECTS[1];
+            const categories = [
+                { name: 'Schedule Adherence', p1Score: 82, p2Score: 68, winner: p1.name, color: 'var(--accent-cyan)' },
+                { name: 'Budget Control', p1Score: 35, p2Score: 82, winner: p2.name, color: 'var(--accent-green)' },
+                { name: 'Team Productivity', p1Score: 78, p2Score: 65, winner: p1.name, color: 'var(--accent-purple)' },
+                { name: 'Delivery Quality', p1Score: 85, p2Score: 70, winner: p1.name, color: 'var(--accent-yellow)' },
+                { name: 'Stakeholder Satisfaction', p1Score: 84, p2Score: 90, winner: p2.name, color: 'var(--accent-pink)' },
+                { name: 'Overall Health', p1Score: 82, p2Score: 78, winner: p1.name, color: 'var(--accent-orange)' }
+            ];
+
+            const grid = document.getElementById('winnerGrid');
+            grid.innerHTML = categories.map(c => {
+                const maxVal = Math.max(c.p1Score, c.p2Score);
+                const winName = c.winner === p1.name ? p1.name : p2.name;
+                return `
+      <div class="winner-card">
+        <div class="winner-category">${c.name}</div>
+        <div class="winner-result">
+          <i class="fas fa-trophy winner-trophy"></i>
+          <span class="winner-name">${winName}</span>
+          <span class="winner-score">${maxVal}%</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;font-size:11px">
+          <span style="color:var(--text-tertiary)">${p1.name}: ${c.p1Score}%</span>
+          <span style="color:var(--text-tertiary)">|</span>
+          <span style="color:var(--text-tertiary)">${p2.name}: ${c.p2Score}%</span>
+        </div>
+        <div class="winner-bar"><div class="winner-bar-fill" style="width:${maxVal}%;background:${c.color}"></div></div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        // ============================================================
+        // NOTES
+        // ============================================================
+        function renderNotes() {
+            const list = document.getElementById('notesList');
+            list.innerHTML = NOTES.map(n => `
+    <div class="note-item">
+      <div class="note-header">
+        <span class="note-author"><i class="fas fa-user" style="font-size:10px;color:var(--accent-cyan);margin-right:4px"></i>${n.author}</span>
+        <span class="note-date">${fmtDate(n.date)}</span>
+      </div>
+      <div class="note-text">${n.text}</div>
+      <div class="note-tags">
+        ${n.tags.map(t => `<span class="note-tag">${t}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+        }
+
+        // ============================================================
+        // PROJECTS VIEW
+        // ============================================================
+        function renderProjects() {
+            // Populate filter dropdowns
+            const fProject = document.getElementById('filterProject');
+            const fStatus = document.getElementById('filterStatus');
+            const fDept = document.getElementById('filterDept');
+            const fOwner = document.getElementById('filterOwner');
+            if (fProject.options.length <= 1) {
+                PROJECTS.forEach(p => {
+                    fProject.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                    if (![...fStatus.options].some(o => o.value === p.status)) fStatus.innerHTML += `<option value="${p.status}">${p.status}</option>`;
+                    if (![...fDept.options].some(o => o.value === p.dept)) fDept.innerHTML += `<option value="${p.dept}">${p.dept}</option>`;
+                    if (![...fOwner.options].some(o => o.value === p.owner)) fOwner.innerHTML += `<option value="${p.owner}">${p.owner}</option>`;
+                });
+            }
+
+            applyProjectFilters();
+        }
+
+        function applyProjectFilters() {
+            const filters = {
+                project: document.getElementById('filterProject').value,
+                status: document.getElementById('filterStatus').value,
+                dept: document.getElementById('filterDept').value,
+                owner: document.getElementById('filterOwner').value,
+                search: document.getElementById('searchProjects').value.toLowerCase()
+            };
+            state.projectFilters = filters;
+
+            let filtered = PROJECTS.filter(p => {
+                if (filters.project && p.id != filters.project) return false;
+                if (filters.status && p.status !== filters.status) return false;
+                if (filters.dept && p.dept !== filters.dept) return false;
+                if (filters.owner && p.owner !== filters.owner) return false;
+                if (filters.search && !p.name.toLowerCase().includes(filters.search) && !p.owner.toLowerCase().includes(filters.search)) return false;
+                return true;
+            });
+
+            renderProjectCards(filtered);
+            renderProjectsTable(filtered);
+        }
+
+        function renderProjectCards(projects) {
+            const grid = document.getElementById('projectsGrid');
+            grid.innerHTML = projects.map(p => {
+                const statusClass = p.priority.toLowerCase();
+                const budgetUtil = Math.round((p.actualSpend / p.budget) * 100);
+                const remaining = p.budget - p.actualSpend;
+                const isExpanded = state.expandedProjects.has(p.id);
+                return `
+      <div class="project-card" onclick="toggleProjectExpand(${p.id})">
+        <div class="p-header">
+          <div>
+            <div class="p-name">${p.name}</div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">${p.owner} · ${p.dept} · ${p.fy} ${p.quarter}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <span class="p-status ${statusClass}">${p.priority}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:600">${p.completion}%</span>
+          <span style="font-size:11px;color:var(--text-tertiary);flex:1">Complete</span>
+          <span style="font-size:11px;color:var(--text-tertiary)">Health: </span>
+          <span style="font-size:13px;font-weight:700;color:${p.healthScore >= 80 ? 'var(--accent-green)' : p.healthScore >= 60 ? 'var(--accent-orange)' : 'var(--accent-red)'}">${p.healthScore}</span>
+        </div>
+        <div class="p-bar"><div class="p-bar-fill" style="width:${p.completion}%;background:${p.healthScore >= 80 ? 'var(--accent-green)' : p.healthScore >= 60 ? 'var(--accent-orange)' : 'var(--accent-red)'}"></div></div>
+        <div class="p-meta">
+          <div class="p-meta-item"><span class="p-meta-label">Budget</span><span class="p-meta-value">${fmtFullCurrency(p.budget)}</span></div>
+          <div class="p-meta-item"><span class="p-meta-label">Actual</span><span class="p-meta-value">${fmtFullCurrency(p.actualSpend)}</span></div>
+          <div class="p-meta-item"><span class="p-meta-label">Remaining</span><span class="p-meta-value" style="color:${remaining > 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${fmtFullCurrency(remaining)}</span></div>
+          <div class="p-meta-item"><span class="p-meta-label">Budget Util</span><span class="p-meta-value">${budgetUtil}%</span></div>
+          <div class="p-meta-item"><span class="p-meta-label">Team Size</span><span class="p-meta-value">${p.teamSize}</span></div>
+          <div class="p-meta-item"><span class="p-meta-label">Milestones</span><span class="p-meta-value">${p.milestones}</span></div>
+          <div class="p-meta-item"><span class="p-meta-label">Open Risks</span><span class="p-meta-value" style="color:${p.openRisks > 4 ? 'var(--accent-red)' : p.openRisks > 2 ? 'var(--accent-orange)' : 'var(--accent-green)'}">${p.openRisks}</span></div>
+          <div class="p-meta-item"><span class="p-meta-label">Blocked</span><span class="p-meta-value" style="color:${p.blockedTasks > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}">${p.blockedTasks}</span></div>
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--card-border);display:flex;justify-content:space-between;font-size:11px">
+          <span style="color:var(--text-tertiary)"><i class="far fa-calendar" style="margin-right:4px"></i>Target: ${fmtDate(p.projectedCompletion)}</span>
+          <span style="color:var(--text-tertiary)">${p.methodology} · ${p.phase}</span>
+        </div>
+        <div class="p-details ${isExpanded ? 'open' : ''}">
+          <div style="padding-top:12px;border-top:1px solid var(--card-border);font-size:12px;color:var(--text-secondary);line-height:1.5">${p.desc}</div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:11px">
+            <span style="padding:3px 8px;border-radius:4px;background:var(--badge-bg);color:var(--text-primary)}"><i class="fas fa-tag" style="margin-right:4px"></i>${p.dept}</span>
+            <span style="padding:3px 8px;border-radius:4px;background:var(--badge-bg);color:var(--text-primary)}"><i class="fas fa-user" style="margin-right:4px"></i>${p.owner}</span>
+            <span style="padding:3px 8px;border-radius:4px;background:var(--badge-bg);color:var(--text-primary)}"><i class="fas fa-layer-group" style="margin-right:4px"></i>${p.methodology}</span>
+            <span style="padding:3px 8px;border-radius:4px;background:var(--badge-bg);color:var(--text-primary)}"><i class="fas fa-flag" style="margin-right:4px"></i>${p.phase}</span>
+          </div>
+        </div>
+      </div>
+    `;
+            }).join('');
+        }
+
+        function toggleProjectExpand(id) {
+            if (state.expandedProjects.has(id)) state.expandedProjects.delete(id);
+            else state.expandedProjects.add(id);
+            saveState();
+            applyProjectFilters();
+        }
+
+        function renderProjectsTable(projects) {
+            const wrap = document.getElementById('projectsTableWrap');
+            wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th onclick="sortProjectsTable('name')">Project <i class="fas fa-sort"></i></th>
+        <th onclick="sortProjectsTable('completion')">Completion <i class="fas fa-sort"></i></th>
+        <th onclick="sortProjectsTable('budget')">Budget <i class="fas fa-sort"></i></th>
+        <th onclick="sortProjectsTable('actualSpend')">Spend <i class="fas fa-sort"></i></th>
+        <th onclick="sortProjectsTable('healthScore')">Health <i class="fas fa-sort"></i></th>
+        <th onclick="sortProjectsTable('openRisks')">Risks <i class="fas fa-sort"></i></th>
+        <th onclick="sortProjectsTable('teamSize')">Team <i class="fas fa-sort"></i></th>
+        <th>Status</th>
+        <th>Priority</th>
+        <th>Dept</th>
+        <th>Owner</th>
+        <th>Quarter</th>
+      </tr></thead>
+      <tbody>
+        ${projects.map(p => `
+          <tr class="expandable" onclick="toggleProjectExpand(${p.id})">
+            <td style="font-weight:600">${p.name}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:40px;height:4px;border-radius:2px;background:var(--badge-bg);overflow:hidden"><div style="width:${p.completion}%;height:100%;background:${p.healthScore >= 80 ? 'var(--accent-green)' : p.healthScore >= 60 ? 'var(--accent-orange)' : 'var(--accent-red)'};border-radius:2px"></div></div>
+                ${p.completion}%
+              </div>
+            </td>
+            <td>${fmtFullCurrency(p.budget)}</td>
+            <td>${fmtFullCurrency(p.actualSpend)}</td>
+            <td><span style="color:${p.healthScore >= 80 ? 'var(--accent-green)' : p.healthScore >= 60 ? 'var(--accent-orange)' : 'var(--accent-red)'};font-weight:700">${p.healthScore}</span></td>
+            <td>${p.openRisks}</td>
+            <td>${p.teamSize}</td>
+            <td>${p.status}</td>
+            <td><span class="p-status ${p.priority.toLowerCase()}">${p.priority}</span></td>
+            <td>${p.dept}</td>
+            <td>${p.owner}</td>
+            <td>${p.fy} ${p.quarter}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+        }
+
+        let projectSortDir = {};
+        function sortProjectsTable(field) {
+            projectSortDir[field] = !(projectSortDir[field]);
+            const dir = projectSortDir[field] ? 1 : -1;
+            PROJECTS.sort((a, b) => (a[field] > b[field] ? 1 : -1) * dir);
+            applyProjectFilters();
+        }
+
+        // ============================================================
+        // TIMELINE VIEW
+        // ============================================================
+        function renderTimeline() {
+            const projFilter = document.getElementById('tlFilterProject')?.value || '';
+            const qFilter = document.getElementById('tlFilterQuarter')?.value || '';
+
+            // Populate project filter
+            const select = document.getElementById('tlFilterProject');
+            if (select.options.length <= 1) {
+                PROJECTS.forEach(p => select.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+            }
+
+            // Filter milestones
+            let ms = MILESTONES.filter(m => {
+                if (projFilter && m.project != projFilter) return false;
+                const p = PROJECTS.find(pr => pr.id === m.project);
+                if (qFilter && p && p.quarter !== qFilter) return false;
+                return true;
+            });
+
+            // Timeline
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = `<div class="timeline">${ms.map(m => {
+                const p = PROJECTS.find(pr => pr.id === m.project);
+                const dotClass = m.status === 'Completed' ? 'completed' : m.status === 'In Progress' ? 'at-risk' : 'delayed';
+                return `
+      <div class="tl-item">
+        <div class="tl-dot ${dotClass}"></div>
+        <div class="tl-content" onclick="toggleMilestoneDetail(${m.id})">
+          <div class="tl-title">${m.name}</div>
+          <div class="tl-date"><i class="far fa-calendar" style="margin-right:4px"></i>Due: ${fmtDate(m.due)} · ${p ? p.name : 'Unknown'} · ${m.owner}</div>
+          <div class="tl-desc" id="tlDesc${m.id}">
+            <div style="margin-top:6px;color:var(--text-secondary)">${m.desc}</div>
+            <div style="margin-top:6px;display:flex;gap:8px;align-items:center">
+              <span style="font-size:11px;color:var(--text-tertiary)">Status: <strong>${m.status}</strong></span>
+              <span style="font-size:11px;color:var(--text-tertiary)">Completion: <strong>${m.completion}%</strong></span>
+            </div>
+            <div class="p-bar" style="margin-top:4px;max-width:200px"><div class="p-bar-fill" style="width:${m.completion}%;background:${m.completion === 100 ? 'var(--accent-green)' : m.completion > 0 ? 'var(--accent-cyan)' : 'var(--accent-orange)'}"></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+            }).join('')}</div>`;
+
+            // Milestones table
+            renderMilestonesTable(ms);
+        }
+
+        function toggleMilestoneDetail(id) {
+            const el = document.getElementById('tlDesc' + id);
+            if (el) el.classList.toggle('open');
+        }
+
+        function renderMilestonesTable(milestones) {
+            const wrap = document.getElementById('milestonesTableWrap');
+            wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Milestone</th>
+        <th>Project</th>
+        <th>Due Date</th>
+        <th>Status</th>
+        <th>Completion</th>
+        <th>Owner</th>
+        <th>Tasks</th>
+      </tr></thead>
+      <tbody>
+        ${milestones.map(m => {
+                const p = PROJECTS.find(pr => pr.id === m.project);
+                const tasks = TASKS.filter(t => t.milestone === m.id);
+                return `
+            <tr class="expandable" onclick="toggleMsRow(${m.id})">
+              <td style="font-weight:600">${m.name}</td>
+              <td>${p ? p.name : 'Unknown'}</td>
+              <td>${fmtDate(m.due)}</td>
+              <td><span style="color:${m.status === 'Completed' ? 'var(--accent-green)' : m.status === 'In Progress' ? 'var(--accent-cyan)' : 'var(--accent-orange)'}">${m.status}</span></td>
+              <td>${m.completion}%</td>
+              <td>${m.owner}</td>
+              <td>${tasks.length}</td>
+            </tr>
+            <tr class="detail-row" id="msDetail${m.id}">
+              <td colspan="7">
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px"><strong>Description:</strong> ${m.desc}</div>
+                ${tasks.length > 0 ? `
+                  <table style="width:auto;min-width:400px;font-size:11px;margin-top:4px">
+                    <thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Blockers</th><th>Comment</th></tr></thead>
+                    <tbody>
+                      ${tasks.map(t => `<tr>
+                        <td style="font-weight:500">${t.name}</td>
+                        <td>${t.owner}</td>
+                        <td><span style="color:${t.status === 'Done' ? 'var(--accent-green)' : 'var(--accent-cyan)'}">${t.status}</span></td>
+                        <td style="color:${t.blocker ? 'var(--accent-red)' : 'var(--accent-green)'}">${t.blocker || 'None'}</td>
+                        <td style="color:var(--text-tertiary)">${t.comment || ''}</td>
+                      </tr>`).join('')}
+                    </tbody>
+                  </table>
+                ` : '<div style="font-size:11px;color:var(--text-tertiary)">No tasks recorded for this milestone.</div>'}
+              </td>
+            </tr>
+          `;
+            }).join('')}
+      </tbody>
+    </table>
+  `;
+        }
+
+        function toggleMsRow(id) {
+            const el = document.getElementById('msDetail' + id);
+            if (el) el.classList.toggle('open');
+        }
+
+        // ============================================================
+        // RESOURCES VIEW
+        // ============================================================
+        function renderResources() {
+            const grid = document.getElementById('teamGrid');
+            grid.innerHTML = TEAMS.map(t => {
+                const utilPct = Math.round((t.allocated / t.capacity) * 100);
+                const statusColor = t.status === 'At Capacity' ? 'var(--accent-red)' : t.status === 'Near Capacity' ? 'var(--accent-orange)' : 'var(--accent-green)';
+                return `
+      <div class="team-card">
+        <div class="team-name">${t.name} <span class="team-count">${t.members} members</span></div>
+        <div class="team-stat"><span class="team-stat-label">Allocation</span><span class="team-stat-value">${t.allocated}/${t.capacity} hrs</span></div>
+        <div class="team-util-bar"><div class="team-util-fill" style="width:${utilPct}%;background:${statusColor}"></div></div>
+        <div class="team-stat"><span class="team-stat-label">Utilization</span><span class="team-stat-value" style="color:${statusColor}">${utilPct}%</span></div>
+        <div class="team-stat"><span class="team-stat-label">Availability</span><span class="team-stat-value">${t.availability} hrs</span></div>
+        <div class="team-stat"><span class="team-stat-label">Overtime Risk</span><span class="team-stat-value" style="color:${t.overtimeRisk === 'High' ? 'var(--accent-red)' : t.overtimeRisk === 'Medium' ? 'var(--accent-orange)' : 'var(--accent-green)'}">${t.overtimeRisk}</span></div>
+        <div class="team-stat"><span class="team-stat-label">Status</span><span class="team-stat-value" style="color:${statusColor}">${t.status}</span></div>
+        <div style="margin-top:6px;font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.5px">${t.dept}</div>
+      </div>
+    `;
+            }).join('');
+
+            renderResourceCharts();
+        }
+
+        function renderResourceCharts() {
+            const c = getChartColors();
+            createOrUpdateChart('chartDeptRes', {
+                type: 'doughnut', data: {
+                    labels: ['Engineering', 'Data', 'Infrastructure', 'IT', 'Security', 'Product'],
+                    datasets: [{
+                        data: [38, 22, 18, 28, 10, 9],
+                        backgroundColor: [c.cyan, c.green, c.orange, c.purple, c.pink, c.yellow],
+                        borderColor: state.theme === 'dark' ? '#080c18' : '#f0f2f8',
+                        borderWidth: 2
+                    }]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 }, color: c.text } } }
+                }
+            });
+            createOrUpdateChart('chartVelocityRes', {
+                type: 'bar', data: {
+                    labels: VELOCITY_DATA.map(d => d.sprint),
+                    datasets: [
+                        { label: 'Committed', data: VELOCITY_DATA.map(d => d.committed), backgroundColor: c.cyan + '60', borderColor: c.cyan, borderWidth: 1, borderRadius: 4 },
+                        { label: 'Completed', data: VELOCITY_DATA.map(d => d.completed), backgroundColor: c.green + '60', borderColor: c.green, borderWidth: 1, borderRadius: 4 }
+                    ]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
+                    scales: { x: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } }, y: { grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } } }
+                }
+            });
+        }
+
+        // ============================================================
+        // RISKS VIEW
+        // ============================================================
+        function renderRisks() {
+            const sevFilter = document.getElementById('riskSeverityFilter')?.value || '';
+            const projFilter = document.getElementById('riskProjectFilter')?.value || '';
+
+            // Populate project filter
+            const pf = document.getElementById('riskProjectFilter');
+            if (pf.options.length <= 1) {
+                PROJECTS.forEach(p => pf.innerHTML += `<option value="${p.id}">${p.name}</option>`);
+            }
+
+            let filtered = RISKS.filter(r => {
+                if (sevFilter && r.severity !== sevFilter) return false;
+                if (projFilter && r.project != projFilter) return false;
+                return true;
+            });
+
+            const grid = document.getElementById('risksGrid');
+            grid.innerHTML = filtered.map(r => {
+                const p = PROJECTS.find(pr => pr.id === r.project);
+                const impactColor = r.impact >= 80 ? 'var(--accent-red)' : r.impact >= 60 ? 'var(--accent-orange)' : 'var(--accent-yellow)';
+                return `
+      <div class="risk-card">
+        <div class="risk-header">
+          <span class="risk-severity ${r.severity}">${r.severity}</span>
+          <span class="risk-title">${r.title}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px">${p ? p.name : 'Unknown'} · ${r.status}</div>
+        <div class="risk-prob">
+          <span>${r.probability}% prob · ${r.impact}% impact</span>
+          <span style="margin-left:auto;font-weight:600;color:${impactColor}">Score: ${Math.round(r.probability * r.impact / 100)}</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:4px">
+          <div style="flex:1"><div style="font-size:9px;color:var(--text-tertiary);margin-bottom:2px">Probability</div><div class="risk-prob-bar"><div class="risk-prob-fill" style="width:${r.probability}%;background:var(--accent-orange)"></div></div></div>
+          <div style="flex:1"><div style="font-size:9px;color:var(--text-tertiary);margin-bottom:2px">Impact</div><div class="risk-prob-bar"><div class="risk-prob-fill" style="width:${r.impact}%;background:${impactColor}"></div></div></div>
+        </div>
+        <div class="risk-owner"><i class="fas fa-user" style="margin-right:4px;font-size:10px"></i>${r.owner}</div>
+        <div class="risk-mitigation"><i class="fas fa-shield" style="margin-right:4px;font-size:10px"></i>${r.mitigation}</div>
+      </div>
+    `;
+            }).join('');
+
+            renderRiskCharts();
+        }
+
+        function renderRiskCharts() {
+            const c = getChartColors();
+            const sevCounts = { critical: 0, high: 0, medium: 0, low: 0 };
+            RISKS.forEach(r => sevCounts[r.severity]++);
+            createOrUpdateChart('chartRiskRsk', {
+                type: 'doughnut', data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [sevCounts.critical, sevCounts.high, sevCounts.medium, sevCounts.low],
+                        backgroundColor: [c.red, c.orange, c.yellow, c.green],
+                        borderColor: state.theme === 'dark' ? '#080c18' : '#f0f2f8',
+                        borderWidth: 2
+                    }]
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 }, color: c.text } } }
+                }
+            });
+            createOrUpdateChart('chartImpactRsk', {
+                type: 'scatter', data: {
+                    datasets: RISKS.filter(r => r.status === 'Active').map(r => ({
+                        label: r.title.substring(0, 20) + '...',
+                        data: [{ x: r.probability, y: r.impact }],
+                        backgroundColor: r.severity === 'critical' ? c.red : r.severity === 'high' ? c.orange : r.severity === 'medium' ? c.yellow : c.green,
+                        pointRadius: 7,
+                        pointBorderColor: state.theme === 'dark' ? '#080c18' : '#f0f2f8',
+                        pointBorderWidth: 2
+                    }))
+                }, options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ctx.raw.x + '% prob, ' + ctx.raw.y + '% impact' } }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Probability (%)', color: c.text, font: { size: 10 } }, min: 0, max: 100, grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } },
+                        y: { title: { display: true, text: 'Impact (%)', color: c.text, font: { size: 10 } }, min: 0, max: 100, grid: { color: c.grid }, ticks: { color: c.text, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // ============================================================
+        // OPERATIONS VIEW
+        // ============================================================
+        function renderOperations() {
+            // Integrations
+            const intGrid = document.getElementById('integrationsGrid');
+            intGrid.innerHTML = INTEGRATIONS.map(i => `
+    <div class="int-card">
+      <div class="int-icon" style="background:${i.color}20;color:${i.color}"><i class="${i.icon}"></i></div>
+      <div class="int-info">
+        <div class="int-name">${i.name}</div>
+        <div class="int-status ${i.status}">${i.status === 'online' ? 'Connected' : i.status === 'warning' ? 'Degraded' : 'Disconnected'}</div>
+        <div class="int-latency">${i.status !== 'offline' ? i.latency + 'ms latency' : 'No connection'} · Last: ${fmtShortDate(i.lastSync)} ${new Date(i.lastSync).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+      </div>
+      <div class="int-dot ${i.status}"></div>
+    </div>
+  `).join('');
+
+            // API Usage
+            const apiGrid = document.getElementById('apiGrid');
+            const totalRuns = AUTOMATION_LOGS.reduce((s, a) => s + a.runs, 0);
+            const avgSuccess = Math.round(AUTOMATION_LOGS.reduce((s, a) => s + a.success, 0) / AUTOMATION_LOGS.length);
+            const totalCost = AUTOMATION_LOGS.reduce((s, a) => s + a.cost, 0);
+            const totalSavings = AUTOMATION_LOGS.reduce((s, a) => s + a.savings, 0);
+            apiGrid.innerHTML = `
+    <div class="api-card"><div class="api-icon"><i class="fas fa-robot"></i></div><div class="api-value">${AUTOMATION_LOGS.length}</div><div class="api-label">Workflows</div></div>
+    <div class="api-card"><div class="api-icon" style="color:var(--accent-green)"><i class="fas fa-play-circle"></i></div><div class="api-value">${totalRuns.toLocaleString()}</div><div class="api-label">Total Executions</div></div>
+    <div class="api-card"><div class="api-icon" style="color:var(--accent-purple)"><i class="fas fa-check-circle"></i></div><div class="api-value">${avgSuccess}%</div><div class="api-label">Success Rate</div></div>
+    <div class="api-card"><div class="api-icon" style="color:var(--accent-orange)"><i class="fas fa-credit-card"></i></div><div class="api-value">${fmtCurrency(totalCost)}</div><div class="api-label">API Costs</div></div>
+    <div class="api-card"><div class="api-icon" style="color:var(--accent-green)"><i class="fas fa-piggy-bank"></i></div><div class="api-value">${fmtCurrency(totalSavings)}</div><div class="api-label">Total Savings</div></div>
+    <div class="api-card"><div class="api-icon" style="color:var(--accent-yellow)"><i class="fas fa-arrow-trend-up"></i></div><div class="api-value">${Math.round((totalSavings / totalCost) * 10) / 10}x</div><div class="api-label">ROI Multiple</div></div>
+  `;
+
+            // Automation table
+            const autoWrap = document.getElementById('automationTableWrap');
+            autoWrap.innerHTML = `
+    <table>
+      <thead><tr><th>Workflow</th><th>Runs</th><th>Success %</th><th>Cost</th><th>Savings</th><th>Last Run</th></tr></thead>
+      <tbody>
+        ${AUTOMATION_LOGS.map(a => `
+          <tr>
+            <td style="font-weight:600">${a.workflow}</td>
+            <td>${a.runs}</td>
+            <td><span style="color:${a.success >= 98 ? 'var(--accent-green)' : a.success >= 95 ? 'var(--accent-orange)' : 'var(--accent-red)'}">${a.success}%</span></td>
+            <td>${fmtCurrency(a.cost)}</td>
+            <td style="color:var(--accent-green)">${fmtCurrency(a.savings)}</td>
+            <td style="color:var(--text-tertiary)">${fmtShortDate(a.lastRun)} ${new Date(a.lastRun).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+        }
+
+        // ============================================================
+        // REFRESH
+        // ============================================================
+        function refreshData() {
+            const btn = document.querySelector('.btn-primary');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            setTimeout(() => {
+                if (state.view === 'summary') renderSummary();
+                else if (state.view === 'projects') renderProjects();
+                else if (state.view === 'timeline') renderTimeline();
+                else if (state.view === 'resources') renderResources();
+                else if (state.view === 'risks') renderRisks();
+                else if (state.view === 'operations') renderOperations();
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            }, 600);
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        loadState();
+        applyTheme();
+        setupChartsGrid();
+
+        // Set initial UI toggles
+        document.querySelectorAll('#viewModeToggle .view-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === state.viewMode));
+        document.querySelectorAll('#methodToggle .view-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.method === state.method));
+        document.getElementById('periodSelect').value = state.period;
+
+        switchView(state.view);
+
+        // Auto-refresh every 60s
+        setInterval(() => {
+            if (state.view === 'summary') renderSummary();
+        }, 60000);
+    </script>
+</body>
+
+</html>

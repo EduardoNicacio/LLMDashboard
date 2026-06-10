@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Command Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, .75);
+            --bg-card-hover: rgba(17, 24, 39, .9);
+            --bg-glass: rgba(255, 255, 255, .03);
+            --border-color: rgba(255, 255, 255, .08);
+            --border-glow: rgba(99, 102, 241, .3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99, 102, 241, .4);
+            --green: #10b981;
+            --green-glow: rgba(16, 185, 129, .3);
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, .3);
+            --yellow: #f59e0b;
+            --yellow-glow: rgba(245, 158, 11, .3);
+            --cyan: #06b6d4;
+            --cyan-glow: rgba(6, 182, 212, .3);
+            --pink: #ec4899;
+            --pink-glow: rgba(236, 72, 153, .3);
+            --orange: #f97316;
+            --shadow: 0 8px 32px rgba(0, 0, 0, .4);
+            --shadow-lg: 0 16px 64px rgba(0, 0, 0, .5);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+            --transition: all .3s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, .85);
+            --bg-card-hover: rgba(255, 255, 255, .95);
+            --bg-glass: rgba(0, 0, 0, .02);
+            --border-color: rgba(0, 0, 0, .08);
+            --border-glow: rgba(99, 102, 241, .2);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent: #4f46e5;
+            --accent-light: #6366f1;
+            --accent-glow: rgba(79, 70, 229, .2);
+            --green: #059669;
+            --green-glow: rgba(5, 150, 105, .15);
+            --red: #dc2626;
+            --red-glow: rgba(220, 38, 38, .15);
+            --yellow: #d97706;
+            --yellow-glow: rgba(217, 119, 6, .15);
+            --cyan: #0891b2;
+            --cyan-glow: rgba(8, 145, 178, .15);
+            --pink: #db2777;
+            --pink-glow: rgba(219, 39, 119, .15);
+            --orange: #ea580c;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .08);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, .12);
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            overflow-x: hidden;
+            min-height: 100vh
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px
+        }
+
+        .glass {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition)
+        }
+
+        .glass:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow), 0 0 20px var(--accent-glow)
+        }
+
+        .glow-text {
+            text-shadow: 0 0 20px var(--accent-glow)
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px var(--accent-glow)
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--accent-glow)
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        .animate-in {
+            animation: fadeIn .5s ease forwards
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-card);
+            backdrop-filter: blur(30px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        .header-controls select,
+        .header-controls button {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: .8rem;
+            cursor: pointer;
+            transition: var(--transition)
+        }
+
+        .header-controls select:hover,
+        .header-controls button:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow)
+        }
+
+        .header-controls button.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent)
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 22px;
+            border-radius: 11px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition)
+        }
+
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            transition: var(--transition)
+        }
+
+        [data-theme="light"] .theme-toggle::after {
+            left: 20px;
+            background: var(--yellow)
+        }
+
+        nav {
+            display: flex;
+            gap: 4px;
+            padding: 8px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto
+        }
+
+        nav button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: .85rem;
+            font-weight: 500;
+            transition: var(--transition);
+            white-space: nowrap;
+            position: relative
+        }
+
+        nav button:hover {
+            color: var(--text-primary);
+            background: var(--bg-glass)
+        }
+
+        nav button.active {
+            color: var(--accent);
+            background: var(--accent-glow)
+        }
+
+        nav button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 1px
+        }
+
+        .filters-bar {
+            padding: 10px 24px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary)
+        }
+
+        .filters-bar select,
+        .filters-bar input {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-size: .78rem;
+            transition: var(--transition)
+        }
+
+        .filters-bar input {
+            min-width: 180px
+        }
+
+        .filters-bar select:focus,
+        .filters-bar input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow)
+        }
+
+        .filters-bar label {
+            color: var(--text-muted);
+            font-size: .75rem;
+            font-weight: 500
+        }
+
+        .filters-bar .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        main {
+            padding: 20px 24px;
+            max-width: 1600px;
+            margin: 0 auto
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn .4s ease
+        }
+
+        .view-section.active {
+            display: block
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px
+        }
+
+        .hero-card {
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity .3s
+        }
+
+        .hero-card:hover::before {
+            opacity: .3
+        }
+
+        .hero-card .icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px
+        }
+
+        .hero-card .value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1.2
+        }
+
+        .hero-card .label {
+            font-size: .75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .hero-card .change {
+            font-size: .7rem;
+            margin-top: 6px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block
+        }
+
+        .hero-card .change.up {
+            color: var(--green);
+            background: var(--green-glow)
+        }
+
+        .hero-card .change.down {
+            color: var(--red);
+            background: var(--red-glow)
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .section-title .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse-glow 2s infinite
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .grid-2-1 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        @media(max-width:1024px) {
+
+            .grid-2,
+            .grid-3,
+            .grid-2-1 {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .h2h-panel {
+            padding: 24px;
+            margin-bottom: 24px
+        }
+
+        .h2h-panel h3 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            text-align: center;
+            color: var(--accent)
+        }
+
+        .h2h-flex {
+            display: flex;
+            gap: 16px;
+            align-items: stretch
+        }
+
+        .h2h-project {
+            flex: 1;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color)
+        }
+
+        .h2h-project h4 {
+            font-size: .9rem;
+            margin-bottom: 12px;
+            color: var(--text-primary)
+        }
+
+        .h2h-vs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent);
+            padding: 0 8px
+        }
+
+        .h2h-metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: .8rem
+        }
+
+        .h2h-metric:last-child {
+            border: none
+        }
+
+        .h2h-metric .label {
+            color: var(--text-muted)
+        }
+
+        .h2h-metric .val {
+            font-weight: 600
+        }
+
+        .h2h-metric .val.winner {
+            color: var(--green)
+        }
+
+        .h2h-metric .val.loser {
+            color: var(--red)
+        }
+
+        .project-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px
+        }
+
+        .project-card {
+            padding: 18px;
+            cursor: pointer;
+            position: relative
+        }
+
+        .project-card .pc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px
+        }
+
+        .project-card .pc-title {
+            font-size: .9rem;
+            font-weight: 600
+        }
+
+        .project-card .pc-status {
+            font-size: .7rem;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .status-on-track {
+            background: var(--green-glow);
+            color: var(--green)
+        }
+
+        .status-at-risk {
+            background: var(--yellow-glow);
+            color: var(--yellow)
+        }
+
+        .status-delayed {
+            background: var(--red-glow);
+            color: var(--red)
+        }
+
+        .status-completed {
+            background: var(--cyan-glow);
+            color: var(--cyan)
+        }
+
+        .pc-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 10px
+        }
+
+        .pc-metric {
+            font-size: .75rem;
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            background: var(--bg-glass);
+            border-radius: 4px
+        }
+
+        .pc-metric .pm-label {
+            color: var(--text-muted)
+        }
+
+        .pc-metric .pm-val {
+            font-weight: 600
+        }
+
+        .pc-health {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            font-weight: 800;
+            border: 2px solid
+        }
+
+        .chart-container {
+            padding: 20px;
+            margin-bottom: 16px
+        }
+
+        .chart-container h4 {
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary)
+        }
+
+        .chart-container canvas {
+            max-height: 260px
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-glass);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 4px 0
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .8s cubic-bezier(.4, 0, .2, 1)
+        }
+
+        .timeline-section {
+            margin-bottom: 24px
+        }
+
+        .timeline-item {
+            padding: 14px 18px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent);
+            position: relative;
+            cursor: pointer
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 18px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg-primary)
+        }
+
+        .timeline-item.phase-done {
+            border-left-color: var(--green)
+        }
+
+        .timeline-item.phase-done::before {
+            background: var(--green)
+        }
+
+        .timeline-item.phase-risk {
+            border-left-color: var(--yellow)
+        }
+
+        .timeline-item.phase-risk::before {
+            background: var(--yellow)
+        }
+
+        .timeline-item.phase-delay {
+            border-left-color: var(--red)
+        }
+
+        .timeline-item.phase-delay::before {
+            background: var(--red)
+        }
+
+        .timeline-item .tl-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .timeline-item .tl-title {
+            font-size: .85rem;
+            font-weight: 600
+        }
+
+        .timeline-item .tl-date {
+            font-size: .75rem;
+            color: var(--text-muted)
+        }
+
+        .timeline-item .tl-details {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+            font-size: .8rem;
+            color: var(--text-secondary)
+        }
+
+        .timeline-item.expanded .tl-details {
+            display: block
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .8rem
+        }
+
+        table.data-table th {
+            text-align: left;
+            padding: 10px 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: .7rem;
+            letter-spacing: .5px;
+            border-bottom: 2px solid var(--border-color);
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none
+        }
+
+        table.data-table th:hover {
+            color: var(--accent)
+        }
+
+        table.data-table th .sort-arrow {
+            margin-left: 4px;
+            font-size: .65rem
+        }
+
+        table.data-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color)
+        }
+
+        table.data-table tr:hover {
+            background: var(--bg-glass)
+        }
+
+        table.data-table tr.expandable {
+            cursor: pointer
+        }
+
+        table.data-table tr.expandable:hover {
+            background: var(--accent-glow)
+        }
+
+        .expanded-row {
+            display: none
+        }
+
+        .expanded-row.show {
+            display: table-row
+        }
+
+        .expanded-content {
+            padding: 12px;
+            background: var(--bg-glass);
+            border-radius: var(--radius-sm);
+            margin: 4px 0;
+            font-size: .78rem
+        }
+
+        .expanded-content .ec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px
+        }
+
+        .expanded-content .ec-item {
+            padding: 6px 10px;
+            background: var(--bg-secondary);
+            border-radius: 4px
+        }
+
+        .expanded-content .ec-label {
+            font-size: .7rem;
+            color: var(--text-muted);
+            margin-bottom: 2px
+        }
+
+        .expanded-content .ec-val {
+            font-weight: 600;
+            font-size: .8rem
+        }
+
+        table.sortable th {
+            position: relative
+        }
+
+        .risk-card {
+            padding: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+
+        .risk-severity {
+            width: 8px;
+            height: 100%;
+            min-height: 40px;
+            border-radius: 4px;
+            flex-shrink: 0
+        }
+
+        .risk-severity.critical {
+            background: var(--red)
+        }
+
+        .risk-severity.high {
+            background: var(--orange)
+        }
+
+        .risk-severity.medium {
+            background: var(--yellow)
+        }
+
+        .risk-severity.low {
+            background: var(--green)
+        }
+
+        .risk-info {
+            flex: 1
+        }
+
+        .risk-info .ri-title {
+            font-size: .85rem;
+            font-weight: 600
+        }
+
+        .risk-info .ri-meta {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 3px
+        }
+
+        .risk-info .ri-mitigation {
+            font-size: .75rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            padding: 4px 8px;
+            background: var(--bg-glass);
+            border-radius: 4px
+        }
+
+        .team-card {
+            padding: 14px;
+            margin-bottom: 8px
+        }
+
+        .tc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px
+        }
+
+        .tc-name {
+            font-size: .85rem;
+            font-weight: 600
+        }
+
+        .tc-util {
+            font-size: .8rem;
+            font-weight: 700
+        }
+
+        .tc-bar {
+            display: flex;
+            gap: 3px;
+            margin: 6px 0
+        }
+
+        .tc-bar div {
+            height: 20px;
+            border-radius: 3px;
+            transition: width .6s ease
+        }
+
+        .tc-meta {
+            display: flex;
+            gap: 16px;
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 6px
+        }
+
+        .integration-card {
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px
+        }
+
+        .int-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .8rem;
+            font-weight: 700;
+            color: #fff
+        }
+
+        .int-info {
+            flex: 1
+        }
+
+        .int-name {
+            font-size: .82rem;
+            font-weight: 600
+        }
+
+        .int-status {
+            font-size: .7rem;
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .int-status .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%
+        }
+
+        .int-status .dot.ok {
+            background: var(--green)
+        }
+
+        .int-status .dot.warn {
+            background: var(--yellow)
+        }
+
+        .int-status .dot.err {
+            background: var(--red)
+        }
+
+        .int-meta {
+            font-size: .7rem;
+            color: var(--text-muted);
+            text-align: right
+        }
+
+        .winner-section {
+            padding: 24px;
+            margin-bottom: 24px
+        }
+
+        .winner-banner {
+            background: linear-gradient(135deg, var(--accent-glow), var(--cyan-glow));
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px
+        }
+
+        .winner-banner h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 4px
+        }
+
+        .winner-banner p {
+            color: var(--text-secondary);
+            font-size: .85rem
+        }
+
+        .winner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px
+        }
+
+        .winner-metric {
+            padding: 14px;
+            background: var(--bg-glass);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color)
+        }
+
+        .winner-metric h5 {
+            font-size: .78rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .3px
+        }
+
+        .winner-metric .wm-winner {
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--green);
+            margin-bottom: 2px
+        }
+
+        .winner-metric .wm-detail {
+            font-size: .75rem;
+            color: var(--text-secondary)
+        }
+
+        .notes-section {
+            margin-bottom: 24px
+        }
+
+        .notes-area {
+            width: 100%;
+            min-height: 120px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            color: var(--text-primary);
+            font-size: .85rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: var(--transition)
+        }
+
+        .notes-area:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow)
+        }
+
+        .notes-saved {
+            font-size: .72rem;
+            color: var(--green);
+            margin-top: 6px;
+            display: none
+        }
+
+        .api-stat {
+            padding: 14px;
+            text-align: center
+        }
+
+        .api-stat .as-val {
+            font-size: 1.4rem;
+            font-weight: 800
+        }
+
+        .api-stat .as-label {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: .9rem
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .7rem;
+            font-weight: 600
+        }
+
+        .badge-green {
+            background: var(--green-glow);
+            color: var(--green)
+        }
+
+        .badge-red {
+            background: var(--red-glow);
+            color: var(--red)
+        }
+
+        .badge-yellow {
+            background: var(--yellow-glow);
+            color: var(--yellow)
+        }
+
+        .badge-blue {
+            background: var(--accent-glow);
+            color: var(--accent)
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 2px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 2px
+        }
+
+        .mode-toggle button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: .75rem;
+            font-weight: 500;
+            transition: var(--transition)
+        }
+
+        .mode-toggle button.active {
+            background: var(--accent);
+            color: #fff
+        }
+
+        .period-toggle {
+            display: flex;
+            gap: 2px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 2px
+        }
+
+        .period-toggle button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: .72rem;
+            font-weight: 500;
+            transition: var(--transition)
+        }
+
+        .period-toggle button.active {
+            background: var(--accent);
+            color: #fff
+        }
+
+        table.data-table .health-score {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .72rem;
+            font-weight: 800;
+            border: 2px solid
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>⬡ Project Management Command Center</h1>
+        <div class="header-controls">
+            <div class="mode-toggle" id="viewModeToggle">
+                <button class="active" data-mode="portfolio">Portfolio</button>
+                <button data-mode="program">Program</button>
+                <button data-mode="project">Project</button>
+            </div>
+            <div class="period-toggle" id="periodToggle">
+                <button data-period="quarterly" class="active">Quarterly</button>
+                <button data-period="monthly">Monthly</button>
+                <button data-period="weekly">Weekly</button>
+            </div>
+            <div class="mode-toggle" id="methodToggle">
+                <button class="active" data-method="agile">Agile</button>
+                <button data-method="waterfall">Waterfall</button>
+            </div>
+            <div class="theme-toggle" id="themeToggle" title="Toggle theme"></div>
+        </div>
+    </header>
+    <nav id="mainNav">
+        <button class="active" data-view="summary">Summary</button>
+        <button data-view="projects">Projects</button>
+        <button data-view="timeline">Timeline</button>
+        <button data-view="resources">Resources</button>
+        <button data-view="risks">Risks</button>
+        <button data-view="operations">Operations</button>
+    </nav>
+    <div class="filters-bar">
+        <div class="filter-group"><label>Search</label><input type="text" id="globalSearch"
+                placeholder="Search projects, milestones, tasks..."></div>
+        <div class="filter-group"><label>Project</label><select id="filterProject">
+                <option value="">All Projects</option>
+            </select></div>
+        <div class="filter-group"><label>Team</label><select id="filterTeam">
+                <option value="">All Teams</option>
+            </select></div>
+        <div class="filter-group"><label>Department</label><select id="filterDept">
+                <option value="">All Depts</option>
+            </select></div>
+        <div class="filter-group"><label>Owner</label><select id="filterOwner">
+                <option value="">All Owners</option>
+            </select></div>
+        <div class="filter-group"><label>Status</label><select id="filterStatus">
+                <option value="">All</option>
+                <option value="On Track">On Track</option>
+                <option value="At Risk">At Risk</option>
+                <option value="Delayed">Delayed</option>
+                <option value="Completed">Completed</option>
+            </select></div>
+        <div class="filter-group"><label>Quarter</label><select id="filterQuarter">
+                <option value="">All</option>
+                <option value="Q1">Q1</option>
+                <option value="Q2">Q2</option>
+                <option value="Q3">Q3</option>
+                <option value="Q4">Q4</option>
+            </select></div>
+        <div class="filter-group"><label>FY</label><select id="filterFY">
+                <option value="">All</option>
+                <option value="FY2025">FY2025</option>
+                <option value="FY2026">FY2026</option>
+            </select></div>
+    </div>
+    <main id="mainContent">
+    </main>
+    <script>
+        const DATA = {
+            projects: [
+                { id: "MPM", name: "Mobile Platform Modernization", status: "On Track", dept: "Engineering", team: "Platform", owner: "Sarah Chen", completion: 72, budget: 2400000, actualSpend: 1620000, teamSize: 18, milestones: 14, openRisks: 3, blockedTasks: 2, healthScore: 88, startDate: "2025-09-01", endDate: "2026-08-31", quarter: "Q1", fy: "FY2026", priority: "High", type: "agile", sprints: 12, sprintsCompleted: 9, program: "Digital Transformation" },
+                { id: "CAI", name: "Customer Analytics Initiative", status: "At Risk", dept: "Data Science", team: "Analytics", owner: "James Wilson", completion: 58, budget: 1800000, actualSpend: 1150000, teamSize: 14, milestones: 11, openRisks: 5, blockedTasks: 4, healthScore: 71, startDate: "2025-10-15", endDate: "2026-09-30", quarter: "Q1", fy: "FY2026", priority: "High", type: "agile", sprints: 10, sprintsCompleted: 6, program: "Digital Transformation" },
+                { id: "ERP", name: "ERP System Upgrade", status: "Delayed", dept: "IT Operations", team: "Infrastructure", owner: "Maria Garcia", completion: 41, budget: 3200000, actualSpend: 1580000, teamSize: 22, milestones: 18, openRisks: 7, blockedTasks: 6, healthScore: 54, startDate: "2025-07-01", endDate: "2026-06-30", quarter: "Q3", fy: "FY2025", priority: "Critical", type: "waterfall", phases: ["Analysis", "Design", "Build", "Test", "Deploy"], currentPhase: 2, program: "Core Systems" },
+                { id: "SEC", name: "Cybersecurity Framework", status: "On Track", dept: "Security", team: "SecOps", owner: "David Kim", completion: 85, budget: 950000, actualSpend: 780000, teamSize: 10, milestones: 9, openRisks: 2, blockedTasks: 0, healthScore: 92, startDate: "2025-06-01", endDate: "2026-03-31", quarter: "Q2", fy: "FY2025", priority: "Critical", type: "agile", sprints: 8, sprintsCompleted: 7, program: "Security & Compliance" },
+                { id: "MKT", name: "Marketing Automation Platform", status: "On Track", dept: "Marketing", team: "MarTech", owner: "Lisa Park", completion: 65, budget: 720000, actualSpend: 440000, teamSize: 8, milestones: 10, openRisks: 1, blockedTasks: 1, healthScore: 84, startDate: "2025-11-01", endDate: "2026-07-31", quarter: "Q4", fy: "FY2025", priority: "Medium", type: "agile", sprints: 9, sprintsCompleted: 6, program: "Growth & Marketing" },
+                { id: "SUP", name: "Supply Chain Optimization", status: "At Risk", dept: "Operations", team: "Supply Chain", owner: "Robert Taylor", completion: 47, budget: 1500000, actualSpend: 820000, teamSize: 12, milestones: 12, openRisks: 4, blockedTasks: 3, healthScore: 67, startDate: "2025-08-15", endDate: "2026-05-31", quarter: "Q3", fy: "FY2025", priority: "High", type: "waterfall", phases: ["Assessment", "Redesign", "Implementation", "Testing", "Go-Live"], currentPhase: 2, program: "Operations Excellence" },
+                { id: "HCM", name: "HR & People Analytics", status: "Completed", dept: "Human Resources", team: "People Ops", owner: "Emily Johnson", completion: 100, budget: 580000, actualSpend: 545000, teamSize: 7, milestones: 8, openRisks: 0, blockedTasks: 0, healthScore: 100, startDate: "2025-04-01", endDate: "2025-12-31", quarter: "Q1", fy: "FY2025", priority: "Medium", type: "agile", sprints: 7, sprintsCompleted: 7, program: "People & Culture" },
+                { id: "IOT", name: "IoT Fleet Management", status: "On Track", dept: "Engineering", team: "Hardware", owner: "Alex Rivera", completion: 33, budget: 2100000, actualSpend: 620000, teamSize: 16, milestones: 15, openRisks: 3, blockedTasks: 1, healthScore: 79, startDate: "2026-01-01", endDate: "2026-12-31", quarter: "Q1", fy: "FY2026", priority: "High", type: "agile", sprints: 14, sprintsCompleted: 5, program: "Innovation Lab" }
+            ],
+            milestones: [
+                { id: "M1", projectId: "MPM", name: "MVP Release", date: "2026-02-15", status: "Completed", phase: "Phase 1", tasks: ["UI Framework", "API Gateway", "Auth Service", "Push Notifications"], owner: "Sarah Chen" },
+                { id: "M2", projectId: "MPM", name: "Beta Launch", date: "2026-05-01", status: "Completed", phase: "Phase 2", tasks: ["Beta Testing", "Performance Tuning", "Analytics Dashboard"], owner: "Sarah Chen" },
+                { id: "M3", projectId: "MPM", name: "GA Release", date: "2026-08-31", status: "In Progress", phase: "Phase 3", tasks: ["Security Audit", "Load Testing", "Documentation", "Migration Tools"], owner: "Sarah Chen" },
+                { id: "M4", projectId: "CAI", name: "Data Pipeline v1", date: "2026-01-30", status: "Completed", phase: "Foundation", tasks: ["ETL Framework", "Data Lake Setup", "Schema Design"], owner: "James Wilson" },
+                { id: "M5", projectId: "CAI", name: "ML Model Deploy", date: "2026-04-15", status: "In Progress", phase: "Core", tasks: ["Model Training", "A/B Testing", "Feature Store"], owner: "James Wilson" },
+                { id: "M6", projectId: "CAI", name: "Dashboard GA", date: "2026-09-30", status: "Not Started", phase: "Delivery", tasks: ["Executive Dashboard", "Self-Service Analytics", "Mobile App"], owner: "James Wilson" },
+                { id: "M7", projectId: "ERP", name: "Requirements Signoff", date: "2025-10-31", status: "Completed", phase: "Analysis", tasks: ["Gap Analysis", "Vendor Selection", "Contract"], owner: "Maria Garcia" },
+                { id: "M8", projectId: "ERP", name: "Design Review", date: "2026-02-28", status: "In Progress", phase: "Design", tasks: ["Architecture Doc", "Data Migration Plan", "Integration Spec"], owner: "Maria Garcia" },
+                { id: "M9", projectId: "ERP", name: "UAT Complete", date: "2026-06-30", status: "Not Started", phase: "Testing", tasks: ["UAT Scripts", "Defect Resolution", "Performance Bench"], owner: "Maria Garcia" },
+                { id: "M10", projectId: "SEC", name: "Zero Trust Deploy", date: "2026-01-31", status: "Completed", phase: "Implementation", tasks: ["Network Segmentation", "MFA Rollout", "SIEM Integration"], owner: "David Kim" },
+                { id: "M11", projectId: "SEC", name: "Compliance Audit", date: "2026-03-31", status: "In Progress", phase: "Certification", tasks: ["SOC2 Prep", "Pen Testing", "Policy Review"], owner: "David Kim" },
+                { id: "M12", projectId: "MKT", name: "Campaign Engine", date: "2026-03-15", status: "Completed", phase: "Core", tasks: ["Email Automation", "Segment Builder", "A/B Framework"], owner: "Lisa Park" },
+                { id: "M13", projectId: "MKT", name: "Omnichannel GA", date: "2026-07-31", status: "In Progress", phase: "Scale", tasks: ["Cross-Channel Sync", "Attribution Model", "ROI Dashboard"], owner: "Lisa Park" },
+                { id: "M14", projectId: "SUP", name: "Vendor Portal", date: "2026-02-28", status: "At Risk", phase: "Portal", tasks: ["Supplier Onboarding", "Order Tracking", "Invoice Processing"], owner: "Robert Taylor" },
+                { id: "M15", projectId: "SUP", name: "Predictive Inventory", date: "2026-05-31", status: "Not Started", phase: "Analytics", tasks: ["Demand Forecasting", "Stock Optimization", "Alert System"], owner: "Robert Taylor" },
+                { id: "M16", projectId: "HCM", name: "People Dashboard", date: "2025-08-30", status: "Completed", phase: "Analytics", tasks: ["Retention Analytics", "Skills Matrix", "Engagement"], owner: "Emily Johnson" },
+                { id: "M17", projectId: "HCM", name: "Full Deployment", date: "2025-12-31", status: "Completed", phase: "Launch", tasks: ["Training", "Go-Live", "Support Handoff"], owner: "Emily Johnson" },
+                { id: "M18", projectId: "IOT", name: "Prototype Delivery", date: "2026-04-30", status: "In Progress", phase: "Hardware", tasks: ["Sensor Integration", "Edge Computing", "Firmware"], owner: "Alex Rivera" },
+                { id: "M19", projectId: "IOT", name: "Pilot Fleet", date: "2026-08-31", status: "Not Started", phase: "Pilot", tasks: ["100 Vehicle Pilot", "Dashboard v1", "Alert System"], owner: "Alex Rivera" }
+            ],
+            teams: [
+                { name: "Platform", dept: "Engineering", members: 18, utilization: 87, capacity: 40, allocated: 35, available: 5, overtimeRisk: "Low", status: "Fully Staffed" },
+                { name: "Analytics", dept: "Data Science", members: 14, utilization: 92, capacity: 30, allocated: 28, available: 2, overtimeRisk: "High", status: "Near Capacity" },
+                { name: "Infrastructure", dept: "IT Operations", members: 22, utilization: 78, capacity: 48, allocated: 37, available: 11, overtimeRisk: "Low", status: "Fully Staffed" },
+                { name: "SecOps", dept: "Security", members: 10, utilization: 82, capacity: 22, allocated: 18, available: 4, overtimeRisk: "Medium", status: "Fully Staffed" },
+                { name: "MarTech", dept: "Marketing", members: 8, utilization: 75, capacity: 18, allocated: 13, available: 5, overtimeRisk: "Low", status: "Fully Staffed" },
+                { name: "Supply Chain", dept: "Operations", members: 12, utilization: 88, capacity: 26, allocated: 23, available: 3, overtimeRisk: "High", status: "Understaffed" },
+                { name: "People Ops", dept: "Human Resources", members: 7, utilization: 68, capacity: 16, allocated: 11, available: 5, overtimeRisk: "Low", status: "Fully Staffed" },
+                { name: "Hardware", dept: "Engineering", members: 16, utilization: 71, capacity: 35, allocated: 25, available: 10, overtimeRisk: "Low", status: "Fully Staffed" }
+            ],
+            risks: [
+                { id: "R1", project: "Customer Analytics Initiative", title: "Data quality issues in legacy sources", severity: "Critical", probability: 85, impact: 90, mitigation: "Implement data cleansing pipeline and validation rules", status: "In Progress", owner: "James Wilson", date: "2026-02-10" },
+                { id: "R2", project: "ERP System Upgrade", title: "Vendor delay in module delivery", severity: "Critical", probability: 70, impact: 85, mitigation: "Escalate to vendor management; prepare fallback vendor list", status: "Open", owner: "Maria Garcia", date: "2026-01-20" },
+                { id: "R3", project: "Supply Chain Optimization", title: "Supplier adoption resistance", severity: "High", probability: 60, impact: 75, mitigation: "Conduct change management workshops; executive sponsorship", status: "In Progress", owner: "Robert Taylor", date: "2026-03-05" },
+                { id: "R4", project: "Mobile Platform Modernization", title: "Cross-platform compatibility issues", severity: "Medium", probability: 45, impact: 60, mitigation: "Implement comprehensive device testing matrix", status: "Open", owner: "Sarah Chen", date: "2026-02-28" },
+                { id: "R5", project: "Customer Analytics Initiative", title: "Key data scientist attrition risk", severity: "High", probability: 55, impact: 70, mitigation: "Retention package and knowledge documentation", status: "In Progress", owner: "James Wilson", date: "2026-01-15" },
+                { id: "R6", project: "ERP System Upgrade", title: "Integration complexity with legacy systems", severity: "Critical", probability: 65, impact: 80, mitigation: "Phased integration approach with comprehensive testing", status: "Open", owner: "Maria Garcia", date: "2026-02-01" },
+                { id: "R7", project: "Supply Chain Optimization", title: "Budget overrun from scope changes", severity: "High", probability: 50, impact: 65, mitigation: "Strict change control process and weekly budget reviews", status: "Monitoring", owner: "Robert Taylor", date: "2026-01-25" },
+                { id: "R8", project: "IoT Fleet Management", title: "Hardware supply chain delays", severity: "Medium", probability: 40, impact: 55, mitigation: "Dual-source critical components; maintain buffer inventory", status: "Open", owner: "Alex Rivera", date: "2026-03-10" },
+                { id: "R9", project: "Marketing Automation Platform", title: "Email deliverability degradation", severity: "Low", probability: 30, impact: 40, mitigation: "Implement warm-up strategy and monitoring alerts", status: "Monitoring", owner: "Lisa Park", date: "2026-02-20" },
+                { id: "R10", project: "Mobile Platform Modernization", title: "Third-party SDK deprecation", severity: "Medium", probability: 50, impact: 50, mitigation: "Evaluate alternatives and create migration plan", status: "Open", owner: "Sarah Chen", date: "2026-04-01" }
+            ],
+            integrations: [
+                { name: "Jira", status: "Operational", latency: "42ms", lastSync: "2 min ago", icon: "J", color: "#0052CC" },
+                { name: "Azure DevOps", status: "Operational", latency: "67ms", lastSync: "5 min ago", icon: "A", color: "#0078D7" },
+                { name: "GitHub", status: "Operational", latency: "31ms", lastSync: "1 min ago", icon: "G", color: "#333" },
+                { name: "Slack", status: "Operational", latency: "28ms", lastSync: "Real-time", icon: "S", color: "#4A154B" },
+                { name: "Microsoft Teams", status: "Degraded", latency: "189ms", lastSync: "12 min ago", icon: "T", color: "#6264A7" },
+                { name: "ServiceNow", status: "Operational", latency: "95ms", lastSync: "8 min ago", icon: "N", color: "#81B53E" }
+            ],
+            velocityHistory: [
+                { sprint: "S1", team: "Platform", points: 34 }, { sprint: "S2", team: "Platform", points: 38 }, { sprint: "S3", team: "Platform", points: 42 },
+                { sprint: "S4", team: "Platform", points: 40 }, { sprint: "S5", team: "Platform", points: 45 }, { sprint: "S6", team: "Platform", points: 41 },
+                { sprint: "S1", team: "Analytics", points: 28 }, { sprint: "S2", team: "Analytics", points: 31 }, { sprint: "S3", team: "Analytics", points: 26 },
+                { sprint: "S4", team: "Analytics", points: 29 }, { sprint: "S5", team: "Analytics", points: 33 }, { sprint: "S6", team: "Analytics", points: 30 }
+            ],
+            sprintDetails: [
+                {
+                    sprint: "Sprint 9", project: "Mobile Platform Modernization", date: "2026-05-01 to 2026-05-14", points: 45, completed: 42, status: "Completed", tasks: [
+                        { name: "Implement push notification service", status: "Done", owner: "John D.", blockers: [], deps: ["Auth Service"] },
+                        { name: "Build analytics dashboard v2", status: "Done", owner: "Amy S.", blockers: [], deps: ["API Gateway"] },
+                        { name: "Performance optimization for lazy loading", status: "Done", owner: "Mike R.", blockers: [], deps: [] },
+                        { name: "Fix iOS keyboard dismiss issue", status: "Done", owner: "John D.", blockers: [], deps: [] },
+                        { name: "E2E test coverage for checkout flow", status: "In Review", owner: "Lisa K.", blockers: [], deps: ["Checkout Module"] },
+                        { name: "Accessibility audit remediation", status: "In Progress", owner: "Amy S.", blockers: ["Design review pending"], deps: ["UI Framework"] },
+                        { name: "Rate limiting implementation", status: "Done", owner: "Mike R.", blockers: [], deps: ["API Gateway"] }
+                    ]
+                },
+                {
+                    sprint: "Sprint 8", project: "Mobile Platform Modernization", date: "2026-04-17 to 2026-04-30", points: 42, completed: 40, status: "Completed", tasks: [
+                        { name: "Refactor payment module", status: "Done", owner: "Mike R.", blockers: [], deps: [] },
+                        { name: "User profile redesign", status: "Done", owner: "Amy S.", blockers: [], deps: ["Design System"] },
+                        { name: "API versioning middleware", status: "Done", owner: "John D.", blockers: [], deps: [] },
+                        { name: "Mobile CI/CD pipeline optimization", status: "Done", owner: "Lisa K.", blockers: [], deps: [] }
+                    ]
+                },
+                {
+                    sprint: "Sprint 6", project: "Customer Analytics Initiative", date: "2026-04-03 to 2026-04-16", points: 33, completed: 30, status: "Completed", tasks: [
+                        { name: "Customer segmentation model v2", status: "Done", owner: "Dr. Chen", blockers: [], deps: ["Data Pipeline"] },
+                        { name: "Real-time event streaming setup", status: "Done", owner: "Tom W.", blockers: [], deps: ["Kafka Cluster"] },
+                        { name: "Churn prediction feature engineering", status: "In Progress", owner: "Priya M.", blockers: ["Data quality"], deps: ["Data Lake"] },
+                        { name: "Dashboard loading performance", status: "Done", owner: "Tom W.", blockers: [], deps: [] }
+                    ]
+                },
+                {
+                    sprint: "Sprint 5", project: "Customer Analytics Initiative", date: "2026-03-20 to 2026-04-02", points: 29, completed: 29, status: "Completed", tasks: [
+                        { name: "A/B testing framework integration", status: "Done", owner: "Priya M.", blockers: [], deps: [] },
+                        { name: "Historical data migration", status: "Done", owner: "Dr. Chen", blockers: [], deps: ["Schema Design"] },
+                        { name: "Cohort analysis engine", status: "Done", owner: "Tom W.", blockers: [], deps: ["Data Lake"] }
+                    ]
+                }
+            ],
+            completionTrend: [
+                { month: "Jul 25", MPM: 0, CAI: 0, ERP: 0, SEC: 0, MKT: 0, SUP: 0, HCM: 15, IOT: 0 },
+                { month: "Aug 25", MPM: 5, CAI: 0, ERP: 8, SEC: 12, MKT: 0, SUP: 5, HCM: 30, IOT: 0 },
+                { month: "Sep 25", MPM: 15, CAI: 8, ERP: 15, SEC: 25, MKT: 0, SUP: 12, HCM: 45, IOT: 0 },
+                { month: "Oct 25", MPM: 28, CAI: 18, ERP: 22, SEC: 38, MKT: 8, SUP: 18, HCM: 60, IOT: 0 },
+                { month: "Nov 25", MPM: 38, CAI: 28, ERP: 28, SEC: 50, MKT: 18, SUP: 25, HCM: 78, IOT: 0 },
+                { month: "Dec 25", MPM: 48, CAI: 35, ERP: 33, SEC: 62, MKT: 28, SUP: 30, HCM: 100, IOT: 0 },
+                { month: "Jan 26", MPM: 55, CAI: 42, ERP: 37, SEC: 72, MKT: 38, SUP: 35, HCM: 100, IOT: 8 },
+                { month: "Feb 26", MPM: 62, CAI: 48, ERP: 39, SEC: 78, MKT: 48, SUP: 40, HCM: 100, IOT: 15 },
+                { month: "Mar 26", MPM: 67, CAI: 53, ERP: 41, SEC: 82, MKT: 55, SUP: 44, HCM: 100, IOT: 22 },
+                { month: "Apr 26", MPM: 70, CAI: 56, ERP: 41, SEC: 84, MKT: 60, SUP: 46, HCM: 100, IOT: 28 },
+                { month: "May 26", MPM: 72, CAI: 58, ERP: 41, SEC: 85, MKT: 65, SUP: 47, HCM: 100, IOT: 33 }
+            ],
+            budgetData: [
+                { project: "Mobile Platform", budget: 2400000, actual: 1620000 },
+                { project: "Customer Analytics", budget: 1800000, actual: 1150000 },
+                { project: "ERP Upgrade", budget: 3200000, actual: 1580000 },
+                { project: "Cybersecurity", budget: 950000, actual: 780000 },
+                { project: "Marketing Auto", budget: 720000, actual: 440000 },
+                { project: "Supply Chain", budget: 1500000, actual: 820000 },
+                { project: "HR Analytics", budget: 580000, actual: 545000 },
+                { project: "IoT Fleet", budget: 2100000, actual: 620000 }
+            ],
+            apiUsage: {
+                totalExecutions: 148520, webhooks: 32450, successRate: 99.2, estimatedCost: 1240, savings: 8750, uptime: 99.97,
+                byService: [{ name: "Jira API", calls: 48200, cost: 320 }, { name: "Azure DevOps", calls: 32100, cost: 280 }, { name: "GitHub API", calls: 28500, cost: 190 }, { name: "Slack API", calls: 22400, cost: 150 }, { name: "Custom Webhooks", calls: 17320, cost: 300 }]
+            }
+        };
+
+        const STATE = {
+            currentView: 'summary',
+            viewMode: 'portfolio',
+            period: 'quarterly',
+            method: 'agile',
+            theme: 'dark',
+            sortCol: null,
+            sortAsc: true,
+            filters: { project: '', team: '', dept: '', owner: '', status: '', quarter: '', fy: '', search: '' },
+            expandedRows: new Set(),
+            chartInstances: {}
+        };
+
+        function init() {
+            loadPrefs();
+            applyTheme(STATE.theme);
+            populateFilters();
+            renderView();
+            setupEventListeners();
+        }
+
+        function loadPrefs() {
+            try {
+                const p = JSON.parse(localStorage.getItem('pmDashboardPrefs') || '{}');
+                if (p.theme) STATE.theme = p.theme;
+                if (p.viewMode) STATE.viewMode = p.viewMode;
+                if (p.period) STATE.period = p.period;
+                if (p.method) STATE.method = p.method;
+            } catch (e) { }
+        }
+
+        function savePrefs() {
+            localStorage.setItem('pmDashboardPrefs', JSON.stringify({ theme: STATE.theme, viewMode: STATE.viewMode, period: STATE.period, method: STATE.method }));
+        }
+
+        function applyTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            STATE.theme = t;
+            savePrefs();
+            Object.values(STATE.chartInstances).forEach(c => { if (c && c.options) { updateChartColors(c) } });
+        }
+
+        function updateChartColors(chart) {
+            const t = document.documentElement.getAttribute('data-theme');
+            const tc = t === 'dark' ? '#94a3b8' : '#475569';
+            const gc = t === 'dark' ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+            if (chart.options.scales) {
+                Object.values(chart.options.scales).forEach(s => {
+                    if (s.ticks) s.ticks.color = tc;
+                    if (s.grid) s.grid.color = gc;
+                });
+            }
+            if (chart.options.plugins && chart.options.plugins.legend) {
+                chart.options.plugins.legend.labels.color = tc;
+            }
+            chart.update('none');
+        }
+
+        function populateFilters() {
+            const fp = document.getElementById('filterProject');
+            const ft = document.getElementById('filterTeam');
+            const fd = document.getElementById('filterDept');
+            const fo = document.getElementById('filterOwner');
+            const projects = [...new Set(DATA.projects.map(p => p.name))];
+            const teams = [...new Set(DATA.projects.map(p => p.team))];
+            const depts = [...new Set(DATA.projects.map(p => p.dept))];
+            const owners = [...new Set(DATA.projects.map(p => p.owner))];
+            projects.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; fp.appendChild(o) });
+            teams.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; ft.appendChild(o) });
+            depts.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; fd.appendChild(o) });
+            owners.forEach(o2 => { const o = document.createElement('option'); o.value = o2; o.textContent = o2; fo.appendChild(o) });
+        }
+
+        function getFilteredProjects() {
+            return DATA.projects.filter(p => {
+                const f = STATE.filters;
+                if (f.project && p.name !== f.project) return false;
+                if (f.team && p.team !== f.team) return false;
+                if (f.dept && p.dept !== f.dept) return false;
+                if (f.owner && p.owner !== f.owner) return false;
+                if (f.status && p.status !== f.status) return false;
+                if (f.quarter && p.quarter !== f.quarter) return false;
+                if (f.fy && p.fy !== f.fy) return false;
+                if (f.search) {
+                    const s = f.search.toLowerCase();
+                    if (!p.name.toLowerCase().includes(s) && !p.id.toLowerCase().includes(s) && !p.team.toLowerCase().includes(s) && !p.owner.toLowerCase().includes(s)) return false;
+                }
+                return true;
+            });
+        }
+
+        function fmt$(n) { return '$' + (n >= 1000000 ? (n / 1000000).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(0) + 'K' : n.toFixed(0)) }
+        function fmtPct(n) { return n.toFixed(0) + '%' }
+        function healthColor(s) { return s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--yellow)' : 'var(--red)' }
+        function healthClass(s) { return s >= 80 ? 'status-on-track' : s >= 60 ? 'status-at-risk' : 'status-delayed' }
+
+        function renderView() {
+            const main = document.getElementById('mainContent');
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            switch (STATE.currentView) {
+                case 'summary': main.innerHTML = renderSummary(); break;
+                case 'projects': main.innerHTML = renderProjects(); break;
+                case 'timeline': main.innerHTML = renderTimeline(); break;
+                case 'resources': main.innerHTML = renderResources(); break;
+                case 'risks': main.innerHTML = renderRisks(); break;
+                case 'operations': main.innerHTML = renderOperations(); break;
+            }
+            requestAnimationFrame(() => { initCharts(); attachInteractions() });
+        }
+
+        function renderSummary() {
+            const fp = getFilteredProjects();
+            const totalActive = fp.filter(p => p.status !== 'Completed').length;
+            const totalCompleted = fp.filter(p => p.status === 'Completed').length;
+            const totalBudget = fp.reduce((s, p) => s + p.budget, 0);
+            const totalSpend = fp.reduce((s, p) => s + p.actualSpend, 0);
+            const avgHealth = fp.length ? Math.round(fp.reduce((s, p) => s + p.healthScore, 0) / fp.length) : 0;
+            const onTimeProjects = fp.filter(p => p.status !== 'Delayed').length;
+            const onTimeRate = fp.length ? Math.round((onTimeProjects / fp.length) * 100) : 0;
+            const totalMembers = fp.reduce((s, p) => s + p.teamSize, 0);
+            const projectedSpend = Math.round(totalSpend * 1.35);
+            const budgetUtil = totalBudget ? Math.round((totalSpend / totalBudget) * 100) : 0;
+
+            let html = `<div class="view-section active" id="summaryView">
+    <div class="hero-grid animate-in">
+      <div class="hero-card glass"><div class="icon">📂</div><div class="value glow-text">${totalActive}</div><div class="label">Active Projects</div><div class="change up">+2 this quarter</div></div>
+      <div class="hero-card glass"><div class="icon">✅</div><div class="value glow-text" style="color:var(--green)">${totalCompleted}</div><div class="label">Completed</div><div class="change up">100% success</div></div>
+      <div class="hero-card glass"><div class="icon">🎯</div><div class="value glow-text" style="color:${healthColor(avgHealth)}">${avgHealth}</div><div class="label">Portfolio Health</div><div class="change up">+3 pts</div></div>
+      <div class="hero-card glass"><div class="icon">💰</div><div class="value glow-text">${budgetUtil}%</div><div class="label">Budget Utilized</div><div class="change ${budgetUtil > 85 ? 'down' : 'up'}">${fmt$(totalSpend)} of ${fmt$(totalBudget)}</div></div>
+      <div class="hero-card glass"><div class="icon">📅</div><div class="value glow-text" style="color:var(--green)">${onTimeRate}%</div><div class="label">On-Time Delivery</div><div class="change up">+5% vs last Q</div></div>
+      <div class="hero-card glass"><div class="icon">👥</div><div class="value glow-text">${totalMembers}</div><div class="label">Team Members</div><div class="change up">Across 8 teams</div></div>
+      <div class="hero-card glass"><div class="icon">📈</div><div class="value glow-text">${fmt$(projectedSpend)}</div><div class="label">Projected Annual</div><div class="change up">On track</div></div>
+    </div>
+    ${renderH2HPanel()}
+    <div class="grid-2 animate-in">
+      <div class="chart-container glass"><h4>Project Completion Trend</h4><canvas id="chartCompletion"></canvas></div>
+      <div class="chart-container glass"><h4>Budget vs Actual Spend</h4><canvas id="chartBudget"></canvas></div>
+    </div>
+    <div class="grid-2 animate-in">
+      <div class="chart-container glass"><h4>Team Velocity & Sprint Throughput</h4><canvas id="chartVelocity"></canvas></div>
+      <div class="chart-container glass"><h4>Resource Allocation by Department</h4><canvas id="chartResource"></canvas></div>
+    </div>
+    <div class="grid-2 animate-in">
+      <div class="chart-container glass"><h4>Open Risks by Severity</h4><canvas id="chartRisks"></canvas></div>
+      <div class="chart-container glass"><h4>Milestone Completion Progress</h4><canvas id="chartMilestones"></canvas></div>
+    </div>
+    <div class="chart-container glass animate-in" style="margin-bottom:24px"><h4>Planned vs Actual Timeline Performance</h4><canvas id="chartTimeline"></canvas></div>
+  </div>`;
+            return html;
+        }
+
+        function renderH2HPanel() {
+            const a = DATA.projects[0], b = DATA.projects[1];
+            const scheduleA = a.completion, scheduleB = b.completion;
+            const budgetVarA = Math.round(((a.actualSpend - a.budget * 0.65) / (a.budget * 0.65)) * 100);
+            const budgetVarB = Math.round(((b.actualSpend - b.budget * 0.58) / (b.budget * 0.58)) * 100);
+            const tasksA = a.type === 'agile' ? Math.round((a.sprintsCompleted / a.sprints) * 100) : a.completion;
+            const tasksB = b.type === 'agile' ? Math.round((b.sprintsCompleted / b.sprints) * 100) : b.completion;
+            const metrics = [
+                { label: 'Schedule Progress', a: scheduleA + '%', b: scheduleB + '%', wa: scheduleA > scheduleB },
+                { label: 'Budget Variance', a: (budgetVarA > 0 ? '+' : '') + budgetVarA + '%', b: (budgetVarB > 0 ? '+' : '') + budgetVarB + '%', wa: Math.abs(budgetVarA) < Math.abs(budgetVarB) },
+                { label: 'Task Completion', a: tasksA + '%', b: tasksB + '%', wa: tasksA > tasksB },
+                { label: 'Risk Score', a: 100 - a.openRisks * 15, b: 100 - b.openRisks * 15, wa: a.openRisks < b.openRisks, display: true },
+                { label: 'Resource Utilization', a: Math.round(a.teamSize * 100 / 22) + '%', b: Math.round(b.teamSize * 100 / 22) + '%', wa: true, neutral: true },
+                { label: 'Stakeholder Satisfaction', a: Math.round(a.healthScore * 0.9) + '%', b: Math.round(b.healthScore * 0.85) + '%', wa: a.healthScore > b.healthScore }
+            ];
+            let mhtml = metrics.map(m => {
+                const va = m.wa !== false ? 'winner' : 'loser';
+                const vb = (!m.wa) ? 'winner' : 'loser';
+                return `<div class="h2h-metric"><span class="label">${m.label}</span><span class="val ${va}">${m.display ? (100 - parseInt(m.a)) : m.a}</span><span class="val ${vb}">${m.display ? (100 - parseInt(m.b)) : m.b}</span></div>`;
+            }).join('');
+            return `<div class="h2h-panel glass animate-in"><h3>⚡ Head-to-Head: ${a.name} vs ${b.name}</h3><div class="h2h-flex">
+    <div class="h2h-project"><h4>${a.name}</h4><p style="font-size:.75rem;color:var(--text-muted);margin-bottom:10px">Health: <strong style="color:${healthColor(a.healthScore)}">${a.healthScore}</strong></p>${mhtml}</div>
+    <div class="h2h-vs">VS</div>
+    <div class="h2h-project"><h4>${b.name}</h4><p style="font-size:.75rem;color:var(--text-muted);margin-bottom:10px">Health: <strong style="color:${healthColor(b.healthScore)}">${b.healthScore}</strong></p>${mhtml.split('</div>').slice(0, -1).map((_, i) => {
+                const parts = ['Schedule Progress', 'Budget Variance', 'Task Completion', 'Risk Score', 'Resource Utilization', 'Stakeholder Satisfaction'];
+                const vals = [[a.completion + '%', b.completion + '%', a.completion > b.completion], [budgetVarA + '%', budgetVarB + '%', Math.abs(budgetVarA) < Math.abs(budgetVarB)], [tasksA + '%', tasksB + '%', tasksA > tasksB], [(100 - a.openRisks * 15), (100 - b.openRisks * 15), a.openRisks < b.openRisks], [Math.round(a.teamSize * 100 / 22) + '%', Math.round(b.teamSize * 100 / 22) + '%', true], [Math.round(a.healthScore * 0.9) + '%', Math.round(b.healthScore * 0.85) + '%', a.healthScore > b.healthScore]];
+                const v = vals[i];
+                return `<div class="h2h-metric"><span class="label">${parts[i]}</span><span class="val ${v[2] ? 'loser' : 'winner'}">${v[0]}</span><span class="val ${v[2] ? 'winner' : 'loser'}">${v[1]}</span></div>`;
+            }).join('')}</div></div></div>`;
+        }
+
+        function renderProjects() {
+            const fp = getFilteredProjects();
+            let cards = fp.map(p => {
+                const remaining = p.budget - p.actualSpend;
+                const pct = Math.round((p.actualSpend / p.budget) * 100);
+                const pc = p.type === 'agile' ? Math.round((p.sprintsCompleted / p.sprints) * 100) : p.completion;
+                return `<div class="project-card glass animate-in" data-id="${p.id}">
+      <div class="pc-health" style="color:${healthColor(p.healthScore)};border-color:${healthColor(p.healthScore)}">${p.healthScore}</div>
+      <div class="pc-header"><div><div class="pc-title">${p.name}</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">${p.team} • ${p.owner}</div></div>
+      <span class="pc-status ${p.status === 'On Track' ? 'status-on-track' : p.status === 'At Risk' ? 'status-at-risk' : p.status === 'Delayed' ? 'status-delayed' : 'status-completed'}">${p.status}</span></div>
+      <div class="progress-bar"><div class="fill" style="width:${p.completion}%;background:linear-gradient(90deg,${healthColor(p.healthScore)},var(--accent))"></div></div>
+      <div class="pc-metrics">
+        <div class="pc-metric"><span class="pm-label">Completion</span><span class="pm-val">${p.completion}%</span></div>
+        <div class="pc-metric"><span class="pm-label">Budget</span><span class="pm-val">${fmt$(p.budget)}</span></div>
+        <div class="pc-metric"><span class="pm-label">Spent</span><span class="pm-val">${fmt$(p.actualSpend)}</span></div>
+        <div class="pc-metric"><span class="pm-label">Remaining</span><span class="pm-val">${fmt$(remaining)}</span></div>
+        <div class="pc-metric"><span class="pm-label">Team</span><span class="pm-val">${p.teamSize} members</span></div>
+        <div class="pc-metric"><span class="pm-label">Milestones</span><span class="pm-val">${p.milestones}</span></div>
+        <div class="pc-metric"><span class="pm-label">Open Risks</span><span class="pm-val" style="color:${p.openRisks > 3 ? 'var(--red)' : 'var(--text-primary)'}">${p.openRisks}</span></div>
+        <div class="pc-metric"><span class="pm-label">Blocked</span><span class="pm-val" style="color:${p.blockedTasks > 0 ? 'var(--red)' : 'var(--green)'}">${p.blockedTasks}</span></div>
+        <div class="pc-metric"><span class="pm-label">End Date</span><span class="pm-val">${p.endDate}</span></div>
+        <div class="pc-metric"><span class="pm-label">${p.type === 'agile' ? 'Sprints' : 'Phases'}</span><span class="pm-val">${p.type === 'agile' ? p.sprintsCompleted + '/' + p.sprints : (p.currentPhase + 1) + '/' + p.phases.length}</span></div>
+      </div>
+    </div>`;
+            }).join('');
+
+            let tableHtml = `<div class="glass animate-in" style="padding:16px;margin-bottom:24px;overflow-x:auto">
+    <table class="data-table sortable" id="projectTable"><thead><tr>
+      <th data-col="name">Project <span class="sort-arrow">↕</span></th>
+      <th data-col="status">Status <span class="sort-arrow">↕</span></th>
+      <th data-col="team">Team <span class="sort-arrow">↕</span></th>
+      <th data-col="owner">Owner <span class="sort-arrow">↕</span></th>
+      <th data-col="completion">Completion <span class="sort-arrow">↕</span></th>
+      <th data-col="budget">Budget <span class="sort-arrow">↕</span></th>
+      <th data-col="actualSpend">Spent <span class="sort-arrow">↕</span></th>
+      <th data-col="healthScore">Health <span class="sort-arrow">↕</span></th>
+    </tr></thead><tbody>`;
+            const sorted = sortData(fp);
+            sorted.forEach(p => {
+                const isOpen = STATE.expandedRows.has('proj-' + p.id);
+                tableHtml += `<tr class="expandable" data-expand="proj-${p.id}">
+      <td><strong>${p.name}</strong></td>
+      <td><span class="pc-status ${p.status === 'On Track' ? 'status-on-track' : p.status === 'At Risk' ? 'status-at-risk' : p.status === 'Delayed' ? 'status-delayed' : 'status-completed'}" style="font-size:.7rem">${p.status}</span></td>
+      <td>${p.team}</td><td>${p.owner}</td>
+      <td><div class="progress-bar" style="width:80px;display:inline-block;vertical-align:middle"><div class="fill" style="width:${p.completion}%;background:${healthColor(p.healthScore)}"></div></div> ${p.completion}%</td>
+      <td>${fmt$(p.budget)}</td><td>${fmt$(p.actualSpend)}</td>
+      <td><span class="health-score" style="color:${healthColor(p.healthScore)};border-color:${healthColor(p.healthScore)}">${p.healthScore}</span></td>
+    </tr>
+    <tr class="expanded-row ${isOpen ? 'show' : ''}" data-for="proj-${p.id}"><td colspan="8"><div class="expanded-content">
+      <div class="ec-grid">
+        <div class="ec-item"><div class="ec-label">Remaining Budget</div><div class="ec-val">${fmt$(p.budget - p.actualSpend)}</div></div>
+        <div class="ec-item"><div class="ec-label">Budget Used</div><div class="ec-val">${Math.round((p.actualSpend / p.budget) * 100)}%</div></div>
+        <div class="ec-item"><div class="ec-label">Milestone Count</div><div class="ec-val">${p.milestones}</div></div>
+        <div class="ec-item"><div class="ec-label">Open Risks</div><div class="ec-val">${p.openRisks}</div></div>
+        <div class="ec-item"><div class="ec-label">Blocked Tasks</div><div class="ec-val">${p.blockedTasks}</div></div>
+        <div class="ec-item"><div class="ec-label">Projected End</div><div class="ec-val">${p.endDate}</div></div>
+        <div class="ec-item"><div class="ec-label">Department</div><div class="ec-val">${p.dept}</div></div>
+        <div class="ec-item"><div class="ec-label">Program</div><div class="ec-val">${p.program || 'N/A'}</div></div>
+        <div class="ec-item"><div class="ec-label">Priority</div><div class="ec-val">${p.priority}</div></div>
+        <div class="ec-item"><div class="ec-label">Type</div><div class="ec-val" style="text-transform:capitalize">${p.type}</div></div>
+      </div>
+    </div></td></tr>`;
+            });
+            tableHtml += `</tbody></table></div>`;
+
+            return `<div class="view-section active" id="projectsView">
+    <div class="section-title"><div class="dot"></div> Project Portfolio (${fp.length} projects)</div>
+    <div class="project-cards">${cards}</div>
+    <div class="section-title"><div class="dot"></div> Detailed Project View</div>
+    ${tableHtml}
+  </div>`;
+        }
+
+        function renderTimeline() {
+            const fp = getFilteredProjects();
+            let html = `<div class="view-section active" id="timelineView"><div class="section-title"><div class="dot"></div> Project Timeline & Milestones</div>`;
+            fp.forEach(p => {
+                const milestones = DATA.milestones.filter(m => m.projectId === p.id).sort((a, b) => new Date(a.date) - new Date(b.date));
+                html += `<div style="margin-bottom:20px"><h4 style="font-size:.9rem;margin-bottom:10px;color:var(--accent)">${p.name}</h4>`;
+                if (p.type === 'waterfall' && p.phases) {
+                    html += `<div style="display:flex;gap:4px;margin-bottom:10px">`;
+                    p.phases.forEach((ph, i) => {
+                        const isDone = i < p.currentPhase; const isCurrent = i === p.currentPhase;
+                        html += `<div style="flex:1;padding:6px 10px;text-align:center;font-size:.72rem;border-radius:4px;background:${isDone ? 'var(--green-glow)' : isCurrent ? 'var(--accent-glow)' : 'var(--bg-glass)'};color:${isDone ? 'var(--green)' : isCurrent ? 'var(--accent)' : 'var(--text-muted)'};border:1px solid ${isDone ? 'var(--green)' : isCurrent ? 'var(--accent)' : 'var(--border-color)'};font-weight:${isCurrent ? '700' : '400'}">${ph}</div>`;
+                    });
+                    html += `</div>`;
+                }
+                milestones.forEach(m => {
+                    const cls = m.status === 'Completed' ? 'phase-done' : m.status === 'At Risk' ? 'phase-risk' : m.status === 'In Progress' ? '' : 'phase-delay';
+                    html += `<div class="timeline-item ${cls} glass" data-expand="ms-${m.id}">
+        <div class="tl-header"><div class="tl-title">${m.name}</div><div class="tl-date">${m.date} • <span class="badge ${m.status === 'Completed' ? 'badge-green' : m.status === 'In Progress' ? 'badge-blue' : m.status === 'At Risk' ? 'badge-yellow' : 'badge-red'}">${m.status}</span></div></div>
+        <div class="tl-details"><strong>Phase:</strong> ${m.phase} &nbsp;|&nbsp; <strong>Owner:</strong> ${m.owner}<br><strong>Tasks:</strong> ${m.tasks.join(', ')}</div>
+      </div>`;
+                });
+                html += `</div>`;
+            });
+            html += `<div class="chart-container glass animate-in"><h4>Planned vs Actual Timeline Performance</h4><canvas id="chartTimeline2"></canvas></div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        function renderResources() {
+            const teams = DATA.teams;
+            let html = `<div class="view-section active" id="resourcesView">
+    <div class="section-title"><div class="dot"></div> Team Workload & Resource Utilization</div>
+    <div class="chart-container glass animate-in" style="margin-bottom:20px"><h4>Resource Allocation by Department</h4><canvas id="chartResourceDetail"></canvas></div>
+    <div class="grid-2 animate-in">`;
+            teams.forEach(t => {
+                const utilColor = t.utilization > 90 ? 'var(--red)' : t.utilization > 80 ? 'var(--yellow)' : 'var(--green)';
+                html += `<div class="team-card glass">
+      <div class="tc-header"><span class="tc-name">${t.name}</span><span class="tc-util" style="color:${utilColor}">${t.utilization}%</span></div>
+      <div class="tc-bar"><div style="width:${t.utilization}%;background:${utilColor};border-radius:3px"></div></div>
+      <div class="tc-meta">
+        <span>Members: ${t.members}</span>
+        <span>Allocated: ${t.allocated}/${t.capacity}h</span>
+        <span>Available: ${t.available}h</span>
+        <span>Overtime: <span style="color:${t.overtimeRisk === 'High' ? 'var(--red)' : t.overtimeRisk === 'Medium' ? 'var(--yellow)' : 'var(--green)'}">${t.overtimeRisk}</span></span>
+        <span class="badge ${t.status === 'Fully Staffed' ? 'badge-green' : t.status === 'Understaffed' ? 'badge-red' : 'badge-yellow'}">${t.status}</span>
+      </div>
+    </div>`;
+            });
+            html += `</div></div>`;
+            return html;
+        }
+
+        function renderRisks() {
+            const risks = DATA.risks.filter(r => {
+                const f = STATE.filters;
+                if (f.project && r.project !== f.project) return false;
+                if (f.search && !r.title.toLowerCase().includes(f.search.toLowerCase())) return false;
+                return true;
+            }).sort((a, b) => {
+                const sev = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+                return sev[a.severity] - sev[b.severity];
+            });
+
+            let html = `<div class="view-section active" id="risksView">
+    <div class="section-title"><div class="dot"></div> Risk Management (${risks.length} active risks)</div>
+    <div class="chart-container glass animate-in" style="margin-bottom:16px"><h4>Open Risks by Severity</h4><canvas id="chartRisksDetail"></canvas></div>`;
+            risks.forEach(r => {
+                html += `<div class="risk-card glass animate-in">
+      <div class="risk-severity ${r.severity.toLowerCase()}"></div>
+      <div class="risk-info">
+        <div class="ri-title">${r.title}</div>
+        <div class="ri-meta">Project: ${r.project} • Owner: ${r.owner} • Identified: ${r.date} • Prob: ${r.probability}% • Impact: ${r.impact}% • Score: ${Math.round(r.probability * r.impact / 100)}</div>
+        <div class="ri-mitigation">Mitigation: ${r.mitigation} • Status: <span class="badge ${r.status === 'In Progress' ? 'badge-blue' : r.status === 'Monitoring' ? 'badge-yellow' : 'badge-red'}">${r.status}</span></div>
+      </div>
+    </div>`;
+            });
+            html += `</div>`;
+            return html;
+        }
+
+        function renderOperations() {
+            const api = DATA.apiUsage;
+            let html = `<div class="view-section active" id="operationsView">
+    <div class="section-title"><div class="dot"></div> Integrations & Operations</div>
+    <div class="grid-3 animate-in" style="margin-bottom:20px">`;
+            DATA.integrations.forEach(i => {
+                html += `<div class="integration-card glass">
+      <div class="int-icon" style="background:${i.color}">${i.icon}</div>
+      <div class="int-info"><div class="int-name">${i.name}</div>
+      <div class="int-status"><span class="dot ${i.status === 'Operational' ? 'ok' : i.status === 'Degraded' ? 'warn' : 'err'}"></span>${i.status}</div></div>
+      <div class="int-meta"><div>Latency: ${i.latency}</div><div>Sync: ${i.lastSync}</div></div>
+    </div>`;
+            });
+            html += `</div>
+    <div class="section-title"><div class="dot"></div> API Usage & Automation</div>
+    <div class="hero-grid animate-in" style="margin-bottom:20px">
+      <div class="api-stat glass"><div class="as-val glow-text">${(api.totalExecutions / 1000).toFixed(1)}K</div><div class="as-label">Total Executions</div></div>
+      <div class="api-stat glass"><div class="as-val glow-text" style="color:var(--cyan)">${(api.webhooks / 1000).toFixed(1)}K</div><div class="as-label">Webhook Events</div></div>
+      <div class="api-stat glass"><div class="as-val glow-text" style="color:var(--green)">${api.successRate}%</div><div class="as-label">Success Rate</div></div>
+      <div class="api-stat glass"><div class="as-val glow-text">${api.uptime}%</div><div class="as-label">Uptime</div></div>
+      <div class="api-stat glass"><div class="as-val glow-text" style="color:var(--yellow)">${fmt$(api.estimatedCost)}</div><div class="as-label">Est. API Cost</div></div>
+      <div class="api-stat glass"><div class="as-val glow-text" style="color:var(--green)">${fmt$(api.savings)}</div><div class="as-label">Automation Savings</div></div>
+    </div>
+    <div class="chart-container glass animate-in" style="margin-bottom:20px"><h4>API Calls by Service</h4><canvas id="chartApi"></canvas></div>
+    <div class="section-title"><div class="dot"></div> Sprint & Milestone History</div>
+    <div class="glass animate-in" style="padding:16px;overflow-x:auto">
+      <table class="data-table sortable" id="sprintTable"><thead><tr>
+        <th>Sprint</th><th>Project</th><th>Date Range</th><th>Points</th><th>Completed</th><th>Status</th>
+      </tr></thead><tbody>`;
+            DATA.sprintDetails.forEach(s => {
+                const isOpen = STATE.expandedRows.has('sprint-' + s.sprint.replace(/\s/g, ''));
+                html += `<tr class="expandable" data-expand="sprint-${s.sprint.replace(/\s/g, '')}">
+      <td><strong>${s.sprint}</strong></td><td>${s.project}</td><td>${s.date}</td>
+      <td>${s.points}</td><td>${s.completed}</td>
+      <td><span class="badge badge-green">${s.status}</span></td>
+    </tr>
+    <tr class="expanded-row ${isOpen ? 'show' : ''}" data-for="sprint-${s.sprint.replace(/\s/g, '')}"><td colspan="6"><div class="expanded-content">
+      <div style="margin-bottom:8px;font-weight:600">Tasks (${s.tasks.length})</div>`;
+                s.tasks.forEach(t => {
+                    html += `<div style="padding:6px 10px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;font-size:.78rem;display:flex;justify-content:space-between;align-items:center">
+        <div><strong>${t.name}</strong><br><span style="color:var(--text-muted)">Owner: ${t.owner} ${t.deps.length ? '• Deps: ' + t.deps.join(', ') : ''}</span>
+        ${t.blockers.length ? '<br><span style="color:var(--red)">⚠ Blockers: ' + t.blockers.join(', ') + '</span>' : ''}</div>
+        <span class="badge ${t.status === 'Done' ? 'badge-green' : t.status === 'In Review' ? 'badge-blue' : 'badge-yellow'}">${t.status}</span>
+      </div>`;
+                });
+                html += `</div></td></tr>`;
+            });
+            html += `</tbody></table></div>`;
+            html += renderWinnerSection();
+            html += renderNotesSection();
+            html += `</div>`;
+            return html;
+        }
+
+        function renderWinnerSection() {
+            const a = DATA.projects[0], b = DATA.projects[1];
+            const metrics = [
+                { cat: 'Schedule Adherence', winner: a.completion > b.completion ? a.name : b.name, detail: `${a.name}: ${a.completion}% vs ${b.name}: ${b.completion}%` },
+                { cat: 'Budget Control', winner: Math.abs(a.actualSpend / a.budget) < Math.abs(b.actualSpend / b.budget) ? a.name : b.name, detail: `${a.name}: ${Math.round(a.actualSpend / a.budget * 100)}% of budget vs ${b.name}: ${Math.round(b.actualSpend / b.budget * 100)}%` },
+                { cat: 'Team Productivity', winner: a.teamSize > 0 && a.completion / a.teamSize > b.completion / b.teamSize ? a.name : b.name, detail: `${(a.completion / a.teamSize).toFixed(1)} pts/person vs ${(b.completion / b.teamSize).toFixed(1)} pts/person` },
+                { cat: 'Delivery Quality', winner: a.openRisks < b.openRisks ? a.name : b.name, detail: `${a.name}: ${a.openRisks} open risks vs ${b.name}: ${b.openRisks} open risks` },
+                { cat: 'Stakeholder Satisfaction', winner: a.healthScore > b.healthScore ? a.name : b.name, detail: `${a.name}: ${a.healthScore}/100 vs ${b.name}: ${b.healthScore}/100` },
+                { cat: 'Overall Health', winner: a.healthScore > b.healthScore ? a.name : b.name, detail: `${a.name}: Health ${a.healthScore} vs ${b.name}: Health ${b.healthScore}` }
+            ];
+            const aWins = metrics.filter(m => m.winner === a.name).length;
+            let html = `<div class="winner-section glass animate-in">
+    <div class="winner-banner"><h3>🏆 Winner: ${a.name}</h3><p>Wins ${aWins} of ${metrics.length} categories against ${b.name}</p></div>
+    <div class="winner-grid">`;
+            metrics.forEach(m => {
+                html += `<div class="winner-metric"><h5>${m.cat}</h5><div class="wm-winner">Winner: ${m.winner}</div><div class="wm-detail">${m.detail}</div></div>`;
+            });
+            html += `</div></div>`;
+            return html;
+        }
+
+        function renderNotesSection() {
+            const saved = localStorage.getItem('pmDashboardNotes') || '';
+            return `<div class="notes-section glass animate-in" style="padding:20px;margin-bottom:24px">
+    <div class="section-title"><div class="dot"></div> Notes & Executive Commentary</div>
+    <textarea class="notes-area" id="notesArea" placeholder="Add observations, delivery updates, concerns, lessons learned, and future outlook here...">${saved}</textarea>
+    <div class="notes-saved" id="notesSaved">✓ Saved</div>
+  </div>`;
+        }
+
+        function initCharts() {
+            Object.values(STATE.chartInstances).forEach(c => { if (c && c.destroy) c.destroy() });
+            STATE.chartInstances = {};
+            const t = document.documentElement.getAttribute('data-theme');
+            const tc = t === 'dark' ? '#94a3b8' : '#475569';
+            const gc = t === 'dark' ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+            const defaults = { color: tc, font: { family: 'Segoe UI,system-ui,sans-serif', size: 11 } };
+            Chart.defaults.color = tc; Chart.defaults.font.family = defaults.font.family; Chart.defaults.font.size = 11;
+
+            const cc = document.getElementById('chartCompletion');
+            if (cc) {
+                STATE.chartInstances.completion = new Chart(cc, {
+                    type: 'line', data: {
+                        labels: DATA.completionTrend.map(d => d.month), datasets: [
+                            { label: 'MPM', data: DATA.completionTrend.map(d => d.MPM), borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,.1)', fill: true, tension: .4 },
+                            { label: 'CAI', data: DATA.completionTrend.map(d => d.CAI), borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,.1)', fill: true, tension: .4 },
+                            { label: 'ERP', data: DATA.completionTrend.map(d => d.ERP), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.1)', fill: true, tension: .4 },
+                            { label: 'SEC', data: DATA.completionTrend.map(d => d.SEC), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.1)', fill: true, tension: .4 },
+                            { label: 'MKT', data: DATA.completionTrend.map(d => d.MKT), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.1)', fill: true, tension: .4 },
+                            { label: 'SUP', data: DATA.completionTrend.map(d => d.SUP), borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,.1)', fill: true, tension: .4 },
+                            { label: 'IOT', data: DATA.completionTrend.map(d => d.IOT), borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,.1)', fill: true, tension: .4 }
+                        ]
+                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } }, scales: { x: { grid: { color: gc } }, y: { grid: { color: gc }, ticks: { callback: v => v + '%' } } } }
+                });
+            }
+
+            const bc = document.getElementById('chartBudget');
+            if (bc) {
+                STATE.chartInstances.budget = new Chart(bc, {
+                    type: 'bar', data: {
+                        labels: DATA.budgetData.map(d => d.project), datasets: [
+                            { label: 'Budget', data: DATA.budgetData.map(d => d.budget), backgroundColor: 'rgba(99,102,241,.6)', borderRadius: 4 },
+                            { label: 'Actual Spend', data: DATA.budgetData.map(d => d.actual), backgroundColor: 'rgba(6,182,212,.6)', borderRadius: 4 }
+                        ]
+                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: gc }, ticks: { callback: v => fmt$(v) } } } }
+                });
+            }
+
+            const vc = document.getElementById('chartVelocity');
+            if (vc) {
+                const platformVel = DATA.velocityHistory.filter(v => v.team === 'Platform');
+                const analyticsVel = DATA.velocityHistory.filter(v => v.team === 'Analytics');
+                STATE.chartInstances.velocity = new Chart(vc, {
+                    type: 'bar', data: {
+                        labels: platformVel.map(v => v.sprint), datasets: [
+                            { label: 'Platform', data: platformVel.map(v => v.points), backgroundColor: 'rgba(99,102,241,.7)', borderRadius: 4 },
+                            { label: 'Analytics', data: analyticsVel.map(v => v.points), backgroundColor: 'rgba(6,182,212,.7)', borderRadius: 4 }
+                        ]
+                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: gc }, title: { display: true, text: 'Story Points' } } } }
+                });
+            }
+
+            const rc = document.getElementById('chartResource');
+            if (rc) {
+                const deptData = {};
+                DATA.teams.forEach(t => { deptData[t.dept] = (deptData[t.dept] || 0) + t.members });
+                STATE.chartInstances.resource = new Chart(rc, { type: 'doughnut', data: { labels: Object.keys(deptData), datasets: [{ data: Object.values(deptData), backgroundColor: ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#f97316'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } } } });
+            }
+
+            const rkc = document.getElementById('chartRisks');
+            if (rkc) {
+                const sevCount = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+                DATA.risks.forEach(r => sevCount[r.severity] = (sevCount[r.severity] || 0) + 1);
+                STATE.chartInstances.risks = new Chart(rkc, { type: 'bar', data: { labels: Object.keys(sevCount), datasets: [{ data: Object.values(sevCount), backgroundColor: ['rgba(239,68,68,.7)', 'rgba(249,115,22,.7)', 'rgba(245,158,11,.7)', 'rgba(16,185,129,.7)'], borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: gc }, ticks: { stepSize: 1 } }, y: { grid: { display: false } } } } });
+            }
+
+            const mc = document.getElementById('chartMilestones');
+            if (mc) {
+                const mStatus = { Completed: 0, 'In Progress': 0, 'Not Started': 0, 'At Risk': 0 };
+                DATA.milestones.forEach(m => mStatus[m.status] = (mStatus[m.status] || 0) + 1);
+                STATE.chartInstances.milestones = new Chart(mc, { type: 'doughnut', data: { labels: Object.keys(mStatus), datasets: [{ data: Object.values(mStatus), backgroundColor: ['rgba(16,185,129,.7)', 'rgba(99,102,241,.7)', 'rgba(100,116,139,.5)', 'rgba(245,158,11,.7)'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } } } });
+            }
+
+            const tc2 = document.getElementById('chartTimeline');
+            if (tc2) {
+                const projects = DATA.projects.filter(p => p.status !== 'Completed');
+                STATE.chartInstances.timeline = new Chart(tc2, {
+                    type: 'bar', data: {
+                        labels: projects.map(p => p.name.split(' ')[0]), datasets: [
+                            { label: 'Planned', data: projects.map(p => { const d = new Date(p.startDate); const e = new Date(p.endDate); const n = new Date(); return Math.round(((n - d) / (e - d)) * 100) }), backgroundColor: 'rgba(99,102,241,.5)', borderRadius: 4 },
+                            { label: 'Actual', data: projects.map(p => p.completion), backgroundColor: 'rgba(16,185,129,.5)', borderRadius: 4 }
+                        ]
+                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: gc }, ticks: { callback: v => v + '%' }, max: 100 } } }
+                });
+            }
+
+            const tc3 = document.getElementById('chartTimeline2');
+            if (tc3) {
+                const projects = DATA.projects.filter(p => p.status !== 'Completed');
+                STATE.chartInstances.timeline2 = new Chart(tc3, { type: 'line', data: { labels: ['Start', '25%', '50%', '75%', 'End'], datasets: projects.map(p => ({ label: p.name.split(' ')[0], data: [0, 25, 50, 75, 100].map(q => Math.round(q * p.completion / 100)), borderColor: p.id === 'MPM' ? '#6366f1' : p.id === 'CAI' ? '#06b6d4' : p.id === 'ERP' ? '#ef4444' : p.id === 'SEC' ? '#10b981' : p.id === 'MKT' ? '#f59e0b' : p.id === 'SUP' ? '#ec4899' : '#f97316', tension: .3, fill: false })) }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } }, scales: { x: { grid: { color: gc } }, y: { grid: { color: gc }, ticks: { callback: v => v + '%' }, max: 100 } } } });
+            }
+
+            const rdc = document.getElementById('chartResourceDetail');
+            if (rdc) {
+                STATE.chartInstances.resourceDetail = new Chart(rdc, {
+                    type: 'bar', data: {
+                        labels: DATA.teams.map(t => t.name), datasets: [
+                            { label: 'Allocated', data: DATA.teams.map(t => t.allocated), backgroundColor: 'rgba(99,102,241,.7)', borderRadius: 4 },
+                            { label: 'Available', data: DATA.teams.map(t => t.available), backgroundColor: 'rgba(16,185,129,.4)', borderRadius: 4 }
+                        ]
+                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: gc }, title: { display: true, text: 'Hours' } } } }
+                });
+            }
+
+            const rkdc = document.getElementById('chartRisksDetail');
+            if (rkdc) {
+                const sevCount = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+                DATA.risks.forEach(r => sevCount[r.severity] = (sevCount[r.severity] || 0) + 1);
+                STATE.chartInstances.risksDetail = new Chart(rkdc, { type: 'doughnut', data: { labels: Object.keys(sevCount), datasets: [{ data: Object.values(sevCount), backgroundColor: ['rgba(239,68,68,.8)', 'rgba(249,115,22,.7)', 'rgba(245,158,11,.7)', 'rgba(16,185,129,.7)'], borderWidth: 2, borderColor: t === 'dark' ? 'rgba(17,24,39,.8)' : 'rgba(255,255,255,.8)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 10 } } } } });
+            }
+
+            const ac = document.getElementById('chartApi');
+            if (ac) {
+                STATE.chartInstances.api = new Chart(ac, {
+                    type: 'bar', data: {
+                        labels: DATA.apiUsage.byService.map(s => s.name), datasets: [
+                            { label: 'API Calls', data: DATA.apiUsage.byService.map(s => s.calls), backgroundColor: 'rgba(99,102,241,.7)', borderRadius: 4, yAxisID: 'y' },
+                            { label: 'Cost ($)', data: DATA.apiUsage.byService.map(s => s.cost), backgroundColor: 'rgba(245,158,11,.7)', borderRadius: 4, yAxisID: 'y1' }
+                        ]
+                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } }, scales: { x: { grid: { display: false } }, y: { type: 'linear', position: 'left', grid: { color: gc }, ticks: { callback: v => (v / 1000).toFixed(0) + 'K' } }, y1: { type: 'linear', position: 'right', grid: { display: false }, ticks: { callback: v => '$' + v } } } }
+                });
+            }
+        }
+
+        function sortData(data) {
+            if (!STATE.sortCol) return data;
+            return [...data].sort((a, b) => {
+                let va = a[STATE.sortCol], vb = b[STATE.sortCol];
+                if (typeof va === 'string') va = va.toLowerCase();
+                if (typeof vb === 'string') vb = vb.toLowerCase();
+                if (va < vb) return STATE.sortAsc ? -1 : 1;
+                if (va > vb) return STATE.sortAsc ? 1 : -1;
+                return 0;
+            });
+        }
+
+        function attachInteractions() {
+            document.querySelectorAll('.expandable').forEach(row => {
+                row.addEventListener('click', () => {
+                    const id = row.getAttribute('data-expand');
+                    const expanded = row.nextElementSibling;
+                    if (expanded && expanded.classList.contains('expanded-row')) {
+                        if (STATE.expandedRows.has(id)) { STATE.expandedRows.delete(id); expanded.classList.remove('show') }
+                        else { STATE.expandedRows.add(id); expanded.classList.add('show') }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                item.addEventListener('click', () => { item.classList.toggle('expanded') });
+            });
+
+            document.querySelectorAll('table.sortable th[data-col]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const col = th.getAttribute('data-col');
+                    if (STATE.sortCol === col) STATE.sortAsc = !STATE.sortAsc;
+                    else { STATE.sortCol = col; STATE.sortAsc = true }
+                    renderView();
+                });
+            });
+
+            const notes = document.getElementById('notesArea');
+            if (notes) {
+                let timer;
+                notes.addEventListener('input', () => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => {
+                        localStorage.setItem('pmDashboardNotes', notes.value);
+                        const saved = document.getElementById('notesSaved');
+                        if (saved) { saved.style.display = 'block'; setTimeout(() => { saved.style.display = 'none' }, 2000) }
+                    }, 500);
+                });
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                applyTheme(STATE.theme === 'dark' ? 'light' : 'dark');
+                renderView();
+            });
+
+            document.getElementById('mainNav').addEventListener('click', e => {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelectorAll('#mainNav button').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    STATE.currentView = e.target.getAttribute('data-view');
+                    renderView();
+                }
+            });
+
+            document.getElementById('viewModeToggle').addEventListener('click', e => {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelectorAll('#viewModeToggle button').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    STATE.viewMode = e.target.getAttribute('data-mode');
+                    savePrefs();
+                    renderView();
+                }
+            });
+
+            document.getElementById('periodToggle').addEventListener('click', e => {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelectorAll('#periodToggle button').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    STATE.period = e.target.getAttribute('data-period');
+                    savePrefs();
+                    renderView();
+                }
+            });
+
+            document.getElementById('methodToggle').addEventListener('click', e => {
+                if (e.target.tagName === 'BUTTON') {
+                    document.querySelectorAll('#methodToggle button').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    STATE.method = e.target.getAttribute('data-method');
+                    savePrefs();
+                    renderView();
+                }
+            });
+
+            ['filterProject', 'filterTeam', 'filterDept', 'filterOwner', 'filterStatus', 'filterQuarter', 'filterFY'].forEach(id => {
+                document.getElementById(id).addEventListener('change', e => {
+                    const key = id.replace('filter', '').toLowerCase();
+                    STATE.filters[key] = e.target.value;
+                    renderView();
+                });
+            });
+
+            document.getElementById('globalSearch').addEventListener('input', e => {
+                STATE.filters.search = e.target.value;
+                clearTimeout(STATE.searchTimer);
+                STATE.searchTimer = setTimeout(() => renderView(), 300);
+            });
+
+            restoreToggleStates();
+        }
+
+        function restoreToggleStates() {
+            const vm = document.querySelector(`#viewModeToggle button[data-mode="${STATE.viewMode}"]`);
+            if (vm) { document.querySelectorAll('#viewModeToggle button').forEach(b => b.classList.remove('active')); vm.classList.add('active') }
+            const pd = document.querySelector(`#periodToggle button[data-period="${STATE.period}"]`);
+            if (pd) { document.querySelectorAll('#periodToggle button').forEach(b => b.classList.remove('active')); pd.classList.add('active') }
+            const mt = document.querySelector(`#methodToggle button[data-method="${STATE.method}"]`);
+            if (mt) { document.querySelectorAll('#methodToggle button').forEach(b => b.classList.remove('active')); mt.classList.add('active') }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1040 @@
+<!-- File: openai-gpt-web-pm-dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI GPT Project Management Command Center</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg: #07111f;
+            --bg2: #0c1627;
+            --card: rgba(255, 255, 255, .06);
+            --card2: rgba(255, 255, 255, .08);
+            --text: #f4f7fb;
+            --muted: #9bb0c7;
+            --border: rgba(255, 255, 255, .12);
+
+            --primary: #4f8cff;
+            --secondary: #00e5ff;
+            --success: #00d084;
+            --warning: #ffb547;
+            --danger: #ff5d73;
+            --purple: #9b6dff;
+
+            --shadow: 0 10px 40px rgba(0, 0, 0, .35);
+            --glass: blur(16px);
+        }
+
+        .light {
+            --bg: #eef3fa;
+            --bg2: #ffffff;
+            --card: rgba(255, 255, 255, .8);
+            --card2: rgba(255, 255, 255, .95);
+            --text: #132235;
+            --muted: #627387;
+            --border: rgba(20, 40, 80, .12);
+            --shadow: 0 10px 35px rgba(38, 70, 120, .12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            font-family: Inter, sans-serif;
+            background: linear-gradient(135deg, var(--bg), var(--bg2));
+            color: var(--text);
+            min-height: 100vh;
+            transition: .35s ease;
+        }
+
+        body {
+            padding: 22px;
+        }
+
+        .app {
+            max-width: 1800px;
+            margin: auto;
+        }
+
+        .topbar {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 0 25px rgba(0, 229, 255, .45);
+        }
+
+        .title h1 {
+            font-size: 24px;
+        }
+
+        .title p {
+            color: var(--muted);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button,
+        select,
+        input,
+        textarea {
+            border: none;
+            outline: none;
+            color: var(--text);
+            background: var(--card);
+            backdrop-filter: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            transition: .25s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .card {
+            background: var(--card);
+            backdrop-filter: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            transition: .35s;
+        }
+
+        .card:hover {
+            border-color: rgba(79, 140, 255, .45);
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .hero {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            margin-bottom: 20px;
+        }
+
+        .metric {
+            padding: 18px;
+        }
+
+        .metric h3 {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .metric .value {
+            font-size: 30px;
+            font-weight: 800;
+        }
+
+        .metric .trend {
+            margin-top: 8px;
+            color: var(--success);
+            font-size: 12px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            cursor: pointer;
+        }
+
+        .active-tab {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .compare {
+            display: grid;
+            grid-template-columns: 1fr 120px 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .project-head {
+            padding: 20px;
+        }
+
+        .vs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            font-weight: 800;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            background: var(--card2);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .stat label {
+            color: var(--muted);
+            font-size: 11px;
+            display: block;
+        }
+
+        .stat b {
+            font-size: 18px;
+        }
+
+        .projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 18px;
+        }
+
+        .project-card {
+            padding: 20px;
+        }
+
+        .progress {
+            height: 10px;
+            background: rgba(255, 255, 255, .08);
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        .chart-card {
+            padding: 18px;
+            height: 380px;
+        }
+
+        .chart-card canvas {
+            width: 100% !important;
+            height: 300px !important;
+        }
+
+        .timeline-item {
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .timeline-details {
+            display: none;
+            margin-top: 12px;
+            color: var(--muted);
+        }
+
+        .timeline-item.open .timeline-details {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        th {
+            cursor: pointer;
+            background: rgba(255, 255, 255, .03);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, .04);
+        }
+
+        .expand {
+            cursor: pointer;
+        }
+
+        .detail-row {
+            display: none;
+        }
+
+        .detail-row td {
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .badge {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+        }
+
+        .green {
+            background: rgba(0, 208, 132, .15);
+            color: var(--success);
+        }
+
+        .red {
+            background: rgba(255, 93, 115, .15);
+            color: var(--danger);
+        }
+
+        .orange {
+            background: rgba(255, 181, 71, .15);
+            color: var(--warning);
+        }
+
+        .blue {
+            background: rgba(79, 140, 255, .15);
+            color: var(--primary);
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .workload {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .resource-card {
+            padding: 18px;
+        }
+
+        .integration {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .winner {
+            padding: 20px;
+        }
+
+        .winner ul {
+            padding-left: 18px;
+        }
+
+        .notes {
+            width: 100%;
+            min-height: 180px;
+            resize: vertical;
+        }
+
+        .glow {
+            box-shadow: 0 0 18px rgba(0, 229, 255, .25);
+        }
+
+        @media(max-width:1000px) {
+            .compare {
+                grid-template-columns: 1fr;
+            }
+
+            .vs {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+
+        <div class="topbar">
+
+            <div class="logo">
+                <div class="logo-badge"></div>
+                <div class="title">
+                    <h1>Project Management Command Center</h1>
+                    <p>Enterprise Portfolio Intelligence Platform</p>
+                </div>
+            </div>
+
+            <div class="controls">
+
+                <select id="viewMode">
+                    <option>Portfolio</option>
+                    <option>Program</option>
+                    <option>Project</option>
+                </select>
+
+                <select id="deliveryMode">
+                    <option>Agile</option>
+                    <option>Waterfall</option>
+                </select>
+
+                <select id="periodMode">
+                    <option>Quarterly</option>
+                    <option>Monthly</option>
+                    <option>Weekly</option>
+                </select>
+
+                <button id="themeToggle">🌙 Theme</button>
+
+            </div>
+        </div>
+
+        <div class="grid hero">
+
+            <div class="card metric">
+                <h3>Active Projects</h3>
+                <div class="value">18</div>
+                <div class="trend">▲ 6% QoQ</div>
+            </div>
+
+            <div class="card metric">
+                <h3>Completed Projects</h3>
+                <div class="value">42</div>
+                <div class="trend">▲ 12% YoY</div>
+            </div>
+
+            <div class="card metric">
+                <h3>Portfolio Health</h3>
+                <div class="value">91%</div>
+                <div class="trend">Excellent</div>
+            </div>
+
+            <div class="card metric">
+                <h3>Budget Utilization</h3>
+                <div class="value">74%</div>
+                <div class="trend">Within Plan</div>
+            </div>
+
+            <div class="card metric">
+                <h3>On-Time Delivery</h3>
+                <div class="value">88%</div>
+                <div class="trend">▲ 4%</div>
+            </div>
+
+            <div class="card metric">
+                <h3>Total Team Members</h3>
+                <div class="value">368</div>
+                <div class="trend">Global Workforce</div>
+            </div>
+
+            <div class="card metric">
+                <h3>Projected Annual Spend</h3>
+                <div class="value">$32.4M</div>
+                <div class="trend">FY2026</div>
+            </div>
+
+        </div>
+
+        <div class="tabs">
+            <button class="tab active-tab" data-tab="summary">Summary</button>
+            <button class="tab" data-tab="projects">Projects</button>
+            <button class="tab" data-tab="timeline">Timeline</button>
+            <button class="tab" data-tab="resources">Resources</button>
+            <button class="tab" data-tab="risks">Risks</button>
+            <button class="tab" data-tab="operations">Operations</button>
+        </div>
+
+        <div id="summary" class="section active">
+
+            <div class="compare">
+
+                <div class="card project-head">
+                    <h2>Mobile Platform Modernization</h2>
+                    <div class="stats">
+                        <div class="stat"><label>Schedule Progress</label><b>78%</b></div>
+                        <div class="stat"><label>Budget Variance</label><b>-2%</b></div>
+                        <div class="stat"><label>Task Completion</label><b>81%</b></div>
+                        <div class="stat"><label>Risk Score</label><b>29</b></div>
+                        <div class="stat"><label>Resource Utilization</label><b>87%</b></div>
+                        <div class="stat"><label>Stakeholder Score</label><b>94</b></div>
+                    </div>
+                </div>
+
+                <div class="vs">VS</div>
+
+                <div class="card project-head">
+                    <h2>Customer Analytics Initiative</h2>
+                    <div class="stats">
+                        <div class="stat"><label>Schedule Progress</label><b>72%</b></div>
+                        <div class="stat"><label>Budget Variance</label><b>+6%</b></div>
+                        <div class="stat"><label>Task Completion</label><b>75%</b></div>
+                        <div class="stat"><label>Risk Score</label><b>42</b></div>
+                        <div class="stat"><label>Resource Utilization</label><b>91%</b></div>
+                        <div class="stat"><label>Stakeholder Score</label><b>89</b></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="charts">
+
+                <div class="card chart-card"><canvas id="completionChart"></canvas></div>
+                <div class="card chart-card"><canvas id="budgetChart"></canvas></div>
+                <div class="card chart-card"><canvas id="velocityChart"></canvas></div>
+                <div class="card chart-card"><canvas id="resourceChart"></canvas></div>
+                <div class="card chart-card"><canvas id="riskChart"></canvas></div>
+                <div class="card chart-card"><canvas id="milestoneChart"></canvas></div>
+                <div class="card chart-card"><canvas id="timelinePerfChart"></canvas></div>
+
+            </div>
+
+            <div class="card winner" style="margin-top:20px">
+                <h2>Winner Breakdown</h2>
+                <br>
+                <ul>
+                    <li>Schedule Adherence: Mobile Platform Modernization</li>
+                    <li>Budget Control: Mobile Platform Modernization</li>
+                    <li>Productivity: Mobile Platform Modernization</li>
+                    <li>Delivery Quality: Mobile Platform Modernization</li>
+                    <li>Stakeholder Satisfaction: Mobile Platform Modernization</li>
+                    <li>Analytics Initiative leads in resource utilization efficiency.</li>
+                    <li><strong>Overall Winner: Mobile Platform Modernization</strong></li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div id="projects" class="section">
+
+            <div class="projects">
+
+                <div class="card project-card">
+                    <h2>Mobile Platform Modernization</h2>
+                    <div class="progress"><span style="width:81%"></span></div>
+                    <p>Completion: 81%</p>
+                    <br>
+                    <p>Budget: $4.2M</p>
+                    <p>Actual Spend: $3.4M</p>
+                    <p>Remaining: $0.8M</p>
+                    <p>Team Size: 46</p>
+                    <p>Milestones: 12</p>
+                    <p>Open Risks: 5</p>
+                    <p>Blocked Tasks: 4</p>
+                    <p>Projected Completion: 2026-10-18</p>
+                    <p><strong>Health Score: 93</strong></p>
+                </div>
+
+                <div class="card project-card">
+                    <h2>Customer Analytics Initiative</h2>
+                    <div class="progress"><span style="width:75%"></span></div>
+                    <p>Completion: 75%</p>
+                    <br>
+                    <p>Budget: $3.1M</p>
+                    <p>Actual Spend: $2.8M</p>
+                    <p>Remaining: $0.3M</p>
+                    <p>Team Size: 38</p>
+                    <p>Milestones: 10</p>
+                    <p>Open Risks: 8</p>
+                    <p>Blocked Tasks: 6</p>
+                    <p>Projected Completion: 2026-11-30</p>
+                    <p><strong>Health Score: 85</strong></p>
+                </div>
+
+                <div class="card project-card">
+                    <h2>ERP Transformation</h2>
+                    <div class="progress"><span style="width:67%"></span></div>
+                    <p>Completion: 67%</p>
+                    <p>Budget: $7.4M</p>
+                    <p>Actual Spend: $5.6M</p>
+                    <p>Remaining: $1.8M</p>
+                    <p>Team Size: 71</p>
+                    <p>Milestones: 16</p>
+                    <p>Open Risks: 12</p>
+                    <p>Blocked Tasks: 8</p>
+                    <p>Health Score: 82</p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="timeline" class="section">
+
+            <div class="card" style="padding:20px">
+
+                <h2>Project Timeline</h2>
+                <br>
+
+                <div class="timeline-item card">
+                    <h3>Discovery & Planning - Jan 2026</h3>
+                    <div class="timeline-details">
+                        Requirements workshops, stakeholder mapping, architecture assessment.
+                    </div>
+                </div>
+
+                <div class="timeline-item card">
+                    <h3>MVP Delivery - Jun 2026</h3>
+                    <div class="timeline-details">
+                        Mobile APIs, authentication, observability rollout, sprint reviews.
+                    </div>
+                </div>
+
+                <div class="timeline-item card">
+                    <h3>Enterprise Rollout - Oct 2026</h3>
+                    <div class="timeline-details">
+                        Migration execution, training, governance signoff.
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="resources" class="section">
+
+            <div class="workload">
+
+                <div class="card resource-card">
+                    <h3>Engineering</h3>
+                    <p>Utilization: 89%</p>
+                    <p>Capacity: 180</p>
+                    <p>Available: 20</p>
+                    <p>Overtime Risk: Medium</p>
+                </div>
+
+                <div class="card resource-card">
+                    <h3>Data & Analytics</h3>
+                    <p>Utilization: 94%</p>
+                    <p>Capacity: 64</p>
+                    <p>Available: 4</p>
+                    <p>Overtime Risk: High</p>
+                </div>
+
+                <div class="card resource-card">
+                    <h3>PMO</h3>
+                    <p>Utilization: 77%</p>
+                    <p>Capacity: 28</p>
+                    <p>Available: 6</p>
+                    <p>Overtime Risk: Low</p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="risks" class="section">
+
+            <div class="card" style="padding:20px">
+
+                <h2>Risk Register</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Risk</th>
+                            <th>Severity</th>
+                            <th>Probability</th>
+                            <th>Impact</th>
+                            <th>Mitigation</th>
+                            <th>Owner</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>Vendor API Delay</td>
+                            <td><span class="badge red">High</span></td>
+                            <td>70%</td>
+                            <td>9</td>
+                            <td>In Progress</td>
+                            <td>Sarah Kim</td>
+                        </tr>
+
+                        <tr>
+                            <td>Resource Constraints</td>
+                            <td><span class="badge orange">Medium</span></td>
+                            <td>55%</td>
+                            <td>6</td>
+                            <td>Planned</td>
+                            <td>David Stone</td>
+                        </tr>
+
+                        <tr>
+                            <td>Compliance Changes</td>
+                            <td><span class="badge red">Critical</span></td>
+                            <td>40%</td>
+                            <td>10</td>
+                            <td>Active</td>
+                            <td>Legal Team</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div id="operations" class="section">
+
+            <div class="filters">
+                <input placeholder="Search Projects..." id="searchInput">
+                <select>
+                    <option>FY2026</option>
+                </select>
+                <select>
+                    <option>Q3</option>
+                </select>
+                <select>
+                    <option>All Teams</option>
+                </select>
+            </div>
+
+            <div class="card" style="padding:20px;margin-bottom:18px">
+
+                <h2>Integrations Status</h2>
+                <br>
+
+                <div class="integration"><span>Jira</span><span>Healthy | 42ms | Synced 2m ago</span></div>
+                <div class="integration"><span>Azure DevOps</span><span>Healthy | 53ms | Synced 1m ago</span></div>
+                <div class="integration"><span>GitHub</span><span>Healthy | 31ms | Synced 30s ago</span></div>
+                <div class="integration"><span>Slack</span><span>Healthy | 26ms | Synced 10s ago</span></div>
+                <div class="integration"><span>Microsoft Teams</span><span>Healthy | 35ms | Synced 1m ago</span></div>
+
+            </div>
+
+            <div class="card" style="padding:20px;margin-bottom:18px">
+                <h2>API Usage & Automation</h2>
+                <br>
+                <p>Workflow Executions: 124,583</p>
+                <p>Webhook Events: 2.4M</p>
+                <p>Automation Success Rate: 99.2%</p>
+                <p>Estimated API Cost: $18,420</p>
+                <p>Total Savings: $312,000</p>
+            </div>
+
+            <div class="card" style="padding:20px">
+
+                <h2>Project Delivery Records</h2>
+
+                <table id="projectTable">
+
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Project</th>
+                            <th onclick="sortTable(1)">Status</th>
+                            <th onclick="sortTable(2)">Completion %</th>
+                            <th onclick="sortTable(3)">Health</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr class="expand">
+                            <td>Mobile Platform Modernization</td>
+                            <td>Active</td>
+                            <td>81</td>
+                            <td>93</td>
+                        </tr>
+
+                        <tr class="detail-row">
+                            <td colspan="4">
+                                Sprint 18 • Blockers: 4 • Dependencies: IAM Upgrade • Owner: Sarah Kim
+                            </td>
+                        </tr>
+
+                        <tr class="expand">
+                            <td>Customer Analytics Initiative</td>
+                            <td>Active</td>
+                            <td>75</td>
+                            <td>85</td>
+                        </tr>
+
+                        <tr class="detail-row">
+                            <td colspan="4">
+                                Release 4.2 • Blockers: 6 • Dependencies: Data Lake • Owner: Michael Lee
+                            </td>
+                        </tr>
+
+                        <tr class="expand">
+                            <td>ERP Transformation</td>
+                            <td>Active</td>
+                            <td>67</td>
+                            <td>82</td>
+                        </tr>
+
+                        <tr class="detail-row">
+                            <td colspan="4">
+                                Milestone 9 • Blockers: 8 • Dependencies: Vendor Migration
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="card" style="padding:20px;margin-top:20px">
+                <h2>Executive Commentary</h2>
+                <br>
+                <textarea class="notes"
+                    placeholder="Add executive observations, delivery updates, concerns, lessons learned and future outlook..."></textarea>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        const body = document.body;
+
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "light") body.classList.add("light");
+
+        document.getElementById("themeToggle").onclick = () => {
+            body.classList.toggle("light");
+            localStorage.setItem("theme",
+                body.classList.contains("light") ? "light" : "dark");
+            updateCharts();
+        };
+
+        const tabs = document.querySelectorAll(".tab");
+        tabs.forEach(t => {
+            t.onclick = () => {
+                tabs.forEach(x => x.classList.remove("active-tab"));
+                t.classList.add("active-tab");
+
+                document.querySelectorAll(".section")
+                    .forEach(s => s.classList.remove("active"));
+
+                document.getElementById(t.dataset.tab)
+                    .classList.add("active");
+            };
+        });
+
+        document.querySelectorAll(".timeline-item").forEach(x => {
+            x.onclick = () => x.classList.toggle("open");
+        });
+
+        document.querySelectorAll(".expand").forEach(row => {
+            row.onclick = () => {
+                const next = row.nextElementSibling;
+                next.style.display =
+                    next.style.display === "table-row" ?
+                        "none" : "table-row";
+            };
+        });
+
+        function sortTable(col) {
+            const table = document.getElementById("projectTable");
+            let rows = [...table.rows].slice(1);
+
+            rows.sort((a, b) => {
+                if (a.classList.contains("detail-row")) return 1;
+                if (b.classList.contains("detail-row")) return -1;
+                return a.cells[col].innerText.localeCompare(
+                    b.cells[col].innerText, undefined, { numeric: true }
+                );
+            });
+
+            rows.forEach(r => table.appendChild(r));
+        }
+
+        document.getElementById("searchInput").addEventListener("input", e => {
+            let v = e.target.value.toLowerCase();
+            document.querySelectorAll("#projectTable tbody .expand")
+                .forEach(r => {
+                    r.style.display = r.innerText.toLowerCase().includes(v) ?
+                        "table-row" : "none";
+                });
+        });
+
+        ["viewMode", "deliveryMode", "periodMode"].forEach(id => {
+            const el = document.getElementById(id);
+
+            const saved = localStorage.getItem(id);
+            if (saved) el.value = saved;
+
+            el.addEventListener("change", () => {
+                localStorage.setItem(id, el.value);
+                updateCharts();
+            });
+        });
+
+        let charts = [];
+
+        function chartColor() {
+            return body.classList.contains("light")
+                ? "#2563eb"
+                : "#00e5ff";
+        }
+
+        function destroyCharts() {
+            charts.forEach(c => c.destroy());
+            charts = [];
+        }
+
+        function updateCharts() {
+
+            destroyCharts();
+
+            Chart.defaults.color = getComputedStyle(document.body)
+                .getPropertyValue('--text');
+
+            const c = chartColor();
+
+            charts.push(new Chart(
+                document.getElementById("completionChart"),
+                {
+                    type: "line",
+                    data: {
+                        labels: ["Q1", "Q2", "Q3", "Q4"],
+                        datasets: [{
+                            label: "Completion Trend",
+                            data: [22, 46, 71, 88],
+                            borderColor: c,
+                            tension: .4
+                        }]
+                    }
+                }));
+
+            charts.push(new Chart(
+                budgetChart, {
+                type: "bar",
+                data: {
+                    labels: ["Mobile", "Analytics", "ERP"],
+                    datasets: [
+                        { label: "Budget", data: [4.2, 3.1, 7.4] },
+                        { label: "Actual", data: [3.4, 2.8, 5.6] }
+                    ]
+                }
+            }));
+
+            charts.push(new Chart(
+                velocityChart, {
+                type: "line",
+                data: {
+                    labels: ["Sprint 1", "2", "3", "4", "5", "6"],
+                    datasets: [{
+                        label: "Velocity",
+                        data: [38, 42, 46, 44, 49, 55],
+                        borderColor: c
+                    }]
+                }
+            }));
+
+            charts.push(new Chart(
+                resourceChart, {
+                type: "doughnut",
+                data: {
+                    labels: ["Engineering", "Data", "PMO", "QA"],
+                    datasets: [{
+                        data: [45, 20, 15, 20]
+                    }]
+                }
+            }));
+
+            charts.push(new Chart(
+                riskChart, {
+                type: "polarArea",
+                data: {
+                    labels: ["Critical", "High", "Medium", "Low"],
+                    datasets: [{
+                        data: [3, 7, 11, 5]
+                    }]
+                }
+            }));
+
+            charts.push(new Chart(
+                milestoneChart, {
+                type: "bar",
+                data: {
+                    labels: ["Planned", "Completed"],
+                    datasets: [{
+                        data: [48, 36]
+                    }]
+                }
+            }));
+
+            charts.push(new Chart(
+                timelinePerfChart, {
+                type: "radar",
+                data: {
+                    labels: ["Schedule", "Quality", "Cost", "Scope", "Risk"],
+                    datasets: [
+                        {
+                            label: "Planned",
+                            data: [90, 90, 90, 90, 90]
+                        },
+                        {
+                            label: "Actual",
+                            data: [88, 92, 84, 89, 80]
+                        }
+                    ]
+                }
+            }));
+
+        }
+
+        updateCharts();
+
+    </script>
+
+</body>
+
+</html>

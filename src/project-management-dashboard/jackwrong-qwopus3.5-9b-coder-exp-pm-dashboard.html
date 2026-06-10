@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Command Center | Project Management OS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+
+            /* Light Theme Defaults */
+            --bg-body: #f3f4f6;
+            --bg-panel: rgba(255, 255, 255, 0.7);
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --glass-blur: blur(12px);
+            --transition-speed: 0.3s;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-panel: rgba(30, 41, 59, 0.6);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+            --glass-blur: blur(16px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+            display: flex;
+            height: 100vh;
+            transition: background-color var(--transition-speed);
+        }
+
+        /* --- Layout & Grid --- */
+        .sidebar {
+            width: 80px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: var(--glass-blur);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 2rem;
+            z-index: 50;
+        }
+
+        .nav-item {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            position: relative;
+            display: grid;
+            grid-template-rows: 80px 1fr;
+            /* Header + Scrollable Content */
+            gap: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-area h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* --- Components --- */
+        .glass-panel {
+            background: var(--bg-panel);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-panel);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .kpi-info h3 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.2rem;
+        }
+
+        .kpi-info span {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        /* --- Head to Head Panel --- */
+        .h2h-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .h2h-card {
+            padding: 1.5rem;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Project A */
+        .project-a {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Project B */
+        .project-b {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .h2h-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-weight: 600;
+        }
+
+        /* --- Charts (SVG) --- */
+        .chart-wrapper {
+            height: 200px;
+            position: relative;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        /* --- Project Cards Grid --- */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .project-card {
+            cursor: pointer;
+            transition: transform 0.2s;
+            border-bottom: 4px solid transparent;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            border-bottom-color: var(--primary);
+        }
+
+        .p-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .p-title {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .p-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge.status-risk {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            transition: width 1s ease-in-out;
+        }
+
+        /* --- Timeline & History --- */
+        .timeline-item {
+            padding: 1rem 0;
+            border-left: 2px solid var(--border-color);
+            position: relative;
+            margin-left: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 1.5rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+        }
+
+        .timeline-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+
+        /* --- Table --- */
+        .data-table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: var(--primary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* --- Integrations & API Panel --- */
+        .integration-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: auto;
+        }
+
+        .int-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .int-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .int-status.offline {
+            background: var(--danger);
+            box-shadow: none;
+        }
+
+        /* --- Notes Section --- */
+        .notes-container {
+            margin-top: auto;
+            padding-bottom: 2rem;
+        }
+
+        .note-card {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1rem;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+    </style>
+</head>
+
+<body data-theme="dark">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div style="margin-bottom: 2rem; color: var(--text-muted); font-size: 1.5rem;">NEXUS</div>
+        <div class="nav-item active" onclick="switchView('summary')" title="Dashboard"><i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="nav-item" onclick="switchView('projects')" title="Projects"><i class="fas fa-project-diagram"></i>
+        </div>
+        <div class="nav-item" onclick="switchView('timeline')" title="Timeline"><i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="nav-item" onclick="switchView('resources')" title="Resources"><i class="fas fa-users"></i></div>
+        <div class="nav-item" onclick="switchView('risks')" title="Risks"><i class="fas fa-shield-alt"></i></div>
+        <div class="nav-item" onclick="switchView('operations')" title="Operations"><i class="fas fa-cogs"></i></div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <header class="header fade-in">
+            <div class="logo-area">
+                <h1 id="page-title">Command Center</h1>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Live Portfolio Monitoring &
+                    Analytics</p>
+            </div>
+
+            <div class="controls fade-in">
+                <!-- View Toggles -->
+                <select id="view-filter"
+                    style="background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 8px;">
+                    <option value="all">All Projects</option>
+                    <option value="active">Active Only</option>
+                    <option value="at-risk">At Risk</option>
+                </select>
+
+                <!-- Reporting Mode -->
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="glass-panel" style="padding: 0.4rem 1rem; border-radius: 8px;"
+                        onclick="toggleMode('Agile')">Agile</button>
+                    <button class="glass-panel" style="padding: 0.4rem 1rem; border-radius: 8px;"
+                        onclick="toggleMode('Waterfall')">Waterfall</button>
+                </div>
+
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="glass-panel" style="padding: 0.4rem 1rem; border-radius: 8px;">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- VIEW 1: SUMMARY -->
+        <section id="view-summary" class="fade-in">
+
+            <!-- KPI Grid -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.8);"><i
+                            class="fas fa-folder-open"></i></div>
+                    <div class="kpi-info">
+                        <h3>Total Active Projects</h3>
+                        <span id="kpi-active">0</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.8);"><i
+                            class="fas fa-check-circle"></i></div>
+                    <div class="kpi-info">
+                        <h3>On-Time Delivery</h3>
+                        <span id="kpi-ontime">0%</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.8);"><i class="fas fa-coins"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>Budget Utilization</h3>
+                        <span id="kpi-budget">0%</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: rgba(239, 68, 68, 0.8);"><i
+                            class="fas fa-exclamation-triangle"></i></div>
+                    <div class="kpi-info">
+                        <h3>Critical Risks</h3>
+                        <span id="kpi-risks">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Head to Head Panel -->
+            <div class="glass-panel h2h-container">
+                <div class="project-a fade-in" style="position: relative;">
+                    <div
+                        style="position:absolute; top:-10px; right:-10px; background:white; color:black; padding:5px 10px; border-radius:20px; font-size:0.7rem; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.3);">
+                        FLAGSHIP A</div>
+                    <h2 style="margin-bottom:1rem;">Mobile Platform Modernization</h2>
+
+                    <div class="h2h-stat"><span class="stat-label">Schedule Progress</span><span class="stat-value"
+                            id="h2h-schedule-a">84%</span></div>
+                    <div class="h2h-stat"><span class="stat-label">Budget Variance</span><span class="stat-value"
+                            style="color:var(--accent)">-5.2%</span></div>
+                    <div class="h2h-stat"><span class="stat-label">Team Velocity</span><span class="stat-value"
+                            id="h2h-velocity-a">42 pts/spin</span></div>
+                    <div class="h2h-stat"><span class="stat-label">Health Score</span><span class="stat-value"
+                            style="color:var(--accent)">92/100</span></div>
+
+                    <!-- Mini Chart -->
+                    <svg viewBox="0 0 100 40" preserveAspectRatio="none" width="100%" height="100%">
+                        <path d="M0,35 L10,28 L20,30 L30,20 L40,25 L50,18 L60,22 L70,15 L80,20 L90,10 L100,5"
+                            fill="none" stroke="#3b82f6" stroke-width="2" />
+                        <path d="M0,35 L10,28 L20,30 L30,20 L40,25 L50,18 L60,22 L70,15 L80,20 L90,10 L100,5"
+                            fill="none" stroke="#3b82f6" stroke-width="2" />
+                    </svg>
+                </div>
+
+                <div class="project-b fade-in" style="position: relative;">
+                    <div
+                        style="position:absolute; top:-10px; right:-10px; background:white; color:black; padding:5px 10px; border-radius:20px; font-size:0.7rem; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.3);">
+                        FLAGSHIP B</div>
+                    <h2 style="margin-bottom:1rem;">Customer Analytics Initiative</h2>
+
+                    <div class="h2h-stat"><span class="stat-label">Schedule Progress</span><span class="stat-value"
+                            id="h2h-schedule-b">78%</span></div>
+                    <div class="h2h-stat"><span class="stat-label">Budget Variance</span><span class="stat-value"
+                            style="color:var(--danger)">+12.4%</span></div>
+                    <div class="h2h-stat"><span class="stat-label">Team Velocity</span><span class="stat-value"
+                            id="h2h-velocity-b">38 pts/spin</span></div>
+                    <div class="h2h-stat"><span class="stat-label">Health Score</span><span class="stat-value"
+                            style="color:var(--warning)">76/100</span></div>
+
+                    <!-- Mini Chart -->
+                    <svg viewBox="0 0 100 40" preserveAspectRatio="none" width="100%" height="100%">
+                        <path d="M0,35 L10,25 L20,28 L30,22 L40,26 L50,19 L60,24 L70,18 L80,23 L90,16 L100,12"
+                            fill="none" stroke="#ef4444" stroke-width="2" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+
+                <!-- Chart 1: Budget vs Actual -->
+                <div class="glass-panel fade-in">
+                    <h3 style="margin-bottom:1rem;">Budget vs Actual Spend</h3>
+                    <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+                        <!-- Grid lines -->
+                        <line x1="0" y1="50" x2="400" y2="50" stroke="rgba(255,255,255,0.1)" />
+                        <line x1="0" y1="100" x2="400" y2="100" stroke="rgba(255,255,255,0.1)" />
+
+                        <!-- Budget Line -->
+                        <path d="M0,180 L100,160 L200,140 L300,120 L400,90" fill="none" stroke="#10b981"
+                            stroke-width="3" />
+
+                        <!-- Actual Line -->
+                        <path d="M0,175 L100,165 L200,145 L300,125 L400,95" fill="none" stroke="#f59e0b"
+                            stroke-width="3" />
+
+                        <!-- Area Fill -->
+                        <path d="M0,180 L100,160 L200,140 L300,120 L400,90 L400,200 L0,200 Z" fill="url(#grad1)"
+                            opacity="0.2" />
+                        <defs>
+                            <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+
+                <!-- Chart 2: Resource Allocation -->
+                <div class="glass-panel fade-in">
+                    <h3 style="margin-bottom:1rem;">Resource Allocation</h3>
+                    <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+                        <circle cx="50" cy="100" r="80" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6"
+                            stroke-width="2" />
+                        <path d="M50,100 L50,20 A80,80 0 0,1 130,180 Z" fill="#3b82f6" /> <!-- Engineering -->
+                        <path d="M50,100 L50,20 A80,80 0 0,0 130,20 Z" fill="#ef4444" /> <!-- Product -->
+
+                        <text x="60" y="70" fill="white" font-size="12">Engineering</text>
+                        <text x="150" y="190" fill="white" font-size="12">Product</text>
+                    </svg>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- VIEW 2: PROJECTS -->
+        <section id="view-projects" class="fade-in" style="display:none;">
+            <div class="glass-panel projects-grid">
+                <!-- Projects injected via JS -->
+            </div>
+        </section>
+
+        <!-- VIEW 3: TIMELINE -->
+        <section id="view-timeline" class="fade-in" style="display:none;">
+            <div class="glass-panel fade-in" style="min-height: 60vh;">
+                <h2 style="margin-bottom:1.5rem;">Project Timeline & Milestones</h2>
+                <div id="timeline-content">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: RESOURCES -->
+        <section id="view-resources" class="fade-in" style="display:none;">
+            <div class="glass-panel fade-in">
+                <h2 style="margin-bottom:1.5rem;">Team Workload & Capacity</h2>
+                <div id="resource-content">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 5: RISKS -->
+        <section id="view-risks" class="fade-in" style="display:none;">
+            <div class="glass-panel fade-in">
+                <h2 style="margin-bottom:1.5rem;">Risk Management Matrix</h2>
+                <div id="risk-content">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 6: OPERATIONS -->
+        <section id="view-operations" class="fade-in" style="display:none;">
+            <div class="glass-panel fade-in">
+                <h2 style="margin-bottom:1.5rem;">Integrations & Automation</h2>
+                <div id="ops-content">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Data Table (Always visible but scrollable) -->
+    <footer class="glass-panel" style="position: sticky; bottom: 0; z-index: 40; border-top: none;">
+        <div style="padding: 1rem 2rem; display:flex; justify-content:space-between; align-items:center;">
+            <h3>Delivery Records</h3>
+            <div class="controls">
+                <input type="text" placeholder="Search projects..." id="search-input"
+                    style="background:rgba(0,0,0,0.2); border:none; padding:8px 12px; border-radius:6px; color:white;">
+                <select id="sort-select"
+                    style="background:rgba(0,0,0,0.2); border:none; padding:8px 12px; border-radius:6px; color:white;">
+                    <option value="health">Sort by Health Score</option>
+                    <option value="budget">Sort by Budget</option>
+                    <option value="schedule">Sort by Schedule</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="data-table-container" style="padding: 0;">
+            <table id="main-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('project')">Project Name</th>
+                        <th onclick="sortTable('status')">Status</th>
+                        <th onclick="sortTable('health')">Health Score</th>
+                        <th onclick="sortTable('budget')">Budget Variance</th>
+                        <th onclick="sortTable('schedule')">Schedule %</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Rows injected via JS -->
+                </tbody>
+            </table>
+        </div>
+    </footer>
+
+    <script>
+        // --- Data Generation ---
+        const projects = [
+            { id: 1, name: "Mobile Platform Modernization", status: "Active", health: 92, budgetVar: -5.2, schedule: 84, teamSize: 45, milestoneCount: 12, openRisks: 2, blockedTasks: 0, completionDate: "Q3 2024" },
+            { id: 2, name: "Customer Analytics Initiative", status: "At Risk", health: 76, budgetVar: 12.4, schedule: 78, teamSize: 32, milestoneCount: 8, openRisks: 5, blockedTasks: 3, completionDate: "Q4 2024" },
+            { id: 3, name: "Legacy ERP Migration", status: "Active", health: 88, budgetVar: -1.5, schedule: 91, teamSize: 60, milestoneCount: 20, openRisks: 1, blockedTasks: 1, completionDate: "Q1 2024" },
+            { id: 4, name: "AI Customer Support Bot", status: "Active", health: 85, budgetVar: 3.2, schedule: 89, teamSize: 24, milestoneCount: 6, openRisks: 0, blockedTasks: 0, completionDate: "Q2 2024" },
+            { id: 5, name: "Global Supply Chain Dashboard", status: "Active", health: 94, budgetVar: -8.1, schedule: 96, teamSize: 38, milestoneCount: 15, openRisks: 0, blockedTasks: 0, completionDate: "Q2 2024" },
+            { id: 6, name: "Security Audit & Remediation", status: "Completed", health: 100, budgetVar: -2.0, schedule: 100, teamSize: 15, milestoneCount: 4, openRisks: 0, blockedTasks: 0, completionDate: "Q1 2024" },
+        ];
+
+        const milestones = [
+            { project: 1, name: "Phase 1: Core API Refactor", date: "Oct 15, 2023", status: "Completed" },
+            { project: 1, name: "Phase 2: UI/UX Redesign", date: "Jan 10, 2024", status: "In Progress" },
+            { project: 2, name: "Data Pipeline Integration", date: "Nov 05, 2023", status: "Completed" },
+            { project: 2, name: "ML Model Training", date: "Feb 01, 2024", status: "Blocked" },
+            { project: 3, name: "Database Schema Migration", date: "Sep 20, 2023", status: "Completed" },
+        ];
+
+        const risks = [
+            { id: 1, project: 2, severity: "High", probability: "Medium", impact: "Critical", description: "Dependency on third-party API rate limits increasing.", owner: "Sarah J." },
+            { id: 2, project: 2, severity: "Medium", probability: "High", impact: "Moderate", description: "Key developer leaving the team next month.", owner: "Mike T." },
+            { id: 3, project: 1, severity: "Low", probability: "Low", impact: "Minor", description: "Minor UI accessibility gaps found in audit.", owner: "Alex R." },
+        ];
+
+        const integrations = [
+            { name: "Jira Cloud", status: "Online", latency: "45ms", lastSync: "2m ago" },
+            { name: "Azure DevOps", status: "Online", latency: "120ms", lastSync: "5m ago" },
+            { name: "GitHub Enterprise", status: "Offline", latency: "N/A", lastSync: "4h ago" },
+            { name: "Slack API", status: "Online", latency: "80ms", lastSync: "1s ago" }
+        ];
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProjects();
+            renderTimeline();
+            renderResources();
+            renderRisks();
+            renderOperations();
+            updateKPIs();
+
+            // Theme Toggle Logic
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.body;
+            let isDark = true;
+
+            themeToggle.addEventListener('click', () => {
+                isDark = !isDark;
+                if (isDark) {
+                    body.setAttribute('data-theme', 'dark');
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                } else {
+                    body.setAttribute('data-theme', 'light');
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                }
+            });
+
+            // Search Logic
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('#table-body tr');
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+
+            // Sort Logic
+            document.getElementById('sort-select').addEventListener('change', (e) => {
+                sortTable(e.target.value);
+            });
+        });
+
+        function switchView(viewId) {
+            // Update Sidebar Active State
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Hide all sections
+            ['summary', 'projects', 'timeline', 'resources', 'risks', 'operations'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                if (el) el.style.display = 'none';
+            });
+
+            // Show selected section
+            const activeEl = document.getElementById(`view-${viewId}`);
+            if (activeEl) {
+                activeEl.style.display = 'block';
+
+                // Re-trigger fade animation
+                setTimeout(() => {
+                    activeEl.classList.remove('fade-in');
+                    void activeEl.offsetWidth; // trigger reflow
+                    activeEl.classList.add('fade-in');
+                }, 10);
+            }
+
+            // Update Header Title based on view
+            const titles = {
+                summary: "Command Center",
+                projects: "Active Projects Portfolio",
+                timeline: "Milestone Timeline",
+                resources: "Team Resource Allocation",
+                risks: "Risk Management Matrix",
+                operations: "System Integrations & API"
+            };
+            document.getElementById('page-title').innerText = titles[viewId] || "Command Center";
+        }
+
+        function toggleMode(mode) {
+            const btns = event.target;
+            if (btns.classList.contains('active')) return;
+
+            // Reset siblings
+            const parent = btns.parentElement;
+            Array.from(parent.children).forEach(c => c.classList.remove('active'));
+            btns.classList.add('active');
+
+            alert(`Reporting Mode switched to ${mode}. View adjusted.`);
+        }
+
+        function updateKPIs() {
+            document.getElementById('kpi-active').innerText = projects.filter(p => p.status !== 'Completed').length;
+
+            const onTimeCount = projects.filter(p => p.schedule >= 90).length;
+            document.getElementById('kpi-ontime').innerText = Math.round((onTimeCount / projects.length) * 100) + "%";
+
+            const budgetUsed = projects.reduce((acc, curr) => acc + (curr.budgetVar > 0 ? curr.budgetVar : 0), 0); // Simplified logic
+            document.getElementById('kpi-budget').innerText = Math.round(budgetUsed) + "%";
+
+            document.getElementById('kpi-risks').innerText = risks.length;
+        }
+
+        function renderProjects() {
+            const container = document.querySelector('.projects-grid');
+
+            projects.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'glass-panel project-card fade-in';
+
+                let statusBadgeClass = p.status === 'Active' ? 'status-active' : (p.status === 'At Risk' ? 'status-risk' : '');
+
+                card.innerHTML = `
+                    <div class="p-header">
+                        <span class="p-title">${p.name}</span>
+                        <span class="badge ${statusBadgeClass}">${p.status}</span>
+                    </div>
+                    <div class="p-meta">
+                        <span style="color:var(--text-muted); font-size:0.8rem;">Team: ${p.teamSize}</span>
+                        <span style="color:var(--primary); font-weight:bold; margin-left:auto;">Health: ${p.health}/100</span>
+                    </div>
+                    
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${p.schedule}%; background-color: var(--accent);"></div>
+                    </div>
+                    
+                    <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+                        <strong>Budget Variance:</strong> ${p.budgetVar > 0 ? '+' : ''}${p.budgetVar}%<br>
+                        <strong>Schedule Progress:</strong> ${p.schedule}%<br>
+                        <strong>Milestones:</strong> ${p.milestoneCount} completed / pending<br>
+                        <strong>Risks Open:</strong> ${p.openRisks} | <strong>Blocked Tasks:</strong> ${p.blockedTasks}
+                    </div>
+
+                    <!-- Expandable Details -->
+                    <details style="margin-top:1rem; border-top:1px solid var(--border-color); padding-top:0.5rem;">
+                        <summary style="cursor:pointer; color:var(--primary); font-size:0.85rem; text-transform:uppercase; letter-spacing:1px;">View Details</summary>
+                        <div style="padding:0.5rem 0; font-size:0.85rem; color:var(--text-muted);">
+                            <strong>Projected Completion:</strong> ${p.completionDate}<br>
+                            <strong>Owner:</strong> Project Lead<br>
+                            <strong>Last Update:</strong> Just now
+                        </div>
+                    </details>
+                `;
+                container.appendChild(card);
+            });
+
+            // Populate Table
+            const tbody = document.getElementById('table-body');
+            projects.forEach(p => {
+                const tr = document.createElement('tr');
+                let statusText = p.status === 'Active' ? '<span style="color:var(--accent)">● Active</span>' : (p.status === 'At Risk' ? '<span style="color:var(--danger)">● At Risk</span>' : '<span style="color:gray">● Done</span>');
+
+                tr.innerHTML = `
+                    <td>${p.name}</td>
+                    <td>${statusText}</td>
+                    <td><span style="font-weight:bold; color:${p.health > 80 ? 'var(--accent)' : 'var(--danger)'}">${p.health}</span></td>
+                    <td style="color: ${p.budgetVar > 0 ? 'var(--danger)' : 'var(--accent)"}>${p.budgetVar > 0 ? ' + ' : ''}${p.budgetVar}%</td>
+                    <td> ${ p.schedule }%</td >
+                        `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline-content');
+            milestones.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                let statusColor = m.status === 'Completed' ? '#10b981' : (m.status === 'Blocked' ? '#ef4444' : '#f59e0b');
+                
+                div.innerHTML = `
+                        < div class="timeline-date" > ${ m.date }</div >
+                    <h3 style="margin-bottom:0.2rem;">${m.name}</h3>
+                    <span style="font-size:0.8rem; padding:2px 6px; border-radius:4px; background:${statusColor}; color:white;">${m.status}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderResources() {
+            const container = document.getElementById('resource-content');
+            // Mock data for resources
+            const teams = [
+                { name: "Engineering", capacity: 80, utilization: 92, overtimeRisk: "High" },
+                { name: "Product Design", capacity: 40, utilization: 75, overtimeRisk: "Low" },
+                { name: "QA / Testing", capacity: 30, utilization: 60, overtimeRisk: "None" }
+            ];
+
+            teams.forEach(t => {
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                div.style.padding = '1rem 0';
+                div.style.borderBottom = '1px solid var(--border-color)';
+
+                let barColor = t.utilization > 90 ? '#ef4444' : (t.utilization > 75 ? '#f59e0b' : '#10b981');
+                
+                div.innerHTML = `
+                    < div >
+                        <strong>${t.name}</strong><br>
+                        <span style="color:var(--text-muted); font-size:0.8rem;">Capacity: ${t.capacity} | Overtime Risk: ${t.overtimeRisk}</span>
+                    </div>
+                    <div>
+                         <div style="width:150px; height:6px; background:rgba(255,255,255,0.1); border-radius:3px;">
+                            <div style="width:${t.utilization}%; height:100%; background:${barColor}; transition: width 1s;"></div>
+                         </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderRisks() {
+            const container = document.getElementById('risk-content');
+            risks.forEach(r => {
+                const div = document.createElement('div');
+                div.style.padding = '1rem';
+                div.style.borderBottom = '1px solid var(--border-color)';
+                
+                let severityColor = r.severity === 'High' ? '#ef4444' : (r.severity === 'Medium' ? '#f59e0b' : '#3b82f6');
+
+                div.innerHTML = `
+                    < div style = "display:flex; justify-content:space-between;" >
+                        <span style="font-weight:bold; color:${severityColor};">${r.severity} Risk</span>
+                        <span style="color:var(--text-muted);">ID: #${r.id}</span>
+                    </div >
+                    <p style="margin-top:0.5rem; font-size:0.9rem;">${r.description}</p>
+                    <div style="display:flex; justify-content:space-between; margin-top:0.5rem; font-size:0.8rem; color:var(--text-muted);">
+                        <span>Probability: ${r.probability} | Impact: ${r.impact}</span>
+                        <span>Owner: ${r.owner}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderOperations() {
+            const container = document.getElementById('ops-content');
+            
+            integrations.forEach(i => {
+                const div = document.createElement('div');
+                div.className = 'int-card';
+                
+                let statusClass = i.status === 'Online' ? '' : 'offline';
+
+                div.innerHTML = `
+                    < div >
+                    <i class="fab fa-${i.name.toLowerCase().replace(' ', '')}" style="margin-right:0.5rem; color:${statusClass === 'offline' ? '#ef4444' : '#3b82f6'}"></i>
+                        ${ i.name }
+                    </div >
+                    <div style="text-align:right;">
+                        <span class="int-status ${statusClass}" title="${i.status}"></span>
+                        <div style="font-size:0.7rem; margin-top:4px;">${i.lastSync}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            // API Usage Mock
+            const apiDiv = document.createElement('div');
+            apiDiv.style.marginTop = '2rem';
+            apiDiv.innerHTML = `<h4 style="margin-bottom:0.5rem;">Automation Savings</h4>
+                <p style="font-size:1.5rem; font-weight:bold; color:var(--accent);">$14,250.00</p>
+                <p style="color:var(--text-muted);">Estimated savings this quarter based on workflow automation.</p>
+            `;
+            container.appendChild(apiDiv);
+        }
+
+        function sortTable(column) {
+            const tbody = document.getElementById('table-body');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Simple reverse toggle for demo purposes
+            rows.forEach(row => row.style.display = 'none');
+            setTimeout(() => {
+                rows.forEach(row => row.style.display = '');
+            }, 10);
+        }
+
+    </script>
+</body>
+
+</html>
