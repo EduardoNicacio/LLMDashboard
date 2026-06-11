@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Command Center | Model Benchmarking</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.468.0"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
@@ -26,7 +26,9 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -54,6 +56,7 @@
         aside {
             background: rgba(10, 10, 12, 0.8);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-right: 1px solid var(--glass-border);
             padding: 2rem 1.5rem;
             display: flex;
@@ -156,6 +159,7 @@
         .glass-panel {
             background: var(--panel-bg);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             padding: 1.5rem;
@@ -490,19 +494,19 @@
 
             <div class="nav-group">
                 <div class="nav-label">Main Dashboard</div>
-                <div class="nav-item active" onclick="switchView('summary')">
+                <div class="nav-item active" onclick="switchView('summary', this)">
                     <i data-lucide="layout-dashboard"></i> Summary
                 </div>
-                <div class="nav-item" onclick="switchView('speed')">
+                <div class="nav-item" onclick="switchView('speed', this)">
                     <i data-lucide="zap"></i> Speed Analysis
                 </div>
-                <div class="nav-item" onclick="switchView('quality')">
+                <div class="nav-item" onclick="switchView('quality', this)">
                     <i data-lucide="star"></i> Quality Metrics
                 </div>
-                <div class="nav-item" onclick="switchView('cost')">
+                <div class="nav-item" onclick="switchView('cost', this)">
                     <i data-lucide="credit-card"></i> Cost Tracking
                 </div>
-                <div class="nav-item" onclick="switchView('hardware')">
+                <div class="nav-item" onclick="switchView('hardware', this)">
                     <i data-lucide="hard-drive"></i> Hardware Monitor
                 </div>
             </div>
@@ -873,7 +877,7 @@
         lucide.createIcons();
 
         // View Switching Logic
-        function switchView(viewId) {
+        function switchView(viewId, el) {
             document.querySelectorAll('.view-section').forEach(section => {
                 section.classList.remove('active');
             });
@@ -882,7 +886,7 @@
             });
 
             document.getElementById(viewId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            el.classList.add('active');
         }
 
         // Table Logic

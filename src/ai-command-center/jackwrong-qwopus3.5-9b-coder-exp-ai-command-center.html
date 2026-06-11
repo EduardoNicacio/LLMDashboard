@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
     <style>
         :root {
@@ -38,7 +38,9 @@
             --radius-md: 8px;
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -748,7 +750,7 @@
         // --- Render Table ---
         function renderTable(data = testData) {
             promptBody.innerHTML = data.map((row, index) => `
-            <tr class="prompt-row" onclick="toggleDetails(${index})">
+            <tr class="prompt-row" data-index="${index}">
                 <td style="font-weight: 500; color: var(--text-main);">${row.category}</td>
                 <td><span class="status-dot status-${row.status}"></span>${row.status.toUpperCase()}</td>
                 <td class="mono-font" style="color: var(--neon-cyan);">${row.time}</td>
@@ -759,7 +761,7 @@
             // Attach click events to rows for expansion
             document.querySelectorAll('.prompt-row').forEach(row => {
                 row.addEventListener('click', (e) => {
-                    if (e.target.tagName !== 'I') toggleDetails(parseInt(row.getAttribute('onclick').split(',')[0]));
+                    if (e.target.tagName !== 'I') toggleDetails(parseInt(row.dataset.index));
                 });
             });
         }
@@ -792,31 +794,38 @@
             renderTable(filtered);
         });
 
-        // --- Sort Logic ---
         let sortDir = 1;
+        let lastSortKey = null;
+        const COL_MAP = { category: 0, status: 1, time: 2, score: 3 };
         function sortTable(key) {
             const tbody = document.getElementById('promptBody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
+            const colIdx = COL_MAP[key] || 0;
+
+            if (lastSortKey === key) {
+                sortDir *= -1;
+            } else {
+                sortDir = 1;
+            }
+            lastSortKey = key;
 
             rows.sort((a, b) => {
-                let valA = a.children[key].innerText.toLowerCase();
-                let valB = b.children[key].innerText.toLowerCase();
+                const cellA = a.children[colIdx];
+                const cellB = b.children[colIdx];
+                let valA = cellA.innerText.toLowerCase();
+                let valB = cellB.innerText.toLowerCase();
 
                 if (key === 'category') return valA.localeCompare(valB);
-                if (key === 'status') return valA > valB ? -1 : 1; // Alphabetical
+                if (key === 'status') return valA > valB ? -1 : 1;
 
-                // Numeric sort for time and score
-                const numA = parseFloat(a.children[key].innerText.replace('Score: ', ''));
-                const numB = parseFloat(b.children[key].innerText.replace('Score: ', ''));
+                const numA = parseFloat(valA.replace('Score: ', '').replace('/100', '').replace('s', ''));
+                const numB = parseFloat(valB.replace('Score: ', '').replace('/100', '').replace('s', ''));
 
                 if (isNaN(numA) || isNaN(numB)) return valA.localeCompare(valB);
-                return ((numA - numB) * sortDir);
+                return (numA - numB) * sortDir;
             });
 
-            tbody.innerHTML = rows.map(row => row.outerHTML).join('');
-
-            // Toggle direction icon
-            const icon = a.querySelector('.fa-sort').nextSibling;
+            rows.forEach(row => tbody.appendChild(row));
         }
 
         // --- Hardware Simulation (Live Data) ---

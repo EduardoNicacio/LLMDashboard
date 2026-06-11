@@ -10,7 +10,7 @@
         rel="stylesheet"> <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-dark: #0b0f14;
@@ -25,7 +25,9 @@
             --hover-scale: 1.02;
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -1284,12 +1286,14 @@
                         tc.classList.add('active');
                     }
                 });
-                // Resize charts to avoid display issues
+                // Resize charts in the visible tab
                 setTimeout(() => {
-                    chartTokensPerSec.resize();
-                    chartCompletionTime.resize();
-                    chartQualityScore.resize();
-                    chartCostComparison.resize();
+                    if (document.getElementById('tab-summary').classList.contains('active')) {
+                        chartTokensPerSec.resize();
+                        chartCompletionTime.resize();
+                        chartQualityScore.resize();
+                        chartCostComparison.resize();
+                    }
                 }, 100);
             });
         });
