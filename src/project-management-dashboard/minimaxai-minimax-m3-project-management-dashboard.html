@@ -1,0 +1,3255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atlas PM · Project Management Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        /* ===========================================================
+   ATLAS PM — Command Center
+   Glassmorphism, neon-accented, dual-theme enterprise UI
+   =========================================================== */
+
+        :root {
+            /* dark (default) */
+            --bg-0: #05070d;
+            --bg-1: #0a0e1a;
+            --bg-2: #0f1424;
+            --bg-3: #131a2e;
+            --surface: rgba(20, 26, 46, 0.55);
+            --surface-2: rgba(28, 36, 60, 0.65);
+            --surface-3: rgba(36, 46, 75, 0.6);
+            --border: rgba(255, 255, 255, 0.07);
+            --border-strong: rgba(255, 255, 255, 0.14);
+            --text: #e6ebf5;
+            --text-dim: #a3acc2;
+            --text-faint: #6a7593;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #a855f7;
+            --accent-magenta: #ec4899;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --glow-cyan: 0 0 18px rgba(34, 211, 238, 0.45);
+            --glow-purple: 0 0 18px rgba(168, 85, 247, 0.45);
+            --glow-green: 0 0 18px rgba(16, 185, 129, 0.45);
+            --glow-red: 0 0 18px rgba(239, 68, 68, 0.45);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.55);
+            --grad-hero: radial-gradient(1200px 600px at 10% -10%, rgba(34, 211, 238, 0.18), transparent 60%),
+                radial-gradient(900px 500px at 90% 0%, rgba(168, 85, 247, 0.18), transparent 60%),
+                radial-gradient(700px 400px at 50% 100%, rgba(236, 72, 153, 0.10), transparent 60%);
+            --chart-grid: rgba(255, 255, 255, 0.06);
+            --chart-text: #a3acc2;
+        }
+
+        [data-theme="light"] {
+            --bg-0: #eef2f9;
+            --bg-1: #f6f8fd;
+            --bg-2: #ffffff;
+            --bg-3: #ffffff;
+            --surface: rgba(255, 255, 255, 0.75);
+            --surface-2: rgba(255, 255, 255, 0.85);
+            --surface-3: rgba(248, 250, 255, 0.9);
+            --border: rgba(15, 23, 42, 0.08);
+            --border-strong: rgba(15, 23, 42, 0.15);
+            --text: #0f172a;
+            --text-dim: #475569;
+            --text-faint: #94a3b8;
+            --accent-cyan: #0891b2;
+            --accent-purple: #7c3aed;
+            --accent-magenta: #db2777;
+            --accent-green: #059669;
+            --accent-amber: #d97706;
+            --accent-red: #dc2626;
+            --accent-blue: #2563eb;
+            --glow-cyan: 0 0 0 transparent;
+            --glow-purple: 0 0 0 transparent;
+            --glow-green: 0 0 0 transparent;
+            --glow-red: 0 0 0 transparent;
+            --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.10);
+            --grad-hero: radial-gradient(1200px 600px at 10% -10%, rgba(8, 145, 178, 0.10), transparent 60%),
+                radial-gradient(900px 500px at 90% 0%, rgba(124, 58, 237, 0.10), transparent 60%),
+                radial-gradient(700px 400px at 50% 100%, rgba(219, 39, 119, 0.06), transparent 60%);
+            --chart-grid: rgba(15, 23, 42, 0.08);
+            --chart-text: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            background: var(--bg-0);
+            color: var(--text);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-feature-settings: 'cv11', 'ss01', 'ss03';
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: var(--grad-hero);
+            pointer-events: none;
+            z-index: 0;
+            transition: background 0.6s ease;
+        }
+
+        [data-theme="light"] body::before {
+            opacity: 0.85;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(120, 140, 180, 0.25);
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(120, 140, 180, 0.45);
+        }
+
+        /* Layout */
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1640px;
+            margin: 0 auto;
+            padding: 18px 28px 60px;
+        }
+
+        /* ============= TOP BAR ============= */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 14px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 240px;
+        }
+
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            background: conic-gradient(from 140deg, var(--accent-cyan), var(--accent-purple), var(--accent-magenta), var(--accent-cyan));
+            border-radius: 11px;
+            position: relative;
+            box-shadow: 0 0 24px rgba(34, 211, 238, 0.4);
+        }
+
+        .brand-mark::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            background: var(--bg-1);
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+        }
+
+        .brand-mark::before {
+            content: '◆';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: grid;
+            place-items: center;
+            color: var(--accent-cyan);
+            font-size: 16px;
+            text-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        .brand-text {
+            line-height: 1.1;
+        }
+
+        .brand-text .b1 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+
+        .brand-text .b2 {
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .nav-tab {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-dim);
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-family: inherit;
+        }
+
+        .nav-tab:hover {
+            color: var(--text);
+            background: var(--surface-2);
+        }
+
+        .nav-tab.active {
+            color: var(--text);
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(168, 85, 247, 0.15));
+            border-color: var(--border-strong);
+            box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.2), 0 4px 12px rgba(34, 211, 238, 0.15);
+        }
+
+        .nav-tab .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        .nav-tab.active .dot {
+            background: var(--accent-magenta);
+            box-shadow: 0 0 8px var(--accent-magenta);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 6px 11px;
+            font-size: 11.5px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            letter-spacing: 0.2px;
+        }
+
+        .toggle-btn:hover {
+            color: var(--text);
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+        }
+
+        .icon-btn {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+
+        .icon-btn:hover {
+            color: var(--text);
+            border-color: var(--border-strong);
+            transform: translateY(-1px);
+        }
+
+        .icon-btn.theme-toggle:hover {
+            color: var(--accent-amber);
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+        }
+
+        .search-input {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px 8px 36px;
+            border-radius: 11px;
+            font-size: 13px;
+            font-family: inherit;
+            width: 220px;
+            outline: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap::before {
+            content: '⌕';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-faint);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+        }
+
+        /* ============= HERO KPI ============= */
+        .hero-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2.2px;
+            color: var(--text-faint);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-strong), transparent);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 14px;
+        }
+
+        .kpi-card {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            backdrop-filter: blur(20px) saturate(140%);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-color, var(--accent-cyan)), transparent);
+            opacity: 0.5;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-strong);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .kpi-card .label {
+            font-size: 11px;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        .kpi-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 8px;
+            line-height: 1;
+            letter-spacing: -0.5px;
+            color: var(--accent-color, var(--text));
+        }
+
+        .kpi-card .sub {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .kpi-card .spark {
+            margin-top: 10px;
+            height: 30px;
+        }
+
+        .kpi-card .pulse {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-color, var(--accent-cyan));
+            box-shadow: 0 0 8px var(--accent-color, var(--accent-cyan));
+            animation: pulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(1.4);
+            }
+        }
+
+        .delta-up {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .delta-down {
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        /* ============= PANELS / CARDS ============= */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+            backdrop-filter: blur(20px) saturate(140%);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
+            transition: border-color 0.3s ease, background 0.3s ease;
+        }
+
+        .panel:hover {
+            border-color: var(--border-strong);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .panel-title .icn {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: var(--surface-3);
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+        }
+
+        .panel-sub {
+            font-size: 11.5px;
+            color: var(--text-faint);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .grid-charts {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .grid-charts-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        /* ============= H2H COMPARISON ============= */
+        .h2h-wrap {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .h2h-card {
+            position: relative;
+            padding: 18px;
+            border-radius: 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .h2h-card.a {
+            border-top: 2px solid var(--accent-cyan);
+        }
+
+        .h2h-card.b {
+            border-top: 2px solid var(--accent-magenta);
+        }
+
+        .h2h-card .proj-name {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .h2h-card .proj-meta {
+            font-size: 11px;
+            color: var(--text-faint);
+            margin-bottom: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .h2h-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .h2h-row:first-of-type {
+            border-top: none;
+        }
+
+        .h2h-row .lbl {
+            font-size: 11.5px;
+            color: var(--text-dim);
+        }
+
+        .h2h-row .val {
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .h2h-vs {
+            align-self: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, var(--accent-cyan), var(--accent-purple), var(--accent-magenta), var(--accent-cyan));
+            display: grid;
+            place-items: center;
+            position: relative;
+            box-shadow: 0 0 24px rgba(168, 85, 247, 0.4);
+            animation: rotate 12s linear infinite;
+        }
+
+        .h2h-vs::after {
+            content: 'VS';
+            position: absolute;
+            inset: 4px;
+            border-radius: 50%;
+            background: var(--bg-1);
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ============= WINNER BREAKDOWN ============= */
+        .winner-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.25s ease;
+        }
+
+        .winner-card:hover {
+            border-color: var(--border-strong);
+            transform: translateX(3px);
+        }
+
+        .winner-card .medal {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 12px;
+        }
+
+        .winner-card .criterion {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .winner-card .winner-name {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .winner-card .a-win {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(34, 211, 238, 0.05));
+            color: var(--accent-cyan);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+        }
+
+        .winner-card .b-win {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(236, 72, 153, 0.05));
+            color: var(--accent-magenta);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+        }
+
+        /* ============= CHARTS ============= */
+        .chart-wrap {
+            position: relative;
+            height: 260px;
+        }
+
+        .chart-wrap.tall {
+            height: 320px;
+        }
+
+        .chart-wrap.short {
+            height: 180px;
+        }
+
+        /* ============= PROJECT CARDS ============= */
+        .proj-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 16px;
+        }
+
+        .proj-card {
+            position: relative;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .proj-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--proj-color-1), var(--proj-color-2));
+            opacity: 0.7;
+        }
+
+        .proj-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-strong);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .proj-card .head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .proj-card h4 {
+            font-size: 14.5px;
+            font-weight: 700;
+            line-height: 1.3;
+            max-width: 75%;
+        }
+
+        .proj-card .badges {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-purple {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent-purple);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .badge-cyan {
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+        }
+
+        .badge-gray {
+            background: rgba(120, 130, 160, 0.15);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+        }
+
+        .prog-bar {
+            height: 6px;
+            background: var(--surface-3);
+            border-radius: 99px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .prog-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--proj-color-1), var(--proj-color-2));
+            border-radius: 99px;
+            position: relative;
+        }
+
+        .prog-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 2.5s linear infinite;
+        }
+
+        @keyframes shine {
+            from {
+                transform: translateX(-100%);
+            }
+
+            to {
+                transform: translateX(100%);
+            }
+        }
+
+        .proj-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .proj-stats .s {
+            text-align: center;
+        }
+
+        .proj-stats .s .k {
+            font-size: 10px;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .proj-stats .s .v {
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 2px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .proj-foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .health-score {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .health-ring {
+            width: 38px;
+            height: 38px;
+            position: relative;
+            display: grid;
+            place-items: center;
+        }
+
+        .health-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .health-ring .v {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        /* ============= TIMELINE / GANTT ============= */
+        .gantt-wrap {
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .gantt {
+            min-width: 1100px;
+        }
+
+        .gantt-row {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 14px;
+            align-items: center;
+            padding: 10px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .gantt-row:first-child {
+            border-top: none;
+        }
+
+        .gantt-row .label {
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .gantt-row .label .sub {
+            font-size: 10.5px;
+            color: var(--text-faint);
+            font-weight: 500;
+        }
+
+        .gantt-bar-track {
+            position: relative;
+            height: 24px;
+            background: var(--surface-3);
+            border-radius: 6px;
+        }
+
+        .gantt-bar {
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, var(--bar-c1), var(--bar-c2));
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 10px;
+            color: white;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .gantt-bar:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .gantt-marker {
+            position: absolute;
+            top: -2px;
+            bottom: -2px;
+            width: 2px;
+            background: var(--accent-amber);
+            box-shadow: 0 0 8px var(--accent-amber);
+        }
+
+        .gantt-milestone {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            width: 14px;
+            height: 14px;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .gantt-milestone:hover {
+            transform: translate(-50%, -50%) rotate(45deg) scale(1.3);
+        }
+
+        .gantt-axis {
+            display: flex;
+            justify-content: space-between;
+            padding-left: 234px;
+            padding-right: 4px;
+            margin-bottom: 6px;
+        }
+
+        .gantt-axis .tick {
+            font-size: 10.5px;
+            color: var(--text-faint);
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+
+        /* ============= TABLE ============= */
+        .tbl-wrap {
+            overflow-x: auto;
+        }
+
+        .tbl {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 12.5px;
+        }
+
+        .tbl th {
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-size: 10.5px;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-3);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .tbl th:hover {
+            color: var(--text);
+        }
+
+        .tbl th .sort-ind {
+            color: var(--accent-cyan);
+            margin-left: 4px;
+        }
+
+        .tbl td {
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tbl tr.row {
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .tbl tr.row:hover {
+            background: var(--surface-2);
+        }
+
+        .tbl tr.row.expanded {
+            background: var(--surface-2);
+        }
+
+        .tbl .expand-row td {
+            padding: 0;
+            background: var(--surface-3);
+        }
+
+        .expand-content {
+            padding: 16px 20px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr;
+            gap: 18px;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .expand-content .ex-col h5 {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-faint);
+            margin-bottom: 8px;
+        }
+
+        .expand-content .ex-col ul {
+            list-style: none;
+        }
+
+        .expand-content .ex-col li {
+            font-size: 12px;
+            padding: 4px 0;
+            color: var(--text-dim);
+        }
+
+        .expand-content .ex-col li::before {
+            content: '›';
+            color: var(--accent-cyan);
+            margin-right: 6px;
+        }
+
+        .expand-content .ex-col .comment {
+            background: var(--surface-2);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 11.5px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            border-left: 2px solid var(--accent-purple);
+        }
+
+        .tbl .progress-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tbl .progress-cell .bar {
+            width: 60px;
+            height: 5px;
+            background: var(--surface-3);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .tbl .progress-cell .fill {
+            height: 100%;
+            background: var(--accent-cyan);
+            border-radius: 99px;
+        }
+
+        .chev {
+            display: inline-block;
+            transition: transform 0.25s ease;
+            color: var(--text-faint);
+            font-size: 10px;
+            margin-right: 4px;
+        }
+
+        tr.expanded .chev {
+            transform: rotate(90deg);
+            color: var(--accent-cyan);
+        }
+
+        /* ============= TEAM WORKLOAD ============= */
+        .team-row {
+            display: grid;
+            grid-template-columns: 180px 1fr 90px 90px 100px;
+            gap: 14px;
+            align-items: center;
+            padding: 10px 0;
+            border-top: 1px solid var(--border);
+            font-size: 12.5px;
+        }
+
+        .team-row:first-child {
+            border-top: none;
+        }
+
+        .team-row .util-bar {
+            height: 8px;
+            background: var(--surface-3);
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .team-row .util-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-amber), var(--accent-red));
+            border-radius: 99px;
+            transition: width 0.5s ease;
+        }
+
+        .team-row .name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            display: grid;
+            place-items: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+        }
+
+        /* ============= INTEGRATIONS ============= */
+        .int-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .int-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .int-card:hover {
+            border-color: var(--border-strong);
+        }
+
+        .int-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .int-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .int-name {
+            font-size: 12.5px;
+            font-weight: 700;
+        }
+
+        .int-meta {
+            font-size: 10.5px;
+            color: var(--text-faint);
+            margin-top: 2px;
+        }
+
+        .int-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .status-ok .status-dot {
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+            animation: pulse 2.4s ease-in-out infinite;
+        }
+
+        .status-warn .status-dot {
+            background: var(--accent-amber);
+            box-shadow: 0 0 8px var(--accent-amber);
+        }
+
+        .status-down .status-dot {
+            background: var(--accent-red);
+            box-shadow: 0 0 8px var(--accent-red);
+        }
+
+        .status-ok {
+            color: var(--accent-green);
+        }
+
+        .status-warn {
+            color: var(--accent-amber);
+        }
+
+        .status-down {
+            color: var(--accent-red);
+        }
+
+        /* ============= RISK MANAGEMENT ============= */
+        .risk-row {
+            display: grid;
+            grid-template-columns: 36px 1fr 100px 100px 100px 120px 90px 100px;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            font-size: 12.5px;
+            transition: all 0.25s ease;
+        }
+
+        .risk-row:hover {
+            border-color: var(--border-strong);
+        }
+
+        .risk-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .risk-row .title {
+            font-weight: 600;
+        }
+
+        .risk-row .title .sub {
+            font-size: 10.5px;
+            color: var(--text-faint);
+            font-weight: 500;
+        }
+
+        .risk-bar {
+            height: 6px;
+            background: var(--surface-3);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .risk-bar .fill {
+            height: 100%;
+            border-radius: 99px;
+        }
+
+        /* ============= AUTOMATION ============= */
+        .auto-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .auto-card {
+            padding: 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auto-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--auto-color, var(--accent-cyan));
+        }
+
+        .auto-card .lbl {
+            font-size: 10.5px;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .auto-card .v {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 6px;
+            color: var(--auto-color, var(--accent-cyan));
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .auto-card .sub {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* ============= NOTES ============= */
+        .notes-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .note-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            position: relative;
+            transition: all 0.25s ease;
+        }
+
+        .note-card:hover {
+            border-color: var(--border-strong);
+        }
+
+        .note-card .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .note-card .author {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .note-card .author .nm {
+            font-size: 12.5px;
+            font-weight: 700;
+        }
+
+        .note-card .author .role {
+            font-size: 10.5px;
+            color: var(--text-faint);
+        }
+
+        .note-card .ts {
+            font-size: 10.5px;
+            color: var(--text-faint);
+        }
+
+        .note-card .body {
+            font-size: 12.5px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        .note-card .tag {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 5px;
+            background: var(--surface-3);
+            color: var(--text-dim);
+            margin-top: 8px;
+            margin-right: 4px;
+        }
+
+        .note-input {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .note-input textarea {
+            width: 100%;
+            min-height: 90px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .note-input textarea:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .note-input .row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            background: var(--surface-3);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            border-color: var(--border-strong);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            border-color: transparent;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 16px rgba(34, 211, 238, 0.4);
+        }
+
+        /* ============= FILTERS BAR ============= */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            align-items: center;
+        }
+
+        .filter-select {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 7px 30px 7px 12px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        .filter-select:hover {
+            border-color: var(--border-strong);
+        }
+
+        .filter-select:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .filter-lbl {
+            font-size: 11px;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        /* ============= VIEW SWITCHING ============= */
+        .view {
+            display: none;
+            animation: fadeUp 0.4s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============= UTILITIES ============= */
+        .flex {
+            display: flex;
+        }
+
+        .between {
+            justify-content: space-between;
+        }
+
+        .center {
+            align-items: center;
+        }
+
+        .gap-2 {
+            gap: 8px;
+        }
+
+        .gap-3 {
+            gap: 12px;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .muted {
+            color: var(--text-dim);
+        }
+
+        .tiny {
+            font-size: 11px;
+        }
+
+        @media (max-width: 1400px) {
+            .kpi-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .grid-charts {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-charts-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .auto-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1100px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .h2h-wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .h2h-vs {
+                justify-self: center;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .nav-tabs {
+                display: none;
+            }
+
+            .grid-charts-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .topbar {
+                flex-wrap: wrap;
+            }
+
+            .brand {
+                min-width: auto;
+            }
+
+            .search-input {
+                width: 140px;
+            }
+
+            .auto-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* theme transition for everything that uses var() */
+        body,
+        .panel,
+        .kpi-card,
+        .proj-card,
+        .h2h-card,
+        .int-card,
+        .auto-card,
+        .note-card,
+        .risk-row,
+        .winner-card,
+        .gantt-bar-track,
+        .gantt-bar,
+        .badge,
+        .btn,
+        .toggle-group,
+        .icon-btn,
+        .filter-select,
+        .topbar,
+        .filters,
+        .search-input,
+        .team-row,
+        .toggle-btn,
+        .nav-tab,
+        .tbl th,
+        .tbl td,
+        .tbl tr,
+        .prog-bar,
+        .prog-fill {
+            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        /* printable focus styles */
+        button:focus-visible,
+        select:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- ============= TOP BAR ============= -->
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark"></div>
+                <div class="brand-text">
+                    <div class="b1">ATLAS PM</div>
+                    <div class="b2">Command Center · v4.2</div>
+                </div>
+            </div>
+
+            <nav class="nav-tabs" id="navTabs">
+                <button class="nav-tab active" data-view="summary"><span class="dot"></span>Summary</button>
+                <button class="nav-tab" data-view="projects"><span class="dot"></span>Projects</button>
+                <button class="nav-tab" data-view="timeline"><span class="dot"></span>Timeline</button>
+                <button class="nav-tab" data-view="resources"><span class="dot"></span>Resources</button>
+                <button class="nav-tab" data-view="risks"><span class="dot"></span>Risks</button>
+                <button class="nav-tab" data-view="operations"><span class="dot"></span>Operations</button>
+            </nav>
+
+            <div class="top-actions">
+                <div class="search-wrap">
+                    <input class="search-input" id="globalSearch" type="text" placeholder="Search projects, owners…" />
+                </div>
+                <div class="toggle-group" id="reportingMode">
+                    <button class="toggle-btn active" data-mode="agile">Agile</button>
+                    <button class="toggle-btn" data-mode="waterfall">Waterfall</button>
+                </div>
+                <div class="toggle-group" id="scopeMode">
+                    <button class="toggle-btn active" data-scope="portfolio">Portfolio</button>
+                    <button class="toggle-btn" data-scope="program">Program</button>
+                    <button class="toggle-btn" data-scope="project">Project</button>
+                </div>
+                <div class="toggle-group" id="periodMode">
+                    <button class="toggle-btn" data-period="weekly">Wk</button>
+                    <button class="toggle-btn active" data-period="monthly">Mo</button>
+                    <button class="toggle-btn" data-period="quarterly">Qtr</button>
+                </div>
+                <button class="icon-btn theme-toggle" id="themeToggle" title="Toggle theme">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" id="themeIcon">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- ============= HERO KPI ============= -->
+        <section class="hero-section">
+            <div class="section-title">Portfolio Health Snapshot · Live</div>
+            <div class="kpi-grid" id="kpiGrid"></div>
+        </section>
+
+        <!-- ============= VIEW: SUMMARY ============= -->
+        <div class="view active" id="view-summary">
+            <div class="grid-2">
+                <!-- H2H Comparison -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">⚔️</span> Flagship Showdown · Head-to-Head</div>
+                        <div class="panel-sub">Live comparison · Updated <span id="lastSync">just now</span></div>
+                    </div>
+                    <div class="h2h-wrap" id="h2hWrap"></div>
+                </div>
+                <!-- Winner Breakdown -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">🏆</span> Winner Breakdown</div>
+                        <div class="panel-sub">6 weighted criteria</div>
+                    </div>
+                    <div id="winnerBreakdown"></div>
+                </div>
+            </div>
+
+            <div class="grid-charts">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">📈</span> Portfolio Completion Trend</div>
+                        <div class="panel-sub">Planned vs Actual · 12 periods</div>
+                    </div>
+                    <div class="chart-wrap tall"><canvas id="chartTrend"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">🥧</span> Resource Allocation</div>
+                        <div class="panel-sub">By department</div>
+                    </div>
+                    <div class="chart-wrap tall"><canvas id="chartResource"></canvas></div>
+                </div>
+            </div>
+
+            <div class="grid-charts-2">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">💰</span> Budget vs Actual Spend</div>
+                        <div class="panel-sub">By flagship project</div>
+                    </div>
+                    <div class="chart-wrap"><canvas id="chartBudget"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">🚀</span> Team Velocity</div>
+                        <div class="panel-sub">Story points per sprint</div>
+                    </div>
+                    <div class="chart-wrap"><canvas id="chartVelocity"></canvas></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">⚠️</span> Open Risks by Severity</div>
+                        <div class="panel-sub">Across portfolio</div>
+                    </div>
+                    <div class="chart-wrap"><canvas id="chartRisks"></canvas></div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">🎯</span> Milestone Completion Progress</div>
+                        <div class="panel-sub">Active programs</div>
+                    </div>
+                    <div id="milestoneProgress"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">📅</span> Planned vs Actual Timeline</div>
+                        <div class="panel-sub">Schedule performance index</div>
+                    </div>
+                    <div class="chart-wrap"><canvas id="chartSPI"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============= VIEW: PROJECTS ============= -->
+        <div class="view" id="view-projects">
+            <div class="filters" id="projFilters"></div>
+            <div class="proj-grid" id="projGrid"></div>
+            <div class="panel" style="margin-top:22px">
+                <div class="panel-header">
+                    <div class="panel-title"><span class="icn">📋</span> All Projects · Sortable & Filterable</div>
+                    <div class="panel-sub" id="projCount"></div>
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl" id="projTable">
+                        <thead>
+                            <tr id="projThead"></tr>
+                        </thead>
+                        <tbody id="projTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============= VIEW: TIMELINE ============= -->
+        <div class="view" id="view-timeline">
+            <div class="panel" style="margin-bottom:18px">
+                <div class="panel-header">
+                    <div class="panel-title"><span class="icn">📅</span> Project Timeline · Phases & Milestones</div>
+                    <div class="panel-sub">Click a milestone to expand</div>
+                </div>
+                <div class="gantt-wrap">
+                    <div class="gantt" id="gantt"></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title"><span class="icn">📝</span> Sprint & Milestone History</div>
+                    <div class="panel-sub">Click row to expand</div>
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl" id="historyTable">
+                        <thead>
+                            <tr id="historyThead"></tr>
+                        </thead>
+                        <tbody id="historyTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============= VIEW: RESOURCES ============= -->
+        <div class="view" id="view-resources">
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">👥</span> Team Workload & Capacity</div>
+                        <div class="panel-sub">Utilization by team</div>
+                    </div>
+                    <div id="teamWorkload"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">🏢</span> Capacity by Department</div>
+                        <div class="panel-sub">Headcount & FTE</div>
+                    </div>
+                    <div class="chart-wrap tall"><canvas id="chartDept"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============= VIEW: RISKS ============= -->
+        <div class="view" id="view-risks">
+            <div class="grid-charts">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">🔥</span> Active Risk Register</div>
+                        <div class="panel-sub">Severity · Probability · Impact · Owner</div>
+                    </div>
+                    <div id="riskRegister"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">🛡️</span> Mitigation Status</div>
+                        <div class="panel-sub">Across severity tiers</div>
+                    </div>
+                    <div class="chart-wrap tall"><canvas id="chartMitigation"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============= VIEW: OPERATIONS ============= -->
+        <div class="view" id="view-operations">
+            <div class="grid-2">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">🔌</span> Integrations Status</div>
+                        <div class="panel-sub">Real-time tool health</div>
+                    </div>
+                    <div class="int-grid" id="intGrid"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="icn">⚡</span> API & Automation</div>
+                        <div class="panel-sub">This month</div>
+                    </div>
+                    <div class="auto-grid" id="autoGrid"></div>
+                    <div style="margin-top:18px">
+                        <div class="chart-wrap short"><canvas id="chartWebhook"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel" style="margin-top:18px">
+                <div class="panel-header">
+                    <div class="panel-title"><span class="icn">📣</span> Executive Notes & Commentary</div>
+                    <div class="panel-sub">From PMs, delivery leads, exec sponsors</div>
+                </div>
+                <div class="notes-area" id="notesArea"></div>
+                <div class="note-input" style="margin-top:18px">
+                    <textarea id="noteInput"
+                        placeholder="Add executive commentary, observations, lessons learned, future outlook…"></textarea>
+                    <div class="row">
+                        <input class="filter-select" id="noteTag" type="text" placeholder="Tag (e.g. Lesson Learned)"
+                            style="flex:1" />
+                        <button class="btn btn-primary" id="addNoteBtn">Post Note</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ===========================================================
+           ATLAS PM — Data Model & State
+           =========================================================== */
+
+        const STATE = {
+            theme: 'dark',
+            view: 'summary',
+            mode: 'agile',
+            scope: 'portfolio',
+            period: 'monthly',
+            search: '',
+            filters: { project: 'all', team: 'all', department: 'all', status: 'all', owner: 'all', fy: 'all', qtr: 'all' },
+            sort: { col: 'health', dir: 'desc' },
+        };
+
+        /* ---------- Projects ---------- */
+        const PROJECTS = [
+            {
+                id: 'P-001', name: 'Mobile Platform Modernization', code: 'MPM', status: 'On Track', priority: 'Critical',
+                owner: 'Priya Anand', team: 'Mobile', department: 'Engineering',
+                completion: 68, budget: 4200000, actual: 3685000,
+                startDate: '2025-02-10', endDate: '2026-04-15',
+                teamSize: 18, milestones: 14, completedMilestones: 10,
+                openRisks: 4, blockedTasks: 2,
+                scheduleVariance: -3, budgetVariance: -1.4, riskScore: 32, resourceUtil: 87, stakeholderSat: 88, health: 84,
+                color1: '#22d3ee', color2: '#0ea5e9',
+                flagship: 'A',
+                description: 'Cross-platform mobile rebuild using Kotlin Multiplatform and SwiftUI with shared design system.',
+                phases: [
+                    { name: 'Discovery & Architecture', start: 0, end: 12, status: 'done' },
+                    { name: 'Core Module Migration', start: 10, end: 38, status: 'done' },
+                    { name: 'Auth & Payments', start: 35, end: 60, status: 'active' },
+                    { name: 'Beta Launch', start: 58, end: 80, status: 'active' },
+                    { name: 'GA Release', start: 78, end: 100, status: 'planned' },
+                ],
+                milestones: [
+                    { name: 'Architecture Sign-off', date: '2025-03-15', status: 'done' },
+                    { name: 'Core Migration Complete', date: '2025-09-30', status: 'done' },
+                    { name: 'Auth Module Live', date: '2025-11-12', status: 'done' },
+                    { name: 'Beta Launch (1k users)', date: '2026-01-20', status: 'active' },
+                    { name: 'GA Release v2.0', date: '2026-04-15', status: 'planned' },
+                ],
+            },
+            {
+                id: 'P-002', name: 'Customer Analytics Initiative', code: 'CAI', status: 'At Risk', priority: 'High',
+                owner: 'Marcus Chen', team: 'Data', department: 'Data',
+                completion: 54, budget: 3100000, actual: 2950000,
+                startDate: '2025-01-15', endDate: '2026-03-30',
+                teamSize: 14, milestones: 12, completedMilestones: 7,
+                openRisks: 9, blockedTasks: 5,
+                scheduleVariance: -8, budgetVariance: 5.2, riskScore: 68, resourceUtil: 94, stakeholderSat: 76, health: 62,
+                color1: '#ec4899', color2: '#a855f7',
+                flagship: 'B',
+                description: 'Unified customer 360 platform consolidating clickstream, CRM, and transactional data into real-time insights.',
+                phases: [
+                    { name: 'Data Ingestion', start: 0, end: 18, status: 'done' },
+                    { name: 'Warehouse Build', start: 16, end: 42, status: 'done' },
+                    { name: 'ML Models', start: 40, end: 68, status: 'active' },
+                    { name: 'Dashboards & APIs', start: 60, end: 88, status: 'active' },
+                    { name: 'Rollout', start: 86, end: 100, status: 'planned' },
+                ],
+                milestones: [
+                    { name: 'Ingestion Live', date: '2025-03-20', status: 'done' },
+                    { name: 'Warehouse GA', date: '2025-06-15', status: 'done' },
+                    { name: 'Beta ML Models', date: '2025-11-30', status: 'active' },
+                    { name: 'Dashboards v1', date: '2026-01-25', status: 'planned' },
+                    { name: 'Production Rollout', date: '2026-03-30', status: 'planned' },
+                ],
+            },
+            {
+                id: 'P-003', name: 'Cloud Migration Phase 2', code: 'CMP-2', status: 'On Track', priority: 'High',
+                owner: 'Sofia Reyes', team: 'Platform', department: 'Engineering',
+                completion: 82, budget: 2800000, actual: 2210000,
+                startDate: '2024-09-01', endDate: '2026-02-28',
+                teamSize: 12, milestones: 9, completedMilestones: 7,
+                openRisks: 2, blockedTasks: 1,
+                scheduleVariance: 1, budgetVariance: -8.4, riskScore: 22, resourceUtil: 78, stakeholderSat: 91, health: 88,
+                color1: '#10b981', color2: '#22d3ee',
+                flagship: '',
+                description: 'Lift-and-shift of remaining 142 services to multi-region EKS with automated failover.',
+                phases: [
+                    { name: 'Planning', start: 0, end: 8, status: 'done' },
+                    { name: 'Pilot Services', start: 6, end: 30, status: 'done' },
+                    { name: 'Wave 1 (50 svcs)', start: 28, end: 56, status: 'done' },
+                    { name: 'Wave 2 (60 svcs)', start: 54, end: 80, status: 'active' },
+                    { name: 'Decommission Legacy', start: 78, end: 100, status: 'planned' },
+                ],
+            },
+            {
+                id: 'P-004', name: 'AI-Powered Support Bot', code: 'AISB', status: 'On Track', priority: 'Medium',
+                owner: 'Hiroshi Tanaka', team: 'AI/ML', department: 'Engineering',
+                completion: 46, budget: 1200000, actual: 580000,
+                startDate: '2025-05-01', endDate: '2026-07-15',
+                teamSize: 8, milestones: 8, completedMilestones: 4,
+                openRisks: 3, blockedTasks: 1,
+                scheduleVariance: 2, budgetVariance: -2.1, riskScore: 38, resourceUtil: 71, stakeholderSat: 82, health: 78,
+                color1: '#a855f7', color2: '#6366f1',
+                flagship: '',
+                description: 'LLM-based tier-1 support agent with retrieval over knowledge base and ticket deflection analytics.',
+            },
+            {
+                id: 'P-005', name: 'Data Warehouse Consolidation', code: 'DWC', status: 'Delayed', priority: 'High',
+                owner: 'Lena Müller', team: 'Data', department: 'Data',
+                completion: 38, budget: 1950000, actual: 1680000,
+                startDate: '2025-03-15', endDate: '2026-06-30',
+                teamSize: 10, milestones: 11, completedMilestones: 4,
+                openRisks: 7, blockedTasks: 4,
+                scheduleVariance: -14, budgetVariance: 9.8, riskScore: 74, resourceUtil: 96, stakeholderSat: 65, health: 52,
+                color1: '#f59e0b', color2: '#ef4444',
+                flagship: '',
+                description: 'Consolidate 7 legacy warehouses into single lakehouse with shared semantic layer.',
+            },
+            {
+                id: 'P-006', name: 'Security Compliance Overhaul', code: 'SCO', status: 'On Track', priority: 'Critical',
+                owner: 'Omar El-Sayed', team: 'Security', department: 'Operations',
+                completion: 71, budget: 1800000, actual: 1340000,
+                startDate: '2025-01-10', endDate: '2026-05-20',
+                teamSize: 9, milestones: 13, completedMilestones: 9,
+                openRisks: 5, blockedTasks: 0,
+                scheduleVariance: -1, budgetVariance: -3.2, riskScore: 41, resourceUtil: 82, stakeholderSat: 86, health: 81,
+                color1: '#22d3ee', color2: '#10b981',
+                flagship: '',
+                description: 'SOC 2 Type II, ISO 27001, and HIPAA gap remediation across 23 product surfaces.',
+            },
+            {
+                id: 'P-007', name: 'Developer Experience Platform', code: 'DXP', status: 'On Track', priority: 'Medium',
+                owner: 'Anya Volkov', team: 'Platform', department: 'Engineering',
+                completion: 59, budget: 980000, actual: 610000,
+                startDate: '2025-04-20', endDate: '2026-08-30',
+                teamSize: 7, milestones: 10, completedMilestones: 6,
+                openRisks: 2, blockedTasks: 1,
+                scheduleVariance: 0, budgetVariance: -1.8, riskScore: 28, resourceUtil: 73, stakeholderSat: 89, health: 80,
+                color1: '#6366f1', color2: '#a855f7',
+                flagship: '',
+                description: 'Internal developer portal with golden paths, scaffolds, and unified observability.',
+            },
+            {
+                id: 'P-008', name: 'Customer Portal Redesign', code: 'CPR', status: 'At Risk', priority: 'Medium',
+                owner: 'Daniel Park', team: 'Web', department: 'Design',
+                completion: 41, budget: 720000, actual: 690000,
+                startDate: '2025-06-01', endDate: '2026-05-15',
+                teamSize: 6, milestones: 8, completedMilestones: 3,
+                openRisks: 5, blockedTasks: 3,
+                scheduleVariance: -7, budgetVariance: 4.1, riskScore: 56, resourceUtil: 84, stakeholderSat: 72, health: 58,
+                color1: '#ec4899', color2: '#f59e0b',
+                flagship: '',
+                description: 'Self-serve portal redesign with new design system, billing, and SSO flows.',
+            },
+            {
+                id: 'P-009', name: 'Real-time Event Streaming', code: 'RES', status: 'On Track', priority: 'High',
+                owner: 'Ravi Patel', team: 'Platform', department: 'Engineering',
+                completion: 64, budget: 1450000, actual: 1020000,
+                startDate: '2025-02-28', endDate: '2026-03-20',
+                teamSize: 11, milestones: 9, completedMilestones: 6,
+                openRisks: 3, blockedTasks: 0,
+                scheduleVariance: -2, budgetVariance: -0.5, riskScore: 30, resourceUtil: 79, stakeholderSat: 85, health: 82,
+                color1: '#10b981', color2: '#22d3ee',
+                flagship: '',
+                description: 'Kafka + Flink pipeline processing 12B events/day with sub-second SLAs.',
+            },
+            {
+                id: 'P-010', name: 'Multi-region Failover', code: 'MRF', status: 'Planning', priority: 'Medium',
+                owner: 'Eva Larsen', team: 'DevOps', department: 'Operations',
+                completion: 12, budget: 1100000, actual: 95000,
+                startDate: '2025-10-01', endDate: '2026-09-15',
+                teamSize: 6, milestones: 7, completedMilestones: 1,
+                openRisks: 6, blockedTasks: 1,
+                scheduleVariance: 0, budgetVariance: 0.2, riskScore: 48, resourceUtil: 55, stakeholderSat: 78, health: 70,
+                color1: '#3b82f6', color2: '#a855f7',
+                flagship: '',
+                description: 'Active-active multi-region failover with automated DR drills and chaos testing.',
+            },
+        ];
+
+        /* ---------- Teams & Workload ---------- */
+        const TEAMS = [
+            { name: 'Mobile', dept: 'Engineering', headcount: 24, fte: 22, utilization: 87, capacity: 88, overtime: 'Low', status: 'Healthy' },
+            { name: 'Web', dept: 'Design', headcount: 14, fte: 13, utilization: 84, capacity: 78, overtime: 'Med', status: 'Watch' },
+            { name: 'Data', dept: 'Data', headcount: 18, fte: 17, utilization: 96, capacity: 82, overtime: 'High', status: 'Overloaded' },
+            { name: 'Platform', dept: 'Engineering', headcount: 20, fte: 19, utilization: 79, capacity: 86, overtime: 'Low', status: 'Healthy' },
+            { name: 'DevOps', dept: 'Operations', headcount: 12, fte: 11, utilization: 72, capacity: 90, overtime: 'Low', status: 'Healthy' },
+            { name: 'Security', dept: 'Operations', headcount: 10, fte: 10, utilization: 82, capacity: 84, overtime: 'Med', status: 'Watch' },
+            { name: 'AI/ML', dept: 'Engineering', headcount: 12, fte: 11, utilization: 71, capacity: 80, overtime: 'Low', status: 'Healthy' },
+            { name: 'QA', dept: 'Engineering', headcount: 16, fte: 15, utilization: 88, capacity: 82, overtime: 'Med', status: 'Watch' },
+        ];
+
+        /* ---------- Risks ---------- */
+        const RISKS = [
+            { id: 'R-12', title: 'Data pipeline SLA breach risk', project: 'CAI', severity: 'High', prob: 0.65, impact: 0.85, score: 55, owner: 'Marcus Chen', mitigation: 'In Progress' },
+            { id: 'R-18', title: 'iOS 19 deprecation', project: 'MPM', severity: 'Med', prob: 0.55, impact: 0.50, score: 28, owner: 'Priya Anand', mitigation: 'Planned' },
+            { id: 'R-22', title: 'Snowflake contract renewal', project: 'DWC', severity: 'High', prob: 0.40, impact: 0.90, score: 36, owner: 'Lena Müller', mitigation: 'In Progress' },
+            { id: 'R-25', title: 'Pen-test findings', project: 'SCO', severity: 'High', prob: 0.30, impact: 0.80, score: 24, owner: 'Omar El-Sayed', mitigation: 'Mitigated' },
+            { id: 'R-31', title: 'SSO SAML drift', project: 'CPR', severity: 'Med', prob: 0.45, impact: 0.40, score: 18, owner: 'Daniel Park', mitigation: 'Planned' },
+            { id: 'R-34', title: 'DR drill failures', project: 'MRF', severity: 'Med', prob: 0.55, impact: 0.60, score: 33, owner: 'Eva Larsen', mitigation: 'In Progress' },
+            { id: 'R-37', title: 'Vendor lock-in (Confluent)', project: 'RES', severity: 'Low', prob: 0.25, impact: 0.35, score: 9, owner: 'Ravi Patel', mitigation: 'Accepted' },
+            { id: 'R-41', title: 'Model hallucination rate', project: 'AISB', severity: 'Med', prob: 0.50, impact: 0.55, score: 28, owner: 'Hiroshi Tanaka', mitigation: 'In Progress' },
+            { id: 'R-44', title: 'Resource conflict — Data team', project: 'CAI', severity: 'Critical', prob: 0.55, impact: 0.90, score: 50, owner: 'Marcus Chen', mitigation: 'Escalated' },
+            { id: 'R-48', title: 'Budget overrun warehouse', project: 'DWC', severity: 'High', prob: 0.70, impact: 0.65, score: 46, owner: 'Lena Müller', mitigation: 'In Progress' },
+        ];
+
+        /* ---------- Integrations ---------- */
+        const INTEGRATIONS = [
+            { name: 'Jira Software', icon: '🟦', color: '#2684FF', status: 'ok', latency: 142, lastSync: '12s ago', region: 'us-east-1' },
+            { name: 'Azure DevOps', icon: '🟪', color: '#8664FF', status: 'ok', latency: 88, lastSync: '8s ago', region: 'us-east-1' },
+            { name: 'GitHub Enterprise', icon: '🐙', color: '#24292F', status: 'ok', latency: 56, lastSync: '4s ago', region: 'us-east-1' },
+            { name: 'Slack', icon: '💬', color: '#4A154B', status: 'ok', latency: 78, lastSync: '6s ago', region: 'us-east-1' },
+            { name: 'Microsoft Teams', icon: '👥', color: '#6264A7', status: 'warn', latency: 312, lastSync: '1m ago', region: 'us-east-1' },
+            { name: 'Notion', icon: '📝', color: '#000000', status: 'ok', latency: 95, lastSync: '14s ago', region: 'us-east-1' },
+            { name: 'Linear', icon: '◆', color: '#5E6AD2', status: 'ok', latency: 64, lastSync: '3s ago', region: 'us-east-1' },
+            { name: 'PagerDuty', icon: '🔔', color: '#06AC38', status: 'ok', latency: 110, lastSync: '21s ago', region: 'us-east-1' },
+            { name: 'Datadog', icon: '🐶', color: '#632CA6', status: 'ok', latency: 72, lastSync: '9s ago', region: 'us-east-1' },
+            { name: 'ServiceNow', icon: '🎫', color: '#62D84E', status: 'down', latency: 0, lastSync: '4m ago', region: 'us-east-1' },
+        ];
+
+        /* ---------- Sprint / Milestone history ---------- */
+        const HISTORY = [
+            {
+                sprint: 'MPM-S24', project: 'MPM', name: 'Sprint 24 — Auth & Onboarding Polish', start: '2026-01-06', end: '2026-01-19', planned: 48, completed: 46, status: 'Done', owner: 'Priya Anand',
+                tasks: ['PKCE flow hardening', 'Magic-link fallback', 'Onboarding AB test', 'Login analytics events', 'Biometric prompts on Android'],
+                blockers: ['iOS 19 deprecation requires SDK upgrade'],
+                dependencies: ['Identity platform v3.2', 'Push notification svc'],
+                comments: 'Slight slip on magic-link testing; pulled forward analytics cleanup.'
+            },
+            {
+                sprint: 'CAI-S18', project: 'CAI', name: 'Sprint 18 — Attribution Model v2', start: '2026-01-06', end: '2026-01-19', planned: 52, completed: 38, status: 'At Risk', owner: 'Marcus Chen',
+                tasks: ['Multi-touch attribution', 'Channel grouping', 'Latency benchmarking', 'Schema v12 migration', 'Backfill 90d'],
+                blockers: ['Snowflake concurrency limits during backfill', 'Data team resource conflict'],
+                dependencies: ['dbt 1.8 upgrade', 'Airflow 2.9'],
+                comments: 'Backfill 73% complete; expect to catch up next sprint. Escalated to data leadership.'
+            },
+            {
+                sprint: 'CMP-W4', project: 'CMP-2', name: 'Wave 4 cutover', start: '2026-01-13', end: '2026-01-17', planned: 32, completed: 32, status: 'Done', owner: 'Sofia Reyes',
+                tasks: ['DNS failover tests', 'EKS node group expansion', 'Observability dashboards', 'Runbook updates', 'Game-day rehearsal'],
+                blockers: [],
+                dependencies: ['CloudWatch Synthetics', 'Internal CA rotation'],
+                comments: 'Zero customer impact. All SLOs held during the cutover window.'
+            },
+            {
+                sprint: 'AISB-S10', project: 'AISB', name: 'Sprint 10 — Retrieval Eval Harness', start: '2026-01-06', end: '2026-01-19', planned: 36, completed: 34, status: 'Done', owner: 'Hiroshi Tanaka',
+                tasks: ['Golden set v2', 'RAGAS integration', 'Latency profiling', 'A/B framework'],
+                blockers: ['Eval pipeline GPU contention'],
+                dependencies: ['LangSmith Pro'],
+                comments: 'Hallucination rate down to 4.1% from 6.8%. Confidence in GA timeline.'
+            },
+            {
+                sprint: 'SCO-M10', project: 'SCO', name: 'Milestone 10 — ISO 27001 Internal Audit', start: '2025-12-15', end: '2026-01-10', planned: 28, completed: 28, status: 'Done', owner: 'Omar El-Sayed',
+                tasks: ['Asset inventory reconciliation', 'Risk register refresh', 'Statement of Applicability', 'Internal audit walkthroughs'],
+                blockers: [],
+                dependencies: ['GRC tool migration'],
+                comments: 'No major non-conformities. Two minor observations to address in M11.'
+            },
+            {
+                sprint: 'DXP-S12', project: 'DXP', name: 'Sprint 12 — Service Catalog GA', start: '2026-01-06', end: '2026-01-19', planned: 40, completed: 36, status: 'Done', owner: 'Anya Volkov',
+                tasks: ['Service ownership model', 'Scorecards', 'Backstage upgrades', 'RBAC refinements'],
+                blockers: ['Pending approval on access policy from Security'],
+                dependencies: ['SSO claims mapping'],
+                comments: 'Policy approved end of week. Service catalog moving to GA next sprint.'
+            },
+            {
+                sprint: 'CPR-S07', project: 'CPR', name: 'Sprint 7 — Billing Flow Refactor', start: '2026-01-06', end: '2026-01-19', planned: 44, completed: 28, status: 'At Risk', owner: 'Daniel Park',
+                tasks: ['Proration engine', 'Invoice PDF redesign', 'Webhook idempotency', 'Tax service v2'],
+                blockers: ['Tax service v2 delayed 2 weeks by vendor'],
+                dependencies: ['Stripe API v2024-12'],
+                comments: 'Major slip — pushed billing GA from Feb to March. Communicated to exec sponsor.'
+            },
+            {
+                sprint: 'RES-S15', project: 'RES', name: 'Sprint 15 — Exactly-Once Delivery', start: '2026-01-06', end: '2026-01-19', planned: 36, completed: 36, status: 'Done', owner: 'Ravi Patel',
+                tasks: ['Transactional producer pattern', 'Idempotent consumer tests', 'DLQ rework', 'Cost optimization'],
+                blockers: [],
+                dependencies: ['Kafka 3.7'],
+                comments: 'Cost reduced 14% via tiered storage. Exactly-once validated at 11.4B events/day.'
+            },
+            {
+                sprint: 'MPM-S25', project: 'MPM', name: 'Sprint 25 — Beta Stabilization', start: '2026-01-20', end: '2026-02-02', planned: 50, completed: 0, status: 'Active', owner: 'Priya Anand',
+                tasks: ['Crash triage', 'Performance profiling', 'Beta feedback triage', 'Crash-free sessions target 99.5%'],
+                blockers: [],
+                dependencies: ['Firebase Crashlytics upgrade'],
+                comments: 'In progress — 64% planned points complete mid-sprint.'
+            },
+            {
+                sprint: 'CAI-S19', project: 'CAI', name: 'Sprint 19 — Dashboard v1 (planned)', start: '2026-01-20', end: '2026-02-02', planned: 48, completed: 0, status: 'Active', owner: 'Marcus Chen',
+                tasks: ['Customer 360 view', 'Cohort analysis', 'Export to CSV/Parquet', 'Embedded analytics SDK'],
+                blockers: [],
+                dependencies: ['Embed SDK v2', 'BI tool vendor selection'],
+                comments: 'On track pending resource conflict resolution next week.'
+            },
+        ];
+
+        /* ---------- Notes ---------- */
+        const NOTES = [
+            { author: 'Priya Anand', role: 'PM, Mobile Platform', ts: '2 hours ago', body: 'Beta feedback from Cohort A (1.2k users) is overwhelmingly positive. Crash-free sessions at 99.7%, app launch time down 38%. Pushing GA timeline by 2 weeks — confident in April 15.', tags: ['Beta Update', 'Confidence High'] },
+            { author: 'Marcus Chen', role: 'PM, Customer Analytics', ts: '5 hours ago', body: 'Snowflake concurrency during backfill is the dominant blocker this week. Coordinating with Data Platform to lease a dedicated warehouse. Risk R-44 still elevated — escalated to VP Data.', tags: ['Risk Escalation', 'Resource Conflict'] },
+            { author: 'Sofia Reyes', role: 'PM, Cloud Migration', ts: '1 day ago', body: 'Wave 4 cutover went clean — 32 services migrated with zero customer impact. Wave 5 plan on track. Projected to finish 8% under budget.', tags: ['Milestone', 'Under Budget'] },
+            { author: 'James Whitfield', role: 'PMO Director', ts: '1 day ago', body: 'Q1 portfolio review next Tuesday. Three items needing exec attention: DWC budget overrun, AISB GA readiness, and the recurring Data team contention. Will share readout deck tomorrow.', tags: ['Exec Review', 'Action Required'] },
+            { author: 'Hiroshi Tanaka', role: 'PM, AI/ML', ts: '2 days ago', body: 'Eval harness paying off. Hallucination rate trending down week over week. Will publish full results to internal ML portal next sprint. Considering early-access tier for tier-1 customers.', tags: ['Lesson Learned', 'Early Win'] },
+        ];
+
+        /* ===========================================================
+           PERSISTENCE
+           =========================================================== */
+        const STORAGE_KEY = 'atlas_pm_prefs_v1';
+        function loadPrefs() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const p = JSON.parse(raw);
+                if (p.theme) STATE.theme = p.theme;
+                if (p.view) STATE.view = p.view;
+                if (p.mode) STATE.mode = p.mode;
+                if (p.scope) STATE.scope = p.scope;
+                if (p.period) STATE.period = p.period;
+                if (p.sort) STATE.sort = p.sort;
+            } catch (e) { console.warn('prefs load failed', e); }
+        }
+        function savePrefs() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    theme: STATE.theme, view: STATE.view, mode: STATE.mode,
+                    scope: STATE.scope, period: STATE.period, sort: STATE.sort
+                }));
+            } catch (e) { console.warn('prefs save failed', e); }
+        }
+
+        /* ===========================================================
+           THEME
+           =========================================================== */
+        function applyTheme(theme) {
+            STATE.theme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('themeIcon').innerHTML = theme === 'dark'
+                ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
+                : '<circle cx="12" cy="12" r="4"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+            // redraw charts to use new colors
+            refreshAllCharts();
+        }
+
+        /* ===========================================================
+           FORMATTERS
+           =========================================================== */
+        const fmt = {
+            money: (n) => {
+                if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+                if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+                if (n >= 1e3) return '$' + (n / 1e3).toFixed(0) + 'K';
+                return '$' + n;
+            },
+            num: (n) => n.toLocaleString(),
+            pct: (n) => (n >= 0 ? '+' : '') + n.toFixed(1) + '%',
+            date: (s) => {
+                const d = new Date(s);
+                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            },
+        };
+
+        /* ===========================================================
+           CHART HELPERS
+           =========================================================== */
+        const charts = {};
+        function chartColors() {
+            const isDark = STATE.theme === 'dark';
+            return {
+                text: isDark ? '#a3acc2' : '#475569',
+                grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.08)',
+                cyan: '#22d3ee', purple: '#a855f7', magenta: '#ec4899', green: '#10b981',
+                amber: '#f59e0b', red: '#ef4444', blue: '#3b82f6',
+            };
+        }
+        function commonOpts() {
+            const c = chartColors();
+            return {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: c.text, font: { family: 'Inter', size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' } },
+                    tooltip: {
+                        backgroundColor: STATE.theme === 'dark' ? 'rgba(15,20,36,0.95)' : 'rgba(255,255,255,0.98)',
+                        titleColor: STATE.theme === 'dark' ? '#e6ebf5' : '#0f172a',
+                        bodyColor: STATE.theme === 'dark' ? '#a3acc2' : '#475569',
+                        borderColor: STATE.theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.1)',
+                        borderWidth: 1, padding: 10, cornerRadius: 8,
+                        titleFont: { family: 'Inter', weight: '700', size: 12 },
+                        bodyFont: { family: 'Inter', size: 11 },
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: c.text, font: { family: 'Inter', size: 10 } }, grid: { color: c.grid, drawBorder: false } },
+                    y: { ticks: { color: c.text, font: { family: 'Inter', size: 10 } }, grid: { color: c.grid, drawBorder: false } },
+                },
+            };
+        }
+        function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+        /* ===========================================================
+           KPI CARDS
+           =========================================================== */
+        function renderKPIs() {
+            const active = PROJECTS.filter(p => p.status !== 'Completed').length;
+            const completed = 14;
+            const healthAvg = Math.round(PROJECTS.reduce((s, p) => s + p.health, 0) / PROJECTS.length);
+            const totalBudget = PROJECTS.reduce((s, p) => s + p.budget, 0);
+            const totalActual = PROJECTS.reduce((s, p) => s + p.actual, 0);
+            const utilPct = Math.round((totalActual / totalBudget) * 100);
+            const onTime = 87.4;
+            const teamMembers = TEAMS.reduce((s, t) => s + t.headcount, 0);
+            const projected = totalBudget * 1.18;
+            const sparkData = (seed) => Array.from({ length: 12 }, (_, i) => 30 + Math.sin((i + seed) * 0.7) * 12 + i * 1.5 + Math.random() * 4);
+
+            const COLOR_MAP = {
+                'var(--accent-cyan)': { rgb: '34, 211, 238', hex: '#22d3ee' },
+                'var(--accent-green)': { rgb: '16, 185, 129', hex: '#10b981' },
+                'var(--accent-purple)': { rgb: '168, 85, 247', hex: '#a855f7' },
+                'var(--accent-amber)': { rgb: '245, 158, 11', hex: '#f59e0b' },
+                'var(--accent-blue)': { rgb: '59, 130, 246', hex: '#3b82f6' },
+                'var(--accent-magenta)': { rgb: '236, 72, 153', hex: '#ec4899' },
+            };
+
+            const kpis = [
+                { label: 'Active Projects', value: active, sub: '3 critical · 4 at risk', delta: '+2', deltaDir: 'up', color: 'var(--accent-cyan)', sparkSeed: 1 },
+                { label: 'Completed (YTD)', value: completed, sub: '12% above plan', delta: '+12%', deltaDir: 'up', color: 'var(--accent-green)', sparkSeed: 2 },
+                { label: 'Portfolio Health', value: healthAvg + '%', sub: 'Trending up', delta: '+3.2%', deltaDir: 'up', color: 'var(--accent-purple)', sparkSeed: 3 },
+                { label: 'Budget Utilization', value: utilPct + '%', sub: 'of ' + fmt.money(totalBudget), delta: '-1.4%', deltaDir: 'down', color: 'var(--accent-amber)', sparkSeed: 4 },
+                { label: 'On-Time Delivery', value: onTime + '%', sub: 'last 90 days', delta: '+1.8%', deltaDir: 'up', color: 'var(--accent-green)', sparkSeed: 5 },
+                { label: 'Team Members', value: teamMembers, sub: '8 cross-functional teams', delta: '+4', deltaDir: 'up', color: 'var(--accent-blue)', sparkSeed: 6 },
+                { label: 'Projected Annual Spend', value: fmt.money(projected), sub: 'forecast FY26', delta: '+6.2%', deltaDir: 'up', color: 'var(--accent-magenta)', sparkSeed: 7 },
+            ];
+
+            const wrap = document.getElementById('kpiGrid');
+            wrap.innerHTML = kpis.map((k, i) => `
+    <div class="kpi-card" style="--accent-color:${k.color}">
+      <div class="pulse"></div>
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="sub">${k.sub} <span class="delta-${k.deltaDir}">${k.delta}</span></div>
+      <canvas class="spark" id="spark${i}" height="30"></canvas>
+    </div>
+  `).join('');
+
+            kpis.forEach((k, i) => {
+                const ctx = document.getElementById('spark' + i);
+                if (!ctx) return;
+                destroyChart('spark' + i);
+                const cm = COLOR_MAP[k.color];
+                charts['spark' + i] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sparkData(k.sparkSeed).map((_, i) => i),
+                        datasets: [{
+                            data: sparkData(k.sparkSeed),
+                            borderColor: cm.hex,
+                            backgroundColor: `rgba(${cm.rgb}, 0.18)`,
+                            borderWidth: 1.5, fill: true, tension: 0.45, pointRadius: 0,
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
+                });
+            });
+        }
+
+        /* ===========================================================
+           H2H COMPARISON
+           =========================================================== */
+        function renderH2H() {
+            const a = PROJECTS.find(p => p.flagship === 'A');
+            const b = PROJECTS.find(p => p.flagship === 'B');
+            if (!a || !b) return;
+
+            const row = (label, va, vb, fmtFn = (v) => v) => `
+    <div class="h2h-row">
+      <span class="lbl">${label}</span>
+      <span class="val" style="color:var(--accent-cyan)">${fmtFn(va)}</span>
+    </div>
+    <div class="h2h-row">
+      <span class="lbl" style="opacity:0.6">vs other</span>
+      <span class="val" style="color:var(--accent-magenta)">${fmtFn(vb)}</span>
+    </div>
+  `;
+            const wrap = document.getElementById('h2hWrap');
+            wrap.innerHTML = `
+    <div class="h2h-card a">
+      <div class="proj-name">${a.name}</div>
+      <div class="proj-meta">${a.code} · ${a.owner} · ${a.team}</div>
+      <div class="h2h-row"><span class="lbl">Schedule Progress</span><span class="val">${a.completion}%</span></div>
+      <div class="h2h-row"><span class="lbl">Budget Variance</span><span class="val">${fmt.pct(a.budgetVariance)}</span></div>
+      <div class="h2h-row"><span class="lbl">Task Completion</span><span class="val">${a.completedMilestones}/${a.milestones}</span></div>
+      <div class="h2h-row"><span class="lbl">Risk Score</span><span class="val">${a.riskScore}/100</span></div>
+      <div class="h2h-row"><span class="lbl">Resource Utilization</span><span class="val">${a.resourceUtil}%</span></div>
+      <div class="h2h-row"><span class="lbl">Stakeholder Sat.</span><span class="val">${a.stakeholderSat}/100</span></div>
+    </div>
+    <div class="h2h-vs"></div>
+    <div class="h2h-card b">
+      <div class="proj-name">${b.name}</div>
+      <div class="proj-meta">${b.code} · ${b.owner} · ${b.team}</div>
+      <div class="h2h-row"><span class="lbl">Schedule Progress</span><span class="val">${b.completion}%</span></div>
+      <div class="h2h-row"><span class="lbl">Budget Variance</span><span class="val">${fmt.pct(b.budgetVariance)}</span></div>
+      <div class="h2h-row"><span class="lbl">Task Completion</span><span class="val">${b.completedMilestones}/${b.milestones}</span></div>
+      <div class="h2h-row"><span class="lbl">Risk Score</span><span class="val">${b.riskScore}/100</span></div>
+      <div class="h2h-row"><span class="lbl">Resource Utilization</span><span class="val">${b.resourceUtil}%</span></div>
+      <div class="h2h-row"><span class="lbl">Stakeholder Sat.</span><span class="val">${b.stakeholderSat}/100</span></div>
+    </div>
+  `;
+        }
+
+        /* ===========================================================
+           WINNER BREAKDOWN
+           =========================================================== */
+        function renderWinners() {
+            const a = PROJECTS.find(p => p.flagship === 'A');
+            const b = PROJECTS.find(p => p.flagship === 'B');
+            const criteria = [
+                { label: 'Schedule Adherence', aScore: 100 + a.scheduleVariance, bScore: 100 + b.scheduleVariance, higherIsBetter: true },
+                { label: 'Budget Control', aScore: 100 - Math.abs(a.budgetVariance), bScore: 100 - Math.abs(b.budgetVariance), higherIsBetter: true },
+                { label: 'Team Productivity', aScore: a.resourceUtil, bScore: b.resourceUtil, higherIsBetter: false, note: 'lower util' },
+                { label: 'Delivery Quality', aScore: 100 - a.riskScore, bScore: 100 - b.riskScore, higherIsBetter: true },
+                { label: 'Stakeholder Satisfaction', aScore: a.stakeholderSat, bScore: b.stakeholderSat, higherIsBetter: true },
+                { label: 'Overall Health', aScore: a.health, bScore: b.health, higherIsBetter: true },
+            ];
+            const wins = { A: 0, B: 0, TIE: 0 };
+            const wrap = document.getElementById('winnerBreakdown');
+            wrap.innerHTML = criteria.map((c, i) => {
+                let winner;
+                if (c.aScore === c.bScore) { winner = 'TIE'; wins.TIE++; }
+                else if ((c.aScore > c.bScore) === c.higherIsBetter) { winner = 'A'; wins.A++; }
+                else { winner = 'B'; wins.B++; }
+                const medal = ['🥇', '🥈', '🥉', '⚡', '🎯', '🏅'][i] || '•';
+                const cls = winner === 'A' ? 'a-win' : winner === 'B' ? 'b-win' : '';
+                const winLabel = winner === 'A' ? a.name.split(' ').slice(0, 2).join(' ') : winner === 'B' ? b.name.split(' ').slice(0, 2).join(' ') : 'Tied';
+                return `<div class="winner-card">
+      <div class="medal ${cls}">${medal}</div>
+      <div class="criterion">${c.label}${c.note ? ' <span class="tiny muted">(' + c.note + ')</span>' : ''}</div>
+      <div class="winner-name">${winLabel}</div>
+    </div>`;
+            }).join('') + `
+    <div style="margin-top:14px; padding:12px; background:linear-gradient(135deg, rgba(34,211,238,0.08), rgba(236,72,153,0.08)); border-radius:10px; border:1px solid var(--border); text-align:center;">
+      <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Overall Winner</div>
+      <div style="font-size:15px; font-weight:800;">${wins.A > wins.B ? '🏆 ' + a.name : wins.B > wins.A ? '🏆 ' + b.name : '🤝 Tied'}</div>
+      <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">${wins.A}-${wins.B}-${wins.TIE} (A-B-Tie)</div>
+    </div>
+  `;
+        }
+
+        /* ===========================================================
+           FILTERS
+           =========================================================== */
+        function renderFilters() {
+            const wrap = document.getElementById('projFilters');
+            const f = STATE.filters;
+            const teams = ['all', ...new Set(PROJECTS.map(p => p.team))];
+            const depts = ['all', ...new Set(PROJECTS.map(p => p.department))];
+            const statuses = ['all', 'On Track', 'At Risk', 'Delayed', 'Planning', 'Completed'];
+            const owners = ['all', ...new Set(PROJECTS.map(p => p.owner))];
+            const fys = ['all', 'FY24', 'FY25', 'FY26'];
+            const qtrs = ['all', 'Q1', 'Q2', 'Q3', 'Q4'];
+            const sel = (key, items) => items.map(v => `<option value="${v}" ${f[key] === v ? 'selected' : ''}>${v === 'all' ? 'All ' + key : v}</option>`).join('');
+            wrap.innerHTML = `
+    <span class="filter-lbl">Project</span><select class="filter-select" data-filter="project">${sel('project', ['all', ...PROJECTS.map(p => p.name)])}</select>
+    <span class="filter-lbl">Team</span><select class="filter-select" data-filter="team">${sel('team', teams)}</select>
+    <span class="filter-lbl">Dept</span><select class="filter-select" data-filter="department">${sel('department', depts)}</select>
+    <span class="filter-lbl">Owner</span><select class="filter-select" data-filter="owner">${sel('owner', owners)}</select>
+    <span class="filter-lbl">Status</span><select class="filter-select" data-filter="status">${sel('status', statuses)}</select>
+    <span class="filter-lbl">FY</span><select class="filter-select" data-filter="fy">${sel('fy', fys)}</select>
+    <span class="filter-lbl">Qtr</span><select class="filter-select" data-filter="qtr">${sel('qtr', qtrs)}</select>
+    <button class="btn" id="resetFilters">Reset</button>
+  `;
+            wrap.querySelectorAll('select').forEach(s => {
+                s.addEventListener('change', (e) => {
+                    STATE.filters[e.target.dataset.filter] = e.target.value;
+                    renderProjects();
+                    renderProjectTable();
+                });
+            });
+            document.getElementById('resetFilters').addEventListener('click', () => {
+                Object.keys(STATE.filters).forEach(k => STATE.filters[k] = 'all');
+                renderFilters();
+                renderProjects();
+                renderProjectTable();
+            });
+        }
+
+        /* ===========================================================
+           PROJECT CARDS
+           =========================================================== */
+        function filteredProjects() {
+            const s = STATE.search.toLowerCase();
+            return PROJECTS.filter(p => {
+                if (STATE.filters.project !== 'all' && p.name !== STATE.filters.project) return false;
+                if (STATE.filters.team !== 'all' && p.team !== STATE.filters.team) return false;
+                if (STATE.filters.department !== 'all' && p.department !== STATE.filters.department) return false;
+                if (STATE.filters.owner !== 'all' && p.owner !== STATE.filters.owner) return false;
+                if (STATE.filters.status !== 'all' && p.status !== STATE.filters.status) return false;
+                if (s && !(`${p.name} ${p.owner} ${p.team} ${p.code}`.toLowerCase().includes(s))) return false;
+                return true;
+            });
+        }
+        function healthRing(score) {
+            const color = score >= 80 ? 'var(--accent-green)' : score >= 60 ? 'var(--accent-amber)' : 'var(--accent-red)';
+            const c2 = 2 * Math.PI * 14;
+            const offset = c2 * (1 - score / 100);
+            return `<div class="health-ring" title="Health ${score}/100">
+    <svg width="38" height="38">
+      <circle cx="19" cy="19" r="14" fill="none" stroke="var(--border)" stroke-width="3"></circle>
+      <circle cx="19" cy="19" r="14" fill="none" stroke="${color}" stroke-width="3" stroke-dasharray="${c2}" stroke-dashoffset="${offset}" stroke-linecap="round"></circle>
+    </svg>
+    <span class="v" style="color:${color}">${score}</span>
+  </div>`;
+        }
+        function renderProjects() {
+            const list = filteredProjects();
+            const grid = document.getElementById('projGrid');
+            if (list.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1; padding:60px; text-align:center; color:var(--text-faint);">No projects match the current filters.</div>`;
+                return;
+            }
+            grid.innerHTML = list.map(p => {
+                const statusClass = p.status === 'On Track' ? 'badge-green' : p.status === 'At Risk' ? 'badge-amber' : p.status === 'Delayed' ? 'badge-red' : 'badge-blue';
+                const priClass = p.priority === 'Critical' ? 'badge-red' : p.priority === 'High' ? 'badge-amber' : p.priority === 'Medium' ? 'badge-blue' : 'badge-gray';
+                const budgetUsed = Math.round((p.actual / p.budget) * 100);
+                return `<div class="proj-card" style="--proj-color-1:${p.color1}; --proj-color-2:${p.color2}">
+      <div class="head">
+        <h4>${p.name}</h4>
+        <div class="badges">
+          <span class="badge ${statusClass}">${p.status}</span>
+          <span class="badge ${priClass}">${p.priority}</span>
+        </div>
+      </div>
+      <div class="tiny muted" style="margin-bottom:8px">${p.code} · ${p.owner} · ${p.team} · ${p.department}</div>
+      <div class="tiny" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Completion</span><span class="mono"><strong>${p.completion}%</strong></span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${p.completion}%"></div></div>
+      <div class="proj-stats">
+        <div class="s"><div class="k">Budget</div><div class="v">${fmt.money(p.budget)}</div></div>
+        <div class="s"><div class="k">Actual</div><div class="v" style="color:var(--accent-cyan)">${fmt.money(p.actual)}</div></div>
+        <div class="s"><div class="k">Remaining</div><div class="v" style="color:var(--accent-green)">${fmt.money(p.budget - p.actual)}</div></div>
+        <div class="s"><div class="k">Team</div><div class="v">${p.teamSize}</div></div>
+        <div class="s"><div class="k">Milestones</div><div class="v">${p.completedMilestones}/${p.milestones}</div></div>
+        <div class="s"><div class="k">Open Risks</div><div class="v" style="color:${p.openRisks > 5 ? 'var(--accent-red)' : 'var(--accent-amber)'}">${p.openRisks}</div></div>
+        <div class="s"><div class="k">Blocked</div><div class="v" style="color:${p.blockedTasks > 2 ? 'var(--accent-red)' : 'var(--text)'}">${p.blockedTasks}</div></div>
+        <div class="s"><div class="k">Budget Used</div><div class="v">${budgetUsed}%</div></div>
+      </div>
+      <div class="proj-foot">
+        <div class="tiny">📅 ETA ${fmt.date(p.endDate)}</div>
+        <div class="health-score">Health ${healthRing(p.health)}</div>
+      </div>
+    </div>`;
+            }).join('');
+        }
+
+        /* ===========================================================
+           PROJECT TABLE (sortable, expandable)
+           =========================================================== */
+        const PROJ_COLS = [
+            { key: 'name', label: 'Project' },
+            { key: 'owner', label: 'Owner' },
+            { key: 'team', label: 'Team' },
+            { key: 'status', label: 'Status' },
+            { key: 'completion', label: '% Complete' },
+            { key: 'budget', label: 'Budget' },
+            { key: 'actual', label: 'Actual' },
+            { key: 'openRisks', label: 'Risks' },
+            { key: 'blockedTasks', label: 'Blocked' },
+            { key: 'health', label: 'Health' },
+            { key: 'endDate', label: 'ETA' },
+        ];
+        function renderProjectTable() {
+            const list = filteredProjects();
+            document.getElementById('projCount').textContent = `${list.length} of ${PROJECTS.length} projects`;
+            const thead = document.getElementById('projThead');
+            thead.innerHTML = PROJ_COLS.map(c => {
+                const ind = STATE.sort.col === c.key ? `<span class="sort-ind">${STATE.sort.dir === 'asc' ? '▲' : '▼'}</span>` : '';
+                return `<th data-col="${c.key}">${c.label}${ind}</th>`;
+            }).join('');
+            thead.querySelectorAll('th').forEach(th => {
+                th.addEventListener('click', () => {
+                    const col = th.dataset.col;
+                    if (STATE.sort.col === col) STATE.sort.dir = STATE.sort.dir === 'asc' ? 'desc' : 'asc';
+                    else { STATE.sort.col = col; STATE.sort.dir = 'desc'; }
+                    savePrefs();
+                    renderProjectTable();
+                });
+            });
+            const sorted = [...list].sort((a, b) => {
+                const av = a[STATE.sort.col], bv = b[STATE.sort.col];
+                if (typeof av === 'number' && typeof bv === 'number') return STATE.sort.dir === 'asc' ? av - bv : bv - av;
+                return STATE.sort.dir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+            });
+            const tbody = document.getElementById('projTbody');
+            tbody.innerHTML = sorted.map(p => {
+                const statusClass = p.status === 'On Track' ? 'badge-green' : p.status === 'At Risk' ? 'badge-amber' : p.status === 'Delayed' ? 'badge-red' : 'badge-blue';
+                const healthColor = p.health >= 80 ? 'var(--accent-green)' : p.health >= 60 ? 'var(--accent-amber)' : 'var(--accent-red)';
+                return `<tr class="row" data-id="${p.id}">
+      <td><span class="chev">▶</span><strong>${p.name}</strong><div class="tiny muted">${p.code} · ${p.department}</div></td>
+      <td>${p.owner}</td>
+      <td>${p.team}</td>
+      <td><span class="badge ${statusClass}">${p.status}</span></td>
+      <td><div class="progress-cell"><div class="bar"><div class="fill" style="width:${p.completion}%; background:${p.color1}"></div></div><span class="mono tiny">${p.completion}%</span></div></td>
+      <td class="mono">${fmt.money(p.budget)}</td>
+      <td class="mono">${fmt.money(p.actual)}</td>
+      <td class="mono" style="color:${p.openRisks > 5 ? 'var(--accent-red)' : 'var(--text)'}">${p.openRisks}</td>
+      <td class="mono" style="color:${p.blockedTasks > 2 ? 'var(--accent-red)' : 'var(--text)'}">${p.blockedTasks}</td>
+      <td><span class="mono" style="color:${healthColor}; font-weight:700">${p.health}</span></td>
+      <td class="tiny">${fmt.date(p.endDate)}</td>
+    </tr>
+    <tr class="expand-row" data-expand="${p.id}" style="display:none"><td colspan="11">
+      <div class="expand-content">
+        <div class="ex-col"><h5>Overview</h5><ul><li>${p.description}</li></ul></div>
+        <div class="ex-col"><h5>Recent Milestones</h5><ul>${(p.milestones || []).slice(0, 4).map(m => `<li>${m.name} <span class="tiny muted">— ${fmt.date(m.date)} · ${m.status}</span></li>`).join('')}</ul></div>
+        <div class="ex-col"><h5>Key Metrics</h5><ul>
+          <li>Schedule Variance: <strong style="color:${p.scheduleVariance < 0 ? 'var(--accent-red)' : 'var(--accent-green)'}">${fmt.pct(p.scheduleVariance)}</strong></li>
+          <li>Budget Variance: <strong style="color:${p.budgetVariance < 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${fmt.pct(p.budgetVariance)}</strong></li>
+          <li>Resource Utilization: <strong>${p.resourceUtil}%</strong></li>
+          <li>Stakeholder Sat: <strong>${p.stakeholderSat}/100</strong></li>
+        </ul></div>
+        <div class="ex-col"><h5>Risk Snapshot</h5><ul>${RISKS.filter(r => r.project === p.code).slice(0, 3).map(r => `<li>${r.title} <span class="tiny muted">— ${r.severity} · ${r.mitigation}</span></li>`).join('') || '<li class="muted">No active risks.</li>'}</ul></div>
+      </div>
+    </td></tr>`;
+            }).join('');
+            // expand/collapse
+            tbody.querySelectorAll('tr.row').forEach(r => {
+                r.addEventListener('click', () => {
+                    const id = r.dataset.id;
+                    const exp = tbody.querySelector(`tr[data-expand="${id}"]`);
+                    const isOpen = exp.style.display !== 'none';
+                    exp.style.display = isOpen ? 'none' : 'table-row';
+                    r.classList.toggle('expanded', !isOpen);
+                });
+            });
+        }
+
+        /* ===========================================================
+           TIMELINE / GANTT
+           =========================================================== */
+        function renderTimeline() {
+            const wrap = document.getElementById('gantt');
+            const periods = ['Feb 25', 'Apr 25', 'Jun 25', 'Aug 25', 'Oct 25', 'Dec 25', 'Feb 26', 'Apr 26', 'Jun 26', 'Aug 26'];
+            const projectMilestones = [];
+            PROJECTS.forEach(p => {
+                if (p.phases) {
+                    p.phases.forEach(ph => projectMilestones.push({
+                        name: ph.name, sub: p.code, c1: p.color1, c2: p.color2, start: ph.start, end: ph.end, status: ph.status, project: p.name,
+                    }));
+                }
+            });
+            const ticks = `<div class="gantt-axis">${periods.map(p => `<div class="tick">${p}</div>`).join('')}</div>`;
+            const rows = projectMilestones.slice(0, 16).map(m => {
+                const width = m.end - m.start;
+                const op = m.status === 'done' ? 0.55 : m.status === 'active' ? 1 : 0.35;
+                const today = 22; // rough "now" marker
+                return `<div class="gantt-row">
+      <div class="label">${m.name}<div class="sub">${m.sub} · ${m.status}</div></div>
+      <div class="gantt-bar-track">
+        <div class="gantt-bar" style="--bar-c1:${m.c1}; --bar-c2:${m.c2}; left:${m.start}%; width:${width}%; opacity:${op}" title="${m.project} — ${m.name}">${m.name}</div>
+        <div class="gantt-marker" style="left:${today}%" title="Today"></div>
+        ${Math.random() > 0.6 ? `<div class="gantt-milestone" style="left:${m.end}%" title="Milestone: ${m.name}"></div>` : ''}
+      </div>
+    </div>`;
+            }).join('');
+            wrap.innerHTML = ticks + rows;
+        }
+
+        /* ===========================================================
+           HISTORY TABLE
+           =========================================================== */
+        function renderHistory() {
+            const cols = [
+                { key: 'sprint', label: 'Sprint / Milestone' },
+                { key: 'project', label: 'Project' },
+                { key: 'name', label: 'Name' },
+                { key: 'start', label: 'Start' },
+                { key: 'end', label: 'End' },
+                { key: 'planned', label: 'Planned Pts' },
+                { key: 'completed', label: 'Done Pts' },
+                { key: 'status', label: 'Status' },
+                { key: 'owner', label: 'Owner' },
+            ];
+            const thead = document.getElementById('historyThead');
+            thead.innerHTML = cols.map(c => `<th>${c.label}</th>`).join('');
+            const tbody = document.getElementById('historyTbody');
+            tbody.innerHTML = HISTORY.map(h => {
+                const statusClass = h.status === 'Done' ? 'badge-green' : h.status === 'Active' ? 'badge-blue' : 'badge-amber';
+                return `<tr class="row" data-id="${h.sprint}">
+      <td><span class="chev">▶</span><strong class="mono">${h.sprint}</strong></td>
+      <td><span class="badge badge-purple">${h.project}</span></td>
+      <td>${h.name}</td>
+      <td class="tiny">${fmt.date(h.start)}</td>
+      <td class="tiny">${fmt.date(h.end)}</td>
+      <td class="mono">${h.planned}</td>
+      <td class="mono">${h.completed}</td>
+      <td><span class="badge ${statusClass}">${h.status}</span></td>
+      <td>${h.owner}</td>
+    </tr>
+    <tr class="expand-row" data-expand="${h.sprint}" style="display:none"><td colspan="9">
+      <div class="expand-content">
+        <div class="ex-col"><h5>Tasks</h5><ul>${h.tasks.map(t => `<li>${t}</li>`).join('')}</ul></div>
+        <div class="ex-col"><h5>Blockers</h5><ul>${(h.blockers.length ? h.blockers : ['— none —']).map(t => `<li>${t}</li>`).join('')}</ul></div>
+        <div class="ex-col"><h5>Dependencies</h5><ul>${h.dependencies.map(t => `<li>${t}</li>`).join('')}</ul></div>
+        <div class="ex-col"><h5>Owner Note</h5><div class="comment">${h.comments}</div></div>
+      </div>
+    </td></tr>`;
+            }).join('');
+            tbody.querySelectorAll('tr.row').forEach(r => {
+                r.addEventListener('click', () => {
+                    const id = r.dataset.id;
+                    const exp = tbody.querySelector(`tr[data-expand="${id}"]`);
+                    const isOpen = exp.style.display !== 'none';
+                    exp.style.display = isOpen ? 'none' : 'table-row';
+                    r.classList.toggle('expanded', !isOpen);
+                });
+            });
+        }
+
+        /* ===========================================================
+           TEAM WORKLOAD
+           =========================================================== */
+        function renderTeamWorkload() {
+            const wrap = document.getElementById('teamWorkload');
+            wrap.innerHTML = `
+    <div class="team-row" style="border-top:none; font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.6px; font-weight:600;">
+      <div>Team</div><div>Utilization</div><div class="mono">HC</div><div class="mono">FTE</div><div>Status</div>
+    </div>
+  ` + TEAMS.map(t => {
+                const statusColor = t.status === 'Healthy' ? 'badge-green' : t.status === 'Watch' ? 'badge-amber' : 'badge-red';
+                return `<div class="team-row">
+      <div class="name"><div class="avatar">${t.name[0]}</div>${t.name}<div class="tiny muted" style="margin-left:auto">${t.dept}</div></div>
+      <div class="util-bar"><div class="util-fill" style="width:${t.utilization}%"></div></div>
+      <div class="mono">${t.headcount}</div>
+      <div class="mono">${t.fte}</div>
+      <div><span class="badge ${statusColor}">${t.status}</span><div class="tiny muted" style="margin-top:3px">OT: ${t.overtime}</div></div>
+    </div>`;
+            }).join('');
+        }
+
+        /* ===========================================================
+           RISK REGISTER
+           =========================================================== */
+        function renderRisks() {
+            const wrap = document.getElementById('riskRegister');
+            const sevColor = { Critical: '#ef4444', High: '#f59e0b', Med: '#3b82f6', Low: '#10b981' };
+            const mitColor = { 'Mitigated': 'badge-green', 'In Progress': 'badge-amber', 'Planned': 'badge-blue', 'Escalated': 'badge-red', 'Accepted': 'badge-gray' };
+            wrap.innerHTML = RISKS.map(r => {
+                const sc = r.score / 100;
+                const color = sevColor[r.severity];
+                return `<div class="risk-row">
+      <div class="risk-icon" style="background:${color}22; color:${color}">${r.severity[0]}</div>
+      <div class="title">${r.title}<div class="sub">${r.id} · ${r.project}</div></div>
+      <div><span class="badge" style="background:${color}22; color:${color}">${r.severity}</span></div>
+      <div class="tiny"><div class="muted" style="margin-bottom:3px">Prob</div><div class="mono">${Math.round(r.prob * 100)}%</div></div>
+      <div class="tiny"><div class="muted" style="margin-bottom:3px">Impact</div><div class="mono">${Math.round(r.impact * 100)}%</div></div>
+      <div><div class="muted tiny" style="margin-bottom:3px">Score</div><div class="risk-bar"><div class="fill" style="width:${sc * 100}%; background:${color}"></div></div><div class="mono tiny" style="margin-top:2px">${r.score}/100</div></div>
+      <div><span class="badge ${mitColor[r.mitigation] || 'badge-gray'}">${r.mitigation}</span></div>
+      <div class="tiny">${r.owner}</div>
+    </div>`;
+            }).join('');
+        }
+
+        /* ===========================================================
+           INTEGRATIONS
+           =========================================================== */
+        function renderIntegrations() {
+            const wrap = document.getElementById('intGrid');
+            wrap.innerHTML = INTEGRATIONS.map(i => {
+                const statusClass = i.status === 'ok' ? 'status-ok' : i.status === 'warn' ? 'status-warn' : 'status-down';
+                const statusText = i.status === 'ok' ? 'Operational' : i.status === 'warn' ? 'Degraded' : 'Down';
+                return `<div class="int-card">
+      <div class="int-icon" style="background:${i.color}22; color:${i.color}">${i.icon}</div>
+      <div class="int-info">
+        <div class="int-name">${i.name}</div>
+        <div class="int-meta">${i.region} · ${i.latency}ms · ${i.lastSync}</div>
+      </div>
+      <div class="int-status ${statusClass}"><span class="status-dot"></span>${statusText}</div>
+    </div>`;
+            }).join('');
+        }
+
+        /* ===========================================================
+           AUTOMATION
+           =========================================================== */
+        function renderAutomation() {
+            const auto = [
+                { lbl: 'Workflow Executions', v: '184,392', sub: '+12% MoM', color: 'var(--accent-cyan)' },
+                { lbl: 'Webhook Events', v: '2.4M', sub: '98.2% delivered', color: 'var(--accent-purple)' },
+                { lbl: 'Automation Success', v: '99.4%', sub: 'last 30 days', color: 'var(--accent-green)' },
+                { lbl: 'API Cost (est.)', v: '$8,420', sub: 'this month', color: 'var(--accent-amber)' },
+                { lbl: 'Total Savings', v: '$412K', sub: 'attributed to automation', color: 'var(--accent-magenta)' },
+                { lbl: 'Hours Saved', v: '6,840', sub: 'since program start', color: 'var(--accent-blue)' },
+                { lbl: 'Active Workflows', v: '247', sub: 'across 14 systems', color: 'var(--accent-cyan)' },
+                { lbl: 'Avg Latency', v: '142ms', sub: 'p95 across all flows', color: 'var(--accent-green)' },
+            ];
+            document.getElementById('autoGrid').innerHTML = auto.map(a => `<div class="auto-card" style="--auto-color:${a.color}"><div class="lbl">${a.lbl}</div><div class="v">${a.v}</div><div class="sub">${a.sub}</div></div>`).join('');
+        }
+
+        /* ===========================================================
+           NOTES
+           =========================================================== */
+        function renderNotes() {
+            const wrap = document.getElementById('notesArea');
+            wrap.innerHTML = NOTES.map(n => `<div class="note-card">
+    <div class="head">
+      <div class="author"><div class="avatar">${n.author.split(' ').map(x => x[0]).join('').slice(0, 2)}</div><div><div class="nm">${n.author}</div><div class="role">${n.role}</div></div></div>
+      <div class="ts">${n.ts}</div>
+    </div>
+    <div class="body">${n.body}</div>
+    <div>${n.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+  </div>`).join('');
+        }
+        function addNote() {
+            const input = document.getElementById('noteInput');
+            const tagInput = document.getElementById('noteTag');
+            const body = input.value.trim();
+            if (!body) return;
+            NOTES.unshift({
+                author: 'You', role: 'Project Manager', ts: 'just now',
+                body: body,
+                tags: tagInput.value.split(',').map(t => t.trim()).filter(Boolean).length ? tagInput.value.split(',').map(t => t.trim()).filter(Boolean) : ['New Note'],
+            });
+            input.value = ''; tagInput.value = '';
+            renderNotes();
+        }
+
+        /* ===========================================================
+           MILESTONE PROGRESS
+           =========================================================== */
+        function renderMilestoneProgress() {
+            const wrap = document.getElementById('milestoneProgress');
+            const items = PROJECTS.filter(p => p.flagship || p.completion > 50).slice(0, 6);
+            wrap.innerHTML = items.map(p => {
+                const pct = Math.round((p.completedMilestones / p.milestones) * 100);
+                return `<div style="margin-bottom:14px">
+      <div class="flex between center" style="margin-bottom:5px">
+        <div class="tiny" style="font-weight:600">${p.name} <span class="muted">· ${p.completedMilestones}/${p.milestones} milestones</span></div>
+        <div class="mono tiny" style="color:${p.color1}"><strong>${pct}%</strong></div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%; --proj-color-1:${p.color1}; --proj-color-2:${p.color2}"></div></div>
+    </div>`;
+            }).join('');
+        }
+
+        /* ===========================================================
+           CHARTS
+           =========================================================== */
+        function renderTrendChart() {
+            const c = chartColors();
+            let labels, planned, actual;
+            if (STATE.period === 'weekly') {
+                labels = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12'];
+                planned = [8, 14, 21, 28, 34, 40, 46, 52, 58, 64, 70, 76];
+                actual = [7, 13, 20, 26, 32, 38, 45, 50, 55, 61, 67, 73];
+            } else if (STATE.period === 'quarterly') {
+                labels = ['Q1 FY25', 'Q2 FY25', 'Q3 FY25', 'Q4 FY25'];
+                planned = [22, 48, 72, 95];
+                actual = [20, 45, 70, 91];
+            } else {
+                labels = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
+                planned = [12, 22, 32, 42, 52, 60, 68, 74, 80, 86, 90, 95];
+                actual = [10, 20, 30, 38, 47, 56, 65, 70, 76, 82, 87, 91];
+            }
+            destroyChart('chartTrend');
+            charts.chartTrend = new Chart(document.getElementById('chartTrend'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Planned', data: planned, borderColor: c.purple, backgroundColor: c.purple + '22', tension: 0.4, fill: true, borderWidth: 2, pointRadius: 3, pointBackgroundColor: c.purple },
+                        { label: 'Actual', data: actual, borderColor: c.cyan, backgroundColor: c.cyan + '22', tension: 0.4, fill: true, borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: c.cyan },
+                    ],
+                },
+                options: commonOpts(),
+            });
+        }
+        function renderBudgetChart() {
+            const c = chartColors();
+            const labels = PROJECTS.slice(0, 6).map(p => p.code);
+            destroyChart('chartBudget');
+            charts.chartBudget = new Chart(document.getElementById('chartBudget'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Budget', data: PROJECTS.slice(0, 6).map(p => p.budget), backgroundColor: c.purple + '99', borderColor: c.purple, borderWidth: 1, borderRadius: 6 },
+                        { label: 'Actual', data: PROJECTS.slice(0, 6).map(p => p.actual), backgroundColor: c.cyan + 'cc', borderColor: c.cyan, borderWidth: 1, borderRadius: 6 },
+                    ],
+                },
+                options: { ...commonOpts(), scales: { ...commonOpts().scales, y: { ...commonOpts().scales.y, ticks: { ...commonOpts().scales.y.ticks, callback: (v) => fmt.money(v) } } } },
+            });
+        }
+        function renderVelocityChart() {
+            const c = chartColors();
+            const isAgile = STATE.mode === 'agile';
+            const sprints = isAgile
+                ? ['S18', 'S19', 'S20', 'S21', 'S22', 'S23', 'S24', 'S25']
+                : ['Discovery', 'Plan', 'Design', 'Build', 'Test', 'UAT', 'Pilot', 'Launch'];
+            const committed = [180, 195, 210, 200, 220, 215, 230, 240];
+            const completed = [168, 188, 205, 192, 218, 198, 226, 218];
+            destroyChart('chartVelocity');
+            charts.chartVelocity = new Chart(document.getElementById('chartVelocity'), {
+                type: 'bar',
+                data: {
+                    labels: sprints,
+                    datasets: [
+                        { type: 'bar', label: isAgile ? 'Committed' : 'Planned Effort', data: committed, backgroundColor: c.purple + '88', borderRadius: 5 },
+                        { type: 'bar', label: isAgile ? 'Completed' : 'Delivered', data: completed, backgroundColor: c.green + 'cc', borderRadius: 5 },
+                        { type: 'line', label: isAgile ? 'Throughput %' : 'On-Time %', data: completed.map((v, i) => Math.round((v / committed[i]) * 100)), borderColor: c.amber, backgroundColor: c.amber + '33', tension: 0.4, yAxisID: 'y1', borderWidth: 2.5, pointRadius: 3 },
+                    ],
+                },
+                options: {
+                    ...commonOpts(),
+                    scales: {
+                        x: commonOpts().scales.x,
+                        y: { ...commonOpts().scales.y, position: 'left', title: { display: true, text: isAgile ? 'Story Points' : 'Effort (pts)', color: c.text } },
+                        y1: { ...commonOpts().scales.y, position: 'right', grid: { display: false }, min: 80, max: 110, ticks: { ...commonOpts().scales.y.ticks, callback: (v) => v + '%' } },
+                    },
+                },
+            });
+        }
+        function renderResourceChart() {
+            const c = chartColors();
+            destroyChart('chartResource');
+            charts.chartResource = new Chart(document.getElementById('chartResource'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Engineering', 'Data', 'Design', 'Operations', 'Security', 'AI/ML'],
+                    datasets: [{
+                        data: [42, 22, 14, 12, 6, 4],
+                        backgroundColor: [c.cyan, c.purple, c.magenta, c.amber, c.green, c.blue],
+                        borderColor: STATE.theme === 'dark' ? '#0a0e1a' : '#ffffff',
+                        borderWidth: 3,
+                    }],
+                },
+                options: {
+                    ...commonOpts(),
+                    cutout: '64%',
+                    plugins: {
+                        ...commonOpts().plugins,
+                        legend: { ...commonOpts().plugins.legend, position: 'bottom' },
+                    },
+                },
+            });
+        }
+        function renderRisksChart() {
+            const c = chartColors();
+            destroyChart('chartRisks');
+            charts.chartRisks = new Chart(document.getElementById('chartRisks'), {
+                type: 'bar',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [RISKS.filter(r => r.severity === 'Critical').length, RISKS.filter(r => r.severity === 'High').length, RISKS.filter(r => r.severity === 'Med').length, RISKS.filter(r => r.severity === 'Low').length],
+                        backgroundColor: [c.red + 'cc', c.amber + 'cc', c.blue + 'cc', c.green + 'cc'],
+                        borderColor: [c.red, c.amber, c.blue, c.green],
+                        borderWidth: 1, borderRadius: 8,
+                    }],
+                },
+                options: { ...commonOpts(), indexAxis: 'y', plugins: { ...commonOpts().plugins, legend: { display: false } } },
+            });
+        }
+        function renderSPIChart() {
+            const c = chartColors();
+            destroyChart('chartSPI');
+            charts.chartSPI = new Chart(document.getElementById('chartSPI'), {
+                type: 'bar',
+                data: {
+                    labels: ['MPM', 'CAI', 'CMP-2', 'AISB', 'DWC', 'SCO', 'DXP', 'CPR', 'RES', 'MRF'],
+                    datasets: [
+                        { label: 'Planned %', data: PROJECTS.map(p => p.completion + 5), backgroundColor: c.purple + '88', borderRadius: 5 },
+                        { label: 'Actual %', data: PROJECTS.map(p => p.completion), backgroundColor: c.cyan + 'cc', borderRadius: 5 },
+                    ],
+                },
+                options: commonOpts(),
+            });
+        }
+        function renderDeptChart() {
+            const c = chartColors();
+            const depts = ['Engineering', 'Data', 'Design', 'Operations'];
+            const data = depts.map(d => TEAMS.filter(t => t.dept === d).reduce((s, t) => s + t.headcount, 0));
+            destroyChart('chartDept');
+            charts.chartDept = new Chart(document.getElementById('chartDept'), {
+                type: 'bar',
+                data: {
+                    labels: depts,
+                    datasets: [
+                        { label: 'Headcount', data, backgroundColor: c.cyan + 'cc', borderRadius: 6 },
+                        { label: 'FTE Available', data: data.map(v => Math.round(v * 0.93)), backgroundColor: c.purple + '99', borderRadius: 6 },
+                        { label: 'Overtime Risk', data: data.map(v => Math.round(v * 0.18)), backgroundColor: c.amber + 'cc', borderRadius: 6 },
+                    ],
+                },
+                options: commonOpts(),
+            });
+        }
+        function renderMitigationChart() {
+            const c = chartColors();
+            destroyChart('chartMitigation');
+            charts.chartMitigation = new Chart(document.getElementById('chartMitigation'), {
+                type: 'radar',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low', 'Escalated', 'Mitigated'],
+                    datasets: [{
+                        label: 'Active',
+                        data: [
+                            RISKS.filter(r => r.severity === 'Critical').length,
+                            RISKS.filter(r => r.severity === 'High').length,
+                            RISKS.filter(r => r.severity === 'Med').length,
+                            RISKS.filter(r => r.severity === 'Low').length,
+                            RISKS.filter(r => r.mitigation === 'Escalated').length,
+                            RISKS.filter(r => r.mitigation === 'Mitigated').length,
+                        ],
+                        backgroundColor: c.cyan + '33',
+                        borderColor: c.cyan, pointBackgroundColor: c.cyan, borderWidth: 2,
+                    }],
+                },
+                options: { ...commonOpts(), scales: { r: { ticks: { color: c.text, backdropColor: 'transparent' }, grid: { color: c.grid }, pointLabels: { color: c.text, font: { size: 10 } } } } },
+            });
+        }
+        function renderWebhookChart() {
+            const c = chartColors();
+            const days = Array.from({ length: 14 }, (_, i) => 'D' + (i + 1));
+            const success = days.map(() => 7000 + Math.random() * 3000);
+            const failed = days.map(() => 200 + Math.random() * 400);
+            destroyChart('chartWebhook');
+            charts.chartWebhook = new Chart(document.getElementById('chartWebhook'), {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [
+                        { label: 'Success', data: success, borderColor: c.green, backgroundColor: c.green + '22', tension: 0.4, fill: true, borderWidth: 2 },
+                        { label: 'Failed', data: failed, borderColor: c.red, backgroundColor: c.red + '22', tension: 0.4, fill: true, borderWidth: 2 },
+                    ],
+                },
+                options: commonOpts(),
+            });
+        }
+        function refreshAllCharts() {
+            renderTrendChart();
+            renderBudgetChart();
+            renderVelocityChart();
+            renderResourceChart();
+            renderRisksChart();
+            renderSPIChart();
+            renderDeptChart();
+            renderMitigationChart();
+            renderWebhookChart();
+        }
+
+        /* ===========================================================
+           VIEW SWITCHING & TOGGLES
+           =========================================================== */
+        function switchView(view) {
+            STATE.view = view;
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+            document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+            savePrefs();
+            // Trigger Chart.js resize on switch
+            setTimeout(() => Object.values(charts).forEach(ch => ch && ch.resize && ch.resize()), 50);
+        }
+        function setToggleGroup(group, key, attr) {
+            group.querySelectorAll('.toggle-btn').forEach(b => {
+                b.addEventListener('click', () => {
+                    group.querySelectorAll('.toggle-btn').forEach(x => x.classList.remove('active'));
+                    b.classList.add('active');
+                    STATE[key] = b.dataset[attr];
+                    savePrefs();
+                    onToggleChange(key);
+                });
+            });
+        }
+        function onToggleChange(key) {
+            if (key === 'period') {
+                // re-render trend chart with new granularity
+                renderTrendChart();
+                renderBudgetChart();
+            } else if (key === 'mode') {
+                // agile vs waterfall changes the velocity chart label
+                renderVelocityChart();
+            } else if (key === 'scope') {
+                // scope filter: portfolio shows all, program = top departments, project = flagship only
+                if (STATE.view === 'projects') {
+                    renderProjects();
+                    renderProjectTable();
+                } else {
+                    renderProjects(); // preview update
+                }
+            }
+        }
+        function scopeFilteredProjects() {
+            if (STATE.scope === 'portfolio') return PROJECTS;
+            if (STATE.scope === 'program') return PROJECTS.filter(p => ['Engineering', 'Data'].includes(p.department));
+            if (STATE.scope === 'project') {
+                const mpm = PROJECTS.find(p => p.flagship === 'A');
+                return mpm ? [mpm] : PROJECTS;
+            }
+            return PROJECTS;
+        }
+
+        /* ===========================================================
+           BOOT
+           =========================================================== */
+        function init() {
+            loadPrefs();
+            applyTheme(STATE.theme);
+            switchView(STATE.view);
+
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                applyTheme(STATE.theme === 'dark' ? 'light' : 'dark');
+                savePrefs();
+            });
+            document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+            setToggleGroup(document.getElementById('reportingMode'), 'mode', 'mode');
+            setToggleGroup(document.getElementById('scopeMode'), 'scope', 'scope');
+            setToggleGroup(document.getElementById('periodMode'), 'period', 'period');
+            // restore active state of toggles from STATE
+            const restoreToggle = (id, attr) => {
+                const grp = document.getElementById(id);
+                grp.querySelectorAll('.toggle-btn').forEach(b => {
+                    const isActive = b.dataset[attr] === STATE[attr];
+                    b.classList.toggle('active', isActive);
+                });
+            };
+            restoreToggle('reportingMode', 'mode');
+            restoreToggle('scopeMode', 'scope');
+            restoreToggle('periodMode', 'period');
+
+            document.getElementById('globalSearch').addEventListener('input', (e) => {
+                STATE.search = e.target.value;
+                if (STATE.view === 'projects' || STATE.view === 'summary') {
+                    renderProjects();
+                    renderProjectTable();
+                }
+            });
+            document.getElementById('addNoteBtn').addEventListener('click', addNote);
+
+            // initial render
+            renderKPIs();
+            renderH2H();
+            renderWinners();
+            renderMilestoneProgress();
+            refreshAllCharts();
+            renderFilters();
+            renderProjects();
+            renderProjectTable();
+            renderTimeline();
+            renderHistory();
+            renderTeamWorkload();
+            renderRisks();
+            renderIntegrations();
+            renderAutomation();
+            renderNotes();
+
+            // live clock for lastSync
+            setInterval(() => {
+                const el = document.getElementById('lastSync');
+                if (el) el.textContent = 'just now';
+            }, 30000);
+        }
+        init();
+    </script>
+</body>
+
+</html>

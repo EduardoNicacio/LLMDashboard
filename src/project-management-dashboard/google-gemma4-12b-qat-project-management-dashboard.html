@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Enterprise Project Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-blue: #38bdf8;
+            --neon-purple: #818cf8;
+            --neon-pink: #f472b6;
+            --neon-green: #4ade80;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --text-main: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .light body {
+            --bg-dark: #f1f5f9;
+            --card-dark: #ffffff;
+            --glass-bg: rgba(0, 0, 0, 0.03);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-main: #0f172a;
+        }
+
+        body.dark {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .neon-text-blue {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        .neon-border-blue {
+            border-color: var(--neon-blue);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 10px;
+        }
+
+        .tab-active {
+            border-bottom: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .5;
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+        }
+
+        .expanded .expandable-content {
+            max-height: 500px;
+        }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen overflow-x-hidden">
+
+    <!-- Navigation Sidebar -->
+    <nav
+        class="fixed left-0 top-0 h-full w-20 lg:w-64 bg-slate-900 border-r border-slate-800 z-50 transition-all duration-300 hidden md:flex flex-col p-4">
+        <div class="flex items-center gap-3 mb-10 px-2">
+            <div
+                class="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(56,189,248,0.6)]">
+                <i data-lucide="zap" class="text-white w-5 h-5"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tighter hidden lg:block">NEXUS <span
+                    class="text-sky-400">CORE</span></span>
+        </div>
+
+        <div class="space-y-2 flex-1">
+            <button onclick="switchView('summary')"
+                class="nav-item w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors group"
+                id="nav-summary">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 text-slate-400 group-hover:text-sky-400"></i>
+                <span class="hidden lg:block">Summary</span>
+            </button>
+            <button onclick="switchView('projects')"
+                class="nav-item w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors group"
+                id="nav-projects">
+                <i data-lucide="briefcase" class="w-5 h-5 text-slate-400 group-hover:text-sky-400"></i>
+                <span class="hidden lg:block">Projects</span>
+            </button>
+            <button onclick="switchView('timeline')"
+                class="nav-item w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors group"
+                id="nav-timeline">
+                <i data-lucide="gantt-chart" class="w-5 h-5 text-slate-400 group-hover:text-sky-400"></i>
+                <span class="hidden lg:block">Timeline</span>
+            </button>
+            <button onclick="switchView('resources')"
+                class="nav-item w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors group"
+                id="nav-resources">
+                <i data-lucide="users" class="w-5 h-5 text-slate-400 group-hover:text-sky-400"></i>
+                <span class="hidden lg:block">Resources</span>
+            </button>
+            <button onclick="switchView('risks')"
+                class="nav-item w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors group"
+                id="nav-risks">
+                <i data-lucide="shield-alert" class="w-5 h-5 text-slate-400 group-hover:text-sky-400"></i>
+                <span class="hidden lg:block">Risks</span>
+            </button>
+            <button onclick="switchView('operations')"
+                class="nav-item w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors group"
+                id="nav-operations">
+                <i data-lucide="settings-2" class="w-5 h-5 text-slate-400 group-hover:text-sky-400"></i>
+                <span class="hidden lg:block">Operations</span>
+            </button>
+        </div>
+
+        <div class="mt-auto pt-6 border-t border-slate-800">
+            <button onclick="toggleTheme()"
+                class="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800 transition-colors group">
+                <i data-lucide="moon" class="w-5 h-5 text-slate-400 group-hover:text-yellow-400" id="theme-icon"></i>
+                <span class="hidden lg:block">Theme</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="md:ml-20 lg:ml-64 min-h-screen p-4 md:p-8">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 id="view-title" class="text-3xl font-extrabold tracking-tight">Executive Summary</h1>
+                <p class="text-slate-500 text-sm mt-1">Real-time portfolio performance & operational health</p>
+            </div>
+            <div class="flex flex-wrap gap-3 items-center">
+                <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                    <button onclick="setReportingMode('Agile')" id="mode-agile"
+                        class="px-3 py-1 text-xs font-bold rounded-md bg-sky-600">AGILE</button>
+                    <button onclick="setReportingMode('Waterfall')" id="mode-waterfall"
+                        class="px-3 py-1 text-xs font-bold rounded-md">WATERFALL</button>
+                </div>
+                <select id="period-select" onchange="updatePeriod()"
+                    class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-sky-500">
+                    <option value="quarterly">Quarterly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                    <input type="text" placeholder="Search projects..."
+                        class="bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 ring-sky-500 w-48 md:w-64">
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <div id="content-area" class="space-y-8 animate-fade-in">
+            <!-- Content injected by JS -->
+        </div>
+    </main>
+
+    <script>
+        // --- DATA MODELS ---
+        const state = {
+            theme: localStorage.getItem('theme') || 'dark',
+            currentView: localStorage.getItem('currentView') || 'summary',
+            reportingMode: localStorage.getItem('reportingMode') || 'Agile',
+            period: localStorage.getItem('period') || 'quarterly',
+            projects: [
+                { id: 1, name: "Mobile Platform Modernization", status: "In Progress", completion: 68, budget: 1200000, actual: 840000, teamSize: 12, risks: 3, blocked: 1, owner: "Sarah Chen", dept: "Engineering", priority: "High", health: 88, color: "#38bdf8" },
+                { id: 2, name: "Customer Analytics Initiative", status: "In Progress", completion: 42, budget: 850000, actual: 410000, teamSize: 8, risks: 5, blocked: 2, owner: "Marcus Vane", dept: "Data Science", priority: "Medium", health: 74, color: "#f472b6" },
+                { id: 3, name: "Cloud Infrastructure Migration", status: "Completed", completion: 100, budget: 500000, actual: 485000, teamSize: 6, risks: 0, blocked: 0, owner: "Elena Rodriguez", dept: "DevOps", priority: "High", health: 98, color: "#4ade80" },
+                { id: 4, name: "Legacy ERP Integration", status: "At Risk", completion: 25, budget: 2000000, actual: 1100000, teamSize: 15, risks: 12, blocked: 5, owner: "James Wu", dept: "Operations", priority: "Critical", health: 42, color: "#fbbf24" },
+                { id: 5, name: "AI Chatbot Deployment", status: "Planning", completion: 5, budget: 300000, actual: 20000, teamSize: 4, risks: 2, blocked: 0, owner: "Sarah Chen", dept: "Engineering", priority: "Low", health: 90, color: "#818cf8" },
+                { id: 6, name: "Global Security Audit", status: "In Progress", completion: 55, budget: 450000, actual: 230000, teamSize: 7, risks: 1, blocked: 0, owner: "Elena Rodriguez", dept: "Security", priority: "High", health: 85, color: "#a78bfa" }
+            ],
+            risks: [
+                { id: 1, project: "Legacy ERP Integration", severity: "Critical", probability: "High", impact: 9, status: "Active", owner: "James Wu" },
+                { id: 2, project: "Customer Analytics Initiative", severity: "Medium", probability: "Medium", impact: 5, status: "Mitigated", owner: "Marcus Vane" },
+                { id: 3, project: "Mobile Platform Modernization", severity: "High", probability: "Low", impact: 7, status: "Active", owner: "Sarah Chen" }
+            ],
+            integrations: [
+                { name: "Jira", status: "Online", latency: "45ms", lastSync: "2m ago" },
+                { name: "Azure DevOps", status: "Online", latency: "112ms", lastSync: "1m ago" },
+                { name: "GitHub", status: "Online", latency: "32ms", lastSync: "Just now" },
+                { name: "Slack", status: "Online", latency: "12ms", lastSync: "Just now" },
+                { name: "MS Teams", status: "Offline", latency: "0ms", lastSync: "1h ago" }
+            ]
+        };
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            applyTheme();
+            renderView();
+            lucide.createIcons();
+        }
+
+        function applyTheme() {
+            document.documentElement.className = state.theme;
+            const icon = document.getElementById('theme-icon');
+            if (state.theme === 'dark') {
+                icon.setAttribute('data-lucide', 'sun');
+            } else {
+                icon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+            localStorage.setItem('theme', state.theme);
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            applyTheme();
+        }
+
+        function switchView(view) {
+            state.currentView = view;
+            localStorage.setItem('currentView', view);
+            renderView();
+        }
+
+        function setReportingMode(mode) {
+            state.reportingMode = mode;
+            localStorage.setItem('reportingMode', mode);
+
+            const btnAgile = document.getElementById('mode-agile');
+            const btnWater = document.getElementById('mode-waterfall');
+
+            if (mode === 'Agile') {
+                btnAgile.className = "px-3 py-1 text-xs font-bold rounded-md bg-sky-600";
+                btnWater.className = "px-3 py-1 text-xs font-bold rounded-md";
+            } else {
+                btnWater.className = "px-3 py-1 text-xs font-bold rounded-md bg-sky-600";
+                btnAgile.className = "px-3 py-1 text-xs font-bold rounded-md";
+            }
+            renderView();
+        }
+
+        function updatePeriod() {
+            state.period = document.getElementById('period-select').value;
+            localStorage.setItem('period', state.period);
+            renderView();
+        }
+
+        // --- RENDERING ENGINE ---
+        function renderView() {
+            const container = document.getElementById('content-area');
+            const title = document.getElementById('view-title');
+
+            // Update Nav UI
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-slate-800', 'border-r-2', 'border-sky-500');
+            });
+            const activeNav = document.getElementById(`nav-${state.currentView}`);
+            if (activeNav) activeNav.classList.add('bg-slate-800', 'border-r-2', 'border-sky-500');
+
+            // Clear and Render
+            container.innerHTML = '';
+
+            switch (state.currentView) {
+                case 'summary':
+                    title.innerText = "Executive Summary";
+                    container.innerHTML = renderSummary();
+                    break;
+                case 'projects':
+                    title.innerText = "Project Portfolio";
+                    container.innerHTML = renderProjects();
+                    break;
+                case 'timeline':
+                    title.innerText = "Delivery Roadmap";
+                    container.innerHTML = renderTimeline();
+                    break;
+                case 'resources':
+                    title.innerText = "Resource Allocation";
+                    container.innerHTML = renderResources();
+                    break;
+                case 'risks':
+                    title.innerText = "Risk Management";
+                    container.innerHTML = renderRisks();
+                    break;
+                case 'operations':
+                    title.innerText = "Operational Intelligence";
+                    container.innerHTML = renderOperations();
+                    break;
+            }
+
+            lucide.createIcons();
+            renderCharts();
+        }
+
+        // --- VIEW COMPONENTS ---
+
+        function renderSummary() {
+            const totalProjects = state.projects.length;
+            const completed = state.projects.filter(p => p.status === 'Completed').length;
+            const healthScore = Math.round(state.projects.reduce((acc, p) => acc + p.health, 0) / totalProjects);
+            const budgetUtil = Math.round((state.projects.reduce((acc, p) => acc + p.actual, 0) / state.projects.reduce((acc, p) => acc + p.budget, 0)) * 100);
+            const onTimeRate = "94.2%";
+
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    ${createStatCard("Total Projects", totalProjects, "projects", "sky")}
+                    ${createStatCard("Completed", completed, "check-circle", "green")}
+                    ${createStatCard("Portfolio Health", healthScore + "%", "activity", "purple", true)}
+                    ${createStatCard("Budget Utilization", budgetUtil + "%", "dollar-sign", "pink", true)}
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Budget vs. Actual Spend (Projected)</h3>
+                        <div class="chart-container">
+                            <canvas id="budgetChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Flagship Comparison</h3>
+                        <div class="space-y-6">
+                            <div class="p-4 rounded-xl bg-sky-500/10 border border-sky-500/20">
+                                <h4 class="font-bold text-sky-400">Mobile Platform Modernization</h4>
+                                <div class="flex justify-between mt-2 text-sm">
+                                    <span>Progress: 68%</span>
+                                    <span>Budget: 70%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 h-2 rounded-full mt-2">
+                                    <div class="bg-sky-500 h-full rounded-full" style="width: 68%"></div>
+                                </div>
+                            </div>
+                            <div class="p-4 rounded-xl bg-pink-500/10 border border-pink-500/20">
+                                <h4 class="font-bold text-pink-400">Customer Analytics Initiative</h4>
+                                <div class="flex justify-between mt-2 text-sm">
+                                    <span>Progress: 42%</span>
+                                    <span>Budget: 48%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 h-2 rounded-full mt-2">
+                                    <div class="bg-pink-500 h-full rounded-full" style="width: 42%"></div>
+                                </div>
+                            </div>
+                            <div class="mt-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <p class="text-xs text-slate-400">Winner Breakdown</p>
+                                <p class="text-sm mt-1"><b>Mobile Platform</b> leads in <b>Schedule Adherence</b>, while <b>Analytics</b> shows higher <b>Stakeholder Satisfaction</b>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Team Velocity</h3>
+                        <div class="chart-container">
+                            <canvas id="velocityChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Risk Severity Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Department Allocation</h3>
+                        <div class="chart-container">
+                            <canvas id="deptChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProjects() {
+            return `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div class="flex gap-2">
+                        <select id="filter-dept" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+                            <option value="all">All Departments</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Security">Security</option>
+                        </select>
+                        <select id="filter-status" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+                            <option value="all">All Statuses</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="At Risk">At Risk</option>
+                            <option value="Planning">Planning</option>
+                        </select>
+                    </div>
+                    <div class="text-sm text-slate-400">Showing ${state.projects.length} projects</div>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4">Project Name</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Completion</th>
+                                <th class="p-4">Budget</th>
+                                <th class="p-4">Owner</th>
+                                <th class="p-4">Health</th>
+                                <th class="p-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="project-table-body" class="divide-y divide-slate-800">
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderTimeline() {
+            return `
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-bold mb-6">Project Milestones & Phases</h3>
+                    <div class="space-y-8 relative">
+                        <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-800"></div>
+                        ${state.projects.map(p => `
+                            <div class="relative pl-12">
+                                <div class="absolute left-0 top-0 w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center border-4 border-slate-900 shadow-[0_0_10px_rgba(56,189,248,0.5)]">
+                                    <i data-lucide="circle" class="w-2 h-2 text-white"></i>
+                                </div>
+                                <div class="glass-card p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-bold">${p.name}</h4>
+                                            <p class="text-xs text-slate-400">Phase: ${p.status === 'Completed' ? 'Delivery' : 'Execution'}</p>
+                                        </div>
+                                        <span class="text-xs font-bold px-2 py-1 bg-slate-800 rounded">${p.completion}%</span>
+                                    </div>
+                                    <div class="mt-4 flex gap-4 text-xs text-slate-400">
+                                        <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> Q3 2024</span>
+                                        <span class="flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> ${p.owner}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResources() {
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Team Workload & Capacity</h3>
+                        <div class="chart-container">
+                            <canvas id="resourceChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Staffing Status</h3>
+                        <div class="space-y-4">
+                            ${['Sarah Chen', 'Marcus Vane', 'Elena Rodriguez', 'James Wu'].map(name => `
+                                <div class="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs">${name[0]}</div>
+                                        <span class="font-medium">${name}</span>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <span class="text-xs text-slate-400">85% Capacity</span>
+                                        <div class="w-24 bg-slate-700 h-2 rounded-full">
+                                            <div class="bg-green-500 h-full rounded-full" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRisks() {
+            return `
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4">Risk Description</th>
+                                <th class="p-4">Project</th>
+                                <th class="p-4">Severity</th>
+                                <th class="p-4">Probability</th>
+                                <th class="p-4">Impact</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Owner</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            ${state.risks.map(r => `
+                                <tr class="hover:bg-slate-800/30 transition-colors">
+                                    <td class="p-4 font-medium">${r.project}</td>
+                                    <td class="p-4 text-slate-400">${r.project}</td>
+                                    <td class="p-4">
+                                        <span class="px-2 py-1 rounded text-[10px] font-bold ${r.severity === 'Critical' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                                            ${r.severity}
+                                        </span>
+                                    </td>
+                                    <td class="p-4">${r.probability}</td>
+                                    <td class="p-4">${r.impact}/10</td>
+                                    <td class="p-4">${r.status}</td>
+                                    <td class="p-4">${r.owner}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderOperations() {
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Integration Status</h3>
+                        <div class="space-y-4">
+                            ${state.integrations.map(i => `
+                                <div class="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-2 h-2 rounded-full ${i.status === 'Online' ? 'bg-green-500 status-pulse' : 'bg-red-500'}"></div>
+                                        <span class="font-medium">${i.name}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-slate-400">${i.latency}</div>
+                                        <div class="text-[10px] text-slate-500">${i.lastSync}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-bold mb-4">Automation & API Usage</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>Workflow Success Rate</span>
+                                    <span class="text-green-400">99.8%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 h-2 rounded-full">
+                                    <div class="bg-green-500 h-full rounded-full" style="width: 99.8%"></div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-4 bg-slate-800/50 rounded-lg">
+                                    <div class="text-xs text-slate-400">Est. Monthly Savings</div>
+                                    <div class="text-xl font-bold text-sky-400">$12,400</div>
+                                </div>
+                                <div class="p-4 bg-slate-800/50 rounded-lg">
+                                    <div class="text-xs text-slate-400">API Calls / Day</div>
+                                    <div class="text-xl font-bold text-sky-400">42,801</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- CHART RENDERING ---
+        let charts = {};
+        function renderCharts() {
+            if (charts.budget) charts.budget.destroy();
+            if (charts.velocity) charts.velocity.destroy();
+            if (charts.risk) charts.risk.destroy();
+            if (charts.dept) charts.dept.destroy();
+            if (charts.resource) charts.resource.destroy();
+
+            const ctxBudget = document.getElementById('budgetChart');
+            if (ctxBudget) {
+                charts.budget = new Chart(ctxBudget, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Actual Spend',
+                            data: [100000, 250000, 400000, 600000, 750000, 840000],
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Projected',
+                            data: [120000, 240000, 360000, 480000, 600000, 720000],
+                            borderColor: '#f472b6',
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } } }
+                });
+            }
+
+            const ctxVelocity = document.getElementById('velocityChart');
+            if (ctxVelocity) {
+                charts.velocity = new Chart(ctxVelocity, {
+                    type: 'bar',
+                    data: {
+                        labels: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'],
+                        datasets: [{
+                            label: 'Story Points',
+                            data: [32, 35, 30, 42, 38, 45],
+                            backgroundColor: '#818cf8',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } } }
+                });
+            }
+
+            const ctxRisk = document.getElementById('riskChart');
+            if (ctxRisk) {
+                charts.risk = new Chart(ctxRisk, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Critical', 'High', 'Medium', 'Low'],
+                        datasets: [{
+                            data: [10, 25, 45, 20],
+                            backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
+                });
+            }
+
+            const ctxDept = document.getElementById('deptChart');
+            if (ctxDept) {
+                charts.dept = new Chart(ctxDept, {
+                    type: 'polarArea',
+                    data: {
+                        labels: ['Eng', 'Data', 'Ops', 'Sec'],
+                        datasets: [{
+                            data: [40, 20, 25, 15],
+                            backgroundColor: ['#38bdf8', '#f472b6', '#818cf8', '#4ade80']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
+                });
+            }
+
+            const ctxResource = document.getElementById('resourceChart');
+            if (ctxResource) {
+                charts.resource = new Chart(ctxResource, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Team Load',
+                            data: [70, 85, 90, 80, 75, 40, 30],
+                            borderColor: '#4ade80',
+                            tension: 0.4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } } }
+                });
+            }
+        }
+
+        // --- HELPERS ---
+        function createStatCard(label, value, icon, color, isNeon = false) {
+            return `
+                <div class="glass-card p-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">${label}</p>
+                        <h2 class="text-2xl font-bold">${value}</h2>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-${color}-500/10 flex items-center justify-center">
+                        <i data-lucide="${icon}" class="w-6 h-6 text-${color}-500"></i>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- TABLE LOGIC ---
+        function updateProjectTable() {
+            const tbody = document.getElementById('project-table-body');
+            if (!tbody) return;
+
+            const deptFilter = document.getElementById('filter-dept').value;
+            const statusFilter = document.getElementById('filter-status').value;
+
+            const filtered = state.projects.filter(p => {
+                const dMatch = deptFilter === 'all' || p.dept === deptFilter;
+                const sMatch = statusFilter === 'all' || p.status === statusFilter;
+                return dMatch && sMatch;
+            });
+
+            tbody.innerHTML = filtered.map(p => `
+                <tr class="hover:bg-slate-800/40 transition-colors group">
+                    <td class="p-4">
+                        <div class="font-bold">${p.name}</div>
+                        <div class="text-[10px] text-slate-500">${p.dept}</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded-full text-[10px] font-bold ${p.status === 'At Risk' ? 'bg-red-500/20 text-red-400' : 'bg-sky-500/20 text-sky-400'}">
+                            ${p.status}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <div class="w-24 bg-slate-700 h-1.5 rounded-full">
+                            <div class="bg-sky-500 h-full rounded-full" style="width: ${p.completion}%"></div>
+                        </div>
+                        <span class="text-[10px] text-slate-400">${p.completion}%</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="font-medium">$${p.actual.toLocaleString()}</div>
+                        <div class="text-[10px] text-slate-500">Cap: $${p.budget.toLocaleString()}</div>
+                    </td>
+                    <td class="p-4 text-sm">${p.owner}</td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="shield-check" class="w-3 h-3 text-green-400"></i>
+                            <span class="font-bold">${p.health}</span>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <button class="p-2 hover:bg-slate-700 rounded-lg transition-colors">
+                            <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('filter-dept').addEventListener('change', updateProjectTable);
+        document.getElementById('filter-status').addEventListener('change', updateProjectTable);
+
+        // Initial Load
+        window.onload = init;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Command Center | Enterprise PM Dashboard</title>
+    <!-- Tailwind CSS CDN for rapid styling and utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for interactive visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        /* Custom CSS for Glassmorphism, Theming, and Animations */
+        :root {
+            --bg-color: #0f172a;
+            /* Slate 900 - Dark Base */
+            --card-bg: rgba(30, 41, 59, 0.6);
+            /* Slate 800 semi-transparent */
+            --text-main: #e2e8f0;
+            /* Light Gray */
+            --accent-neon: #00ffff;
+            /* Cyan Neon */
+            --border-color: rgba(71, 85, 105, 0.3);
+        }
+
+        [data-theme='light'] {
+            --bg-color: #f4f7fa;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-main: #1e293b;
+            --accent-neon: #0ea5e9;
+            /* Sky Blue */
+            --border-color: rgba(229, 231, 235, 0.7);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            /* Assuming Inter font is available or fallback */
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Glassmorphism Effect */
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Neon Glow Effect */
+        .neon-glow {
+            text-shadow: 0 0 5px var(--accent-neon), 0 0 10px var(--accent-neon);
+        }
+
+        /* Custom Scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-neon);
+            border-radius: 10px;
+        }
+
+        /* Custom styles for interactive elements */
+        .tab-button.active {
+            border-bottom: 3px solid var(--accent-neon) !important;
+            color: var(--accent-neon) !important;
+            background-color: rgba(0, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- Main Application Container -->
+    <div id="app" class="p-4 md:p-8 transition-colors duration-500">
+
+        <!-- Header & Controls -->
+        <header
+            class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 pb-4 border-b border-white/10 dark:border-cyan-900">
+            <div>
+                <h1 class="text-3xl md:text-5xl font-extrabold tracking-tighter bg-clip-text text-transparent"
+                    style="background-image: linear-gradient(to right, var(--accent-neon), #ffffff);">Nexus Command
+                    Center</h1>
+                <p class="text-gray-400 mt-1">Enterprise Portfolio Management & Delivery Oversight</p>
+            </div>
+
+            <!-- Controls Group -->
+            <div id="controls" class="flex flex-wrap gap-3 mt-4 lg:mt-0 items-center p-2 rounded-xl glass">
+
+                <!-- Theme Toggle -->
+                <button id="themeToggle"
+                    class="p-2 rounded-lg hover:bg-white/10 transition text-sm font-medium flex items-center gap-2">
+                    <svg id="sunIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                    <svg id="moonIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707">
+                        </path>
+                    </svg>
+                    <span id="themeText">Dark Mode</span>
+                </button>
+
+                <!-- View Selector -->
+                <div class="flex bg-slate-800/50 p-1 rounded-lg text-xs border border-cyan-600/30">
+                    <button data-view="summary"
+                        class="tab-button active px-3 py-1.5 rounded-md transition duration-200">Summary</button>
+                    <button data-view="projects"
+                        class="tab-button px-3 py-1.5 rounded-md transition duration-200">Projects</button>
+                    <button data-view="timeline"
+                        class="tab-button px-3 py-1.5 rounded-md transition duration-200">Timeline</button>
+                    <button data-view="resources"
+                        class="tab-button px-3 py-1.5 rounded-md transition duration-200">Resources</button>
+                </div>
+
+                <!-- Filter/Mode Toggles -->
+                <select id="reportPeriod"
+                    class="p-2 rounded-lg bg-slate-700 border border-cyan-600/30 text-sm"></select>
+                <select id="reportingMode" class="p-2 rounded-lg bg-slate-700 border border-cyan-600/30 text-sm">
+                    <option value="Agile">Agile Reporting</option>
+                    <option value="Waterfall">Waterfall Reporting</option>
+                </select>
+
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content Area -->
+        <main id="dashboardContent" class="space-y-8">
+            <!-- Dynamic content will be injected here based on the selected view -->
+        </main>
+
+    </div>
+
+    <!-- Modal for Detailed View (Tasks/Milestones) -->
+    <div id="detailModal"
+        class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 transition-opacity duration-300">
+        <div class="glass w-full max-w-4xl rounded-2xl overflow-hidden transform scale-100 shadow-2xl border-cyan-500/50"
+            id="modalContent">
+            <!-- Modal content injected here -->
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. DATA SIMULATION (Realistic, Internally Consistent Data)
+        // =========================================================================
+
+        const PROJECTS_DATA = [
+            { id: 'P001', name: "Mobile Platform Modernization", status: "In Progress", type: "Program", department: "Engineering", healthScore: 85, completionPct: 45, budget: 2.5e6, actualSpend: 1.1e6, remainingBudget: 1.4e6, teamSize: 35, milestones: 12, openRisks: 3, blockedTasks: 5, projectedCompletionDate: "2024-11-15", isFlagship: true },
+            { id: 'P002', name: "Customer Analytics Initiative", status: "On Track", type: "Program", department: "Data Science", healthScore: 92, completionPct: 68, budget: 4.0e6, actualSpend: 1.5e6, remainingBudget: 2.5e6, teamSize: 22, milestones: 18, openRisks: 1, blockedTasks: 1, projectedCompletionDate: "2025-03-01", isFlagship: true },
+            { id: 'P003', name: "Legacy System Decommissioning", status: "At Risk", type: "Project", department: "Operations", healthScore: 42, completionPct: 20, budget: 800e3, actualSpend: 150e3, remainingBudget: 650e3, teamSize: 10, milestones: 5, openRisks: 7, blockedTasks: 12, projectedCompletionDate: "2024-09-30", isFlagship: false },
+            { id: 'P004', name: "AI Chatbot Integration", status: "Completed", type: "Project", department: "Product", healthScore: 98, completionPct: 100, budget: 500e3, actualSpend: 480e3, remainingBudget: 20e3, teamSize: 15, milestones: 8, openRisks: 0, blockedTasks: 0, projectedCompletionDate: "2024-06-15", isFlagship: false },
+            { id: 'P005', name: "Global Supply Chain Optimization", status: "In Progress", type: "Program", department: "Logistics", healthScore: 78, completionPct: 33, budget: 1.2e6, actualSpend: 400e3, remainingBudget: 800e3, teamSize: 50, milestones: 20, openRisks: 5, blockedTasks: 3, projectedCompletionDate: "2025-07-31", isFlagship: false },
+        ];
+
+        const TEAMS_DATA = [
+            { id: 'T1', name: "Core Engineering Team", size: 35, utilization: 85, availability: 90, overtimeRisk: "Medium" },
+            { id: 'T2', name: "Data Science Squad", size: 22, utilization: 70, availability: 100, overtimeRisk: "Low" },
+            { id: 'T3', name: "Ops Reliability Group", size: 10, utilization: 95, availability: 80, overtimeRisk: "High" },
+            { id: 'T4', name: "Product Innovation Hub", size: 15, utilization: 60, availability: 100, overtimeRisk: "Low" },
+        ];
+
+        const RISKS_DATA = [
+            { id: 1, project: "P003", severity: "High", probability: 80, impact: 90, status: "Open", owner: "Alice Johnson", description: "Key vendor dependency delay." },
+            { id: 2, project: "P001", severity: "Medium", probability: 40, impact: 60, status: "Mitigating", owner: "Bob Smith", description: "Scope creep in UI/UX requirements." },
+            { id: 3, project: "P002", severity: "Low", probability: 15, impact: 20, status: "Open", owner: "Charlie Day", description: "Data pipeline latency concerns." },
+        ];
+
+        const INTEGRATIONS_DATA = [
+            { name: 'Jira', status: 'Operational', latency: '45ms', lastSync: '2 mins ago' },
+            { name: 'Azure DevOps', status: 'Degraded', latency: '120ms', lastSync: '3 hours ago' },
+            { name: 'GitHub', status: 'Operational', latency: '10ms', lastSync: 'Just now' },
+            { name: 'Slack', status: 'Operational', latency: '5ms', lastSync: 'Real-time' },
+            { name: 'MS Teams', status: 'Operational', latency: '30ms', lastSync: '1 hour ago' },
+        ];
+
+        const API_USAGE_DATA = {
+            workflowsExecuted: 452,
+            webhookActivity: 12890,
+            automationSuccessRate: "96.7%",
+            estimatedCost: "$1,200/mo",
+            totalSavings: "$3,500/mo"
+        };
+
+        // =========================================================================
+        // 2. STATE MANAGEMENT & INITIALIZATION
+        // =========================================================================
+
+        let appState = {
+            currentView: 'summary', // summary, projects, timeline, resources
+            theme: localStorage.getItem('theme') || 'dark', // dark or light
+            reportPeriod: 'Quarterly', // Quarterly, Monthly, Weekly
+            reportingMode: 'Agile', // Agile or Waterfall
+            filterProject: 'All',
+            sortKey: 'healthScore',
+            sortDirection: 'desc'
+        };
+
+        const elements = {
+            dashboardContent: document.getElementById('dashboardContent'),
+            themeToggle: document.getElementById('themeToggle'),
+            sunIcon: document.getElementById('sunIcon'),
+            moonIcon: document.getElementById('moonIcon'),
+            body: document.body,
+            controlsContainer: document.getElementById('controls')
+        };
+
+        // --- Theme Management ---
+        function applyTheme(theme) {
+            appState.theme = theme;
+            elements.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeUI();
+            renderDashboard(); // Re-render to ensure colors update everywhere
+        }
+
+        function updateThemeUI() {
+            const isDark = appState.theme === 'dark';
+            elements.sunIcon.classList.toggle('hidden', !isDark);
+            elements.moonIcon.classList.toggle('hidden', isDark);
+            document.getElementById('themeText').textContent = isDark ? "Light Mode" : "Dark Mode";
+        }
+
+        // --- Data Processing & Sorting ---
+        function getFilteredAndSortedProjects() {
+            let projects = [...PROJECT_DATA];
+            const filterValue = appState.filterProject;
+
+            if (filterValue !== 'All') {
+                projects = projects.filter(p => p.id === filterValue);
+            }
+
+            // Sorting logic
+            projects.sort((a, b) => {
+                let valA = a[appState.sortKey];
+                let valB = b[appState.sortKey];
+
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+
+                if (valA < valB) return appState.sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return appState.sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            return projects;
+        }
+
+
+        // =========================================================================
+        // 3. RENDERING COMPONENTS (The UI Logic)
+        // =========================================================================
+
+        function renderHeroSummary() {
+            const totalProjects = PROJECTS_DATA.length;
+            const activeProjects = PROJECTS_DATA.filter(p => p.status !== 'Completed').length;
+            const completedProjects = PROJECTS_DATA.filter(p => p.status === 'Completed').length;
+
+            // Portfolio Health Score: Average of all project health scores
+            const avgHealthScore = (PROJECT_DATA.reduce((sum, p) => sum + p.healthScore, 0) / PROJECT_DATA.length).toFixed(1);
+
+            const totalBudget = PROJECTS_DATA.reduce((sum, p) => sum + p.budget, 0);
+            const actualSpendTotal = PROJECTS_DATA.reduce((sum, p) => sum + p.actualSpend, 0);
+            const budgetUtilizationPct = ((actualSpendTotal / totalBudget) * 100).toFixed(1);
+
+            const onTimeDeliveryRate = (PROJECT_DATA.filter(p => p.status === 'Completed' && p.completionPct === 100).length / PROJECT_DATA.filter(p => p.status === 'Completed').length || 0) * 100;
+
+            const totalTeamMembers = TEAMS_DATA.reduce((sum, t) => sum + t.size, 0);
+
+            return `
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6">
+                    <!-- Metric Card Component -->
+                    ${createMetricCard("Total Projects", totalProjects, "info")}
+                    ${createMetricCard("Active Portfolio", activeProjects, "warning")}
+                    ${createMetricCard("Health Score", avgHealthScore + "%", "success")}
+                    ${createMetricCard("Budget Util.", budgetUtilizationPct + "%", "primary")}
+                    ${createMetricCard("On-Time Rate", onTimeDeliveryRate.toFixed(1) + "%", "info")}
+                    ${createMetricCard("Total Team Size", totalTeamMembers, "secondary")}
+                    ${createMetricCard("Annual Spend Est.", '$' + (totalBudget / 1e6).toFixed(1) + 'M', "danger")}
+                </div>
+            `;
+        }
+
+        function createMetricCard(title, value, type) {
+            let colorClass = "";
+            if (type === 'success') colorClass = "text-green-400";
+            else if (type === 'warning') colorClass = "text-yellow-400";
+            else if (type === 'primary') colorClass = "text-cyan-400";
+            else if (type === 'danger') colorClass = "text-red-400";
+            else colorClass = "text-gray-300";
+
+            return `
+                <div class="glass p-5 rounded-xl transition duration-300 hover:shadow-cyan-500/20 border-l-4 ${type === 'success' ? 'border-green-500' : type === 'warning' ? 'border-yellow-500' : type === 'primary' ? 'border-cyan-500' : 'border-gray-600'}">
+                    <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">${title}</p>
+                    <h3 class="text-3xl font-bold mt-1 ${colorClass}">${value}</h3>
+                </div>
+            `;
+        }
+
+        function renderHeadToHeadComparison() {
+            const p1 = PROJECTS_DATA.find(p => p.isFlagship && p.name.includes("Mobile Platform"));
+            const p2 = PROJECTS_DATA.find(p => p.isFlagship && p.name.includes("Customer Analytics"));
+
+            if (!p1 || !p2) return `<div class="text-center text-red-400">Flagship projects not found for comparison.</div>`;
+
+            const metrics = [
+                { label: "Schedule Progress", p1Val: `${p1.completionPct}%`, p2Val: `${p2.completionPct}%`, unit: "%" },
+                { label: "Budget Variance", p1Val: `${((p1.budget - p1.actualSpend) / p1.budget * 100).toFixed(1)}%`, p2Val: `${((p2.budget - p2.actualSpend) / p2.budget * 100).toFixed(1)}%`, unit: "%" },
+                { label: "Task Completion", p1Val: `${Math.round(p1.completionPct * (p1.teamSize / 35))}%`, p2Val: `${Math.round(p2.completionPct * (p2.teamSize / 22))}%`, unit: "%" },
+                { label: "Risk Score", p1Val: p1.openRisks, p2Val: p2.openRisks, unit: "" },
+                { label: "Resource Util.", p1Val: `${TEAMS_DATA.find(t => t.id === 'T1').utilization}%`, p2Val: `${TEAMS_DATA.find(t => t.id === 'T2').utilization}%`, unit: "%" },
+                { label: "Stakeholder Sat.", p1Val: Math.round((p1.healthScore / 10) * 5), p2Val: Math.round((p2.healthScore / 10) * 5), unit: "/5" } // Simulated score
+            ];
+
+            return `
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- Project A Card -->
+                    ${createProjectCardView(p1, 'Mobile Platform Modernization')}
+                    <!-- Project B Card -->
+                    ${createProjectCardView(p2, 'Customer Analytics Initiative')}
+                </div>
+            `;
+        }
+
+        function createProjectCardView(project, title) {
+            // Reusing the card structure but making it more detailed for comparison
+            const healthColor = project.healthScore > 75 ? "bg-green-600" : project.healthScore > 50 ? "bg-yellow-600" : "bg-red-600";
+
+            return `
+                <div class="glass p-6 rounded-xl transition duration-300 hover:shadow-lg border-t-4 ${healthColor} transform hover:-translate-y-1">
+                    <h2 class="text-2xl font-bold mb-2 text-cyan-300">${title}</h2>
+                    <p class="text-sm text-gray-400 mb-4">${project.id} | ${project.status}</p>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-6">
+                        <div class="flex justify-between text-xs font-medium mb-1"><span>Completion</span> <span class="text-cyan-300">${project.completionPct}%</span></div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                            <div class="h-2.5 rounded-full transition-all duration-1000" style="width: ${project.completionPct}%; background: linear-gradient(90deg, #06b6d4, #38bdf8);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Key Metrics Grid -->
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        ${createMetricCard("Budget", `$${(project.actualSpend / 1e6).toFixed(2)}M / $${(project.budget / 1e6).toFixed(2)}M`, 'primary')}
+                        ${createMetricCard("Remaining Budget", `$${((project.remainingBudget / 1e6)).toFixed(2)}M`, 'success')}
+                        ${createMetricCard("Team Size", project.teamSize, 'secondary')}
+                        ${createMetricCard("Open Risks", project.openRisks, 'danger')}
+                    </div>
+
+                    <!-- Health & Timeline -->
+                    <div class="mt-6 pt-4 border-t border-white/10">
+                         <div class="flex justify-between items-center mb-3">
+                            <span class="text-lg font-semibold text-cyan-300">Project Health</span>
+                            <div class="w-28 h-28 rounded-full flex items-center justify-center ${healthColor} shadow-xl transition duration-500">${project.healthScore}%</div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Projected Completion: ${project.projectCompletionDate}</p>
+                    </div>
+
+                </div>
+            `;
+        }
+
+
+        function renderProjectCardsView() {
+            const projects = getFilteredAndSortedProjects();
+
+            if (projects.length === 0) return `<div class="text-center p-10 glass rounded-xl">No projects match the current filters. Try adjusting your search criteria.</div>`;
+
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${projects.map(p => createProjectCard(p)).join('')}
+                </div>
+            `;
+        }
+
+        function createProjectCard(project) {
+            const healthColor = project.healthScore > 75 ? "border-green-500" : project.healthScore > 50 ? "border-yellow-500" : "border-red-500";
+            const statusClasses = {
+                'In Progress': 'bg-blue-900/30 border-blue-500',
+                'On Track': 'bg-green-900/30 border-green-500',
+                'At Risk': 'bg-yellow-900/30 border-yellow-500',
+                'Completed': 'bg-gray-700/40 border-gray-500'
+            }[project.status] || 'bg-slate-800/30 border-white/10';
+
+            return `
+                <div class="glass p-6 rounded-xl transition duration-300 hover:shadow-2xl hover:scale-[1.02] ${healthColor} cursor-pointer" onclick="openDetailModal('${project.id}')">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-xl font-bold text-cyan-300">${project.name}</h3>
+                            <p class="text-sm text-gray-400">${project.id} | ${project.department}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase ${statusClasses}">
+                            ${project.status}
+                        </span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs font-medium mb-1"><span>Completion</span> <span class="text-cyan-300">${project.completionPct}%</span></div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                            <div class="h-2.5 rounded-full transition-all duration-1000" style="width: ${project.completionPct}%; background: linear-gradient(90deg, #06b6d4, #38bdf8);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Key Metrics Grid -->
+                    <div class="grid grid-cols-2 gap-3 text-sm border-t border-white/10 pt-4">
+                        <div><p class="text-gray-400">Budget</p><p class="font-bold">$${(project.actualSpend / 1e6).toFixed(1)}M</p></div>
+                        <div><p class="text-gray-400">Team</p><p class="font-bold">${project.teamSize}</p></div>
+                        <div><p class="text-gray-400">Risks</p><p class="font-bold text-red-400">${project.openRisks}</p></div>
+                        <div><p class="text-gray-400">Health Score</p><p class="font-bold ${healthColor}">${project.healthScore}%</p></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTimelineView() {
+            // Placeholder for complex Gantt/Timeline visualization using data structure
+            const projects = PROJECTS_DATA; // For simplicity, show all
+            return `
+                <div class="glass p-8 rounded-2xl">
+                    <h2 class="text-3xl font-bold mb-6 text-cyan-300 border-b pb-3 border-white/10">Project Delivery Timeline & Milestones</h2>
+                    <p class="mb-6 text-gray-400">Visual representation of project phases, milestones, and delivery dependencies. (Interactive Gantt chart simulation)</p>
+
+                    <!-- Simulated Timeline Structure -->
+                    <div id="timelineContainer" class="space-y-8">
+                        ${projects.map(project => `
+                            <div class="border border-cyan-700/30 p-5 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 transition duration-200 cursor-pointer" onclick="toggleMilestoneDetails('${project.id}')">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-xl font-semibold text-cyan-400">${project.name}</h3>
+                                    <span class="text-sm px-3 py-1 rounded-full bg-gray-700/50">${project.status}</span>
+                                </div>
+                                <div class="mt-2 flex justify-between text-sm text-gray-400">
+                                    <span>Start: ${project.projectCompletionDate ? 'N/A' : 'TBD'}</span>
+                                    <span class="font-bold">${project.projectedCompletionDate}</span>
+                                </div>
+                                <div id="details-${project.id}" class="mt-4 hidden border-t border-cyan-600 pt-3">
+                                    <p class="text-sm mb-2 text-gray-300">Milestone Breakdown:</p>
+                                    <ul class="space-y-1 ml-4 list-disc">
+                                        ${Array(project.milestones).fill(0).map((_, i) => `<li>Phase ${i + 1}: Core Feature Delivery (Due: TBD)</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResourcesView() {
+            return `
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <!-- Team Workload Panel -->
+                    <div class="glass p-6 rounded-xl col-span-1">
+                        <h2 class="text-2xl font-bold mb-4 text-cyan-300 flex items-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a4.97 4.97 0 011.54-1.916m0 0l3.536-3.536M12 14v-2"></path></svg> Team Workload & Capacity</h2>
+                        <div class="space-y-4">
+                            ${TEAMS_DATA.map(team => `
+                                <div class="p-3 rounded-lg bg-slate-700/50 border-l-4 ${team.overtimeRisk === 'High' ? 'border-red-500' : team.utilization > 80 ? 'border-yellow-500' : 'border-green-500'}">
+                                    <p class="font-semibold">${team.name}</p>
+                                    <div class="text-xs mt-1 flex justify-between"><span>Util: ${team.utilization}%</span> <span>Avail: ${team.availability}%</span></div>
+                                    <span class="text-[10px] uppercase font-bold text-red-400">${team.overtimeRisk} Risk</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Integrations Status Panel -->
+                    <div class="glass p-6 rounded-xl col-span-1">
+                         <h2 class="text-2xl font-bold mb-4 text-cyan-300 flex items-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Integrations Status</h2>
+                         <div class="space-y-3">
+                             ${INTEGRATIONS_DATA.map(int => `
+                                <div class="flex justify-between items-center p-2 rounded ${int.status === 'Operational' ? 'bg-green-900/20 border-l-4 border-green-500' : 'bg-red-900/20 border-l-4 border-red-500'}">
+                                    <span class="font-medium">${int.name}</span>
+                                    <div class="text-right text-xs">
+                                        <p>${int.status}</p>
+                                        <p class="text-gray-400">${int.latency} | ${int.lastSync}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                     <!-- API Usage Panel -->
+                    <div class="glass p-6 rounded-xl col-span-1">
+                         <h2 class="text-2xl font-bold mb-4 text-cyan-300 flex items-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Automation & API Usage</h2>
+                         <div class="space-y-4">
+                             <div class="p-3 rounded bg-slate-800/50 border-l-4 border-cyan-500">
+                                <p class="text-sm text-gray-400">Workflows Executed</p>
+                                <p class="font-bold">${API_USAGE_DATA.workflowsExecuted}</p>
+                             </div>
+                            <div class="p-3 rounded bg-slate-800/50 border-l-4 border-green-500">
+                                <p class="text-sm text-gray-400">Automation Success Rate</p>
+                                <p class="font-bold">${API_USAGE_DATA.automationSuccessRate}</p>
+                            </div>
+                             <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/10 text-sm">
+                                <div><p class="text-gray-400">Est. Cost</p><p>${API_USAGE_DATA.estimatedCost}</p></div>
+                                <div class="text-right"><p class="text-green-400 font-bold">Savings: ${API_USAGE_DATA.totalSavings}</p></div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRiskManagementView() {
+            return `
+                <div class="glass p-8 rounded-2xl max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-6 text-cyan-300 border-b pb-3 border-white/10 flex justify-between items-center">
+                        Risk Register <span class="text-sm bg-red-900/50 px-3 py-1 rounded-full">Active Risks: ${RISKS_DATA.length}</span>
+                    </h2>
+
+                    <div class="mb-6 flex gap-4">
+                         <input type="text" placeholder="Search risks by description or owner..." class="flex-grow p-3 glass rounded-lg border border-white/10 focus:ring-cyan-500 focus:border-cyan-500 outline-none">
+                         <select id="riskSeverityFilter" class="p-3 glass rounded-lg border border-white/10 text-sm"></select>
+                    </div>
+
+                    <!-- Risk Table -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-cyan-700/50">
+                            <thead>
+                                <tr class="text-left text-xs uppercase tracking-wider text-gray-400 bg-slate-800/50">
+                                    <th class="p-3 rounded-tl-lg">ID</th>
+                                    <th>Project</th>
+                                    <th>Description</th>
+                                    <th>Severity</th>
+                                    <th>Prob. / Impact</th>
+                                    <th>Status</th>
+                                    <th>Owner</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riskTableBody" class="divide-y divide-white/10">
+                                ${RISKS_DATA.map(r => `
+                                <tr class="hover:bg-cyan-900/20 transition duration-150 cursor-pointer" onclick="openDetailModal('Risk', '${r.id}')">
+                                    <td class="p-3 text-sm">${r.id}</td>
+                                    <td class="p-3 font-medium text-cyan-400">${r.project}</td>
+                                    <td class="p-3 text-sm max-w-xs truncate">${r.description}</td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${r.severity === 'High' ? 'bg-red-900/50 text-red-400' : r.severity === 'Medium' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-green-900/50 text-green-400'}">${r.severity}</span></td>
+                                    <td class="p-3 text-sm">${r.probability}% / ${r.impact}%</td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-semibold ${r.status === 'Open' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}">${r.status}</span></td>
+                                    <td class="p-3 text-sm">${r.owner}</td>
+                                </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        // =========================================================================
+        // 4. MAIN DASHBOARD RENDER & ROUTING
+        // =========================================================================
+
+        function renderDashboard() {
+            const view = appState.currentView;
+            let contentHTML = '';
+
+            switch (view) {
+                case 'summary':
+                    contentHTML = `
+                        <!-- Hero Summary -->
+                        <section id="heroSummary" class="mb-10">${renderHeroSummary()}</section>
+                        
+                        <!-- Head-to-Head Comparison -->
+                        <section id="headToHead" class="mb-12">
+                            ${renderHeadToHeadComparison()}
+                        </section>
+
+                        <!-- Key Project Cards (Overview) -->
+                        <section id="projectCards" class="mb-12">${renderProjectCardsView()}</section>
+
+                        <!-- Integrated Panels: Risks, Integrations, API Usage -->
+                        <div class="grid lg:grid-cols-3 gap-6">
+                            ${view === 'summary' ? renderRiskManagementView() : ''}
+                            ${view === 'summary' ? renderResourcesView() : ''}
+                            <!-- Placeholder for Executive Commentary/Notes -->
+                             <div class="glass p-6 rounded-xl lg:col-span-1 h-[300px] flex flex-col">
+                                <h2 class="text-2xl font-bold mb-4 text-cyan-300">Executive Commentary</h2>
+                                <textarea id="executiveNotes" rows="8" class="w-full p-3 glass rounded-lg border border-white/10 focus:ring-cyan-500 outline-none resize-y"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'projects':
+                    contentHTML = `
+                         <div class="flex justify-between items-center mb-6">
+                             <h2 class="text-3xl font-bold text-cyan-300">Project Portfolio Management</h2>
+                            <!-- Filter/Sort Controls would go here -->
+                        </div>
+                        ${renderProjectCardsView()}
+                    `;
+                    break;
+
+                case 'timeline':
+                    contentHTML = `
+                         <div class="flex justify-between items-center mb-6">
+                             <h2 class="text-3xl font-bold text-cyan-300">Delivery Timeline & Milestones</h2>
+                        </div>
+                        ${renderTimelineView()}
+                    `;
+                    break;
+
+                case 'resources':
+                    contentHTML = `
+                         <div class="flex justify-between items-center mb-6">
+                             <h2 class="text-3xl font-bold text-cyan-300">Resource Allocation & Team Health</h2>
+                        </div>
+                        ${renderResourcesView()}
+                    `;
+                    break;
+
+                default:
+                    contentHTML = `<div class="p-10 glass rounded-xl text-center">404 - View Not Found. Please select a valid dashboard view.</div>`;
+            }
+
+            elements.dashboardContent.innerHTML = contentHTML;
+        }
+
+
+        // =========================================================================
+        // 5. INTERACTIVITY & EVENT LISTENERS (The Polish)
+        // =========================================================================
+
+        function setupEventListeners() {
+            // --- Theme Toggle Listener ---
+            elements.themeToggle.addEventListener('click', () => {
+                const newTheme = appState.theme === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme);
+            });
+
+            // --- View Switch Listener ---
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const view = e.currentTarget.dataset.view;
+                    appState.currentView = view;
+
+                    // Update active state visually
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+
+                    renderDashboard();
+                });
+            });
+
+            // --- Persistence & Initial Setup for Select Menus (Placeholder) ---
+            const periodSelect = document.getElementById('reportPeriod');
+            ['Quarterly', 'Monthly', 'Weekly'].forEach(p => {
+                const option = new Option(p, p);
+                periodSelect.add(option);
+            });
+
+            // Initialize controls based on state
+            document.getElementById('reportingMode').value = appState.reportingMode;
+            periodSelect.value = appState.reportPeriod;
+
+
+            // --- Global Listeners for State Change (Simulated) ---
+            window.addEventListener('storage', () => {
+                // In a real app, this would listen to global state changes
+                renderDashboard();
+            });
+
+        }
+
+        // Modal Logic
+        function openDetailModal(type, id) {
+            let content = '';
+            const project = PROJECTS_DATA.find(p => p.id === id);
+            const risk = RISKS_DATA.find(r => r.id == id);
+
+            if (type === 'Project' && project) {
+                content = `
+                    <div class="p-8">
+                        <h2 class="text-4xl font-extrabold text-cyan-300 mb-6">${project.name} Details</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            ${createMetricCard("Project ID", project.id, 'info')}
+                            ${createMetricCard("Status", project.status, 'warning')}
+                            ${createMetricCard("Health Score", `${project.healthScore}%`, 'success')}
+                        </div>
+
+                        <div class="space-y-6">
+                             <!-- Timeline/Milestones -->
+                            <div>
+                                <h3 class="text-2xl font-semibold mb-4 text-cyan-400 border-b pb-2">Milestone History</h3>
+                                <ul class="space-y-3">
+                                    ${Array(project.milestones).fill(0).map((_, i) => `
+                                        <li class="p-3 glass rounded-lg flex justify-between items-center hover:bg-cyan-900/20 transition">
+                                            <span>Milestone ${i + 1}: Feature Set Complete</span>
+                                            <span class="text-sm text-gray-400">${project.projectedCompletionDate}</span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+
+                             <!-- Risks -->
+                            <div>
+                                <h3 class="text-2xl font-semibold mb-4 text-cyan-400 border-b pb-2">Open Risks</h3>
+                                ${project.openRisks > 0 ? `
+                                    <ul class="space-y-3">
+                                        ${RISKS_DATA.filter(r => r.project === project.id).map(r => `
+                                            <li class="p-3 glass rounded-lg border-l-4 ${r.severity === 'High' ? 'border-red-500' : 'border-yellow-500'} flex justify-between items-center">
+                                                <div>
+                                                    <span class="font-bold">${r.description}</span>
+                                                    <p class="text-xs text-gray-400">${r.owner}</p>
+                                                </div>
+                                                <span class="text-sm font-semibold ${r.status === 'Open' ? 'text-red-400' : 'text-green-400'}">${r.status}</span>
+                                            </li>
+                                        `).join('')}
+                                    </ul>` : '<p class="text-gray-500">No major risks identified for this project.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'Risk' && risk) {
+                content = `
+                    <div class="p-8">
+                        <h2 class="text-4xl font-extrabold text-red-400 mb-6">${risk.severity} Risk: ${risk.id}</h2>
+                        <div class="space-y-4 max-w-3xl">
+                            <p><strong>Project Affected:</strong> <span class="font-bold text-cyan-300">${RISKS_DATA.find(r => r.project === risk.project).name || 'Unknown'}</span></p>
+                            <p><strong>Description:</strong> ${risk.description}</p>
+                            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                                <div>
+                                    <p class="text-sm text-gray-400">Probability</p>
+                                    <p class="font-bold">${risk.probability}% ${risk.status === 'Open' ? '(High)' : ''}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-400">Impact</p>
+                                    <p class="font-bold">${risk.impact}% ${risk.status === 'Open' ? '(Critical)' : ''}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('detailModal').classList.add('flex');
+        }
+
+
+        function toggleMilestoneDetails(projectId) {
+            const detailsElement = document.getElementById(`details-${projectId}`);
+            if (detailsElement) {
+                detailsElement.classList.toggle('hidden');
+            }
+        }
+
+        // Initialize the application on load
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme(appState.theme); // Apply stored theme
+            setupEventListeners();
+            renderDashboard(); // Initial render based on default state
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Command Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #2b3a4a;
+            --text-secondary: #6c7983;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #00b8cc;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        :root.dark-theme {
+            --bg-primary: #1a1b3a;
+            --bg-secondary: #2d2e5f;
+            --text-primary: #e8eaf6;
+            --text-secondary: #b3c1ff;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #00b8cc;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --card-bg: rgba(45, 46, 95, 0.5);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-primary);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .view-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mode-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .hero-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .comparison-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .project-comparison-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .project-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .projects-section {
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-primary);
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .project-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .project-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .health-score {
+            background: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .project-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .metric-item {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .metric-value-bold {
+            font-weight: bold;
+            color: var(--accent-primary);
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--accent-primary);
+        }
+
+        .timeline-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .task-section {
+            margin-bottom: 30px;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(0, 212, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .task-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .task-row:hover {
+            background: rgba(0, 212, 255, 0.03);
+        }
+
+        .team-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .resource-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .integrations-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .integration-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .api-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .risk-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .risk-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .winner-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: rgba(0, 212, 255, 0.1);
+            font-weight: bold;
+            color: var(--accent-primary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: rgba(0, 212, 255, 0.15);
+        }
+
+        .notes-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .note-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(0, 212, 255, 0.03);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .note-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+
+            .hero-section,
+            .comparison-section,
+            .team-section {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th,
+            td {
+                padding: 8px 10px;
+            }
+        }
+
+        /* Status indicators */
+        .status-active {
+            color: var(--info);
+        }
+
+        .status-completed {
+            color: var(--success);
+        }
+
+        .status-blocked {
+            color: var(--danger);
+        }
+
+        .status-at-risk {
+            color: var(--warning);
+        }
+
+        /* Progress bars */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-primary);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Project Management Command Center</div>
+            <div class="header-controls">
+                <div class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                    <span>Dark Mode</span>
+                </div>
+                <div class="view-selector">
+                    <button class="view-btn active" data-view="summary">Summary</button>
+                    <button class="view-btn" data-view="projects">Projects</button>
+                    <button class="view-btn" data-view="timeline">Timeline</button>
+                    <button class="view-btn" data-view="resources">Resources</button>
+                    <button class="view-btn" data-view="risks">Risks</button>
+                    <button class="view-btn" data-view="operations">Operations</button>
+                </div>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="portfolio">Portfolio</button>
+                    <button class="mode-btn" data-mode="program">Program</button>
+                    <button class="mode-btn" data-mode="project">Project</button>
+                </div>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-report="agile">Agile</button>
+                    <button class="mode-btn" data-report="waterfall">Waterfall</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Summary View -->
+        <section id="summaryView" class="view">
+            <div class="hero-section">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-project-diagram"></i></div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Active Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-value">45</div>
+                    <div class="stat-label">Completed Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-heartbeat"></i></div>
+                    <div class="stat-value">87%</div>
+                    <div class="stat-label">Portfolio Health Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="stat-value">68%</div>
+                    <div class="stat-label">Budget Utilization</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-value">92%</div>
+                    <div class="stat-label">On-Time Delivery Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-value">428</div>
+                    <div class="stat-label">Team Members</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-calculator"></i></div>
+                    <div class="stat-value">$12.4M</div>
+                    <div class="stat-label">Projected Annual Spend</div>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <div class="project-comparison-card">
+                    <h3 class="project-title"><i class="fab fa-android"></i> Mobile Platform Modernization</h3>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Schedule Progress</span></div>
+                        <div><span class="metric-value">78% <span class="progress-container"><span class="progress-bar"
+                                        style="width: 78%;"></span></span></span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Budget Variance</span></div>
+                        <div><span class="metric-value status-at-risk">+5.2% <i class="fas fa-arrow-up"></i></span>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Task Completion</span></div>
+                        <div><span class="metric-value">84% <span class="progress-container"><span class="progress-bar"
+                                        style="width: 84%;"></span></span></span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Risk Score</span></div>
+                        <div><span class="metric-value status-at-risk">6.2/10</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Resource Utilization</span></div>
+                        <div><span class="metric-value">89% <span class="progress-container"><span class="progress-bar"
+                                        style="width: 89%;"></span></span></span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Stakeholder Satisfaction</span></div>
+                        <div><span class="metric-value status-active">4.2/5 <i class="fas fa-star"></i></span></div>
+                    </div>
+                </div>
+
+                <div class="project-comparison-card">
+                    <h3 class="project-title"><i class="fas fa-chart-bar"></i> Customer Analytics Initiative</h3>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Schedule Progress</span></div>
+                        <div><span class="metric-value">65% <span class="progress-container"><span class="progress-bar"
+                                        style="width: 65%;"></span></span></span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Budget Variance</span></div>
+                        <div><span class="metric-value status-active">-2.8% <i class="fas fa-arrow-down"></i></span>
+                        </div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Task Completion</span></div>
+                        <div><span class="metric-value">71% <span class="progress-container"><span class="progress-bar"
+                                        style="width: 71%;"></span></span></span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Risk Score</span></div>
+                        <div><span class="metric-value status-active">4.5/10</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Resource Utilization</span></div>
+                        <div><span class="metric-value">73% <span class="progress-container"><span class="progress-bar"
+                                        style="width: 73%;"></span></span></span></div>
+                    </div>
+                    <div class="metric-row">
+                        <div><span class="metric-label">Stakeholder Satisfaction</span></div>
+                        <div><span class="metric-value status-active">4.5/5 <i class="fas fa-star"></i></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="winner-section">
+                <h3>Project Performance Comparison Winner</h3>
+                <p>The Mobile Platform Modernization project outperforms the Customer Analytics Initiative in several
+                    key areas:</p>
+                <ul style="margin-top: 15px; padding-left: 20px;">
+                    <li><strong>Schedule Adherence:</strong> 78% vs 65%</li>
+                    <li><strong>Budget Control:</strong> +5.2% variance vs -2.8% (better control despite higher spend)
+                    </li>
+                    <li><strong>Team Productivity:</strong> Higher task completion rate (84% vs 71%)</li>
+                    <li><strong>Delivery Quality:</strong> More consistent sprint velocity and fewer defects</li>
+                    <li><strong>Stakeholder Satisfaction:</strong> Stronger executive engagement and user feedback</li>
+                </ul>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-card">
+                    <h4 class="chart-title">Project Completion Trend (Last 6 Months)</h4>
+                    <canvas id="completionChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h4 class="chart-title">Budget vs Actual Spend</h4>
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-card">
+                    <h4 class="chart-title">Team Velocity (Sprints)</h4>
+                    <canvas id="velocityChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h4 class="chart-title">Resource Allocation by Department</h4>
+                    <canvas id="resourceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-card">
+                    <h4 class="chart-title">Open Risks by Severity</h4>
+                    <canvas id="riskChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h4 class="chart-title">Milestone Completion Progress</h4>
+                    <canvas id="milestoneChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects View -->
+        <section id="projectsView" class="view" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">All Projects</h2>
+                <div class="filter-controls">
+                    <select class="filter-btn">
+                        <option>Filter by Status</option>
+                        <option>Active</option>
+                        <option>Completed</option>
+                        <option>At Risk</option>
+                    </select>
+                    <select class="filter-btn">
+                        <option>Filter by Team</option>
+                        <option>Engineering</option>
+                        <option>Analytics</option>
+                        <option>Product</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-header">
+                    <h3 class="project-name">Mobile Platform Modernization</h3>
+                    <span class="health-score">87%</span>
+                </div>
+                <div class="project-metrics">
+                    <div><strong>Status:</strong> <span class="status-active">Active</span></div>
+                    <div><strong>Completion:</strong> 78% <span class="progress-container"><span class="progress-bar"
+                                style="width: 78%;"></span></span></div>
+                    <div><strong>Budget:</strong> $2.1M</div>
+                    <div><strong>Actual Spend:</strong> $1.95M</div>
+                    <div><strong>Remaining:</strong> $150K</div>
+                    <div><strong>Team Size:</strong> 42</div>
+                    <div><strong>Milestones:</strong> 18/23</div>
+                    <div><strong>Open Risks:</strong> 5</div>
+                    <div><strong>Blocked Tasks:</strong> 2</div>
+                </div>
+                <p style="margin-top: 15px; color: var(--text-secondary);">Complete overhaul of mobile platform with new
+                    architecture, improved performance, and enhanced security features.</p>
+            </div>
+
+            <div class="project-card">
+                <div class="project-header">
+                    <h3 class="project-name">Customer Analytics Initiative</h3>
+                    <span class="health-score">82%</span>
+                </div>
+                <div class="project-metrics">
+                    <div><strong>Status:</strong> <span class="status-active">Active</span></div>
+                    <div><strong>Completion:</strong> 65% <span class="progress-container"><span class="progress-bar"
+                                style="width: 65%;"></span></span></div>
+                    <div><strong>Budget:</strong> $1.8M</div>
+                    <div><strong>Actual Spend:</strong> $1.75M</div>
+                    <div><strong>Remaining:</strong> $50K</div>
+                    <div><strong>Team Size:</strong> 38</div>
+                    <div><strong>Milestones:</strong> 14/21</div>
+                    <div><strong>Open Risks:</strong> 3</div>
+                    <div><strong>Blocked Tasks:</strong> 0</div>
+                </div>
+                <p style="margin-top: 15px; color: var(--text-secondary);">Implementation of advanced analytics platform
+                    to provide real-time customer insights and predictive modeling.</p>
+            </div>
+
+            <!-- Additional project cards would go here -->
+        </section>
+
+        <!-- Timeline View -->
+        <section id="timelineView" class="view" style="display: none;">
+            <div class="timeline-section">
+                <div class="timeline-header">
+                    <h2>Project Timeline</h2>
+                    <select class="filter-btn">
+                        <option>All Projects</option>
+                        <option>Mobile Platform Modernization</option>
+                        <option>Customer Analytics Initiative</option>
+                    </select>
+                </div>
+
+                <div class="timeline-item">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-calendar-alt" style="color: var(--info); font-size: 20px;"></i>
+                        <div>
+                            <strong>Discovery Phase</strong>
+                            <p style="margin-top: 5px; color: var(--text-secondary);">Research and requirements
+                                gathering</p>
+                        </div>
+                    </div>
+                    <span style="color: var(--text-secondary);">Jan 10 - Feb 28, 2023</span>
+                </div>
+
+                <div class="timeline-item">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-cogs" style="color: var(--success); font-size: 20px;"></i>
+                        <div>
+                            <strong>Architecture Design</strong>
+                            <p style="margin-top: 5px; color: var(--text-secondary);">System architecture and component
+                                design</p>
+                        </div>
+                    </div>
+                    <span style="color: var(--text-secondary);">Mar 1 - Apr 30, 2023</span>
+                </div>
+
+                <!-- More timeline items would go here -->
+            </div>
+        </section>
+
+        <!-- Resources View -->
+        <section id="resourcesView" class="view" style="display: none;">
+            <div class="team-section">
+                <div class="resource-card">
+                    <h3>Resource Utilization</h3>
+                    <canvas id="utilizationChart"></canvas>
+                </div>
+
+                <div class="resource-card">
+                    <h3>Team Capacity</h3>
+                    <p style="margin-bottom: 15px;">Current capacity utilization across all teams</p>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div style="background: rgba(0, 212, 255, 0.1); padding: 10px; border-radius: 6px;">
+                            <strong>Engineering:</strong> 89% utilized
+                        </div>
+                        <div style="background: rgba(0, 212, 255, 0.1); padding: 10px; border-radius: 6px;">
+                            <strong>Analytics:</strong> 73% utilized
+                        </div>
+                        <div style="background: rgba(0, 212, 255, 0.1); padding: 10px; border-radius: 6px;">
+                            <strong>Product:</strong> 68% utilized
+                        </div>
+                        <div style="background: rgba(0, 212, 255, 0.1); padding: 10px; border-radius: 6px;">
+                            <strong>Design:</strong> 79% utilized
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="resource-card" style="margin-top: 20px;">
+                <h3>Overtime Risk</h3>
+                <p style="margin-bottom: 15px;">Teams at risk of burnout based on recent overtime patterns</p>
+                <canvas id="overtimeChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Risks View -->
+        <section id="risksView" class="view" style="display: none;">
+            <div class="risk-section">
+                <h2>Active Risks</h2>
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">Current risks across all projects, sorted
+                    by severity</p>
+
+                <div class="risk-item">
+                    <div><strong>Third-Party API Dependency</strong></div>
+                    <div><span class="status-at-risk">High</span></div>
+                    <div>30%</div>
+                    <div>7/10</div>
+                    <div><span class="status-active">Mitigation in progress</span></div>
+                </div>
+
+                <div class="risk-item">
+                    <div><strong>Resource Constraints</strong></div>
+                    <div><span class="status-at-risk">High</span></div>
+                    <div>25%</div>
+                    <div>6/10</div>
+                    <div><span class="status-active">Mitigation in progress</span></div>
+                </div>
+
+                <!-- More risk items would go here -->
+            </div>
+        </section>
+
+        <!-- Operations View -->
+        <section id="operationsView" class="view" style="display: none;">
+            <div class="integrations-section">
+                <h2>Integrations Status</h2>
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">Real-time status of all connected systems
+                </p>
+
+                <div class="integration-item">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fab fa-jira" style="font-size: 20px;"></i>
+                        <span>Jira</span>
+                    </div>
+                    <span style="color: var(--success);">Connected</span>
+                    <span style="color: var(--text-secondary); font-size: 12px;">Last sync: 5 mins ago</span>
+                </div>
+
+                <div class="integration-item">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fab fa-microsoft" style="font-size: 20px;"></i>
+                        <span>Azure DevOps</span>
+                    </div>
+                    <span style="color: var(--success);">Connected</span>
+                    <span style="color: var(--text-secondary); font-size: 12px;">Last sync: 3 mins ago</span>
+                </div>
+
+                <!-- More integrations would go here -->
+            </div>
+
+            <div class="api-section" style="margin-top: 20px;">
+                <h2>API Usage & Automation</h2>
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">Workflow executions and automation metrics
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div style="background: rgba(0, 212, 255, 0.1); padding: 15px; border-radius: 8px;">
+                        <strong>Workflow Executions</strong>
+                        <p style="margin-top: 10px; font-size: 24px;">4,238</p>
+                    </div>
+                    <div style="background: rgba(0, 212, 255, 0.1); padding: 15px; border-radius: 8px;">
+                        <strong>Automation Success Rate</strong>
+                        <p style="margin-top: 10px; font-size: 24px;">96.7%</p>
+                    </div>
+                    <div style="background: rgba(0, 212, 255, 0.1); padding: 15px; border-radius: 8px;">
+                        <strong>Estimated API Costs</strong>
+                        <p style="margin-top: 10px; font-size: 24px;">$2,432</p>
+                    </div>
+                </div>
+
+                <canvas id="automationChart" style="margin-top: 20px;"></canvas>
+            </div>
+        </section>
+
+        <!-- Notes Section (Visible in all views) -->
+        <div class="notes-section">
+            <h2>Executive Commentary</h2>
+            <p style="margin-bottom: 15px; color: var(--text-secondary);">Project manager observations and delivery
+                updates</p>
+
+            <div class="note-item">
+                <div class="note-header">
+                    <strong>Mobile Platform Progress Update</strong>
+                    <span class="note-date">May 15, 2023</span>
+                </div>
+                <p>The Mobile Platform Modernization project is progressing well with 78% completion. We've successfully
+                    delivered all Phase 1 milestones and are on track for the final release in Q3.</p>
+            </div>
+
+            <div class="note-item">
+                <div class="note-header">
+                    <strong>Analytics Team Concerns</strong>
+                    <span class="note-date">May 10, 2023</span>
+                </div>
+                <p>The analytics team has raised concerns about resource constraints affecting the Customer Analytics
+                    Initiative timeline. We're working on reallocating resources from completed projects.</p>
+            </div>
+
+            <!-- More notes would go here -->
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        function updateTheme() {
+            if (body.classList.contains('dark-theme')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i> <span>Light Mode</span>';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i> <span>Dark Mode</span>';
+            }
+        }
+
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-theme');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            updateTheme();
+        });
+
+        // View Switching
+        const viewButtons = document.querySelectorAll('.view-btn');
+        const views = document.querySelectorAll('.view');
+
+        viewButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                viewButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const viewId = button.getAttribute('data-view') + 'View';
+                views.forEach(view => {
+                    if (view.id === viewId) {
+                        view.style.display = 'block';
+                    } else {
+                        view.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Mode Toggles
+        const modeButtons = document.querySelectorAll('.mode-btn');
+
+        modeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const groupName = button.parentElement.classList.contains('view-selector') ? 'view' :
+                    button.parentElement.classList.contains('mode-toggle') ? 'mode' : null;
+
+                if (groupName) {
+                    modeButtons.forEach(btn => {
+                        if (btn.dataset[groupName] === button.dataset[groupName]) {
+                            btn.classList.remove('active');
+                        }
+                    });
+                    button.classList.add('active');
+
+                    // Save preference
+                    localStorage.setItem(groupName, button.dataset[groupName]);
+                }
+            });
+        });
+
+        // Restore saved preferences
+        const savedView = localStorage.getItem('view');
+        if (savedView) {
+            document.querySelector(`.view-btn[data-view="${savedView}"]`).classList.add('active');
+            document.getElementById(`${savedView}View`).style.display = 'block';
+        }
+
+        const savedMode = localStorage.getItem('mode');
+        if (savedMode) {
+            document.querySelector(`.mode-btn[data-mode="${savedMode}"]`).classList.add('active');
+        }
+
+        // Initialize Charts
+        function initCharts() {
+            // Completion Trend Chart
+            new Chart(document.getElementById('completionChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Mobile Platform',
+                        data: [25, 45, 60, 70, 75, 78],
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        tension: 0.3
+                    }, {
+                        label: 'Analytics Initiative',
+                        data: [20, 35, 50, 60, 63, 65],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+
+            // Budget Chart
+            new Chart(document.getElementById('budgetChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Mobile Platform', 'Analytics Initiative'],
+                    datasets: [{
+                        label: 'Budgeted',
+                        data: [2100000, 1800000],
+                        backgroundColor: 'rgba(0, 212, 255, 0.3)'
+                    }, {
+                        label: 'Actual Spend',
+                        data: [1950000, 1750000],
+                        backgroundColor: 'rgba(0, 212, 255, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Velocity Chart
+            new Chart(document.getElementById('velocityChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5'],
+                    datasets: [{
+                        label: 'Mobile Platform',
+                        data: [85, 92, 78, 89, 95],
+                        backgroundColor: 'rgba(0, 212, 255, 0.6)'
+                    }, {
+                        label: 'Analytics Initiative',
+                        data: [72, 78, 84, 76, 81],
+                        backgroundColor: 'rgba(16, 185, 129, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Resource Allocation Chart
+            new Chart(document.getElementById('resourceChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Engineering', 'Analytics', 'Product', 'Design'],
+                    datasets: [{
+                        data: [42, 38, 25, 18],
+                        backgroundColor: [
+                            'rgba(0, 212, 255, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(245, 158, 11, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Risk Severity Chart
+            new Chart(document.getElementById('riskChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Low', 'Medium', 'High'],
+                    datasets: [{
+                        label: 'Open Risks',
+                        data: [8, 12, 5],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(239, 68, 68, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Milestone Chart
+            new Chart(document.getElementById('milestoneChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Mobile Platform', 'Analytics Initiative'],
+                    datasets: [{
+                        label: 'Completed',
+                        data: [18, 14],
+                        backgroundColor: 'rgba(0, 212, 255, 0.7)'
+                    }, {
+                        label: 'Remaining',
+                        data: [5, 7],
+                        backgroundColor: 'rgba(0, 212, 255, 0.3)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Utilization Chart
+            new Chart(document.getElementById('utilizationChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Engineering', 'Analytics', 'Product', 'Design'],
+                    datasets: [{
+                        label: 'Utilization %',
+                        data: [89, 73, 68, 79],
+                        backgroundColor: [
+                            'rgba(0, 212, 255, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(245, 158, 11, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Overtime Chart
+            new Chart(document.getElementById('overtimeChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Engineering', 'Analytics', 'Product'],
+                    datasets: [{
+                        label: 'Overtime Hours',
+                        data: [125, 89, 67],
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(16, 185, 129, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Automation Chart
+            new Chart(document.getElementById('automationChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                    datasets: [{
+                        label: 'Success Rate',
+                        data: [94, 95, 96, 97, 98],
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Initialize charts when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initCharts);
+
+        // Update theme for charts when theme changes
+        body.addEventListener('transitionend', () => {
+            // Reinitialize charts to pick up new theme colors
+            setTimeout(initCharts, 100);
+        });
+    </script>
+</body>
+
+</html>

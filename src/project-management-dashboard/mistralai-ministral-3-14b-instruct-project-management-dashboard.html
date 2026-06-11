@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Command Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-accent: #6c5ce7;
+            --primary-dark: #1a1b23;
+            --secondary-dark: #2d3436;
+            --tertiary-dark: #3d4059;
+            --text-dark: #e0e0e0;
+            --border-dark: rgba(255, 255, 255, 0.1);
+            --card-bg-dark: rgba(45, 52, 54, 0.6);
+
+            /* Light theme variables */
+            --glass-bg-light: rgba(255, 255, 255, 0.8);
+            --glass-border-light: rgba(0, 0, 0, 0.1);
+            --neon-accent-light: #6c5ce7;
+            --primary-light: #f8f9fa;
+            --secondary-light: #e9ecef;
+            --tertiary-light: #dee2e6;
+            --text-light: #212529;
+            --border-light: rgba(0, 0, 0, 0.1);
+            --card-bg-light: rgba(248, 249, 250, 0.7);
+        }
+
+        [data-theme="dark"] {
+            --glass-bg: var(--glass-bg-dark);
+            --glass-border: var(--glass-border-dark);
+            --neon-accent: #6c5ce7;
+            --primary: var(--primary-dark);
+            --secondary: var(--secondary-dark);
+            --tertiary: var(--tertiary-dark);
+            --text: var(--text-dark);
+            --border: var(--border-dark);
+            --card-bg: var(--card-bg-dark);
+        }
+
+        [data-theme="light"] {
+            --glass-bg: var(--glass-bg-light);
+            --glass-border: var(--glass-border-light);
+            --neon-accent: #6c5ce7;
+            --primary: var(--primary-light);
+            --secondary: var(--secondary-light);
+            --tertiary: var(--tertiary-light);
+            --text: var(--text-light);
+            --border: var(--border-light);
+            --card-bg: var(--card-bg-light);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--primary);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background-color: var(--secondary);
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(45deg, var(--neon-accent), #a29bfe);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .search-container {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 8px;
+            background-color: var(--glass-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .theme-toggle {
+            background-color: var(--glass-bg);
+            border: none;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            background-color: var(--primary);
+            border-radius: 12px;
+            padding: 2rem;
+            min-height: calc(100vh - 150px);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            padding: 0.25rem;
+            background-color: var(--secondary);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-card {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            height: 100%;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Comparison Panel */
+        .comparison-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .project-card {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            height: 100%;
+            position: relative;
+        }
+
+        .project-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        #mobile-platform {
+            background-color: rgba(92, 201, 237, 0.2);
+        }
+
+        #customer-analytics {
+            background-color: rgba(168, 224, 131, 0.2);
+        }
+
+        .progress-container {
+            margin-bottom: 1rem;
+        }
+
+        .progress-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: var(--border);
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        /* Project Cards Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .project-item {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .project-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Charts */
+        .chart-container {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        /* Timeline */
+        .timeline-section {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        /* Task History */
+        .task-history {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .history-table th {
+            background-color: rgba(45, 52, 54, 0.3);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .history-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Team Workload */
+        .team-workload {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Integrations Panel */
+        .integrations-panel {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .integration-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            background-color: rgba(45, 52, 54, 0.3);
+        }
+
+        .integration-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: auto;
+        }
+
+        /* Risk Management */
+        .risk-management {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .risk-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            background-color: rgba(45, 52, 54, 0.3);
+        }
+
+        .risk-severity {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Winner Breakdown */
+        .winner-breakdown {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .winner-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background-color: rgba(45, 52, 54, 0.3);
+        }
+
+        /* Projects Table */
+        .projects-table-container {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th,
+        td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: rgba(45, 52, 54, 0.3);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background-color: rgba(45, 52, 54, 0.2);
+        }
+
+        /* Notes Section */
+        .notes-section {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .note-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: rgba(45, 52, 54, 0.3);
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        select,
+        button {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            background-color: var(--glass-bg);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        /* Expandable Sections */
+        .expandable-section {
+            margin-bottom: 1rem;
+        }
+
+        .expandable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: rgba(45, 52, 54, 0.3);
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+        }
+
+        .expandable-content {
+            padding: 1rem;
+            display: none;
+            background-color: var(--glass-bg);
+            border-radius: 0 0 8px 8px;
+            overflow-x: auto;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+
+            .comparison-panel,
+            .hero-section,
+            .winner-breakdown {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* Utility Classes */
+        .text-neon {
+            color: var(--neon-accent);
+        }
+
+        .glow {
+            text-shadow: 0 0 8px var(--neon-accent);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: auto;
+        }
+
+        .status-green {
+            background-color: #4caf50;
+        }
+
+        .status-yellow {
+            background-color: #ff9800;
+        }
+
+        .status-red {
+            background-color: #f44336;
+        }
+
+        .status-blue {
+            background-color: #2196f3;
+        }
+
+        /* Chart Styling */
+        .chart-legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">PMC</div>
+            <span>Project Management Command Center</span>
+        </div>
+
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search projects, teams, risks...">
+        </div>
+
+        <button class="theme-toggle" id="themeToggle">
+            <span id="themeIcon">🌙</span>
+            <span id="themeText">Dark Mode</span>
+        </button>
+    </header>
+
+    <main class="main-content">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-view="summary">Summary</div>
+            <div class="tab" data-view="projects">Projects</div>
+            <div class="tab" data-view="timeline">Timeline</div>
+            <div class="tab" data-view="resources">Resources</div>
+            <div class="tab" data-view="risks">Risks</div>
+            <div class="tab" data-view="operations">Operations</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="control-group">
+                <label>Reporting Mode:</label>
+                <select id="reportingMode">
+                    <option value="agile">Agile</option>
+                    <option value="waterfall" selected>Waterfall</option>
+                </select>
+
+                <label>View Level:</label>
+                <select id="viewLevel">
+                    <option value="portfolio">Portfolio</option>
+                    <option value="program">Program</option>
+                    <option value="project" selected>Project</option>
+                </select>
+
+                <label>Time Period:</label>
+                <select id="timePeriod">
+                    <option value="quarterly">Quarterly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly" selected>Weekly</option>
+                </select>
+            </div>
+
+            <button id="refreshBtn">Refresh Data</button>
+        </div>
+
+        <!-- Summary View -->
+        <section class="view active" id="summaryView">
+            <h2>Portfolio Overview</h2>
+
+            <div class="hero-section">
+                <div class="hero-card">
+                    <div class="metric-value text-neon glow">148</div>
+                    <div class="metric-label">Active Projects</div>
+                </div>
+                <div class="hero-card">
+                    <div class="metric-value text-neon glow">72</div>
+                    <div class="metric-label">Completed Projects</div>
+                </div>
+                <div class="hero-card">
+                    <div class="metric-value text-neon glow">89%</div>
+                    <div class="metric-label">Portfolio Health Score</div>
+                </div>
+                <div class="hero-card">
+                    <div class="metric-value text-neon glow">$42.7M</div>
+                    <div class="metric-label">Budget Utilization</div>
+                </div>
+                <div class="hero-card">
+                    <div class="metric-value text-neon glow">83%</div>
+                    <div class="metric-label">On-Time Delivery Rate</div>
+                </div>
+                <div class="hero-card">
+                    <div class="metric-value text-neon glow">1,245</div>
+                    <div class="metric-label">Team Members</div>
+                </div>
+                <div class="hero-card">
+                    <div class="metric-value text-neon glow">$187M</div>
+                    <div class="metric-label">Projected Annual Spend</div>
+                </div>
+            </div>
+
+            <!-- Comparison Panel -->
+            <h3>Flagship Project Comparison</h3>
+            <div class="comparison-panel">
+                <div class="project-card" id="mobilePlatformCard">
+                    <div class="project-header">
+                        <div class="project-icon" id="mobile-platform"></div>
+                        <div>
+                            <h4>Mobile Platform Modernization</h4>
+                            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">#MPM-2023</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Schedule Progress</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 78%; background-color: #4caf50;"></div>
+                        </div>
+                        <span>78% Complete</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Budget Variance</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 120%; background-color: #ff9800;"></div>
+                        </div>
+                        <span>+$456K Over Budget</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Task Completion</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 82%; background-color: #2196f3;"></div>
+                        </div>
+                        <span>82% Tasks Complete</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Risk Score</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 55%; background-color: #f44336;"></div>
+                        </div>
+                        <span>Medium Risk (5.2)</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Resource Utilization</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 91%; background-color: #6c5ce7;"></div>
+                        </div>
+                        <span>91% Capacity Used</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Stakeholder Satisfaction</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 74%; background-color: #8bc34a;"></div>
+                        </div>
+                        <span>7.4/10 Satisfaction</span>
+                    </div>
+
+                    <div style="margin-top: 1rem; display: flex; justify-content: space-between;">
+                        <button class="expand-btn">View Details ▼</button>
+                        <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Project Health Score:
+                            78/100</span>
+                    </div>
+                </div>
+
+                <div class="project-card" id="customerAnalyticsCard">
+                    <div class="project-header">
+                        <div class="project-icon" id="customer-analytics"></div>
+                        <div>
+                            <h4>Customer Analytics Initiative</h4>
+                            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">#CAI-2023</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Schedule Progress</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%; background-color: #4caf50;"></div>
+                        </div>
+                        <span>65% Complete</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Budget Variance</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 98%; background-color: #ff9800;"></div>
+                        </div>
+                        <span>$23K Under Budget</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Task Completion</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 69%; background-color: #2196f3;"></div>
+                        </div>
+                        <span>69% Tasks Complete</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Risk Score</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 42%; background-color: #f44336;"></div>
+                        </div>
+                        <span>Low Risk (3.8)</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Resource Utilization</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 76%; background-color: #6c5ce7;"></div>
+                        </div>
+                        <span>76% Capacity Used</span>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">Stakeholder Satisfaction</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 81%; background-color: #8bc34a;"></div>
+                        </div>
+                        <span>8.1/10 Satisfaction</span>
+                    </div>
+
+                    <div style="margin-top: 1rem; display: flex; justify-content: space-between;">
+                        <button class="expand-btn">View Details ▼</button>
+                        <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Project Health Score:
+                            84/100</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Winner Breakdown -->
+            <h3>Performance Comparison</h3>
+            <div class="winner-breakdown">
+                <div class="winner-card"
+                    style="background-color: rgba(92, 201, 237, 0.2); border-left: 4px solid #4caf50;">
+                    <div>🏆 Schedule Adherence</div>
+                    <div style="font-size: 2rem; font-weight: bold;">Customer Analytics Initiative</div>
+                    <div style="color: rgba(255,255,255,0.7);">65% vs 78%</div>
+                </div>
+
+                <div class="winner-card"
+                    style="background-color: rgba(168, 224, 131, 0.2); border-left: 4px solid #ff9800;">
+                    <div>💰 Budget Control</div>
+                    <div style="font-size: 2rem; font-weight: bold;">Customer Analytics Initiative</div>
+                    <div style="color: rgba(255,255,255,0.7);">-$23K vs +$456K</div>
+                </div>
+
+                <div class="winner-card"
+                    style="background-color: rgba(92, 201, 237, 0.2); border-left: 4px solid #4caf50;">
+                    <div>📈 Team Productivity</div>
+                    <div style="font-size: 2rem; font-weight: bold;">Mobile Platform Modernization</div>
+                    <div style="color: rgba(255,255,255,0.7);">82% vs 69%</div>
+                </div>
+
+                <div class="winner-card"
+                    style="background-color: rgba(168, 224, 131, 0.2); border-left: 4px solid #ff9800;">
+                    <div>⚡ Delivery Quality</div>
+                    <div style="font-size: 2rem; font-weight: bold;">Customer Analytics Initiative</div>
+                    <div style="color: rgba(255,255,255,0.7);">8.1 vs 7.4</div>
+                </div>
+
+                <div class="winner-card"
+                    style="background-color: rgba(92, 201, 237, 0.2); border-left: 4px solid #6c5ce7;">
+                    <div>👥 Stakeholder Satisfaction</div>
+                    <div style="font-size: 2rem; font-weight: bold;">Customer Analytics Initiative</div>
+                </div>
+
+                <div class="winner-card"
+                    style="background-color: rgba(168, 224, 131, 0.2); border-left: 4px solid #f44336;">
+                    <div>🏆 Overall Health Score</div>
+                    <div style="font-size: 2rem; font-weight: bold;">Customer Analytics Initiative</div>
+                    <div style="color: rgba(255,255,255,0.7);">84 vs 78</div>
+                </div>
+            </div>
+
+            <!-- Key Metrics Charts -->
+            <div class="chart-container">
+                <h3>Project Completion Trend</h3>
+                <canvas id="completionTrendChart"></canvas>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="chart-container">
+                    <h3>Budget vs Actual Spend</h3>
+                    <canvas id="budgetSpendChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Team Velocity & Sprint Throughput</h3>
+                    <canvas id="teamVelocityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Project Cards Grid -->
+            <h3>Recent Projects</h3>
+            <div class="projects-grid" id="projectCardsGrid">
+                <!-- Sample project cards will be generated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Projects View -->
+        <section class="view" id="projectsView">
+            <h2>Project Management Dashboard</h2>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>All Projects</h3>
+                <button id="addProjectBtn">+ Add New Project</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="controls" style="margin-bottom: 1.5rem;">
+                <div class="control-group">
+                    <select id="projectFilterStatus">
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="on-hold">On Hold</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+
+                    <select id="projectFilterDepartment">
+                        <option value="">All Departments</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="product">Product</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="operations">Operations</option>
+                    </select>
+
+                    <select id="projectFilterPriority">
+                        <option value="">All Priorities</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+
+                    <input type="text" id="projectFilterSearch" placeholder="Search projects..." style="width: 200px;">
+                </div>
+            </div>
+
+            <!-- Projects Table -->
+            <div class="projects-table-container">
+                <table id="projectsTable">
+                    <thead>
+                        <tr>
+                            <th>Project ▼</th>
+                            <th>Status ▶</th>
+                            <th>Completion % ↑</th>
+                            <th>Budget</th>
+                            <th>Actual Spend</th>
+                            <th>Remaining Budget</th>
+                            <th>Team Size</th>
+                            <th>Milestones</th>
+                            <th>Open Risks</th>
+                            <th>Blocked Tasks</th>
+                            <th>Projected Completion</th>
+                            <th>Health Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <!-- Sample project rows will be generated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Project Details Expandable Section -->
+            <div class="expandable-section" style="display: none;">
+                <div class="expandable-header">
+                    <h4>Project Details</h4>
+                    <span>▼</span>
+                </div>
+                <div class="expandable-content">
+                    <!-- Detailed project information will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline View -->
+        <section class="view" id="timelineView">
+            <h2>Project Timeline</h2>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Mobile Platform Modernization (#MPM-2023)</h3>
+                <button id="addMilestoneBtn">+ Add Milestone</button>
+            </div>
+
+            <!-- Timeline Controls -->
+            <div class="controls" style="margin-bottom: 1.5rem;">
+                <select id="timelineFilter">
+                    <option value="all">All Phases</option>
+                    <option value="planning">Planning</option>
+                    <option value="development">Development</option>
+                    <option value="testing">Testing</option>
+                    <option value="deployment">Deployment</option>
+                </select>
+
+                <button id="collapseAllBtn">Collapse All ▼</button>
+            </div>
+
+            <!-- Timeline Section -->
+            <div class="timeline-section">
+                <div class="timeline-header">
+                    <h4>Project Phases & Milestones</h4>
+                    <span style="color: rgba(255,255,255,0.6);">Last updated: 3 hours ago</span>
+                </div>
+
+                <!-- Timeline items will be generated by JavaScript -->
+            </div>
+
+            <!-- Task History -->
+            <h3>Task & Milestone History</h3>
+            <div class="task-history">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Sprint/Release</th>
+                            <th>Milestone</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Status</th>
+                            <th>Tasks Complete</th>
+                            <th>Blockers</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="taskHistoryBody">
+                        <!-- Sample history items will be generated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Gantt Chart Placeholder -->
+            <div class="chart-container" style="height: 300px;">
+                <h3>Project Timeline Gantt</h3>
+                <canvas id="ganttChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Resources View -->
+        <section class="view" id="resourcesView">
+            <h2>Team & Resource Management</h2>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <h3>Resource Allocation by Department</h3>
+                    <canvas id="resourceAllocationChart"></canvas>
+                </div>
+
+                <div class="team-workload">
+                    <div
+                        style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);">
+                        <h4>Team Capacity</h4>
+                        <canvas id="teamCapacityChart"></canvas>
+
+                        <div style="margin-top: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Available Capacity:</span>
+                                <strong>68%</strong>
+                            </div>
+                            <div class="progress-bar" style="height: 6px; margin-bottom: 1rem;">
+                                <div style="width: 68%; height: 100%; background-color: #4caf50;"></div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Overtime Risk:</span>
+                                <strong>22%</strong>
+                            </div>
+                            <div class="progress-bar" style="height: 6px;">
+                                <div style="width: 22%; height: 100%; background-color: #ff9800;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);">
+                        <h4>Staffing Status</h4>
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="padding: 0.5rem;">Total Team Members:</td>
+                                <td style="text-align: right; padding: 0.5rem;"><strong>1245</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem;">Available:</td>
+                                <td style="text-align: right; padding: 0.5rem;"><strong>83%</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem;">On Leave:</td>
+                                <td style="text-align: right; padding: 0.5rem;"><strong>12%</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem;">Overtime:</td>
+                                <td style="text-align: right; padding: 0.5rem;"><strong>3%</strong></td>
+                            </tr>
+                        </table>
+
+                        <div style="margin-top: 1rem;">
+                            <button
+                                style="background-color: #4caf50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px;">View
+                                Team Roster</button>
+                            <button
+                                style="background-color: transparent; color: var(--text); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 6px; margin-left: 0.5rem;">Add
+                                Resources</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resource Allocation Table -->
+            <h3>Resource Allocation Details</h3>
+            <table
+                style="width: 100%; background-color: var(--glass-bg); border-radius: 12px; padding: 1rem; border: 1px solid var(--border);">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Allocated Resources</th>
+                        <th>Utilization %</th>
+                        <th>Overtime Risk</th>
+                        <th>Available Capacity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Engineering</td>
+                        <td>456</td>
+                        <td>89%</td>
+                        <td>18%</td>
+                        <td>11%</td>
+                        <td><button
+                                style="background-color: #2196f3; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px;">Reallocate</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Product Management</td>
+                        <td>87</td>
+                        <td>72%</td>
+                        <td>5%</td>
+                        <td>28%</td>
+                        <td><button
+                                style="background-color: #2196f3; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px;">Reallocate</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>QA/Test</td>
+                        <td>123</td>
+                        <td>91%</td>
+                        <td>22%</td>
+                        <td>9%</td>
+                        <td><button
+                                style="background-color: #f44336; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px;">Add
+                                Resources</button></td>
+                    </tr>
+                    <tr>
+                        <td>Design</td>
+                        <td>45</td>
+                        <td>68%</td>
+                        <td>0%</td>
+                        <td>32%</td>
+                        <td><button
+                                style="background-color: #2196f3; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px;">Reallocate</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Operations</td>
+                        <td>78</td>
+                        <td>75%</td>
+                        <td>10%</td>
+                        <td>25%</td>
+                        <td><button
+                                style="background-color: #2196f3; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px;">Reallocate</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Risks View -->
+        <section class="view" id="risksView">
+            <h2>Risk Management Dashboard</h2>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Active Risks</h3>
+                <button id="addRiskBtn">+ Add New Risk</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="controls" style="margin-bottom: 1.5rem;">
+                <select id="riskFilterSeverity">
+                    <option value="">All Severities</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+
+                <select id="riskFilterStatus">
+                    <option value="">All Statuses</option>
+                    <option value="open">Open</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+
+                <input type="text" id="riskFilterSearch" placeholder="Search risks..." style="width: 200px;">
+            </div>
+
+            <!-- Risk Management -->
+            <div class="risk-management">
+                <h4>Risk Severity Distribution</h4>
+                <canvas id="riskSeverityChart"></canvas>
+
+                <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Total Open Risks: <strong>28</strong></span>
+                    <button
+                        style="background-color: #f44336; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px;">Escalate
+                        Critical Risks</button>
+                </div>
+
+                <h4>Active Risks</h4>
+                <div style="display: flex; gap: 1rem;">
+                    <!-- Sample risk items will be generated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Risk Details Table -->
+            <table
+                style="width: 100%; background-color: var(--glass-bg); border-radius: 12px; padding: 1rem; margin-top: 1rem; border: 1px solid var(--border);">
+                <thead>
+                    <tr>
+                        <th>Risk ID</th>
+                        <th>Description</th>
+                        <th>Severity</th>
+                        <th>Probability</th>
+                        <th>Impact</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                        <th>Mitigation Plan</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody id="risksTableBody">
+                    <!-- Sample risk rows will be generated by JavaScript -->
+                </tbody>
+            </table>
+
+            <!-- Risk Trend Chart -->
+            <div class="chart-container" style="margin-top: 2rem;">
+                <h3>Risk Trend Over Time</h3>
+                <canvas id="riskTrendChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Operations View -->
+        <section class="view" id="operationsView">
+            <h2>Operations & Integrations</h2>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <h3>System Integrations Status</h3>
+                    <div class="integrations-panel">
+                        <div class="integration-item">
+                            <span>🔧 Jira Integration</span>
+                            <span style="color: #4caf50;">✓ Online</span>
+                            <span
+                                style="background-color: #4caf50; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Last
+                                sync: 12m ago</span>
+                        </div>
+
+                        <div class="integration-item">
+                            <span>🔧 Azure DevOps Integration</span>
+                            <span style="color: #ff9800;">⚠️ Warning</span>
+                            <span
+                                style="background-color: #ff9800; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Last
+                                sync: 3h ago (delayed)</span>
+                        </div>
+
+                        <div class="integration-item">
+                            <span>🔧 GitHub Integration</span>
+                            <span style="color: #4caf50;">✓ Online</span>
+                            <span
+                                style="background-color: #4caf50; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Last
+                                sync: 5m ago</span>
+                        </div>
+
+                        <div class="integration-item">
+                            <span>🔧 Slack Integration</span>
+                            <span style="color: #2196f3;">✓ Online</span>
+                            <span
+                                style="background-color: #2196f3; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Last
+                                sync: 8m ago</span>
+                        </div>
+
+                        <div class="integration-item">
+                            <span>🔧 Microsoft Teams Integration</span>
+                            <span style="color: #f44336;">✗ Offline</span>
+                            <span
+                                style="background-color: #f44336; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Connection
+                                lost for 1h</span>
+                        </div>
+
+                        <div class="integration-item">
+                            <span>🔧 Confluence Integration</span>
+                            <span style="color: #4caf50;">✓ Online</span>
+                            <span
+                                style="background-color: #4caf50; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Last
+                                sync: 15m ago</span>
+                        </div>
+
+                        <button
+                            style="width: 100%; background-color: #6c5ce7; color: white; border: none; padding: 0.75rem; border-radius: 8px; margin-top: 1rem;">View
+                            Integration Details</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3>API & Automation Status</h3>
+                    <div
+                        style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <span>Workflow Executions</span>
+                            <strong>4,287</strong>
+                        </div>
+
+                        <div class="progress-bar" style="height: 6px; margin-bottom: 1rem;">
+                            <div style="width: 98%; height: 100%; background-color: #4caf50;"></div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <span>Automation Success Rate</span>
+                            <strong>97.8%</strong>
+                        </div>
+
+                        <div class="progress-bar" style="height: 6px; margin-bottom: 1rem;">
+                            <div style="width: 97.8%; height: 100%; background-color: #2196f3;"></div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <span>Estimated API Costs</span>
+                            <strong>$4,287.50/month</strong>
+                        </div>
+
+                        <div class="progress-bar" style="height: 6px; margin-bottom: 1rem;">
+                            <div style="width: 35%; height: 100%; background-color: #ff9800;"></div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <span>Total Automation Savings</span>
+                            <strong>$2.4M/year</strong>
+                        </div>
+
+                        <button
+                            style="width: 100%; background-color: #6c5ce7; color: white; border: none; padding: 0.75rem; border-radius: 8px;">View
+                            API Usage Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <h3>Recent System Activity</h3>
+            <table
+                style="width: 100%; background-color: var(--glass-bg); border-radius: 12px; padding: 1rem; margin-top: 1rem; border: 1px solid var(--border);">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Activity Type</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2023-11-15 14:32:17</td>
+                        <td>Integration Sync</td>
+                        <td>Jira → PMC</td>
+                        <td style="color: #4caf50;">✓ Success</td>
+                        <td>Synced 456 issues (0 errors)</td>
+                    </tr>
+                    <tr>
+                        <td>2023-11-15 14:28:42</td>
+                        <td>Automation Workflow</td>
+                        <td>Slack → PMC</td>
+                        <td style="color: #ff9800;">⚠️ Warning</td>
+                        <td>Delayed processing (3m)</td>
+                    </tr>
+                    <tr>
+                        <td>2023-11-15 14:15:09</td>
+                        <td>API Request</td>
+                        <td>PMC → GitHub</td>
+                        <td style="color: #f44336;">✗ Failed</td>
+                        <td>Rate limit exceeded (429)</td>
+                    </tr>
+                    <tr>
+                        <td>2023-11-15 13:58:33</td>
+                        <td>Data Export</td>
+                        <td>PMC → Confluence</td>
+                        <td style="color: #4caf50;">✓ Success</td>
+                        <td>Exported project docs (2.4MB)</td>
+                    </tr>
+                    <tr>
+                        <td>2023-11-15 13:47:21</td>
+                        <td>System Update</td>
+                        <td>PMC → Azure DevOps</td>
+                        <td style="color: #ff9800;">⚠️ Warning</td>
+                        <td>Partial sync (missing 12 items)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- System Health -->
+            <h3>System Health Metrics</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div
+                    style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); text-align: center;">
+                    <h4>Uptime</h4>
+                    <div class="metric-value" style="font-size: 2rem;">99.98%</div>
+                    <div style="color: rgba(255,255,255,0.6);">Last 30 days</div>
+                </div>
+
+                <div
+                    style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); text-align: center;">
+                    <h4>Response Time</h4>
+                    <div class="metric-value" style="font-size: 2rem;">87ms</div>
+                    <div style="color: rgba(255,255,255,0.6);">Average API response</div>
+                </div>
+
+                <div
+                    style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); text-align: center;">
+                    <h4>Data Sync Latency</h4>
+                    <div class="metric-value" style="font-size: 2rem;">12s</div>
+                    <div style="color: rgba(255,255,255,0.6);">Average across integrations</div>
+                </div>
+
+                <div
+                    style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); text-align: center;">
+                    <h4>Error Rate</h4>
+                    <div class="metric-value" style="font-size: 2rem;">0.02%</div>
+                    <div style="color: rgba(255,255,255,0.6);">Last 7 days</div>
+                </div>
+
+                <div
+                    style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); text-align: center;">
+                    <h4>Storage Usage</h4>
+                    <div class="metric-value" style="font-size: 2rem;">47%</div>
+                    <div style="color: rgba(255,255,255,0.6);">of 1TB allocated</div>
+                </div>
+
+                <div
+                    style="background-color: var(--glass-bg); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); text-align: center;">
+                    <h4>Backup Status</h4>
+                    <div class="metric-value" style="font-size: 2rem;">✓ Healthy</div>
+                    <div style="color: rgba(255,255,255,0.6);">Last backup: 1h ago</div>
+                </div>
+            </div>
+
+            <!-- Maintenance Schedule -->
+            <h3>Maintenance & Upgrade Schedule</h3>
+            <table
+                style="width: 100%; background-color: var(--glass-bg); border-radius: 12px; padding: 1rem; margin-top: 1rem; border: 1px solid var(--border);">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Maintenance Type</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2023-11-18</td>
+                        <td>02:00 - 04:00 UTC</td>
+                        <td>System Update</td>
+                        <td>2 hours</td>
+                        <td style="color: #ff9800;">⚠️ Scheduled</td>
+                        <td>Major version upgrade (v3.1.4 → v3.2.0)</td>
+                    </tr>
+                    <tr>
+                        <td>2023-11-25</td>
+                        <td>03:00 - 03:30 UTC</td>
+                        <td>Database Optimization</td>
+                        <td>30 minutes</td>
+                        <td style="color: #4caf50;">✓ Completed</td>
+                        <td>Index rebuild and query optimization</td>
+                    </tr>
+                    <tr>
+                        <td>2023-12-02</td>
+                        <td>01:00 - 02:00 UTC</td>
+                        <td>Backup Verification</td>
+                        <td>1 hour</td>
+                        <td style="color: #ff9800;">⚠️ Scheduled</td>
+                        <td>Quarterly backup integrity check</td>
+                    </tr>
+                    <tr>
+                        <td>2023-12-15</td>
+                        <td>04:00 - 06:00 UTC</td>
+                        <td>Security Patch Update</td>
+                        <td>2 hours</td>
+                        <td style="color: #ff9800;">⚠️ Scheduled</td>
+                        <td>Critical security vulnerability fixes</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button
+                style="background-color: #6c5ce7; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; margin-top: 1rem;">View
+                Full Maintenance Schedule</button>
+        </section>
+
+        <!-- Notes Section -->
+        <div class="notes-section">
+            <h2>Executive Commentary & Notes</h2>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span>Project Manager Notes</span>
+                <button id="addNoteBtn">+ Add Note</button>
+            </div>
+
+            <!-- Sample notes will be generated by JavaScript -->
+        </div>
+    </main>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const themeText = document.getElementById('themeText');
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('dashboardTheme', newTheme);
+
+            if (newTheme === 'dark') {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+            } else {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+            }
+        }
+
+        // Load saved theme preference
+        const savedTheme = localStorage.getItem('dashboardTheme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeUI(savedTheme);
+        } else {
+            // Default to dark mode
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        function updateThemeUI(theme) {
+            if (theme === 'dark') {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+            } else {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+            }
+        }
+
+        // Tab Switching
+        const tabs = document.querySelectorAll('.tab');
+        const views = document.querySelectorAll('.view');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and views
+                tabs.forEach(t => t.classList.remove('active'));
+                views.forEach(v => v.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding view
+                tab.classList.add('active');
+                const viewId = tab.getAttribute('data-view') + 'View';
+                document.getElementById(viewId).classList.add('active');
+
+                // Save view preference
+                localStorage.setItem('dashboardActiveTab', viewId);
+            });
+        });
+
+        // Load saved active tab
+        const savedTab = localStorage.getItem('dashboardActiveTab');
+        if (savedTab) {
+            tabs.forEach(tab => {
+                if (tab.getAttribute('data-view') + 'View' === savedTab) {
+                    tab.classList.add('active');
+                    document.getElementById(savedTab).classList.add('active');
+                }
+            });
+        }
+
+        // Theme toggle button
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Sample Data Generation
+        function generateSampleData() {
+            const projects = [
+                {
+                    id: 'MPM-2023',
+                    name: 'Mobile Platform Modernization',
+                    status: 'active',
+                    completion: 78,
+                    budget: '$12,500,000',
+                    actualSpend: '$9,876,423',
+                    remainingBudget: '$2,623,577',
+                    teamSize: 187,
+                    milestones: 12,
+                    openRisks: 5,
+                    blockedTasks: 3,
+                    projectedCompletion: '2024-03-15',
+                    healthScore: 78
+                },
+                {
+                    id: 'CAI-2023',
+                    name: 'Customer Analytics Initiative',
+                    status: 'active',
+                    completion: 65,
+                    budget: '$8,200,000',
+                    actualSpend: '$7,945,210',
+                    remainingBudget: '$254,790',
+                    teamSize: 98,
+                    milestones: 8,
+                    openRisks: 3,
+                    blockedTasks: 1,
+                    projectedCompletion: '2024-02-20',
+                    healthScore: 84
+                },
+                {
+                    id: 'ERP-2023',
+                    name: 'Enterprise Resource Planning Upgrade',
+                    status: 'completed',
+                    completion: 100,
+                    budget: '$15,750,000',
+                    actualSpend: '$16,123,456',
+                    remainingBudget: '$0',
+                    teamSize: 212,
+                    milestones: 18,
+                    openRisks: 0,
+                    blockedTasks: 0,
+                    projectedCompletion: '2023-11-01',
+                    healthScore: 92
+                },
+                {
+                    id: 'DXP-2023',
+                    name: 'Digital Experience Platform Launch',
+                    status: 'active',
+                    completion: 42,
+                    budget: '$7,800,000',
+                    actualSpend: '$3,256,789',
+                    remainingBudget: '$4,543,211',
+                    teamSize: 114,
+                    milestones: 10,
+                    openRisks: 7,
+                    blockedTasks: 4,
+                    projectedCompletion: '2024-06-30',
+                    healthScore: 68
+                },
+                {
+                    id: 'CRM-2023',
+                    name: 'Customer Relationship Management Modernization',
+                    status: 'on-hold',
+                    completion: 58,
+                    budget: '$9,500,000',
+                    actualSpend: '$5,478,123',
+                    remainingBudget: '$4,021,877',
+                    teamSize: 89,
+                    milestones: 9,
+                    openRisks: 4,
+                    blockedTasks: 2,
+                    projectedCompletion: '2024-05-15',
+                    healthScore: 63
+                },
+                {
+                    id: 'AI-2023',
+                    name: 'Artificial Intelligence Integration Project',
+                    status: 'active',
+                    completion: 37,
+                    budget: '$18,900,000',
+                    actualSpend: '$7,056,432',
+                    remainingBudget: '$11,843,568',
+                    teamSize: 156,
+                    milestones: 14,
+                    openRisks: 9,
+                    blockedTasks: 5,
+                    projectedCompletion: '2024-12-31',
+                    healthScore: 72
+                },
+                {
+                    id: 'CYB-2023',
+                    name: 'Cybersecurity Infrastructure Upgrade',
+                    status: 'active',
+                    completion: 91,
+                    budget: '$6,800,000',
+                    actualSpend: '$5,978,456',
+                    remainingBudget: '$821,544',
+                    teamSize: 78,
+                    milestones: 7,
+                    openRisks: 2,
+                    blockedTasks: 0,
+                    projectedCompletion: '2023-12-15',
+                    healthScore: 90
+                },
+                {
+                    id: 'SCM-2023',
+                    name: 'Supply Chain Management Optimization',
+                    status: 'completed',
+                    completion: 100,
+                    budget: '$4,200,000',
+                    actualSpend: '$4,187,654',
+                    remainingBudget: '$12,346',
+                    teamSize: 45,
+                    milestones: 6,
+                    openRisks: 0,
+                    blockedTasks: 0,
+                    projectedCompletion: '2023-10-31',
+                    healthScore: 95
+                }
+            ];
+
+            const risks = [
+                {
+                    id: 'RISK-001',
+                    description: 'Third-party API dependency delays',
+                    severity: 'high',
+                    probability: 75,
+                    impact: 80,
+                    status: 'open',
+                    owner: 'Sarah Johnson',
+                    mitigation: 'Engage backup vendor, implement fallback mechanisms'
+                },
+                {
+                    id: 'RISK-002',
+                    description: 'Key team member resignation risk',
+                    severity: 'critical',
+                    probability: 40,
+                    impact: 95,
+                    status: 'open',
+                    owner: 'Michael Chen',
+                    mitigation: 'Identify backup resources, cross-train team members'
+                },
+                {
+                    id: 'RISK-003',
+                    description: 'Budget overrun in Q4',
+                    severity: 'medium',
+                    probability: 60,
+                    impact: 70,
+                    status: 'in-progress',
+                    owner: 'Emily Rodriguez',
+                    mitigation: 'Implement cost controls, renegotiate vendor contracts'
+                },
+                {
+                    id: 'RISK-004',
+                    description: 'Regulatory compliance changes',
+                    severity: 'high',
+                    probability: 50,
+                    impact: 85,
+                    status: 'open',
+                    owner: 'David Kim',
+                    mitigation: 'Monitor regulatory updates, adjust project scope if needed'
+                },
+                {
+                    id: 'RISK-005',
+                    description: 'Hardware procurement delays',
+                    severity: 'medium',
+                    probability: 30,
+                    impact: 65,
+                    status: 'resolved',
+                    owner: 'Lisa Patel',
+                    mitigation: 'Identified alternative suppliers, placed backup orders'
+                },
+                {
+                    id: 'RISK-006',
+                    description: 'Data migration failures',
+                    severity: 'critical',
+                    probability: 20,
+                    impact: 90,
+                    status: 'open',
+                    owner: 'Robert Smith',
+                    mitigation: 'Implement comprehensive test environment, backup data regularly'
+                },
+                {
+                    id: 'RISK-007',
+                    description: 'Stakeholder alignment issues',
+                    severity: 'low',
+                    probability: 50,
+                    impact: 40,
+                    status: 'open',
+                    owner: 'Jennifer Lee',
+                    mitigation: 'Schedule regular stakeholder sync meetings'
+                },
+                {
+                    id: 'RISK-008',
+                    description: 'Vendor performance concerns',
+                    severity: 'medium',
+                    probability: 45,
+                    impact: 70,
+                    status: 'in-progress',
+                    owner: 'Thomas Wilson',
+                    mitigation: 'Conduct vendor performance review, renegotiate SLAs'
+                }
+            ];
+
+            const notes = [
+                {
+                    id: 'NOTE-001',
+                    date: '2023-11-15',
+                    author: 'Sarah Johnson',
+                    title: 'Mobile Platform Progress Update',
+                    content: 'The Mobile Platform Modernization project is progressing well with 78% completion. The backend integration phase is ahead of schedule, but we need to address some API latency issues in the frontend components.'
+                },
+                {
+                    id: 'NOTE-002',
+                    date: '2023-11-14',
+                    author: 'Michael Chen',
+                    title: 'Resource Allocation Concerns',
+                    content: 'We\'re seeing capacity constraints in the QA team for several projects.Need to either add more resources or adjust timelines for some deliverables.'
+                },
+                {
+                    id: 'NOTE-003',
+                    date: '2023-11-13',
+                    author: 'Emily Rodriguez',
+                    title: 'Budget Forecast Update',
+                    content: 'Updated budget forecast shows potential overrun in Q4. Recommend we implement stricter cost controls and monitor vendor invoices more closely.'
+                },
+                {
+                    id: 'NOTE-004',
+                    date: '2023-11-10',
+                    author: 'David Kim',
+                    title: 'Regulatory Update',
+                    content: 'New GDPR compliance requirements may impact the Customer Analytics Initiative. Need to assess scope changes and potential delays.'
+                },
+                {
+                    id: 'NOTE-005',
+                    date: '2023-11-08',
+                    author: 'Robert Smith',
+                    title: 'Data Migration Plan',
+                    content: 'Finalized data migration plan for the ERP upgrade. Testing phase will begin next week with a focus on critical business processes.'
+                }
+            ];
+
+            const taskHistory = [
+                {
+                    sprint: 'Sprint 18',
+                    milestone: 'Backend API Integration Complete',
+                    startDate: '2023-10-30',
+                    endDate: '2023-11-15',
+                    status: 'completed',
+                    tasksComplete: '42/45',
+                    blockers: 0,
+                    details: 'All backend services integrated successfully. Minor performance tuning needed.'
+                },
+                {
+                    sprint: 'Sprint 17',
+                    milestone: 'Frontend Component Library Update',
+                    startDate: '2023-10-16',
+                    endDate: '2023-10-29',
+                    status: 'completed',
+                    tasksComplete: '38/42',
+                    blockers: 1,
+                    details: 'Completed with one minor styling issue. All components responsive and accessible.'
+                },
+                {
+                    sprint: 'Sprint 16',
+                    milestone: 'Security Audit Phase',
+                    startDate: '2023-10-02',
+                    endDate: '2023-10-15',
+                    status: 'completed',
+                    tasksComplete: '45/48',
+                    blockers: 2,
+                    details: 'Audit completed with two critical findings. Remediation work ongoing.'
+                },
+                {
+                    sprint: 'Sprint 15',
+                    milestone: 'Database Migration Testing',
+                    startDate: '2023-09-18',
+                    endDate: '2023-10-01',
+                    status: 'completed',
+                    tasksComplete: '40/42',
+                    blockers: 0,
+                    details: 'Migration testing successful. Performance metrics within expected ranges.'
+                },
+                {
+                    sprint: 'Sprint 14',
+                    milestone: 'Feature Freeze',
+                    startDate: '2023-09-04',
+                    endDate: '2023-09-17',
+                    status: 'completed',
+                    tasksComplete: '56/58',
+                    blockers: 1,
+                    details: 'All features frozen. One minor bug in payment processing component.'
+                }
+            ];
+
+            // Generate project cards
+            const projectsGrid = document.getElementById('projectCardsGrid');
+            projects.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'project-item';
+                card.innerHTML = `
+                    <h4>${project.name}</h4>
+                    <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">#${project.id.substring(0, project.id.indexOf('-'))}-${project.id.split('-')[1]}</span>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">Status</span>
+                        <span class="status-indicator ${project.status === 'active' ? 'status-green' :
+                        project.status === 'completed' ? 'status-blue' :
+                            project.status === 'on-hold' ? 'status-yellow' : 'status-red'}"></span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.2rem;">${project.completion}%</span>
+                        <span style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">Completion</span>
+                    </div>
+
+                    <div class="progress-bar" style="height: 4px; margin-bottom: 1rem;">
+                        <div class="progress-fill" style="width: ${project.completion}%; background-color: #2196f3;"></div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.9rem;">${project.teamSize}</div>
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.7rem;">Team Members</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.9rem;">${project.milestones}</div>
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.7rem;">Milestones</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Health Score: ${project.healthScore}/100</span>
+                        <button class="expand-btn">View Details ▼</button>
+                    </div>
+                `;
+                projectsGrid.appendChild(card);
+            });
+
+            // Generate projects table
+            const projectsTableBody = document.getElementById('projectsTableBody');
+            projects.forEach(project => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${project.name} (#${project.id})</td>
+                    <td><span class="status-indicator ${project.status === 'active' ? 'status-green' :
+                        project.status === 'completed' ? 'status-blue' :
+                            project.status === 'on-hold' ? 'status-yellow' : 'status-red'}"></span> ${project.status}</td>
+                    <td>${project.completion}%</td>
+                    <td>${project.budget}</td>
+                    <td>$${parseFloat(project.actualSpend.replace(/[^0-9.-]/g, '')).toLocaleString()}</td>
+                    <td>$${parseFloat(project.remainingBudget.replace(/[^0-9.-]/g, '')).toLocaleString()}</td>
+                    <td>${project.teamSize}</td>
+                    <td>${project.milestones}</td>
+                    <td>${project.openRisks} <span style="color: #f44336;">⚠️</span></td>
+                    <td>${project.blockedTasks} <span style="color: #ff9800;">!</span></td>
+                    <td>${new Date(project.projectedCompletion).toLocaleDateString()}</td>
+                    <td><div class="progress-bar" style="height: 6px; margin-top: -3px;">
+                        <div class="progress-fill" style="width: ${project.healthScore}%; background-color: #4caf50;"></div>
+                    </div></td>
+                `;
+                projectsTableBody.appendChild(row);
+            });
+
+            // Generate risks
+            const riskManagement = document.querySelector('.risk-management');
+            const risksTableBody = document.getElementById('risksTableBody');
+
+            risks.forEach(risk => {
+                // Add to risk management section
+                const riskItem = document.createElement('div');
+                riskItem.className = 'risk-item';
+                riskItem.innerHTML = `
+                    <span style="font-weight: bold;">${risk.id}</span>
+                    <span>${risk.description.substring(0, 40)}...</span>
+                    <span class="risk-severity ${risk.severity === 'critical' ? 'status-red' :
+                        risk.severity === 'high' ? 'status-yellow' : 'status-green'}"></span>
+                    <span style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">${risk.status}</span>
+                    <button class="expand-btn" style="background-color: transparent; border: none; color: var(--text);">View Details ▼</button>
+                `;
+                riskManagement.querySelector('div[style*="display: flex; gap: 1rem"]').appendChild(riskItem);
+
+                // Add to risks table
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${risk.id}</td>
+                    <td>${risk.description}</td>
+                    <td><span class="risk-severity ${risk.severity === 'critical' ? 'status-red' :
+                        risk.severity === 'high' ? 'status-yellow' : 'status-green'}"></span> ${risk.severity}</td>
+                    <td>${risk.probability}%</td>
+                    <td>${risk.impact}%</td>
+                    <td><span class="status-indicator ${risk.status === 'open' ? 'status-red' :
+                        risk.status === 'in-progress' ? 'status-yellow' : 'status-green'}"></span> ${risk.status}</td>
+                    <td>${risk.owner}</td>
+                    <td>${risk.mitigation.substring(0, 30)}...</td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                `;
+                risksTableBody.appendChild(row);
+            });
+
+            // Generate task history
+            const taskHistoryBody = document.getElementById('taskHistoryBody');
+            taskHistory.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.sprint}</td>
+                    <td>${item.milestone}</td>
+                    <td>${new Date(item.startDate).toLocaleDateString()}</td>
+                    <td>${new Date(item.endDate).toLocaleDateString()}</td>
+                    <td><span class="status-indicator ${item.status === 'completed' ? 'status-green' : item.blockers > 0 ? 'status-yellow' : 'status-blue'}"></span> ${item.status}</td>
+                    <td>${item.tasksComplete} / ${item.details.split('Completed with')[0].split('/')[1] || '45'}</td>
+                    <td>${item.blockers > 0 ? item.blockers + ' blockers' : 'None'}</td>
+                    <td><button class="expand-btn" style="background-color: transparent; border: none; color: var(--text);">View Tasks ▼</button></td>
+                `;
+                taskHistoryBody.appendChild(row);
+            });
+
+            // Generate notes
+            const notesSection = document.querySelector('.notes-section');
+            notes.forEach(note => {
+                const noteItem = document.createElement('div');
+                noteItem.className = 'note-item';
+                noteItem.innerHTML = `
+                    <h5>${note.title}</h5>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        ${new Date(note.date).toLocaleDateString()} • ${note.author}
+                    </div>
+                    <p>${note.content}</p>
+                `;
+                notesSection.appendChild(noteItem);
+            });
+
+            // Initialize charts
+            initializeCharts();
+        }
+
+        function initializeCharts() {
+            // Completion Trend Chart
+            const completionTrendCtx = document.getElementById('completionTrendChart').getContext('2d');
+            new Chart(completionTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    datasets: [
+                        {
+                            label: 'Mobile Platform Modernization',
+                            data: [25, 48, 67, 78],
+                            borderColor: '#4caf50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Customer Analytics Initiative',
+                            data: [12, 35, 52, 65],
+                            borderColor: '#8bc34a',
+                            backgroundColor: 'rgba(139, 195, 74, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'ERP Upgrade',
+                            data: [0, 0, 82, 100],
+                            borderColor: '#6c5ce7',
+                            backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { bodyFontColor: '#fff', backgroundColor: 'rgba(45, 52, 54, 0.9)' }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.1)', ticks: { beginAtZero: true } } }
+                    }
+                }
+            });
+
+            // Budget vs Actual Spend Chart
+            const budgetSpendCtx = document.getElementById('budgetSpendChart').getContext('2d');
+            new Chart(budgetSpendCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    datasets: [
+                        {
+                            label: 'Budgeted Spend',
+                            data: [3500000, 3750000, 3800000, 1450000],
+                            backgroundColor: '#2196f3',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Actual Spend',
+                            data: [3256789, 3876543, 2745678, 1000000],
+                            backgroundColor: '#ff9800',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { bodyFontColor: '#fff', backgroundColor: 'rgba(45, 52, 54, 0.9)' }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { callback: value => `$${value.toLocaleString()}` }
+                        }
+                    }
+                }
+            });
+
+            // Team Velocity Chart
+            const teamVelocityCtx = document.getElementById('teamVelocityChart').getContext('2d');
+            new Chart(teamVelocityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5', 'Sprint 6'],
+                    datasets: [
+                        {
+                            label: 'Story Points Completed',
+                            data: [87, 92, 105, 98, 112, 108],
+                            backgroundColor: '#4caf50',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Velocity Trend',
+                            data: [87, 92, 105, 98, 112, 108],
+                            type: 'line',
+                            borderColor: '#6c5ce7',
+                            backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { bodyFontColor: '#fff', backgroundColor: 'rgba(45, 52, 54, 0.9)' }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Resource Allocation Chart
+            const resourceAllocationCtx = document.getElementById('resourceAllocationChart').getContext('2d');
+            new Chart(resourceAllocationCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Engineering', 'Product Management', 'QA/Test', 'Design', 'Operations'],
+                    datasets: [{
+                        data: [456, 87, 123, 45, 78],
+                        backgroundColor: [
+                            '#4caf50',
+                            '#2196f3',
+                            '#ff9800',
+                            '#9c27b0',
+                            '#6c5ce7'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' },
+                        tooltip: { bodyFontColor: '#fff', backgroundColor: 'rgba(45, 52, 54, 0.9)' }
+                    }
+                }
+            });
+
+            // Team Capacity Chart
+            const teamCapacityCtx = document.getElementById('teamCapacityChart').getContext('2d');
+            new Chart(teamCapacityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Available', 'Utilized', 'Overtime Risk'],
+                    datasets: [{
+                        data: [68, 91, 22],
+                        backgroundColor: [
+                            '#4caf50',
+                            '#ff9800',
+                            '#f44336'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { bodyFontColor: '#fff', backgroundColor: 'rgba(45, 52, 54, 0.9)' }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // Risk Severity Chart
+            const riskSeverityCtx = document.getElementById('riskSeverityChart').getContext('2d');
+            new Chart(riskSeverityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        label: 'Open Risks',
+                        data: [3, 7, 12, 6],
+                        backgroundColor: '#f44336',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { bodyFontColor: '#fff', backgroundColor: 'rgba(45, 52, 54, 0.9)' }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                    }
+                }
+            });
+
+            // Risk Trend Chart
+            const riskTrendCtx = document.getElementById('riskTrendChart').getContext('2d');
+            new Chart(riskTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+                    datasets: [{
+                        label: 'Open Risks',
+                        data: [12, 15, 18, 14, 16, 13, 10, 9, 7, 5, 8],
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { bodyFontColor: '#fff', backgroundColor: 'rgba(45, 52, 54, 0.9)' }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                    }
+                }
+            });
+        }
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function () {
+            generateSampleData();
+
+            // Set up expandable sections
+            const expandBtns = document.querySelectorAll('.expand-btn');
+            expandBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const icon = this.textContent.includes('▼') ? '▲' : '▼';
+                    this.textContent = this.textContent.replace(/[▲▼]/, '') + (this.textContent.includes('View Details') ? ' ▼' : ' ▲');
+                });
+            });
+
+            // Set up project card clicks
+            const projectCards = document.querySelectorAll('.project-item');
+            projectCards.forEach(card => {
+                card.addEventListener('click', function () {
+                    this.style.transform = 'scale(1.02)';
+                    setTimeout(() => this.style.transform = 'scale(1)', 300);
+                });
+            });
+
+            // Set up table sorting
+            const tableHeaders = document.querySelectorAll('th');
+            tableHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const table = this.closest('table');
+                    const tbody = table.querySelector('tbody');
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                    // Simple sorting implementation
+                    const index = Array.from(tableHeaders).indexOf(this);
+                    const isAscending = !this.classList.contains('asc') && !this.classList.contains('desc');
+
+                    rows.sort((a, b) => {
+                        const aValue = a.cells[index].textContent;
+                        const bValue = b.cells[index].textContent;
+
+                        // Handle numeric values
+                        if (!isNaN(aValue.replace(/[^0-9.-]/g, '')) && !isNaN(bValue.replace(/[^0-9.-]/g, ''))) {
+                            return isAscending ?
+                                parseFloat(aValue.replace(/[^0-9.-]/g, '')) - parseFloat(bValue.replace(/[^0-9.-]/g, '')) :
+                                parseFloat(bValue.replace(/[^0-9.-]/g, '')) - parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+                        }
+
+                        // Handle dates
+                        if (aValue.includes('/') || aValue.includes('-')) {
+                            const dateA = new Date(aValue);
+                            const dateB = new Date(bValue);
+                            return isAscending ? dateA - dateB : dateB - dateA;
+                        }
+
+                        return isAscending ?
+                            aValue.localeCompare(bValue) :
+                            bValue.localeCompare(aValue);
+                    });
+
+                    // Clear previous sort indicators
+                    tableHeaders.forEach(h => {
+                        h.classList.remove('asc', 'desc');
+                    });
+
+                    // Add current sort indicator
+                    this.classList.add(isAscending ? 'asc' : 'desc');
+
+                    // Rebuild the table
+                    rows.forEach(row => tbody.appendChild(row));
+                });
+            });
+
+            // Set up controls
+            const reportingMode = document.getElementById('reportingMode');
+            const viewLevel = document.getElementById('viewLevel');
+            const timePeriod = document.getElementById('timePeriod');
+
+            [reportingMode, viewLevel, timePeriod].forEach(select => {
+                select.addEventListener('change', function () {
+                    // In a real app, this would update the data and charts
+                    console.log(`${this.id} changed to ${this.value}`);
+                });
+            });
+
+            document.getElementById('refreshBtn').addEventListener('click', function () {
+                generateSampleData();
+                initializeCharts();
+                alert('Dashboard refreshed with latest data!');
+            });
+        });
+    </script>
+</body>
+
+</html>

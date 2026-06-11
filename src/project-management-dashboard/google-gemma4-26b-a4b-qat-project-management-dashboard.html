@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Project Management Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --border: rgba(226, 232, 240, 0.8);
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark {
+            --bg-primary: #020617;
+            --bg-secondary: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #60a5fa;
+            --accent-glow: rgba(96, 165, 250, 0.4);
+            --border: rgba(51, 65, 85, 0.8);
+            --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            transition: background-color 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            box-shadow: var(--card-shadow);
+        }
+
+        .neon-border {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .neon-border::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.5;
+        }
+
+        .status-pill {
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-on-track {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .status-at-risk {
+            background: rgba(234, 179, 8, 0.2);
+            color: #facc15;
+        }
+
+        .status-delayed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 10px;
+        }
+
+        .expandable-row {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .expanded .expandable-row {
+            max-height: 500px;
+            opacity: 1;
+            padding: 1rem 0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .nav-item.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex">
+
+    <!-- Sidebar -->
+    <aside
+        class="w-64 h-screen sticky top-0 border-r border-[var(--border)] flex flex-col p-4 z-50 bg-[var(--bg-secondary)]">
+        <div class="flex items-center gap-3 px-2 mb-10">
+            <div
+                class="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center shadow-[0_0_15px_var(--accent-glow)]">
+                <i data-lucide="layers" class="text-white w-5 h-5"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight">NEXUS</span>
+        </div>
+
+        <nav class="flex-1 space-y-2">
+            <button onclick="app.setView('summary')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-[var(--accent)]/10"
+                id="nav-summary">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Summary
+            </button>
+            <button onclick="app.setView('projects')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-[var(--accent)]/10"
+                id="nav-projects">
+                <i data-lucide="briefcase" class="w-5 h-5"></i> Projects
+            </button>
+            <button onclick="app.setView('timeline')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-[var(--accent)]/10"
+                id="nav-timeline">
+                <i data-lucide="calendar-range" class="w-5 h-5"></i> Timeline
+            </button>
+            <button onclick="app.setView('resources')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-[var(--accent)]/10"
+                id="nav-resources">
+                <i data-lucide="users" class="w-5 h-5"></i> Resources
+            </button>
+            <button onclick="app.setView('risks')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-[var(--accent)]/10"
+                id="nav-risks">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i> Risks
+            </button>
+            <button onclick="app.setView('operations')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-[var(--accent)]/10"
+                id="nav-operations">
+                <i data-lucide="cpu" class="w-5 h-5"></i> Operations
+            </button>
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-[var(--border)]">
+            <div class="flex items-center justify-between px-2 mb-4">
+                <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">System
+                    Status</span>
+                <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+            </div>
+            <button onclick="app.toggleTheme()"
+                class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-[var(--border)] text-sm hover:bg-[var(--accent)]/10 transition-colors">
+                <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
+                <span id="theme-text">Dark Mode</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0">
+        <!-- Top Bar -->
+        <header
+            class="h-16 border-b border-[var(--border)] bg-[var(--bg-secondary)] flex items-center justify-between px-8 sticky top-0 z-40">
+            <div class="flex items-center gap-4 flex-1">
+                <div class="relative w-96">
+                    <i data-lucide="search"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"></i>
+                    <input type="text" placeholder="Search projects, tasks, or teams..."
+                        class="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all">
+                </div>
+                <div class="h-6 w-[1px] bg-[var(--border)] mx-2"></div>
+                <div class="flex items-center gap-2">
+                    <select id="filter-dept" onchange="app.applyFilters()"
+                        class="bg-transparent text-xs font-medium border-none focus:ring-0 cursor-pointer text-[var(--text-muted)]">
+                        <option value="all">All Departments</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Product">Product</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Sales">Sales</option>
+                    </select>
+                    <select id="filter-status" onchange="app.applyFilters()"
+                        class="bg-transparent text-xs font-medium border-none focus:ring-0 cursor-pointer text-[var(--text-muted)]">
+                        <option value="all">All Statuses</option>
+                        <option value="On Track">On Track</option>
+                        <option value="At Risk">At Risk</option>
+                        <option value="Delayed">Delayed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex bg-[var(--bg-primary)] p-1 rounded-lg border border-[var(--border)]">
+                    <button onclick="app.setMode('portfolio')" id="mode-portfolio"
+                        class="px-3 py-1 text-[10px] font-bold rounded-md transition-all">PORTFOLIO</button>
+                    <button onclick="app.setMode('program')" id="mode-program"
+                        class="px-3 py-1 text-[10px] font-bold rounded-md transition-all">PROGRAM</button>
+                    <button onclick="app.setMode('project')" id="mode-project"
+                        class="px-3 py-1 text-[10px] font-bold rounded-md transition-all">PROJECT</button>
+                </div>
+                <div class="h-8 w-[1px] bg-[var(--border)]"></div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <p class="text-xs font-bold">Alex Sterling</p>
+                        <p class="text-[10px] text-[var(--text-muted)]">Global PMO Lead</p>
+                    </div>
+                    <div
+                        class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 border border-[var(--border)]">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <div id="content-area" class="p-8 space-y-8 animate-fade-in">
+            <!-- Content injected by JS -->
+        </div>
+    </main>
+
+    <script>
+        /**
+         * DATA MODEL
+         */
+        const DATA = {
+            projects: [
+                { id: 'p1', name: 'Mobile Platform Modernization', status: 'On Track', completion: 68, budget: 1250000, actual: 840000, remaining: 410000, teamSize: 14, milestones: 12, openRisks: 2, blockedTasks: 0, projectedEnd: '2024-11-15', health: 92, dept: 'Engineering', owner: 'Sarah Chen', type: 'Agile' },
+                { id: 'p2', name: 'Customer Analytics Initiative', status: 'At Risk', completion: 42, budget: 850000, actual: 620000, remaining: 230000, teamSize: 8, milestones: 8, openRisks: 5, blockedTasks: 3, projectedEnd: '2024-12-01', health: 65, dept: 'Product', owner: 'Marcus Vane', type: 'Waterfall' },
+                { id: 'p3', name: 'Cloud Infrastructure Migration', status: 'On Track', completion: 90, budget: 2100000, actual: 1950000, remaining: 150000, teamSize: 22, milestones: 15, openRisks: 1, blockedTasks: 0, projectedEnd: '2024-09-30', health: 98, dept: 'Engineering', owner: 'Elena Rodriguez', type: 'Agile' },
+                { id: 'p4', name: 'Global CRM Integration', status: 'Delayed', completion: 25, budget: 500000, actual: 450000, remaining: 50000, teamSize: 5, milestones: 6, openRisks: 8, blockedTasks: 7, projectedEnd: '2025-03-20', health: 42, dept: 'Sales', owner: 'David Kim', type: 'Waterfall' },
+                { id: 'p5', name: 'AI Chatbot Deployment', status: 'On Track', completion: 55, budget: 400000, actual: 210000, remaining: 190000, teamSize: 6, milestones: 5, openRisks: 0, blockedTasks: 0, projectedEnd: '2024-10-10', health: 88, dept: 'Product', owner: 'Sarah Chen', type: 'Agile' }
+            ],
+            milestones: [
+                { id: 'm1', projectId: 'p1', name: 'API Gateway Implementation', date: '2024-05-10', status: 'Completed', details: 'Successfully migrated 45 endpoints. No downtime reported.' },
+                { id: 'm2', projectId: 'p1', name: 'UI Component Library', date: '2024-08-20', status: 'In Progress', details: 'Design system finalized. Frontend dev in progress.' },
+                { id: 'm3', projectId: 'p2', name: 'Data Warehouse Schema', date: '2024-06-15', status: 'Completed', details: 'Schema finalized by data engineering team.' },
+                { id: 'm4', projectId: 'p2', name: 'ML Model Training', date: '2024-09-05', status: 'Delayed', details: 'Waiting on GPU availability in AWS cluster.' },
+                { id: 'm5', projectId: 'p3', name: 'Network Cutover', date: '2024-08-01', status: 'In Progress', details: 'Testing phase 2 underway.' }
+            ],
+            risks: [
+                { id: 'r1', projectId: 'p2', severity: 'High', probability: '70%', impact: 'High', mitigation: 'Allocate additional cloud budget', owner: 'Marcus Vane' },
+                { id: 'r2', projectId: 'p4', severity: 'Critical', probability: '90%', impact: 'High', mitigation: 'Re-evaluate vendor contract', owner: 'David Kim' },
+                { id: 'r3', projectId: 'p1', severity: 'Low', probability: '20%', impact: 'Low', mitigation: 'Monitor sprint velocity', owner: 'Sarah Chen' }
+            ],
+            teams: [
+                { name: 'Core Eng', dept: 'Engineering', utilization: 88, capacity: 100, availability: 12, risk: 'Low' },
+                { name: 'Product Squad', dept: 'Product', utilization: 95, capacity: 100, availability: 5, risk: 'Medium' },
+                { name: 'Sales Ops', dept: 'Sales', utilization: 60, capacity: 100, availability: 40, risk: 'Low' }
+            ],
+            integrations: [
+                { name: 'Jira', status: 'Connected', latency: '45ms', lastSync: '2m ago' },
+                { name: 'GitHub', status: 'Connected', latency: '120ms', lastSync: '10m ago' },
+                { name: 'Slack', status: 'Connected', latency: '12ms', lastSync: '1m ago' },
+                { name: 'Azure DevOps', status: 'Syncing', latency: '350ms', lastSync: 'Just now' }
+            ],
+            automation: {
+                executions: 12450,
+                successRate: '99.8%',
+                apiCost: '$420.50',
+                savings: '$2,400.00'
+            }
+        };
+
+        /**
+         * APP LOGIC
+         */
+        const app = {
+            state: {
+                view: 'summary',
+                theme: 'dark',
+                mode: 'portfolio',
+                reporting: 'monthly',
+                filters: { dept: 'all', status: 'all' },
+                search: ''
+            },
+
+            init() {
+                // Load persistence
+                const savedTheme = localStorage.getItem('nexus_theme');
+                if (savedTheme) {
+                    this.state.theme = savedTheme;
+                    document.documentElement.classList.toggle('dark', this.state.theme === 'dark');
+                }
+                this.applyThemeUI();
+
+                this.setView('summary');
+                lucide.createIcons();
+            },
+
+            toggleTheme() {
+                this.state.theme = this.state.theme === 'dark' ? 'light' : 'dark';
+                document.documentElement.classList.toggle('dark', this.state.theme === 'dark');
+                localStorage.setItem('nexus_theme', this.state.theme);
+                this.applyThemeUI();
+                this.render();
+            },
+
+            applyThemeUI() {
+                const icon = document.getElementById('theme-icon');
+                const text = document.getElementById('theme-text');
+                if (this.state.theme === 'dark') {
+                    icon.setAttribute('data-lucide', 'moon');
+                    text.innerText = 'Dark Mode';
+                } else {
+                    icon.setAttribute('data-lucide', 'sun');
+                    text.innerText = 'Light Mode';
+                }
+                lucide.createIcons();
+            },
+
+            setView(view) {
+                this.state.view = view;
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.getElementById(`nav-${view}`).classList.add('active');
+                this.render();
+            },
+
+            setMode(mode) {
+                this.state.mode = mode;
+                ['portfolio', 'program', 'project'].forEach(m => {
+                    document.getElementById(`mode-${m}`).classList.remove('bg-[var(--accent)]', 'text-white');
+                    document.getElementById(`mode-${m}`).classList.add('text-[var(--text-muted)]');
+                });
+                document.getElementById(`mode-${mode}`).classList.add('bg-[var(--accent)]', 'text-white');
+                this.render();
+            },
+
+            applyFilters() {
+                this.state.filters.dept = document.getElementById('filter-dept').value;
+                this.state.filters.status = document.getElementById('filter-status').value;
+                this.render();
+            },
+
+            getFilteredProjects() {
+                return DATA.projects.filter(p => {
+                    const deptMatch = this.state.filters.dept === 'all' || p.dept === this.state.filters.dept;
+                    const statusMatch = this.state.filters.status === 'all' || p.status === this.state.filters.status;
+                    return deptMatch && statusMatch;
+                });
+            },
+
+            render() {
+                const container = document.getElementById('content-area');
+                container.innerHTML = '';
+
+                switch (this.state.view) {
+                    case 'summary': this.renderSummary(container); break;
+                    case 'projects': this.renderProjects(container); break;
+                    case 'timeline': this.renderTimeline(container); break;
+                    case 'resources': this.renderResources(container); break;
+                    case 'risks': this.renderRisks(container); break;
+                    case 'operations': this.renderOperations(container); break;
+                }
+
+                lucide.createIcons();
+                this.initCharts();
+            },
+
+            renderSummary(container) {
+                const totalProjects = DATA.projects.length;
+                const completed = DATA.projects.filter(p => p.completion === 100).length;
+                const avgHealth = (DATA.projects.reduce((acc, p) => acc + p.health, 0) / totalProjects).toFixed(0);
+                const totalSpend = DATA.projects.reduce((acc, p) => acc + p.actual, 0);
+
+                container.innerHTML = `
+                    <!-- Hero Summary -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        ${this.createStatCard('Active Projects', totalProjects, 'briefcase', 'text-blue-500')}
+                        ${this.createStatCard('Completed', completed, 'check-circle', 'text-green-500')}
+                        ${this.createStatCard('Portfolio Health', avgHealth + '%', 'activity', 'text-emerald-500')}
+                        ${this.createStatCard('Budget Util', ((totalSpend / DATA.projects.reduce((a, b) => a + b.budget, 0)) * 100).toFixed(0) + '%', 'dollar-sign', 'text-amber-500')}
+                        ${this.createStatCard('On-Time Rate', '94%', 'clock', 'text-cyan-500')}
+                        ${this.createStatCard('Total Team', '49', 'users', 'text-purple-500')}
+                    </div>
+
+                    <!-- Head-to-Head Comparison -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="glass p-6 rounded-3xl border-l-4 border-l-blue-500">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-bold">Mobile Platform Modernization</h3>
+                                <span class="status-pill status-on-track">On Track</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                ${this.createComparisonMetric('Schedule Progress', '68%', 'progress-bar', 68)}
+                                ${this.createComparisonMetric('Budget Variance', '-12%', 'trending-down', 88)}
+                                ${this.createComparisonMetric('Task Completion', '72%', 'check-square', 72)}
+                                ${this.createComparisonMetric('Risk Score', 'Low', 'shield', 15)}
+                                ${this.createComparisonMetric('Resource Util', '84%', 'user-check', 84)}
+                                ${this.createComparisonMetric('Stakeholder Sat', '9.2/10', 'smile', 92)}
+                            </div>
+                        </div>
+                        <div class="glass p-6 rounded-3xl border-l-4 border-l-purple-500">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-bold">Customer Analytics Initiative</h3>
+                                <span class="status-pill status-at-risk">At Risk</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                ${this.createComparisonMetric('Schedule Progress', '42%', 'progress-bar', 42)}
+                                ${this.createComparisonMetric('Budget Variance', '+18%', 'trending-up', 118)}
+                                ${this.createComparisonMetric('Task Completion', '38%', 'check-square', 38)}
+                                ${this.createComparisonMetric('Risk Score', 'High', 'shield', 65)}
+                                ${this.createComparisonMetric('Resource Util', '96%', 'user-check', 96)}
+                                ${this.createComparisonMetric('Stakeholder Sat', '6.4/10', 'smile', 64)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 glass p-6 rounded-3xl">
+                            <h3 class="text-lg font-bold mb-6">Portfolio Performance Trends</h3>
+                            <div class="chart-container">
+                                <canvas id="chart-trend"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass p-6 rounded-3xl">
+                            <h3 class="text-lg font-bold mb-6">Resource Allocation</h3>
+                            <div class="chart-container">
+                                <canvas id="chart-resources"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass p-6 rounded-3xl">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold">Winner Breakdown: Performance Analysis</h3>
+                            <span class="text-xs text-[var(--text-muted)]">Based on Q3 Metrics</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="p-4 rounded-2xl bg-[var(--bg-primary)]/50 border border-[var(--border)]">
+                                <p class="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Schedule Adherence</p>
+                                <p class="text-xl font-bold text-blue-500">Mobile Platform</p>
+                                <p class="text-xs mt-1">Outperformed by 26%</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-[var(--bg-primary)]/50 border border-[var(--border)]">
+                                <p class="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Budget Control</p>
+                                <p class="text-xl font-bold text-blue-500">Mobile Platform</p>
+                                <p class="text-xs mt-1">Variance: -12% vs +18%</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-[var(--bg-primary)]/50 border border-[var(--border)]">
+                                <p class="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Overall Health</p>
+                                <p class="text-xl font-bold text-blue-500">Mobile Platform</p>
+                                <p class="text-xs mt-1">Score: 92 vs 65</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            createStatCard(label, value, icon, colorClass) {
+                return `
+                    <div class="glass p-5 rounded-2xl flex items-center gap-4 animate-fade-in">
+                        <div class="w-12 h-12 rounded-xl bg-[var(--bg-primary)] flex items-center justify-center">
+                            <i data-lucide="${icon}" class="w-6 h-6 ${colorClass}"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">${label}</p>
+                            <p class="text-2xl font-bold">${value}</p>
+                        </div>
+                    </div>
+                `;
+            },
+
+            createComparisonMetric(label, value, icon, percent) {
+                return `
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-[var(--text-muted)]">${label}</span>
+                            <span class="text-xs font-bold">${value}</span>
+                        </div>
+                        <div class="w-full bg-[var(--bg-primary)] h-1.5 rounded-full overflow-hidden">
+                            <div class="h-full bg-[var(--accent)] rounded-full" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderProjects(container) {
+                const projects = this.getFilteredProjects();
+                container.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold">Project Portfolio</h2>
+                        <div class="flex gap-2">
+                            <button class="px-4 py-2 rounded-lg border border-[var(--border)] text-sm hover:bg-[var(--accent)]/10">Export CSV</button>
+                            <button class="px-4 py-2 rounded-lg bg-[var(--accent)] text-white text-sm font-medium">New Project</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${projects.map(p => this.createProjectCard(p)).join('')}
+                    </div>
+                    <div class="glass rounded-3xl overflow-hidden">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-[var(--bg-secondary)]/50 text-[var(--text-muted)] text-xs uppercase">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Project Name</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                    <th class="px-6 py-4 font-semibold">Completion</th>
+                                    <th class="px-6 py-4 font-semibold">Budget</th>
+                                    <th class="px-6 py-4 font-semibold">Health</th>
+                                    <th class="px-6 py-4 font-semibold">Owner</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                ${projects.map(p => this.createProjectRow(p)).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            },
+
+            createProjectCard(p) {
+                const statusClass = p.status === 'On Track' ? 'status-on-track' : (p.status === 'At Risk' ? 'status-at-risk' : 'status-delayed');
+                return `
+                    <div class="glass p-6 rounded-3xl hover:scale-[1.02] transition-transform cursor-pointer group" onclick="app.toggleRow('p-${p.id}')">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-bold text-lg leading-tight">${p.name}</h3>
+                            <span class="status-pill ${statusClass}">${p.status}</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-[var(--text-muted)]">Progress</span>
+                                    <span class="font-bold">${p.completion}%</span>
+                                </div>
+                                <div class="w-full bg-[var(--bg-primary)] h-2 rounded-full overflow-hidden">
+                                    <div class="h-full bg-[var(--accent)]" style="width: ${p.completion}%"></div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-[10px] text-[var(--text-muted)] uppercase">Budget</p>
+                                    <p class="text-sm font-semibold">$${(p.budget / 1000000).toFixed(1)}M</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-[var(--text-muted)] uppercase">Team</p>
+                                    <p class="text-sm font-semibold">${p.teamSize} Members</p>
+                                </div>
+                            </div>
+                            <div class="pt-4 border-t border-[var(--border)] flex justify-between items-center">
+                                <div class="flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                                    <i data-lucide="calendar" class="w-3 h-3"></i> ${p.projectedEnd}
+                                </div>
+                                <div class="flex items-center gap-1 text-xs font-bold ${p.health > 80 ? 'text-green-500' : 'text-amber-500'}">
+                                    <i data-lucide="activity" class="w-3 h-3"></i> ${p.health}%
+                                </div>
+                            </div>
+                        </div>
+                        <div id="details-${p.id}" class="expandable-row">
+                            <div class="bg-[var(--bg-primary)]/50 rounded-xl p-4 space-y-2 text-xs">
+                                <p><strong>Milestones:</strong> ${p.milestones} total</p>
+                                <p><strong>Open Risks:</strong> ${p.openRisks}</p>
+                                <p><strong>Blocked Tasks:</strong> ${p.blockedTasks}</p>
+                                <p><strong>Actual Spend:</strong> $${p.actual.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            createProjectRow(p) {
+                const statusClass = p.status === 'On Track' ? 'status-on-track' : (p.status === 'At Risk' ? 'status-at-risk' : 'status-delayed');
+                return `
+                    <tr class="border-t border-[var(--border)] hover:bg-[var(--bg-primary)]/30 transition-colors cursor-pointer" onclick="app.toggleRow('p-${p.id}')">
+                        <td class="px-6 py-4 font-medium">${p.name}</td>
+                        <td class="px-6 py-4"><span class="status-pill ${statusClass}">${p.status}</span></td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-12 bg-[var(--bg-primary)] h-1.5 rounded-full overflow-hidden">
+                                    <div class="h-full bg-[var(--accent)]" style="width: ${p.completion}%"></div>
+                                </div>
+                                <span class="text-xs">${p.completion}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">$${(p.budget / 1000).toFixed(0)}k</td>
+                        <td class="px-6 py-4">
+                            <span class="font-bold ${p.health > 80 ? 'text-green-500' : 'text-amber-500'}">${p.health}%</span>
+                        </td>
+                        <td class="px-6 py-4 text-[var(--text-muted)]">${p.owner}</td>
+                    </tr>
+                    <tr id="details-${p.id}" class="expandable-row">
+                        <td colspan="6" class="px-6">
+                            <div class="grid grid-cols-3 gap-4 text-xs">
+                                <div class="bg-[var(--bg-primary)]/30 p-3 rounded-lg">
+                                    <p class="text-[var(--text-muted)] mb-1">Key Milestones</p>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        ${DATA.milestones.filter(m => m.projectId === p.id).map(m => `<li>${m.name} (${m.status})</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div class="bg-[var(--bg-primary)]/30 p-3 rounded-lg">
+                                    <p class="text-[var(--text-muted)] mb-1">Active Risks</p>
+                                    ${DATA.risks.filter(r => r.projectId === p.id).map(r => `<p class="text-red-400">• ${r.severity}: ${r.mitigation}</p>`).join('') || '<p>None</p>'}
+                                </div>
+                                <div class="bg-[var(--bg-primary)]/30 p-3 rounded-lg">
+                                    <p class="text-[var(--text-muted)] mb-1">Resource Load</p>
+                                    <p>Current: ${p.teamSize} / Max: 25</p>
+                                    <p class="text-blue-400">Efficiency: 88%</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            },
+
+            renderTimeline(container) {
+                container.innerHTML = `
+                    <h2 class="text-2xl font-bold">Project Roadmap</h2>
+                    <div class="glass p-6 rounded-3xl">
+                        <div class="flex justify-between items-center mb-8">
+                            <div class="flex gap-4">
+                                <button class="text-sm font-bold text-[var(--accent)]">Monthly</button>
+                                <button class="text-sm font-bold text-[var(--text-muted)]">Quarterly</button>
+                                <button class="text-sm font-bold text-[var(--text-muted)]">Weekly</button>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-500 rounded-full"></span> Planning</span>
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-amber-500 rounded-full"></span> In Progress</span>
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-500 rounded-full"></span> Completed</span>
+                            </div>
+                        </div>
+                        <div class="space-y-8">
+                            ${this.renderTimelinePhase('Mobile Platform Modernization', ['Design', 'API Dev', 'UI Integration', 'QA', 'Deployment'], ['2024-04', '2024-06', '2024-08', '2024-10', '2024-11'])}
+                            ${this.renderTimelinePhase('Customer Analytics Initiative', ['Data Collection', 'Model Training', 'Dashboard Dev', 'UAT', 'Launch'], ['2024-05', '2024-07', '2024-09', '2024-11', '2024-12'])}
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderTimelinePhase(name, phases, dates) {
+                return `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold">${name}</span>
+                            <span class="text-xs text-[var(--text-muted)]">Phase: ${phases[0]}</span>
+                        </div>
+                        <div class="relative h-8 flex items-center">
+                            <div class="absolute w-full h-1 bg-[var(--bg-primary)] rounded-full"></div>
+                            ${phases.map((p, i) => `
+                                <div class="relative flex-1 group">
+                                    <div class="absolute h-3 w-3 rounded-full bg-[var(--accent)] -translate-x-1/2 left-[${(i / (phases.length - 1)) * 100}%] z-10 cursor-pointer hover:scale-150 transition-transform"></div>
+                                    <div class="absolute h-3 w-3 rounded-full bg-green-500 -translate-x-1/2 left-[${((i - 1) / (phases.length - 1)) * 100}%] z-10"></div>
+                                    <div class="absolute top-6 text-[10px] text-[var(--text-muted)] whitespace-nowrap -translate-x-1/2 left-[${(i / (phases.length - 1)) * 100}%]">${dates[i]}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderResources(container) {
+                container.innerHTML = `
+                    <h2 class="text-2xl font-bold">Team Workload & Capacity</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 glass p-6 rounded-3xl">
+                            <h3 class="text-lg font-bold mb-6">Departmental Utilization</h3>
+                            <div class="chart-container">
+                                <canvas id="chart-resources-bar"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass p-6 rounded-3xl">
+                            <h3 class="text-lg font-bold mb-6">Resource Status</h3>
+                            <div class="space-y-4">
+                                ${DATA.teams.map(t => `
+                                    <div class="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-primary)]/50">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 rounded-full ${t.risk === 'Low' ? 'bg-green-500' : 'bg-red-500'}"></div>
+                                            <span class="text-sm font-medium">${t.name}</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-xs font-bold">${t.utilization}%</p>
+                                            <p class="text-[10px] text-[var(--text-muted)]">Cap: ${t.capacity}%</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderRisks(container) {
+                container.innerHTML = `
+                    <h2 class="text-2xl font-bold">Risk Management Register</h2>
+                    <div class="glass rounded-3xl overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-[var(--bg-secondary)]/50 text-[var(--text-muted)] text-xs uppercase">
+                                <tr>
+                                    <th class="px-6 py-4">Risk Description</th>
+                                    <th class="px-6 py-4">Severity</th>
+                                    <th class="px-6 py-4">Probability</th>
+                                    <th class="px-6 py-4">Impact</th>
+                                    <th class="px-6 py-4">Mitigation</th>
+                                    <th class="px-6 py-4">Owner</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                ${DATA.risks.map(r => `
+                                    <tr class="border-t border-[var(--border)]">
+                                        <td class="px-6 py-4 font-medium">Resource Bottleneck</td>
+                                        <td class="px-6 py-4"><span class="status-pill ${r.severity === 'High' ? 'status-at-risk' : 'status-on-track'}">${r.severity}</span></td>
+                                        <td class="px-6 py-4">${r.probability}</td>
+                                        <td class="px-6 py-4">${r.impact}</td>
+                                        <td class="px-6 py-4 text-[var(--text-muted)]">${r.mitigation}</td>
+                                        <td class="px-6 py-4">${r.owner}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            },
+
+            renderOperations(container) {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="glass p-6 rounded-3xl">
+                            <h3 class="text-lg font-bold mb-6">Integrations Status</h3>
+                            <div class="space-y-4">
+                                ${DATA.integrations.map(i => `
+                                    <div class="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-primary)]/50">
+                                        <div class="flex items-center gap-3">
+                                            <i data-lucide="${i.name === 'Jira' ? 'clipboard-list' : 'github'}" class="w-5 h-5 text-[var(--accent)]"></i>
+                                            <span class="text-sm font-medium">${i.name}</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-[10px] ${i.status === 'Connected' ? 'text-green-500' : 'text-amber-500'}">${i.status}</p>
+                                            <p class="text-[10px] text-[var(--text-muted)]">${i.latency} | ${i.lastSync}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="glass p-6 rounded-3xl">
+                            <h3 class="text-lg font-bold mb-6">Automation & API</h3>
+                            <div class="space-y-6">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span>Workflow Executions</span>
+                                        <span class="font-bold">${DATA.automation.executions.toLocaleString()}</span>
+                                    </div>
+                                    <div class="w-full bg-[var(--bg-primary)] h-2 rounded-full overflow-hidden">
+                                        <div class="h-full bg-blue-500" style="width: 99%"></div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-3 rounded-xl bg-[var(--bg-primary)]/50">
+                                        <p class="text-[10px] text-[var(--text-muted)] uppercase">Success Rate</p>
+                                        <p class="text-lg font-bold text-green-500">${DATA.automation.successRate}</p>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-[var(--bg-primary)]/50">
+                                        <p class="text-[10px] text-[var(--text-muted)] uppercase">API Cost</p>
+                                        <p class="text-lg font-bold">${DATA.automation.apiCost}</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <i data-lucide="trending-up" class="w-4 h-4 text-blue-500"></i>
+                                        <span class="text-xs font-bold text-blue-500">Automation Savings</span>
+                                    </div>
+                                    <p class="text-xl font-bold text-blue-500">${DATA.automation.savings}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass p-6 rounded-3xl">
+                            <h3 class="text-lg font-bold mb-6">Executive Commentary</h3>
+                            <textarea class="w-full h-40 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" placeholder="Add observations, delivery updates, or concerns..."></textarea>
+                            <button class="w-full mt-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium">Post Update</button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            initCharts() {
+                // Trend Chart
+                const ctxTrend = document.getElementById('chart-trend');
+                if (ctxTrend) {
+                    new Chart(ctxTrend, {
+                        type: 'line',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                            datasets: [{
+                                label: 'Portfolio Completion',
+                                data: [10, 25, 40, 45, 60, 75, 82],
+                                borderColor: '#3b82f6',
+                                tension: 0.4,
+                                fill: true,
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#94a3b8' } },
+                                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                            }
+                        }
+                    });
+                }
+
+                // Resource Chart
+                const ctxRes = document.getElementById('chart-resources');
+                if (ctxRes) {
+                    new Chart(ctxRes, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Engineering', 'Product', 'Sales', 'Marketing'],
+                            datasets: [{
+                                data: [45, 25, 20, 10],
+                                backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', usePointStyle: true } } }
+                        }
+                    });
+                }
+
+                // Resource Bar Chart
+                const ctxResBar = document.getElementById('chart-resources-bar');
+                if (ctxResBar) {
+                    new Chart(ctxResBar, {
+                        type: 'bar',
+                        data: {
+                            labels: DATA.teams.map(t => t.name),
+                            datasets: [{
+                                label: 'Utilization %',
+                                data: DATA.teams.map(t => t.utilization),
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { max: 100, grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#94a3b8' } },
+                                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                            }
+                        }
+                    });
+                }
+            },
+
+            toggleRow(id) {
+                const el = document.getElementById(`details-${id}`);
+                if (el) {
+                    el.parentElement.classList.toggle('expanded');
+                }
+            }
+        };
+
+        // Initialize App
+        window.onload = () => app.init();
+    </script>
+</body>
+
+</html>

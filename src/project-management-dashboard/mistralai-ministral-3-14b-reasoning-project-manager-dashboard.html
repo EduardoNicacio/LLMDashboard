@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Project Management Command Center</title>
+    <style>
+        /* Previous CSS remains the same */
+        /* Adding more specific styles for new functionality */
+
+        /* Expandable sections */
+        .expandable {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .expandable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: 4px 4px 0 0;
+        }
+
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            background: var(--glass-effect);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .expandable-content.expanded {
+            max-height: 1000px;
+            /* Adjust based on content */
+            padding: 1rem;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s;
+        }
+
+        .expandable.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Table sorting indicators */
+        .sort-indicator {
+            margin-left: 0.5rem;
+        }
+
+        /* Risk severity colors */
+        .risk-high {
+            color: #ff4757;
+        }
+
+        .risk-medium {
+            color: #ffa31a;
+        }
+
+        .risk-low {
+            color: #11ce29;
+        }
+
+        /* Health score indicators */
+        .health-excellent {
+            color: #11ce29;
+        }
+
+        .health-good {
+            color: #4caf50;
+        }
+
+        .health-fair {
+            color: #ffa31a;
+        }
+
+        .health-poor {
+            color: #ff4757;
+        }
+
+        /* Chart glow effect */
+        .chart-glow {
+            position: relative;
+        }
+
+        .chart-glow::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            z-index: -1;
+            background: linear-gradient(45deg, rgba(74, 107, 255, 0.3), rgba(0, 210, 211, 0.3));
+            border-radius: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.7;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+
+            100% {
+                opacity: 0.7;
+                transform: scale(1);
+            }
+        }
+
+        /* Timeline markers */
+        .timeline-marker {
+            position: relative;
+            height: 2px;
+            background: var(--accent-color);
+            margin: 1rem 0;
+        }
+
+        .timeline-marker::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-color);
+            border-radius: 50%;
+        }
+
+        /* Integrations status colors */
+        .status-online {
+            color: #11ce29;
+        }
+
+        .status-degraded {
+            color: #ffa31a;
+        }
+
+        .status-offline {
+            color: #ff4757;
+        }
+
+        /* API cost indicator */
+        .api-cost {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .cost-saving {
+            background: rgba(17, 206, 41, 0.2);
+            color: #11ce29;
+        }
+
+        .cost-neutral {
+            background: rgba(51, 153, 255, 0.2);
+            color: white;
+        }
+
+        .cost-increasing {
+            background: rgba(255, 87, 119, 0.2);
+            color: #ff4757;
+        }
+
+        /* Responsive adjustments for charts */
+        @media (max-width: 600px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div>
+            <h1>Project Management Command Center</h1>
+        </div>
+        <div class="nav-controls gap">
+            <!-- View toggles -->
+            <button class="view-toggle active" data-view="summary">Summary</button>
+            <button class="view-toggle" data-view="projects">Projects</button>
+            <button class="view-toggle" data-view="timeline">Timeline</button>
+            <button class="view-toggle" data-view="resources">Resources</button>
+            <button class="view-toggle" data-view="risks">Risks</button>
+            <button class="view-toggle" data-view="operations">Operations</button>
+
+            <!-- Mode toggles -->
+            <div class="mode-toggles gap">
+                <label class="flex align-center gap mode-toggle">
+                    <span>Agile</span>
+                    <input type="checkbox" class="agile-toggle" checked>
+                    <span>Waterfall</span>
+                </label>
+                <label class="flex align-center gap mode-toggle">
+                    <span>Portfolio</span>
+                    <input type="checkbox" class="portfolio-toggle" checked>
+                    <span>Program</span>
+                </label>
+                <label class="flex align-center gap mode-toggle">
+                    <span>Project</span>
+                    <input type="checkbox" class="project-toggle">
+                </label>
+            </div>
+
+            <!-- Reporting period -->
+            <select class="reporting-period">
+                <option value="quarterly">Quarterly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+            </select>
+        </div>
+
+        <!-- Theme toggle -->
+        <button class="theme-toggle dark" id="themeToggle"></button>
+    </header>
+
+    <main class="main-content">
+        <aside class="sidebar">
+            <h3>Filters</h3>
+            <select class="filter-control filter-projects">
+                <option value="all">All Projects</option>
+                <option value="active">Active Only</option>
+                <option value="completed">Completed Only</option>
+            </select>
+
+            <div class="mt-1">
+                <label><input type="checkbox" class="filter-checkbox filter-high-risk"> Show only high-risk
+                    projects</label>
+            </div>
+
+            <!-- Additional filters -->
+            <h4 class="mt-2">Department</h4>
+            <select class="filter-control filter-department">
+                <option value="all">All Departments</option>
+                <option value="engineering">Engineering</option>
+                <option value="product">Product Management</option>
+                <option value="design">Design</option>
+                <option value="operations">Operations</option>
+            </select>
+
+            <h4 class="mt-2">Status</h4>
+            <div class="status-filters gap">
+                <label><input type="checkbox" class="filter-checkbox filter-status" value="not-started"> Not
+                    Started</label>
+                <label><input type="checkbox" class="filter-checkbox filter-status" value="in-progress"> In
+                    Progress</label>
+                <label><input type="checkbox" class="filter-checkbox filter-status" value="on-hold"> On Hold</label>
+                <label><input type="checkbox" class="filter-checkbox filter-status" value="completed"> Completed</label>
+            </div>
+
+            <!-- More filters would go here -->
+        </aside>
+
+        <section class="content-area fade-in">
+            <!-- Hero Summary Section -->
+            <div class="hero-summary gap">
+                <div class="summary-card">
+                    <h3>Active Projects</h3>
+                    <p id="activeProjectsCount">42</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Completed Projects</h3>
+                    <p id="completedProjectsCount">18</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Portfolio Health Score</h3>
+                    <p id="portfolioHealthScore">87%</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Budget Utilization</h3>
+                    <p id="budgetUtilization">$42.5M / $50M (85%)</p>
+                </div>
+                <div class="summary-card">
+                    <h3>On-Time Delivery Rate</h3>
+                    <p id="onTimeDeliveryRate">92%</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Total Team Members</h3>
+                    <p id="teamMembersCount">487</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Projected Annual Spend</h3>
+                    <p id="annualSpendProjection">$120.3M</p>
+                </div>
+            </div>
+
+            <!-- Head-to-head Comparison Panel -->
+            <div class="comparison-panel gap">
+                <div class="project-card expandable" data-project="mobile-platform">
+                    <div class="expandable-header">
+                        <h3>Mobile Platform Modernization</h3>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="expandable-content">
+                        <div class="mb-1">
+                            <strong>Schedule Progress:</strong> 78% (Target: 90%)
+                        </div>
+                        <div class="mb-1">
+                            <strong>Budget Variance:</strong> -5% (Under budget)
+                        </div>
+                        <div class="mb-1">
+                            <strong>Task Completion:</strong> 82%
+                        </div>
+                        <div class="mb-1">
+                            <strong>Risk Score:</strong> Medium (4/10)
+                        </div>
+                        <div class="mb-1">
+                            <strong>Resource Utilization:</strong> 91% (Critical: 3 team members at risk of burnout)
+                        </div>
+                        <div class="mb-1">
+                            <strong>Stakeholder Satisfaction:</strong> 88%
+                        </div>
+                        <div class="mt-1">
+                            <h4>Key Metrics</h4>
+                            <p><strong>Team Velocity:</strong> 28 story points/sprint (avg)</p>
+                            <p><strong>Defect Rate:</strong> 0.3 defects per story point</p>
+                            <p><strong>Deployment Frequency:</strong> Bi-weekly (14 deployments in last quarter)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card expandable" data-project="customer-analytics">
+                    <div class="expandable-header">
+                        <h3>Customer Analytics Initiative</h3>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="expandable-content">
+                        <div class="mb-1">
+                            <strong>Schedule Progress:</strong> 65% (Target: 80%)
+                        </div>
+                        <div class="mb-1">
+                            <strong>Budget Variance:</strong> +8% (Over budget)
+                        </div>
+                        <div class="mb-1">
+                            <strong>Task Completion:</strong> 72%
+                        </div>
+                        <div class="mb-1">
+                            <strong>Risk Score:</strong> High (6/10)
+                        </div>
+                        <div class="mb-1">
+                            <strong>Resource Utilization:</strong> 85% (Warning: 5 team members at risk)
+                        </div>
+                        <div class="mb-1">
+                            <strong>Stakeholder Satisfaction:</strong> 79%
+                        </div>
+                        <div class="mt-1">
+                            <h4>Key Metrics</h4>
+                            <p><strong>Data Quality Score:</strong> 82% (Target: 95%)</p>
+                            <p><strong>Model Accuracy:</strong> 93% (improved from 88% last quarter)</p>
+                            <p><strong>Query Performance:</strong> Avg 120ms (target <100ms)< /p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Cards Grid -->
+            <div class="projects-grid gap" id="projectsGrid">
+                <!-- Projects will be populated by JavaScript -->
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section gap">
+                <div class="chart-card chart-glow">
+                    <h3>Project Completion Trend</h3>
+                    <div class="chart-container" id="completionChart"></div>
+                </div>
+
+                <div class="chart-card chart-glow">
+                    <h3>Budget vs Actual Spend</h3>
+                    <div class="chart-container" id="budgetChart"></div>
+                </div>
+
+                <div class="chart-card chart-glow">
+                    <h3>Team Velocity and Sprint Throughput</h3>
+                    <div class="chart-container" id="velocityChart"></div>
+                </div>
+
+                <div class="chart-card chart-glow">
+                    <h3>Resource Allocation by Department</h3>
+                    <div class="chart-container" id="resourceChart"></div>
+                </div>
+
+                <div class="chart-card chart-glow">
+                    <h3>Open Risks by Severity</h3>
+                    <div class="chart-container" id="risksChart"></div>
+                </div>
+
+                <div class="chart-card chart-glow">
+                    <h3>Milestone Completion Progress</h3>
+                    <div class="chart-container" id="milestonesChart"></div>
+                </div>
+
+                <div class="chart-card chart-glow">
+                    <h3>Planned vs Actual Timeline Performance</h3>
+                    <div class="chart-container" id="timelineChart"></div>
+                </div>
+            </div>
+
+            <!-- Timeline Section -->
+            <div class="timeline-section">
+                <h2>Project Timeline</h2>
+                <p>View project phases, milestones, and delivery dates with expandable details.</p>
+
+                <div class="timeline-content">
+                    <div class="expandable" data-timeline-item="mobile-platform">
+                        <div class="expandable-header">
+                            <h4>Q3 2023 - Mobile Platform Modernization</h4>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="expandable-content">
+                            <p><strong>Current Phase:</strong> API Integration (65% complete, due Oct 1)</p>
+                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
+                                <div>
+                                    <h5>Milestones</h5>
+                                    <ul class="timeline-milestones">
+                                        <li>• UI/UX Redesign - Completed (95%, Sept 15)</li>
+                                        <li>• Backend Migration - In Progress (68%, Sept 30 target)</li>
+                                        <li>• API Integration - In Progress (42%, Oct 15 target)</li>
+                                        <li>• Performance Testing - Not Started (Nov 1 target)</li>
+                                        <li>• Beta Release - Upcoming (Oct 20 target)</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5>Key Dates</h5>
+                                    <ul class="timeline-dates">
+                                        <li>• Q3 Kickoff: July 1, 2023</li>
+                                        <li>• Beta Release: Sept 15, 2023 (slipped to Oct 20)</li>
+                                        <li>• Full Launch: Oct 31, 2023 (target)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- More timeline items would go here -->
+                </div>
+            </div>
+
+            <!-- Task and Milestone History Section -->
+            <div class="task-history">
+                <h2>Task and Milestone History</h2>
+                <p>Expand to view detailed sprint, release, or milestone information.</p>
+
+                <div class="history-content">
+                    <div class="expandable" data-history-item="sprint-12">
+                        <div class="expandable-header">
+                            <h4>Sprint 12 - Mobile Platform Modernization</h4>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="expandable-content">
+                            <p><strong>Period:</strong> Aug 1-14, 2023 | <strong>Velocity:</strong> 28 story points |
+                                <strong>Status:</strong> Completed</p>
+                            <h5>Sprint Goals</h5>
+                            <ul>
+                                <li>Complete API integration for core features (60%)</li>
+                                <li>Implement new authentication system (40%)</li>
+                                <li>Performance optimization (30%)</li>
+                            </ul>
+
+                            <h5>Tasks</h5>
+                            <table
+                                style="width: 100%; background: var(--bg-secondary); border-radius: 4px; margin-top: 1rem;">
+                                <thead>
+                                    <tr>
+                                        <th style="padding: 0.75rem; text-align: left;">ID</th>
+                                        <th style="padding: 0.75rem; text-align: left;">Title</th>
+                                        <th style="padding: 0.75rem; text-align: left;">Status</th>
+                                        <th style="padding: 0.75rem; text-align: left;">Assignee</th>
+                                        <th style="padding: 0.75rem; text-align: left;">Blocked?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>TASK-2345</td>
+                                        <td>Implement OAuth 2.0 integration</td>
+                                        <td><span style="color: green;">Done</span></td>
+                                        <td>John Smith</td>
+                                        <td>✓</td>
+                                    </tr>
+                                    <tr>
+                                        <td>TASK-2346</td>
+                                        <td>Create API documentation</td>
+                                        <td><span style="color: orange;">In Review</span></td>
+                                        <td>Jane Doe</td>
+                                        <td>✗ (Waiting on API specs)</td>
+                                    </tr>
+                                    <!-- More tasks would go here -->
+                                </tbody>
+                            </table>
+
+                            <h5>Blockers</h5>
+                            <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                                <strong>API Specification Delay:</strong> The third-party API specifications were
+                                delayed by one week, impacting our integration timeline.
+                            </div>
+
+                            <h5>Dependencies</h5>
+                            <ul>
+                                <li>• Backend migration must be completed before API integration (80% complete)</li>
+                                <li>• Security review required for all new API endpoints</li>
+                            </ul>
+
+                            <h5>Comments</h5>
+                            <div
+                                style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-top: 1rem;">
+                                <p><strong>John Smith (Aug 12, 2023):</strong> We're making good progress on the API
+                                    integration but need to prioritize testing for the upcoming beta release.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- More history items would go here -->
+                </div>
+            </div>
+
+            <!-- Team Workload Panel -->
+            <div class="team-workload">
+                <h2>Team Workload Analysis</h2>
+                <p>View resource utilization, capacity, availability, and overtime risk.</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="chart-card chart-glow">
+                        <h3>Resource Utilization</h3>
+                        <div class="chart-container" id="utilizationChart"></div>
+                    </div>
+
+                    <div class="chart-card chart-glow">
+                        <h3>Overtime Risk</h3>
+                        <div class="chart-container" id="overtimeChart"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <h4>Team Capacity Analysis</h4>
+                    <table style="width: 100%; background: var(--bg-secondary); border-radius: 4px;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 0.75rem; text-align: left;">Department</th>
+                                <th style="padding: 0.75rem; text-align: left;">Available Capacity</th>
+                                <th style="padding: 0.75rem; text-align: left;">Utilization %</th>
+                                <th style="padding: 0.75rem; text-align: left;">Overtime Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Engineering</td>
+                                <td>320 person-days</td>
+                                <td>88%</td>
+                                <td><span style="color: orange;">High (15% of team at risk)</span></td>
+                            </tr>
+                            <tr>
+                                <td>Product Management</td>
+                                <td>45 person-days</td>
+                                <td>72%</td>
+                                <td><span style="color: green;">Low</span></td>
+                            </tr>
+                            <!-- More rows would go here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Integrations Status Panel -->
+            <div class="integrations-status">
+                <h2>Integrations Status</h2>
+                <p>Real-time status of connected tools and their synchronization.</p>
+
+                <table style="width: 100%; background: var(--bg-secondary); border-radius: 4px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 0.75rem; text-align: left;">Tool</th>
+                            <th style="padding: 0.75rem; text-align: left;">Status</th>
+                            <th style="padding: 0.75rem; text-align: left;">Last Sync</th>
+                            <th style="padding: 0.75rem; text-align: left;">Latency</th>
+                        </tr>
+                    </thead>
+                    <tbody id="integrationsTable">
+                        <!-- Integration data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 1rem;">
+                    <h4>Integration Health</h4>
+                    <div class="chart-card chart-glow" style="height: 200px;">
+                        <div class="chart-container" id="integrationsHealthChart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Usage Panel -->
+            <div class="api-usage">
+                <h2>API Usage and Automation</h2>
+                <p>Track workflow executions, automation success rates, and estimated costs.</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="chart-card chart-glow">
+                        <h3>Workflow Executions</h3>
+                        <div class="chart-container" id="workflowChart"></div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                            <strong>Automation Success Rate:</strong>
+                            <span id="automationSuccessRate">98%</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                            <strong>Estimated API Costs (Month):</strong>
+                            <span id="apiCosts" class="api-cost cost-saving">$12,450</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                            <strong>Total Automation Savings:</strong>
+                            <span id="automationSavings">$428,760 (YTD)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <h4>API Cost Breakdown</h4>
+                    <table style="width: 100%; background: var(--bg-secondary); border-radius: 4px;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 0.75rem; text-align: left;">Service</th>
+                                <th style="padding: 0.75rem; text-align: left;">Calls (Month)</th>
+                                <th style="padding: 0.75rem; text-align: left;">Cost per Call</th>
+                                <th style="padding: 0.75rem; text-align: left;">Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody id="apiBreakdownTable">
+                            <!-- API breakdown data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Risk Management Section -->
+            <div class="risk-management">
+                <h2>Risk Management</h2>
+                <p>View active risks with severity levels, probability, impact, and mitigation status.</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="chart-card chart-glow">
+                        <h3>Risk Distribution</h3>
+                        <div class="chart-container" id="riskDistributionChart"></div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                            <strong>Total Open Risks:</strong>
+                            <span id="totalRisks">12</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                            <strong>High Severity Risks:</strong>
+                            <span id="highRisks" class="risk-high">3</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                            <strong>Mitigation Progress:</strong>
+                            <span id="mitigationProgress">68%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <table style="width: 100%; background: var(--bg-secondary); border-radius: 4px; margin-top: 1rem;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 0.75rem; text-align: left;">Risk ID</th>
+                            <th style="padding: 0.75rem; text-align: left;">Description</th>
+                            <th style="padding: 0.75rem; text-align: left;">Severity</th>
+                            <th style="padding: 0.75rem; text-align: left;">Probability</th>
+                            <th style="padding: 0.75rem; text-align: left;">Impact</th>
+                            <th style="padding: 0.75rem; text-align: left;">Mitigation Status</th>
+                            <th style="padding: 0.75rem; text-align: left;">Owner</th>
+                        </tr>
+                    </thead>
+                    <tbody id="risksTable">
+                        <!-- Risk data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Winner Breakdown Section -->
+            <div class="winner-breakdown">
+                <h2>Project Performance Comparison</h2>
+                <p>Analysis of which project outperformed the other in key metrics.</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="chart-card chart-glow">
+                        <h3>Schedule Adherence</h3>
+                        <div class="chart-container" id="scheduleChart"></div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                            <strong>Winner:</strong>
+                            <span id="scheduleWinner">Mobile Platform Modernization</span>
+                            <span style="float: right;">(82% on schedule)</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px;">
+                            <strong>Key Metric:</strong> Consistent sprint delivery with only 3 minor delays
+                        </div>
+                    </div>
+                </div>
+
+                <!-- More comparison sections would go here -->
+            </div>
+
+            <!-- Searchable/Sortable Table Section -->
+            <div class="table-section">
+                <h2>Project Portfolio</h2>
+                <p>Searchable and sortable table of all projects, milestones, and delivery records.</p>
+
+                <div style="margin-bottom: 1rem; display: flex; gap: 1rem;">
+                    <input type="text" id="projectSearch" placeholder="Search projects..."
+                        style="flex-grow: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);">
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary" id="sortTable">Sort</button>
+                        <select id="sortColumn"
+                            style="padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);">
+                            <option value="name">Name</option>
+                            <option value="completion">Completion %</option>
+                            <option value="budget">Budget</option>
+                            <option value="spend">Actual Spend</option>
+                            <option value="health">Health Score</option>
+                        </select>
+                    </div>
+                </div>
+
+                <table style="width: 100%; background: var(--bg-secondary); border-radius: 4px;" id="projectsTable">
+                    <thead>
+                        <tr>
+                            <th style="padding: 0.75rem; text-align: left;">Project ID</th>
+                            <th style="padding: 0.75rem; text-align: left;">Name</th>
+                            <th style="padding: 0.75rem; text-align: left;">Status</th>
+                            <th style="padding: 0.75rem; text-align: left;">Completion %<span
+                                    class="sort-indicator">↕</span></th>
+                            <th style="padding: 0.75rem; text-align: left;">Budget</th>
+                            <th style="padding: 0.75rem; text-align: left;">Actual Spend</th>
+                            <th style="padding: 0.75rem; text-align: left;">Team Size</th>
+                            <th style="padding: 0.75rem; text-align: left;">Milestones</th>
+                            <th style="padding: 0.75rem; text-align: left;">Health Score<span
+                                    class="sort-indicator">↕</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <!-- Project data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Notes and Executive Commentary Section -->
+            <div class="notes-section">
+                <h2>Executive Commentary</h2>
+                <p>Project managers can add observations, updates, concerns, lessons learned, and future outlook.</p>
+
+                <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <strong>Recent Comment (Sept 20, 2023):</strong>
+                    <p>The Mobile Platform Modernization project is showing strong progress despite some API integration
+                        challenges. The team has demonstrated excellent adaptability in addressing these technical
+                        hurdles while maintaining schedule adherence. We should continue monitoring the resource
+                        allocation to prevent burnout, especially as we approach the beta release milestone.</p>
+                    <p><em>— Sarah Johnson, CTO</em></p>
+                </div>
+
+                <textarea id="executiveCommentary" placeholder="Add your commentary here..."
+                    style="width: 100%; height: 150px; padding: 0.75rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);"></textarea>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Enhanced JavaScript functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            // Theme toggle functionality with localStorage persistence
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+
+            // Check for saved theme preference or use preferred color scheme
+            const savedTheme = localStorage.getItem('theme') ||
+                (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+            if (savedTheme === 'dark') {
+                body.classList.add('light-theme');
+                themeToggle.classList.remove('dark');
+            } else {
+                themeToggle.classList.add('dark');
+            }
+
+            themeToggle.addEventListener('click', function () {
+                const isDark = this.classList.contains('dark');
+
+                if (isDark) {
+                    body.classList.add('light-theme');
+                    this.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.classList.remove('light-theme');
+                    this.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+
+            // View toggle functionality
+            const viewToggles = document.querySelectorAll('.view-toggle');
+            viewToggles.forEach(toggle => {
+                toggle.addEventListener('click', function () {
+                    // Remove active class from all toggles
+                    viewToggles.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked toggle
+                    this.classList.add('active');
+
+                    // In a real app, we would load different content based on the view
+                    console.log(`Switched to ${this.dataset.view} view`);
+
+                    // Update URL or highlight in navigation (optional)
+                });
+            });
+
+            // Mode toggle functionality with localStorage persistence
+            const modeToggles = document.querySelectorAll('.mode-toggle input');
+            modeToggles.forEach(toggle => {
+                toggle.addEventListener('change', function () {
+                    console.log(`Switched ${this.name} mode to`, this.checked);
+
+                    // Save mode preferences
+                    localStorage.setItem(`${this.name}-mode`, this.checked);
+
+                    // Update UI based on modes (simplified)
+                    if (this.name === 'agile-toggle' && !this.checked) {
+                        document.body.classList.add('waterfall-mode');
+                    } else {
+                        document.body.classList.remove('waterfall-mode');
+                    }
+
+                    if (this.name === 'portfolio-toggle' && !this.checked) {
+                        document.body.classList.add('program-mode');
+                    } else {
+                        document.body.classList.remove('program-mode');
+                    }
+
+                    if (this.name === 'project-toggle' && this.checked) {
+                        document.body.classList.add('project-mode');
+                    } else {
+                        document.body.classList.remove('project-mode');
+                    }
+                });
+            });
+
+            // Load saved mode preferences
+            ['agile', 'portfolio', 'project'].forEach(mode => {
+                const saved = localStorage.getItem(`${mode}-mode`);
+                if (saved !== null) {
+                    document.querySelector(`.${mode}-toggle`).checked = JSON.parse(saved);
+                }
+            });
+
+            // Reporting period change handler
+            document.querySelector('.reporting-period').addEventListener('change', function () {
+                console.log(`Changed reporting period to`, this.value);
+
+                // Update charts and data based on selected period
+                updateChartsForPeriod(this.value);
+            });
+
+            // Filter functionality
+            const filterControls = document.querySelectorAll('.filter-control, .filter-checkbox');
+            filterControls.forEach(control => {
+                control.addEventListener('change', function () {
+                    console.log(`Filtered by`, this.classList.contains('filter-checkbox') ? this.checked : this.value);
+                    applyFilters();
+                });
+            });
+
+            // Expandable sections functionality
+            const expandables = document.querySelectorAll('.expandable');
+            expandables.forEach(expandable => {
+                expandable.addEventListener('click', function () {
+                    this.classList.toggle('expanded');
+
+                    // Close other expanded sections in the same category if needed
+                    if (this.dataset.timelineItem) {
+                        document.querySelectorAll(`.timeline-content .expandable[data-timeline-item]`).forEach(el => {
+                            if (el !== this && el.classList.contains('expanded')) {
+                                el.classList.remove('expanded');
+                            }
+                        });
+                    } else if (this.dataset.historyItem) {
+                        document.querySelectorAll(`.history-content .expandable[data-history-item]`).forEach(el => {
+                            if (el !== this && el.classList.contains('expanded')) {
+                                el.classList.remove('expanded');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Table sorting functionality
+            const sortButton = document.getElementById('sortTable');
+            const sortColumn = document.getElementById('sortColumn');
+            const projectsTableBody = document.getElementById('projectsTableBody');
+
+            let currentSortDirection = 'asc';
+            let currentSortColumn = 'name';
+
+            function updateSortIndicator() {
+                const indicators = document.querySelectorAll('.sort-indicator');
+                indicators.forEach(indicator => indicator.textContent = '↕');
+
+                if (currentSortColumn === 'completion' || currentSortColumn === 'health') {
+                    const columnHeader = document.querySelector(`th[data-column="${currentSortColumn}"] .sort-indicator`);
+                    if (columnHeader) {
+                        columnHeader.textContent = currentSortDirection === 'asc' ? '↑' : '↓';
+                    }
+                }
+            }
+
+            sortButton.addEventListener('click', function () {
+                currentSortColumn = sortColumn.value;
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+
+                // Sort the table
+                const rows = Array.from(projectsTableBody.querySelectorAll('tr'));
+                rows.sort((a, b) => {
+                    let aValue, bValue;
+
+                    if (currentSortColumn === 'completion') {
+                        aValue = parseFloat(a.querySelector('[data-column="completion"]').textContent.replace('%', ''));
+                        bValue = parseFloat(b.querySelector('[data-column="completion"]').textContent.replace('%', ''));
+                    } else if (currentSortColumn === 'health') {
+                        // Extract numeric value from health score span
+                        aValue = parseInt(a.querySelector('[data-column="health"] .health-score').textContent);
+                        bValue = parseInt(b.querySelector('[data-column="health"] .health-score').textContent);
+                    } else if (currentSortColumn === 'budget' || currentSortColumn === 'spend') {
+                        aValue = parseFloat(a.querySelector(`[data-column="${currentSortColumn}"]`).textContent.replace(/[^0-9.-]/g, ''));
+                        bValue = parseFloat(b.querySelector(`[data-column="${currentSortColumn}"]`).textContent.replace(/[^0-9.-]/g, ''));
+                    } else {
+                        aValue = a.querySelector(`[data-column="${currentSortColumn}"]`).textContent.toLowerCase();
+                        bValue = b.querySelector(`[data-column="${currentSortColumn}"]`).textContent.toLowerCase();
+                    }
+
+                    if (aValue < bValue) return currentSortDirection === 'asc' ? -1 : 1;
+                    if (aValue > bValue) return currentSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                // Re-append sorted rows
+                rows.forEach(row => projectsTableBody.appendChild(row));
+
+                updateSortIndicator();
+            });
+
+            sortColumn.addEventListener('change', function () {
+                currentSortColumn = this.value;
+                updateSortIndicator();
+
+                // Apply the new sort immediately
+                sortButton.click();
+            });
+
+            // Project search functionality
+            const projectSearch = document.getElementById('projectSearch');
+            projectSearch.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+
+                if (!searchTerm) {
+                    // Reset to full table if search is cleared
+                    resetTable();
+                    return;
+                }
+
+                const rows = projectsTableBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td, th');
+                    let matches = false;
+
+                    cells.forEach(cell => {
+                        if (cell.textContent.toLowerCase().includes(searchTerm)) {
+                            matches = true;
+                        }
+                    });
+
+                    row.style.display = matches ? '' : 'none';
+                });
+            });
+
+            // Initialize charts (using Chart.js)
+            function initializeCharts() {
+                if (typeof Chart === 'undefined') return;
+
+                // Sample data for all charts
+                const completionData = {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                    datasets: [{
+                        label: 'Project Completion %',
+                        data: [10, 25, 40, 55, 68, 72, 75, 78, 82],
+                        backgroundColor: 'rgba(74, 107, 255, 0.3)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
+                };
+
+                const budgetData = {
+                    labels: ['Q1', 'Q2', 'Q3 (Actual)', 'Q3 (Planned)'],
+                    datasets: [{
+                        label: 'Budget',
+                        data: [5, 10, 15, 18],
+                        backgroundColor: 'rgba(74, 107, 255, 0.3)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Actual Spend',
+                        data: [4, 8, 14.5, 18],
+                        backgroundColor: 'rgba(255, 118, 117, 0.3)',
+                        borderColor: 'rgba(255, 118, 117, 1)',
+                        borderWidth: 2
+                    }]
+                };
+
+                const velocityData = {
+                    labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5', 'Sprint 6'],
+                    datasets: [{
+                        label: 'Velocity (Story Points)',
+                        data: [20, 22, 25, 28, 30, 28],
+                        backgroundColor: 'rgba(74, 107, 255, 0.3)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Throughput (Hours)',
+                        data: [85, 90, 95, 100, 98, 102],
+                        backgroundColor: 'rgba(255, 210, 0, 0.3)',
+                        borderColor: 'rgba(255, 210, 0, 1)',
+                        borderWidth: 2,
+                        yAxisID: 'y1'
+                    }]
+                };
+
+                const resourceData = {
+                    labels: ['Engineering', 'Product', 'Design', 'QA', 'Operations'],
+                    datasets: [{
+                        label: 'Resource Allocation',
+                        data: [320, 45, 30, 25, 18],
+                        backgroundColor: [
+                            'rgba(74, 107, 255, 0.7)',
+                            'rgba(255, 118, 117, 0.7)',
+                            'rgba(0, 210, 211, 0.7)',
+                            'rgba(138, 43, 226, 0.7)',
+                            'rgba(255, 159, 0, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(74, 107, 255, 1)',
+                            'rgba(255, 118, 117, 1)',
+                            'rgba(0, 210, 211, 1)',
+                            'rgba(138, 43, 226, 1)',
+                            'rgba(255, 159, 0, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                const risksData = {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [{
+                        label: 'Open Risks',
+                        data: [3, 5, 4],
+                        backgroundColor: [
+                            'rgba(255, 71, 87, 0.7)',
+                            'rgba(255, 163, 26, 0.7)',
+                            'rgba(17, 206, 41, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 71, 87, 1)',
+                            'rgba(255, 163, 26, 1)',
+                            'rgba(17, 206, 41, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                const milestonesData = {
+                    labels: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'],
+                    datasets: [{
+                        label: 'Planned',
+                        data: [25, 50, 75, 100],
+                        backgroundColor: 'rgba(74, 107, 255, 0.3)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }, {
+                        label: 'Actual',
+                        data: [20, 48, 65, 78],
+                        backgroundColor: 'rgba(255, 118, 117, 0.3)',
+                        borderColor: 'rgba(255, 118, 117, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
+                };
+
+                const timelineData = {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    datasets: [{
+                        label: 'Planned Timeline',
+                        data: [25, 50, 75, 100],
+                        backgroundColor: 'rgba(74, 107, 255, 0.3)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }, {
+                        label: 'Actual Progress',
+                        data: [20, 48, 65, 78],
+                        backgroundColor: 'rgba(255, 118, 117, 0.3)',
+                        borderColor: 'rgba(255, 118, 117, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
+                };
+
+                const utilizationData = {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Utilization %',
+                        data: [85, 88, 91, 93, 90, 87],
+                        backgroundColor: 'rgba(74, 107, 255, 0.3)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2,
+                        min: 0,
+                        max: 100
+                    }]
+                };
+
+                const overtimeData = {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Overtime Risk %',
+                        data: [5, 8, 12, 15, 10, 7],
+                        backgroundColor: 'rgba(255, 118, 117, 0.3)',
+                        borderColor: 'rgba(255, 118, 117, 1)',
+                        borderWidth: 2,
+                        min: 0,
+                        max: 20
+                    }]
+                };
+
+                const integrationsData = {
+                    labels: ['Jira', 'Azure DevOps', 'GitHub', 'Slack', 'Teams'],
+                    datasets: [{
+                        label: 'Integration Health',
+                        data: [98, 95, 85, 99, 97],
+                        backgroundColor: [
+                            'rgba(17, 206, 41, 0.3)',
+                            'rgba(17, 206, 41, 0.3)',
+                            'rgba(255, 163, 26, 0.3)',
+                            'rgba(17, 206, 41, 0.3)',
+                            'rgba(17, 206, 41, 0.3)'
+                        ],
+                        borderColor: [
+                            'rgba(17, 206, 41, 1)',
+                            'rgba(17, 206, 41, 1)',
+                            'rgba(255, 163, 26, 1)',
+                            'rgba(17, 206, 41, 1)',
+                            'rgba(17, 206, 41, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                const workflowData = {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Successful Workflows',
+                        data: [250, 300, 350, 400, 450, 500],
+                        backgroundColor: 'rgba(74, 107, 255, 0.3)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Failed Workflows',
+                        data: [5, 8, 6, 4, 3, 2],
+                        backgroundColor: 'rgba(255, 118, 117, 0.3)',
+                        borderColor: 'rgba(255, 118, 117, 1)',
+                        borderWidth: 2
+                    }]
+                };
+
+                const riskDistributionData = {
+                    labels: ['High', 'Medium', 'Low'],
+                    datasets: [{
+                        label: 'Risk Distribution',
+                        data: [3, 5, 4],
+                        backgroundColor: [
+                            'rgba(255, 71, 87, 0.7)',
+                            'rgba(255, 163, 26, 0.7)',
+                            'rgba(17, 206, 41, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 71, 87, 1)',
+                            'rgba(255, 163, 26, 1)',
+                            'rgba(17, 206, 41, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                const scheduleData = {
+                    labels: ['Q1', 'Q2', 'Q3'],
+                    datasets: [{
+                        label: 'Mobile Platform',
+                        data: [85, 90, 82],
+                        backgroundColor: 'rgba(74, 107, 255, 0.7)',
+                        borderColor: 'rgba(74, 107, 255, 1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Customer Analytics',
+                        data: [80, 75, 65],
+                        backgroundColor: 'rgba(255, 118, 117, 0.7)',
+                        borderColor: 'rgba(255, 118, 117, 1)',
+                        borderWidth: 2
+                    }]
+                };
+
+                // Create all charts if Chart.js is available
+                if (window.Chart) {
+                    new Chart(document.getElementById('completionChart'), {
+                        type: 'line',
+                        data: completionData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Project Completion Trend Over Time'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('budgetChart'), {
+                        type: 'bar',
+                        data: budgetData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Budget vs Actual Spend'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('velocityChart'), {
+                        type: 'line',
+                        data: velocityData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Team Velocity and Sprint Throughput'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    id: 'y1'
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('resourceChart'), {
+                        type: 'doughnut',
+                        data: resourceData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Resource Allocation by Department'
+                                },
+                                legend: {
+                                    position: 'right'
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('risksChart'), {
+                        type: 'doughnut',
+                        data: risksData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Open Risks by Severity'
+                                },
+                                legend: {
+                                    position: 'right'
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('milestonesChart'), {
+                        type: 'line',
+                        data: milestonesData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Milestone Completion Progress'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('timelineChart'), {
+                        type: 'line',
+                        data: timelineData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Planned vs Actual Timeline Performance'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('utilizationChart'), {
+                        type: 'line',
+                        data: utilizationData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Resource Utilization Over Time'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('overtimeChart'), {
+                        type: 'bar',
+                        data: overtimeData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Overtime Risk by Month'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('integrationsHealthChart'), {
+                        type: 'bar',
+                        data: integrationsData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Integration Health Scores'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('workflowChart'), {
+                        type: 'bar',
+                        data: workflowData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Workflow Executions by Month'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('riskDistributionChart'), {
+                        type: 'doughnut',
+                        data: riskDistributionData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Risk Distribution by Severity'
+                                },
+                                legend: {
+                                    position: 'right'
+                                }
+                            }
+                        }
+                    });
+
+                    new Chart(document.getElementById('scheduleChart'), {
+                        type: 'bar',
+                        data: scheduleData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Schedule Adherence Comparison'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Populate project data in the grid
+                populateProjectsGrid();
+
+                // Populate integrations table
+                populateIntegrationsTable();
+
+                // Populate API breakdown table
+                populateAPIBreakdownTable();
+
+                // Populate risks table
+                populateRisksTable();
+            }
+
+            function updateChartsForPeriod(period) {
+                console.log(`Updating charts for ${period} period`);
+
+                // In a real app, we would fetch or generate data based on the selected period
+                // For this demo, we'll just log the action
+
+                if (typeof Chart !== 'undefined') {
+                    // We could update chart data here if we had more sophisticated data handling
+                    console.log('Charts would be updated for', period);
+                }
+            }
+
+            function applyFilters() {
+                console.log('Applying filters');
+
+                // In a real app, we would filter the displayed projects based on:
+                const projectFilter = document.querySelector('.filter-projects').value;
+                const departmentFilter = document.querySelector('.filter-department').value;
+                const highRiskOnly = document.querySelector('.filter-high-risk').checked;
+
+                console.log('Filters applied:', {
+                    project: projectFilter,
+                    department: departmentFilter,
+                    highRisk: highRiskOnly
+                });
+
+                // For this demo, we'll just log the filters
+            }
+
+            function populateProjectsGrid() {
+                const projectsGrid = document.getElementById('projectsGrid');
+
+                // Sample project data
+                const sampleProjects = [
+                    {
+                        id: 'PRJ-2023-01',
+                        name: 'Mobile Platform Modernization',
+                        status: 'In Progress (Q3 2023)',
+                        completion: '78%',
+                        budget: '$15.2M',
+                        actualSpend: '$14.5M (96%)',
+                        remainingBudget: '$780K',
+                        teamSize: 45,
+                        milestones: '12/15',
+                        openRisks: '3 (Medium)',
+                        blockedTasks: 2,
+                        projectedCompletion: 'Nov 15, 2023',
+                        healthScore: 87
+                    },
+                    {
+                        id: 'PRJ-2023-02',
+                        name: 'Customer Analytics Initiative',
+                        status: 'In Progress (Q2 2023)',
+                        completion: '65%',
+                        budget: '$18.7M',
+                        actualSpend: '$20.2M (108%)',
+                        remainingBudget: '-$1.5M (Over)',
+                        teamSize: 38,
+                        milestones: '9/14',
+                        openRisks: '5 (High: 2, Medium: 3)',
+                        blockedTasks: 4,
+                        projectedCompletion: 'Dec 10, 2023',
+                        healthScore: 72
+                    },
+                    {
+                        id: 'PRJ-2023-03',
+                        name: 'CRM Integration Project',
+                        status: 'On Hold (Q4 2023)',
+                        completion: '55%',
+                        budget: '$12.8M',
+                        actualSpend: '$7.1M (56%)',
+                        remainingBudget: '$5.7M',
+                        teamSize: 22,
+                        milestones: '8/10',
+                        openRisks: '4 (High: 1, Medium: 3)',
+                        blockedTasks: 3,
+                        projectedCompletion: 'Feb 15, 2024',
+                        healthScore: 65
+                    },
+                    {
+                        id: 'PRJ-2023-04',
+                        name: 'Marketing Automation Overhaul',
+                        status: 'Completed (Q2 2023)',
+                        completion: '100%',
+                        budget: '$9.5M',
+                        actualSpend: '$9.8M (103%)',
+                        remainingBudget: '-$300K (Over)',
+                        teamSize: 18,
+                        milestones: '14/14',
+                        openRisks: '0',
+                        blockedTasks: 0,
+                        projectedCompletion: 'Jul 31, 2023',
+                        healthScore: 92
+                    },
+                    {
+                        id: 'PRJ-2023-05',
+                        name: 'Data Warehouse Migration',
+                        status: 'In Progress (Q3 2023)',
+                        completion: '42%',
+                        budget: '$21.3M',
+                        actualSpend: '$9.1M (43%)',
+                        remainingBudget: '$12.2M',
+                        teamSize: 55,
+                        milestones: '6/18',
+                        openRisks: '7 (High: 3, Medium: 4)',
+                        blockedTasks: 5,
+                        projectedCompletion: 'Mar 15, 2024',
+                        healthScore: 58
+                    }
+                ];
+
+                // Clear existing projects
+                projectsGrid.innerHTML = '';
+
+                sampleProjects.forEach(project => {
+                    const projectCard = document.createElement('div');
+                    projectCard.className = 'project-card expandable';
+                    projectCard.dataset.project = project.id.toLowerCase().replace('-', '');
+
+                    projectCard.innerHTML = `
+                        <div class="expandable-header">
+                            <h3>${project.name}</h3>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="expandable-content">
+                            <p><strong>Status:</strong> ${project.status}</p>
+                            <p><strong>Completion:</strong> ${project.completion}</p>
+                            <p><strong>Budget:</strong> ${project.budget} | <strong>Actual Spend:</strong> ${project.actualSpend}</p>
+                            <p><strong>Remaining Budget:</strong> ${project.remainingBudget}</p>
+                            <p><strong>Team Size:</strong> ${project.teamSize}</p>
+                            <p><strong>Milestones:</strong> ${project.milestones} completed</p>
+                            <p><strong>Open Risks:</strong> ${project.openRisks}</p>
+                            <p><strong>Blocked Tasks:</strong> ${project.blockedTasks}</p>
+                            <p><strong>Projected Completion:</strong> ${project.projectedCompletion}</p>
+
+                            <!-- Health score indicator -->
+                            <div class="mb-1 health-score-container">
+                                <span class="health-score ${getHealthScoreClass(project.healthScore)}">${project.healthScore}/100</span>
+                            </div>
+
+                            <h4>Additional Details</h4>
+                            <p><strong>Department:</strong> Engineering (60%), Product (25%), Design (15%)</p>
+                            <p><strong>Budget Breakdown:</strong>
+                                <ul>
+                                    <li>• Development: $8.2M (54%)</li>
+                                    <li>• Testing: $1.9M (12%)</li>
+                                    <li>• Infrastructure: $3.1M (20%)</li>
+                                    <li>• Contingency: $2.0M (13%)</li>
+                                </ul>
+                            </p>
+                        </div>
+                    `;
+
+                    projectsGrid.appendChild(projectCard);
+                });
+
+                // Add expandable functionality to newly added cards
+                const newExpandables = document.querySelectorAll('.projects-grid .expandable');
+                newExpandables.forEach(expandable => {
+                    expandable.addEventListener('click', function () {
+                        this.classList.toggle('expanded');
+
+                        // Close other expanded project cards if needed
+                        document.querySelectorAll('.projects-grid .expandable').forEach(el => {
+                            if (el !== this && el.classList.contains('expanded')) {
+                                el.classList.remove('expanded');
+                            }
+                        });
+                    });
+                });
+            }
+
+            function getHealthScoreClass(score) {
+                if (score >= 90) return 'health-excellent';
+                if (score >= 75) return 'health-good';
+                if (score >= 60) return 'health-fair';
+                return 'health-poor';
+            }
+
+            function populateIntegrationsTable() {
+                const integrationsTableBody = document.getElementById('integrationsTable');
+
+                // Clear existing content
+                integrationsTableBody.innerHTML = '';
+
+                // Sample integration data
+                const sampleIntegrations = [
+                    { name: 'Jira', status: 'Online', lastSync: '2 minutes ago', latency: '1.2s' },
+                    { name: 'Azure DevOps', status: 'Online', lastSync: '5 minutes ago', latency: '0.8s' },
+                    { name: 'GitHub', status: 'Degraded', lastSync: '12 minutes ago', latency: '3.5s' },
+                    { name: 'Slack', status: 'Online', lastSync: '1 minute ago', latency: '0.5s' },
+                    { name: 'Microsoft Teams', status: 'Online', lastSync: '3 minutes ago', latency: '1.0s' },
+                    { name: 'Confluence', status: 'Online', lastSync: '8 minutes ago', latency: '0.7s' },
+                    { name: 'ServiceNow', status: 'Offline', lastSync: '2 hours ago', latency: 'N/A' }
+                ];
+
+                sampleIntegrations.forEach(integration => {
+                    const row = document.createElement('tr');
+
+                    // Status cell with color coding
+                    const statusCell = document.createElement('td');
+                    statusCell.className = `status-${integration.status.toLowerCase()}`;
+                    statusCell.textContent = integration.status;
+                    row.appendChild(statusCell);
+
+                    // Last sync and latency cells
+                    const lastSyncCell = document.createElement('td');
+                    lastSyncCell.textContent = integration.lastSync;
+                    row.appendChild(lastSyncCell);
+
+                    const latencyCell = document.createElement('td');
+                    if (integration.latency === 'N/A') {
+                        latencyCell.textContent = integration.latency;
+                    } else {
+                        // Color code latency
+                        if (parseFloat(integration.latency) > 2.0) {
+                            latencyCell.className = 'status-degraded';
+                        }
+                        latencyCell.textContent = `${integration.latency}ms`;
+                    }
+                    row.appendChild(latencyCell);
+
+                    integrationsTableBody.appendChild(row);
+                });
+            }
+
+            function populateAPIBreakdownTable() {
+                const apiBreakdownTableBody = document.getElementById('apiBreakdownTable');
+
+                // Clear existing content
+                apiBreakdownTableBody.innerHTML = '';
+
+                // Sample API data
+                const sampleAPIs = [
+                    { name: 'Authentication Service', calls: 1500, costPerCall: '$0.002', totalCost: '$3.00' },
+                    { name: 'Payment Gateway', calls: 850, costPerCall: '$0.003', totalCost: '$2.55' },
+                    { name: 'Customer Data API', calls: 2200, costPerCall: '$0.0015', totalCost: '$3.30' },
+                    { name: 'Reporting API', calls: 450, costPerCall: '$0.004', totalCost: '$1.80' },
+                    { name: 'Notification Service', calls: 920, costPerCall: '$0.001', totalCost: '$0.92' }
+                ];
+
+                let totalCalls = 0;
+                let totalCost = 0;
+
+                sampleAPIs.forEach(api => {
+                    const row = document.createElement('tr');
+
+                    // Name cell
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = api.name;
+                    row.appendChild(nameCell);
+
+                    // Calls cell
+                    const callsCell = document.createElement('td');
+                    callsCell.textContent = api.calls.toLocaleString();
+                    row.appendChild(callsCell);
+
+                    // Cost per call cell with formatting
+                    const costPerCallCell = document.createElement('td');
+                    costPerCallCell.textContent = `$${parseFloat(api.costPerCall).toFixed(4)}`;
+                    row.appendChild(costPerCallCell);
+
+                    // Total cost cell with color coding based on savings
+                    const totalCostCell = document.createElement('td');
+                    if (parseFloat(api.totalCost) < 1.0) {
+                        totalCostCell.className = 'cost-saving';
+                    } else if (parseFloat(api.totalCost) > 3.0) {
+                        totalCostCell.className = 'cost-increasing';
+                    } else {
+                        totalCostCell.className = 'cost-neutral';
+                    }
+                    totalCostCell.textContent = `$${parseFloat(api.totalCost).toFixed(2)}`;
+                    row.appendChild(totalCostCell);
+
+                    apiBreakdownTableBody.appendChild(row);
+                    totalCalls += api.calls;
+                    totalCost += parseFloat(api.totalCost);
+                });
+
+                // Add summary row
+                const summaryRow = document.createElement('tr');
+                summaryRow.style.fontWeight = 'bold';
+
+                const callsSummary = document.createElement('td');
+                callsSummary.textContent = 'Total';
+                summaryRow.appendChild(callsSummary);
+
+                const totalCallsCell = document.createElement('td');
+                totalCallsCell.textContent = totalCalls.toLocaleString();
+                summaryRow.appendChild(totalCallsCell);
+
+                const costPerCallSummary = document.createElement('td');
+                costPerCallSummary.colSpan = 2;
+                costPerCallSummary.style.textAlign = 'right';
+                if (totalCost < 10) {
+                    costPerCallSummary.className = 'cost-saving';
+                } else if (totalCost > 15) {
+                    costPerCallSummary.className = 'cost-increasing';
+                } else {
+                    costPerCallSummary.className = 'cost-neutral';
+                }
+                costPerCallSummary.textContent = `$${totalCost.toFixed(2)}`;
+                summaryRow.appendChild(costPerCallSummary);
+
+                apiBreakdownTableBody.appendChild(summaryRow);
+            }
+
+            function populateRisksTable() {
+                const risksTableBody = document.getElementById('risksTable');
+
+                // Clear existing content
+                risksTableBody.innerHTML = '';
+
+                // Sample risk data
+                const sampleRisks = [
+                    {
+                        id: 'RISK-2023-042',
+                        description: 'Third-party API deprecation affecting mobile app performance',
+                        severity: 'High',
+                        probability: '75%',
+                        impact: 'Critical',
+                        mitigationStatus: 'Partially Mitigated',
+                        owner: 'Jane Doe (API Team)'
+                    },
+                    {
+                        id: 'RISK-2023-041',
+                        description: 'Key team member resignation during critical phase',
+                        severity: 'Medium',
+                        probability: '50%',
+                        impact: 'High',
+                        mitigationStatus: 'Mitigated',
+                        owner: 'John Smith (HR)'
+                    },
+                    {
+                        id: 'RISK-2023-040',
+                        description: 'Data migration tool performance issues causing delays',
+                        severity: 'Medium',
+                        probability: '60%',
+                        impact: 'High',
+                        mitigationStatus: 'In Progress',
+                        owner: 'Mike Johnson (Engineering)'
+                    },
+                    {
+                        id: 'RISK-2023-039',
+                        description: 'Regulatory compliance requirements not fully addressed in current design',
+                        severity: 'High',
+                        probability: '40%',
+                        impact: 'Critical',
+                        mitigationStatus: 'Not Started',
+                        owner: 'Sarah Williams (Legal)'
+                    },
+                    {
+                        id: 'RISK-2023-038',
+                        description: 'Vendor delivery delays for third-party integration components',
+                        severity: 'Medium',
+                        probability: '70%',
+                        impact: 'Medium',
+                        mitigationStatus: 'Monitoring',
+                        owner: 'David Brown (Procurement)'
+                    },
+                    {
+                        id: 'RISK-2023-037',
+                        description: 'Potential security vulnerabilities in new authentication system',
+                        severity: 'High',
+                        probability: '55%',
+                        impact: 'Critical',
+                        mitigationStatus: 'Partially Mitigated',
+                        owner: 'Emily Davis (Security)'
+                    }
+                ];
+
+                sampleRisks.forEach(risk => {
+                    const row = document.createElement('tr');
+
+                    // ID cell
+                    const idCell = document.createElement('td');
+                    idCell.textContent = risk.id;
+                    row.appendChild(idCell);
+
+                    // Description cell
+                    const descCell = document.createElement('td');
+                    descCell.textContent = risk.description;
+                    row.appendChild(descCell);
+
+                    // Severity cell with color coding
+                    const severityCell = document.createElement('td');
+                    severityCell.className = `risk-${risk.severity.toLowerCase()}`;
+                    severityCell.textContent = risk.severity;
+                    row.appendChild(severityCell);
+
+                    // Probability and impact cells
+                    const probCell = document.createElement('td');
+                    probCell.textContent = risk.probability;
+                    row.appendChild(probCell);
+
+                    const impactCell = document.createElement('td');
+                    impactCell.textContent = risk.impact;
+                    row.appendChild(impactCell);
+
+                    // Mitigation status cell with color coding
+                    const mitigationCell = document.createElement('td');
+                    if (risk.mitigationStatus === 'Mitigated') {
+                        mitigationCell.className = 'status-online';
+                    } else if (risk.mitigationStatus === 'Partially Mitigated') {
+                        mitigationCell.className = 'status-degraded';
+                    } else if (risk.mitigationStatus === 'In Progress') {
+                        mitigationCell.className = 'status-degraded';
+                    } else {
+                        mitigationCell.className = 'status-offline';
+                    }
+                    mitigationCell.textContent = risk.mitigationStatus;
+                    row.appendChild(mitigationCell);
+
+                    // Owner cell
+                    const ownerCell = document.createElement('td');
+                    ownerCell.textContent = risk.owner;
+                    row.appendChild(ownerCell);
+
+                    risksTableBody.appendChild(row);
+                });
+
+                // Update summary statistics
+                document.getElementById('totalRisks').textContent = sampleRisks.length;
+
+                const highRisks = sampleRisks.filter(r => r.severity === 'High');
+                document.getElementById('highRisks').textContent = highRisks.length;
+
+                // Calculate mitigation progress (simplified)
+                const mitigatedCount = sampleRisks.filter(r => r.mitigationStatus === 'Mitigated').length;
+                const mitigationProgress = Math.round((mitigatedCount / sampleRisks.length) * 100);
+                document.getElementById('mitigationProgress').textContent = `${mitigationProgress}%`;
+            }
+
+            // Initialize everything when the page loads
+            initializeCharts();
+
+            // Add event listener for executive commentary (simplified)
+            const executiveCommentary = document.getElementById('executiveCommentary');
+            if (executiveCommentary) {
+                executiveCommentary.addEventListener('input', function () {
+                    // In a real app, we would save this to a database or backend
+                    console.log('Executive commentary updated:', this.value);
+                });
+            }
+
+            // Load Chart.js dynamically if not already loaded
+            if (typeof Chart === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+                script.async = true;
+                script.onload = function () {
+                    // Retry chart initialization after Chart.js loads
+                    if (typeof initializeCharts === 'function') {
+                        initializeCharts();
+                    }
+                };
+                document.head.appendChild(script);
+            }
+
+            // Function to reset the table when search is cleared
+            function resetTable() {
+                const rows = projectsTableBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    row.style.display = '';
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

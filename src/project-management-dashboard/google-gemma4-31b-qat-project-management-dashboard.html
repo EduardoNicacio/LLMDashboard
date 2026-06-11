@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Command | Enterprise Project Management Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.5);
+            --accent: #06b6d4;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --bg-dark: #0f172a;
+            --card-dark: rgba(30, 41, 59, 0.7);
+            --border-dark: rgba(51, 65, 85, 0.5);
+            --text-dark: #f8fafc;
+            --text-muted-dark: #94a3b8;
+
+            --bg-light: #f1f5f9;
+            --card-light: rgba(255, 255, 255, 0.8);
+            --border-light: rgba(226, 232, 240, 0.8);
+            --text-light: #1e293b;
+            --text-muted-light: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-dark);
+        }
+
+        .dark .glass {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .light .glass {
+            background: var(--card-light);
+            border-color: var(--border-light);
+            color: var(--text-light);
+        }
+
+        .neon-border-primary {
+            box-shadow: 0 0 10px var(--primary-glow);
+            border: 1px solid var(--primary);
+        }
+
+        .neon-text-primary {
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--border-dark);
+            border-radius: 10px;
+        }
+
+        .view-transition {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-pill {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-on-track {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-at-risk {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .status-delayed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+        }
+
+        .mode-toggle-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mode-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+
+<body class="dark bg-slate-900 text-slate-100 transition-colors duration-300">
+    <!-- Sidebar Navigation -->
+    <aside class="fixed left-0 top-0 h-screen w-64 glass z-50 hidden lg:flex flex-col p-4 gap-6 border-r">
+        <div class="flex items-center gap-3 px-2 mb-6">
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center neon-border-primary"><i
+                    data-lucide="layout-dashboard" class="text-white w-6 h-6"></i></div>
+            <h1 class="text-xl font-bold tracking-tight">NEXUS<span class="text-indigo-500">COMMAND</span></h1>
+        </div>
+        <nav class="flex-1 space-y-2"><button onclick="switchView('summary')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-indigo-500/10 group"
+                data-view="summary"><i data-lucide="pie-chart" class="w-5 h-5 group-hover:text-indigo-400"></i><span
+                    class="font-medium">Executive Summary</span></button><button onclick="switchView('projects')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-indigo-500/10 group"
+                data-view="projects"><i data-lucide="layers" class="w-5 h-5 group-hover:text-indigo-400"></i><span
+                    class="font-medium">Project Portfolio</span></button><button onclick="switchView('timeline')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-indigo-500/10 group"
+                data-view="timeline"><i data-lucide="gantt-chart" class="w-5 h-5 group-hover:text-indigo-400"></i><span
+                    class="font-medium">Delivery
+                    Timeline</span></button><button onclick="switchView('resources')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-indigo-500/10 group"
+                data-view="resources"><i data-lucide="users" class="w-5 h-5 group-hover:text-indigo-400"></i><span
+                    class="font-medium">Resource Center</span></button><button onclick="switchView('risks')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-indigo-500/10 group"
+                data-view="risks"><i data-lucide="alert-triangle" class="w-5 h-5 group-hover:text-indigo-400"></i><span
+                    class="font-medium">Risk
+                    Matrix</span></button><button onclick="switchView('operations')"
+                class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:bg-indigo-500/10 group"
+                data-view="operations"><i data-lucide="cpu" class="w-5 h-5 group-hover:text-indigo-400"></i><span
+                    class="font-medium">Ops & Automation</span></button></nav>
+        <div class="mt-auto p-4 glass rounded-xl border-indigo-500/30">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500"></div>
+                <div class="text-xs">
+                    <p class="font-bold">Alex Sterling</p>
+                    <p class="text-slate-400">Chief Delivery Officer</p>
+                </div>
+            </div><button onclick="toggleTheme()"
+                class="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors text-xs font-medium"><span
+                    class="flex items-center gap-2"><i data-lucide="moon" class="w-3 h-3"></i>Theme</span><i
+                    data-lucide="chevron-right" class="w-3 h-3"></i></button>
+        </div>
+    </aside>
+    <!-- Main Content Area -->
+    <main class="lg:ml-64 min-h-screen p-4 lg:p-8 transition-all duration-300">
+        <!-- Top Header Controls -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+                <h2 id="view-title" class="text-3xl font-extrabold tracking-tight">Executive Summary</h2>
+                <p id="view-subtitle" class="text-slate-400">Real-time portfolio health and delivery
+                    metrics.</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <!-- Reporting Mode Toggle -->
+                <div class="flex bg-slate-800/50 p-1 rounded-lg border border-slate-700"><button
+                        onclick="setMode('agile')" id="mode-agile"
+                        class="mode-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-md active">Agile</button><button
+                        onclick="setMode('waterfall')" id="mode-waterfall"
+                        class="mode-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-md">Waterfall</button>
+                </div>
+                <!-- View Level Toggle -->
+                <div class="flex bg-slate-800/50 p-1 rounded-lg border border-slate-700"><button
+                        onclick="setLevel('portfolio')" id="level-portfolio"
+                        class="mode-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-md active">Portfolio</button><button
+                        onclick="setLevel('program')" id="level-program"
+                        class="mode-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-md">Program</button><button
+                        onclick="setLevel('project')" id="level-project"
+                        class="mode-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-md">Project</button>
+                </div>
+                <!-- Period Toggle -->
+                <div class="flex bg-slate-800/50 p-1 rounded-lg border border-slate-700"><button
+                        onclick="setPeriod('weekly')" id="period-weekly"
+                        class="mode-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-md">Weekly</button><button
+                        onclick="setPeriod('monthly')" id="period-monthly"
+                        class="mode-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-md">Monthly</button><button
+                        onclick="setPeriod('quarterly')" id="period-quarterly"
+                        class="mode-toggle-btn px-3 py-1.5 text-xs font-semibold rounded-md active">Quarterly</button>
+                </div>
+            </div>
+        </header>
+        <!-- Dynamic View Container -->
+        <div id="main-view-container" class="view-transition">
+            <!-- Content will be injected here by JS -->
+        </div>
+    </main>
+    <!-- Templates (Hidden) --><template id="tpl-summary">
+        <div class="space-y-8">
+            <!-- Hero Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                <div class="glass p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all">
+                    </div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active
+                        Projects</p>
+                    <div class="flex items-end justify-between mt-2">
+                        <h3 class="text-3xl font-bold mono">24</h3><span
+                            class="text-xs text-success flex items-center gap-1"><i data-lucide="trending-up"
+                                class="w-3 h-3"></i>+2</span>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all">
+                    </div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Completed
+                    </p>
+                    <div class="flex items-end justify-between mt-2">
+                        <h3 class="text-3xl font-bold mono">112</h3><span class="text-xs text-slate-400">YTD</span>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all">
+                    </div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Portfolio
+                        Health</p>
+                    <div class="flex items-end justify-between mt-2">
+                        <h3 class="text-3xl font-bold mono text-success">94%</h3><i data-lucide="heart"
+                            class="w-5 h-5 text-success"></i>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all">
+                    </div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Budget
+                        Util.</p>
+                    <div class="flex items-end justify-between mt-2">
+                        <h3 class="text-3xl font-bold mono">68%</h3><span class="text-xs text-warning">On Track</span>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all">
+                    </div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">On-Time
+                        Rate</p>
+                    <div class="flex items-end justify-between mt-2">
+                        <h3 class="text-3xl font-bold mono">82%</h3><span class="text-xs text-danger">↓
+                            3%</span>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all">
+                    </div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Staff
+                    </p>
+                    <div class="flex items-end justify-between mt-2">
+                        <h3 class="text-3xl font-bold mono">412</h3><span class="text-xs text-slate-400">FTE</span>
+                    </div>
+                </div>
+                <div class="glass p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group">
+                    <div
+                        class="absolute -right-4 -bottom-4 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition-all">
+                    </div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Proj. Spend
+                    </p>
+                    <div class="flex items-end justify-between mt-2">
+                        <h3 class="text-3xl font-bold mono">$12.4M</h3><span
+                            class="text-xs text-slate-400">Annual</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Head-to-Head Comparison -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass p-6 rounded-3xl relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold flex items-center gap-2"><i data-lucide="swords"
+                                class="text-indigo-500"></i>Flagship Comparison
+                        </h3><span class="text-xs font-mono text-slate-400">Q3 Performance
+                            Analysis</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Project A -->
+                        <div class="space-y-4">
+                            <div class="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30">
+                                <p class="text-xs font-bold text-indigo-400 uppercase mb-1">
+                                    Project Alpha</p>
+                                <h4 class="text-lg font-bold">Mobile Platform Modernization</h4>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-xs mb-1"><span>Schedule
+                                        Progress</span><span class="mono">78%</span></div>
+                                <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-indigo-500 h-full" style="width: 78%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs mb-1"><span>Budget
+                                        Variance</span><span class="mono text-success">-4.2%</span></div>
+                                <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-emerald-500 h-full" style="width: 95%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs mb-1"><span>Risk
+                                        Score</span><span class="mono text-warning">Medium
+                                        (42)</span></div>
+                                <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-amber-500 h-full" style="width: 42%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Project B -->
+                        <div class="space-y-4">
+                            <div class="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
+                                <p class="text-xs font-bold text-cyan-400 uppercase mb-1">
+                                    Project Beta</p>
+                                <h4 class="text-lg font-bold">Customer Analytics Initiative
+                                </h4>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span>Schedule Progress</span><span class="mono">62%</span>
+                                </div>
+                                <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-cyan-500 h-full" style="width: 62%">
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs mb-1"><span>Budget
+                                        Variance</span><span class="mono text-danger">+12.8%</span></div>
+                                <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-rose-500 h-full" style="width: 87%">
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs mb-1"><span>Risk
+                                        Score</span><span class="mono text-danger">High
+                                        (78)</span></div>
+                                <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-rose-500 h-full" style="width: 78%">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Winner Breakdown -->
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="trophy"
+                            class="text-amber-500"></i>Performance Winner
+                    </h3>
+                    <div class="space-y-4">
+                        <div
+                            class="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-indigo-500"></div><span
+                                    class="text-sm font-medium">Schedule Adherence</span>
+                            </div><span class="text-xs font-bold text-indigo-400">Alpha
+                                (+16%)</span>
+                        </div>
+                        <div
+                            class="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-indigo-500"></div><span
+                                    class="text-sm font-medium">Budget Control</span>
+                            </div><span class="text-xs font-bold text-indigo-400">Alpha
+                                (-17%)</span>
+                        </div>
+                        <div
+                            class="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-cyan-500"></div><span
+                                    class="text-sm font-medium">Team Productivity</span>
+                            </div><span class="text-xs font-bold text-cyan-400">Beta
+                                (+8%)</span>
+                        </div>
+                        <div
+                            class="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-indigo-500"></div><span
+                                    class="text-sm font-medium">Stakeholder Satisfaction</span>
+                            </div><span class="text-xs font-bold text-indigo-400">Alpha
+                                (4.8/5)</span>
+                        </div>
+                        <div class="mt-6 p-4 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 text-center">
+                            <p class="text-xs uppercase font-bold text-indigo-400 mb-1">Overall
+                                Winner</p>
+                            <h4 class="text-2xl font-black text-white">Mobile Platform
+                                Modernization</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase text-slate-400 mb-4">Project
+                        Completion Trend</h4><canvas id="chart-completion" height="200"></canvas>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase text-slate-400 mb-4">Budget vs Actual
+                        Spend</h4><canvas id="chart-budget" height="200"></canvas>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase text-slate-400 mb-4">Resource
+                        Allocation by Dept</h4><canvas id="chart-resources" height="200"></canvas>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase text-slate-400 mb-4">Open Risks by
+                        Severity</h4><canvas id="chart-risks" height="200"></canvas>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase text-slate-400 mb-4">Team Velocity
+                        (Sprints)</h4><canvas id="chart-velocity" height="200"></canvas>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h4 class="text-sm font-bold uppercase text-slate-400 mb-4">Milestone
+                        Progress</h4><canvas id="chart-milestones" height="200"></canvas>
+                </div>
+            </div>
+            <!-- Executive Commentary -->
+            <div class="glass p-6 rounded-3xl">
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="message-square"
+                        class="text-indigo-500"></i>Executive
+                    Commentary </h3>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                        <p class="text-xs font-bold text-indigo-400 mb-2 uppercase">
+                            Observations</p>
+                        <p class="text-sm text-slate-300 italic">"Portfolio health remains
+                            strong. The shift to the new cloud infrastructure has reduced
+                            latency by 40% across all flagship projects. Resource contention
+                            in the DevOps team is the primary bottleneck for Q4." </p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                        <p class="text-xs font-bold text-amber-400 mb-2 uppercase">Concerns
+                        </p>
+                        <p class="text-sm text-slate-300 italic">"Customer Analytics project
+                            is seeing significant scope creep. Need to align with
+                            stakeholders on the MVP definition to avoid further budget
+                            overruns." </p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                        <p class="text-xs font-bold text-emerald-400 mb-2 uppercase">Future
+                            Outlook</p>
+                        <p class="text-sm text-slate-300 italic">"Projected completion for
+                            the Mobile Modernization is now 2 weeks ahead of schedule.
+                            Planning to reallocate 2 engineers to the Analytics project in
+                            November." </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template><template id="tpl-projects">
+        <div class="space-y-6">
+            <!-- Filters -->
+            <div class="glass p-4 rounded-2xl flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex flex-wrap gap-3">
+                    <div class="relative"><i data-lucide="search"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i><input
+                            type="text" id="project-search" oninput="filterProjects()" placeholder="Search projects..."
+                            class="bg-slate-800/50 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64">
+                    </div><select id="filter-status" onchange="filterProjects()"
+                        class="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                        <option value="all">All Statuses</option>
+                        <option value="on-track">On Track</option>
+                        <option value="at-risk">At Risk</option>
+                        <option value="delayed">Delayed</option>
+                    </select><select id="filter-dept" onchange="filterProjects()"
+                        class="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                        <option value="all">All Departments</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Product">Product</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Operations">Operations</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-slate-400"><span>Showing <span id="project-count"
+                            class="font-bold text-white">0</span>projects</span>
+                </div>
+            </div>
+            <!-- Project Cards Grid -->
+            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Cards injected by JS -->
+            </div>
+            <!-- Detailed Project Table -->
+            <div class="glass rounded-3xl overflow-hidden">
+                <div class="p-6 border-b border-slate-700 flex justify-between items-center">
+                    <h3 class="text-xl font-bold">Project Master Registry</h3><button
+                        class="text-xs bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg font-bold transition-colors">Export
+                        CSV</button>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-800/30 text-xs uppercase text-slate-400 font-bold">
+                                <th class="p-4 cursor-pointer hover:text-white transition-colors"
+                                    onclick="sortProjects('name')">Project Name <i data-lucide="chevrons-up-down"
+                                        class="inline w-3 h-3 ml-1"></i></th>
+                                <th class="p-4 cursor-pointer hover:text-white transition-colors"
+                                    onclick="sortProjects('progress')">Progress <i data-lucide="chevrons-up-down"
+                                        class="inline w-3 h-3 ml-1"></i></th>
+                                <th class="p-4 cursor-pointer hover:text-white transition-colors"
+                                    onclick="sortProjects('health')">Health <i data-lucide="chevrons-up-down"
+                                        class="inline w-3 h-3 ml-1"></i></th>
+                                <th class="p-4 cursor-pointer hover:text-white transition-colors"
+                                    onclick="sortProjects('budget')">Budget <i data-lucide="chevrons-up-down"
+                                        class="inline w-3 h-3 ml-1"></i></th>
+                                <th class="p-4 cursor-pointer hover:text-white transition-colors"
+                                    onclick="sortProjects('spend')">Spend <i data-lucide="chevrons-up-down"
+                                        class="inline w-3 h-3 ml-1"></i></th>
+                                <th class="p-4">Owner</th>
+                                <th class="p-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-table-body" class="text-sm">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template><template id="tpl-timeline">
+        <div class="space-y-6">
+            <div class="glass p-6 rounded-3xl">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-xl font-bold">Strategic Delivery Roadmap</h3>
+                    <div class="flex gap-2"><button
+                            class="px-3 py-1 text-xs rounded-lg bg-slate-800 border border-slate-700">Q3
+                            2024</button><button class="px-3 py-1 text-xs rounded-lg bg-indigo-600 font-bold">Q4
+                            2024</button><button
+                            class="px-3 py-1 text-xs rounded-lg bg-slate-800 border border-slate-700">Q1
+                            2025</button></div>
+                </div>
+                <div class="space-y-8" id="timeline-container">
+                    <!-- Timeline items injected by JS -->
+                </div>
+            </div>
+            <!-- Task/Milestone History -->
+            <div class="glass rounded-3xl overflow-hidden">
+                <div class="p-6 border-b border-slate-700">
+                    <h3 class="text-xl font-bold">Detailed Milestone History</h3>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-800/30 text-xs uppercase text-slate-400 font-bold">
+                                <th class="p-4">Sprint/Release</th>
+                                <th class="p-4">Milestone</th>
+                                <th class="p-4">Target Date</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Owner</th>
+                                <th class="p-4">Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="milestone-table-body" class="text-sm">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template><template id="tpl-resources">
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6">Team Workload & Capacity</h3>
+                    <div class="space-y-6" id="resource-list">
+                        <!-- Resource items injected by JS -->
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6">Staffing Status</h3>
+                    <div class="space-y-4">
+                        <div
+                            class="flex justify-between items-center p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 rounded-full bg-emerald-500"></div><span
+                                    class="text-sm">Available</span>
+                            </div><span class="mono font-bold">12</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 rounded-full bg-indigo-500"></div><span
+                                    class="text-sm">Allocated</span>
+                            </div><span class="mono font-bold">382</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 rounded-full bg-rose-500"></div><span
+                                    class="text-sm">Over-Capacity</span>
+                            </div><span class="mono font-bold">18</span>
+                        </div>
+                        <div class="mt-8 p-4 rounded-2xl bg-indigo-600/10 border border-indigo-500/30">
+                            <p class="text-xs font-bold text-indigo-400 uppercase mb-2">Staffing Insight</p>
+                            <p class="text-xs text-slate-400 leading-relaxed">Current overall utilization is
+                                at 92%. High risk of burnout in the Frontend Engineering pod. Recommend
+                                hiring 2 contract developers for the Q4 push.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template><template id="tpl-risks">
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6">Active Risk Registry</h3>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs uppercase text-slate-400 font-bold border-b border-slate-700">
+                                    <th class="p-4">Risk Description</th>
+                                    <th class="p-4">Severity</th>
+                                    <th class="p-4">Probability</th>
+                                    <th class="p-4">Impact</th>
+                                    <th class="p-4">Mitigation</th>
+                                    <th class="p-4">Owner</th>
+                                </tr>
+                            </thead>
+                            <tbody id="risk-table-body" class="text-sm">
+                                <!-- Rows injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6">Risk Heatmap</h3>
+                    <div class="grid grid-cols-3 grid-rows-3 gap-2 h-64">
+                        <div
+                            class="bg-emerald-500/20 border border-emerald-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-emerald-500">
+                            Low</div>
+                        <div
+                            class="bg-emerald-500/20 border border-emerald-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-emerald-500">
+                            Low</div>
+                        <div
+                            class="bg-amber-500/20 border border-amber-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-amber-500">
+                            Med</div>
+                        <div
+                            class="bg-emerald-500/20 border border-emerald-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-emerald-500">
+                            Low</div>
+                        <div
+                            class="bg-amber-500/20 border border-amber-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-amber-500">
+                            Med</div>
+                        <div
+                            class="bg-rose-500/20 border border-rose-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-rose-500">
+                            High</div>
+                        <div
+                            class="bg-amber-500/20 border border-amber-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-amber-500">
+                            Med</div>
+                        <div
+                            class="bg-rose-500/20 border border-rose-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-rose-500">
+                            High</div>
+                        <div
+                            class="bg-rose-500/20 border border-rose-500/40 rounded-lg flex items-center justify-center text-xs font-bold text-rose-500">
+                            Critical</div>
+                    </div>
+                    <div class="mt-6 space-y-3">
+                        <div class="flex justify-between text-xs"><span>Probability →</span><span
+                                class="text-slate-400">Low to High</span></div>
+                        <div class="flex justify-between text-xs"><span>Impact ↓</span><span class="text-slate-400">Low
+                                to High</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template><template id="tpl-operations">
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Integrations Panel -->
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="plug"
+                            class="text-indigo-500"></i>Integration Status </h3>
+                    <div class="space-y-4" id="integrations-list">
+                        <!-- Integrations injected by JS -->
+                    </div>
+                </div>
+                <!-- API & Automation Panel -->
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="zap"
+                            class="text-amber-500"></i>Automation Hub </h3>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                                <p class="text-xs text-slate-400 mb-1">Executions</p>
+                                <p class="text-2xl font-bold mono">14.2k</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                                <p class="text-xs text-slate-400 mb-1">Success Rate</p>
+                                <p class="text-2xl font-bold mono text-success">99.4%</p>
+                            </div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700">
+                            <p class="text-xs text-slate-400 mb-2">Estimated API Costs (MTD)</p>
+                            <div class="flex items-end justify-between">
+                                <p class="text-2xl font-bold mono">$1,
+                                    240</p><span class="text-xs text-rose-400">↑ 12% vs last
+                                    month</span>
+                            </div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-indigo-600/20 border border-indigo-500/40">
+                            <p class="text-xs font-bold text-indigo-400 mb-1 uppercase">Automation
+                                Savings</p>
+                            <p class="text-3xl font-black text-white mono">$42,
+                                800</p>
+                            <p class="text-xs text-indigo-300 mt-1">Estimated manual labor hours
+                                saved</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- System Health -->
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="activity"
+                            class="text-emerald-500"></i>System Health
+                    </h3>
+                    <div class="space-y-4">
+                        <div
+                            class="flex justify-between items-center p-3 rounded-xl bg-slate-800/40 border border-slate-700">
+                            <span class="text-sm">API Gateway Latency</span><span
+                                class="mono text-xs text-emerald-400">42ms</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center p-3 rounded-xl bg-slate-800/40 border border-slate-700">
+                            <span class="text-sm">DB Query Avg</span><span
+                                class="mono text-xs text-emerald-400">112ms</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center p-3 rounded-xl bg-slate-800/40 border border-slate-700">
+                            <span class="text-sm">Cache Hit Rate</span><span
+                                class="mono text-xs text-indigo-400">88.2%</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center p-3 rounded-xl bg-slate-800/40 border border-slate-700">
+                            <span class="text-sm">Webhook Queue</span><span class="mono text-xs text-amber-400">14
+                                pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script> // --- DATA MODEL ---
+
+        const DATA = {
+            projects: [{
+                id: 1, name: "Mobile Platform Modernization", dept: "Engineering", owner: "Sarah Chen", progress: 78, health: 92, budget: 1200000, spend: 1150000, status: "on-track", risks: 2, blocked: 1, date: "2024-12-15", team: 12
+            }
+
+                ,
+            {
+                id: 2, name: "Customer Analytics Initiative", dept: "Product", owner: "Marcus Thorne", progress: 62, health: 65, budget: 800000, spend: 904000, status: "at-risk", risks: 5, blocked: 3, date: "2025-02-20", team: 8
+            }
+
+                ,
+            {
+                id: 3, name: "Cloud Infrastructure Migration", dept: "Engineering", owner: "Elena Rodriguez", progress: 91, health: 98, budget: 2500000, spend: 2400000, status: "on-track", risks: 1, blocked: 0, date: "2024-11-01", team: 20
+            }
+
+                ,
+            {
+                id: 4, name: "Global Brand Refresh", dept: "Marketing", owner: "Julian Vane", progress: 45, health: 72, budget: 500000, spend: 300000, status: "on-track", risks: 3, blocked: 2, date: "2025-03-10", team: 6
+            }
+
+                ,
+            {
+                id: 5, name: "ERP System Integration", dept: "Operations", owner: "Linda Wu", progress: 30, health: 48, budget: 3000000, spend: 1800000, status: "delayed", risks: 8, blocked: 6, date: "2025-06-30", team: 15
+            }
+
+                ,
+            {
+                id: 6, name: "AI Chatbot Deployment", dept: "Product", owner: "Kevin Park", progress: 85, health: 88, budget: 400000, spend: 380000, status: "on-track", risks: 2, blocked: 1, date: "2024-11-15", team: 5
+            }
+
+                ,
+            {
+                id: 7, name: "Security Compliance Audit", dept: "Engineering", owner: "Sarah Chen", progress: 100, health: 100, budget: 200000, spend: 195000, status: "on-track", risks: 0, blocked: 0, date: "2024-09-01", team: 4
+            }
+
+                ,
+            {
+                id: 8, name: "NextGen Payment Gateway", dept: "Engineering", owner: "Marcus Thorne", progress: 55, health: 78, budget: 1500000, spend: 900000, status: "on-track", risks: 4, blocked: 2, date: "2025-01-20", team: 10
+            }
+
+                ,
+            ],
+            milestones: [{
+                id: 1, project: "Mobile Platform", name: "API Layer Redesign", date: "2024-10-15", status: "completed", owner: "Sarah Chen", risk: "Low"
+            }
+
+                ,
+            {
+                id: 2, project: "Mobile Platform", name: "Beta User Testing", date: "2024-11-20", status: "in-progress", owner: "Sarah Chen", risk: "Medium"
+            }
+
+                ,
+            {
+                id: 3, project: "Customer Analytics", name: "Data Lake Integration", date: "2024-10-01", status: "delayed", owner: "Marcus Thorne", risk: "High"
+            }
+
+                ,
+            {
+                id: 4, project: "Customer Analytics", name: "Dashboard MVP", date: "2024-12-15", status: "planned", owner: "Marcus Thorne", risk: "Medium"
+            }
+
+                ,
+            {
+                id: 5, project: "Cloud Migration", name: "AWS Region Cutover", date: "2024-10-20", status: "completed", owner: "Elena Rodriguez", risk: "Low"
+            }
+
+                ,
+            {
+                id: 6, project: "ERP Integration", name: "Vendor Selection", date: "2024-09-15", status: "completed", owner: "Linda Wu", risk: "Low"
+            }
+
+                ,
+            {
+                id: 7, project: "ERP Integration", name: "Core Module Mapping", date: "2024-11-01", status: "delayed", owner: "Linda Wu", risk: "High"
+            }
+
+                ,
+            ],
+            risks: [{
+                id: 1, project: "ERP Integration", desc: "Data mapping inconsistency between legacy and new system", severity: "Critical", prob: "High", impact: "High", mitigation: "Manual audit of 10% sample", owner: "Linda Wu"
+            }
+
+                ,
+            {
+                id: 2, project: "Customer Analytics", desc: "Stakeholder misalignment on KPI definitions", severity: "High", prob: "Medium", impact: "High", mitigation: "Weekly alignment workshops", owner: "Marcus Thorne"
+            }
+
+                ,
+            {
+                id: 3, project: "Mobile Platform", desc: "Third-party API latency issues", severity: "Medium", prob: "Medium", impact: "Medium", mitigation: "Implement caching layer", owner: "Sarah Chen"
+            }
+
+                ,
+            {
+                id: 4, project: "Global Brand Refresh", desc: "Delayed approval from regional leads", severity: "Medium", prob: "High", impact: "Low", mitigation: "Escalate to Steering Committee", owner: "Julian Vane"
+            }
+
+                ,
+            ],
+            resources: [{
+                name: "Engineering Pod A", utilization: 95, capacity: 100, overtimeRisk: "High", status: "Critical"
+            }
+
+                ,
+            {
+                name: "Engineering Pod B", utilization: 82, capacity: 100, overtimeRisk: "Low", status: "Healthy"
+            }
+
+                ,
+            {
+                name: "Product Design Team", utilization: 70, capacity: 100, overtimeRisk: "Low", status: "Healthy"
+            }
+
+                ,
+            {
+                name: "DevOps Core", utilization: 110, capacity: 100, overtimeRisk: "Critical", status: "Overloaded"
+            }
+
+                ,
+            {
+                name: "QA Automation", utilization: 88, capacity: 100, overtimeRisk: "Medium", status: "Healthy"
+            }
+
+                ,
+            ],
+            integrations: [{
+                name: "Jira Cloud", status: "online", latency: "120ms", sync: "2 mins ago", icon: "layers"
+            }
+
+                ,
+            {
+                name: "Azure DevOps", status: "online", latency: "210ms", sync: "5 mins ago", icon: "cloud"
+            }
+
+                ,
+            {
+                name: "GitHub Enterprise", status: "online", latency: "45ms", sync: "1 min ago", icon: "github"
+            }
+
+                ,
+            {
+                name: "Slack API", status: "degraded", latency: "1.2s", sync: "10 mins ago", icon: "message-circle"
+            }
+
+                ,
+            {
+                name: "MS Teams", status: "online", latency: "310ms", sync: "3 mins ago", icon: "users"
+            }
+
+                ,
+            ]
+        }
+
+            ;
+
+        // --- STATE MANAGEMENT ---
+        let state = {
+
+            view: 'summary',
+            mode: 'agile',
+            level: 'portfolio',
+            period: 'quarterly',
+            theme: 'dark',
+            sortKey: 'name',
+            sortDir: 'asc',
+            filter: {
+                search: '',
+                status: 'all',
+                dept: 'all'
+            }
+        }
+
+            ;
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            loadPreferences();
+            applyTheme();
+            switchView(state.view);
+            lucide.createIcons();
+        }
+
+            ;
+
+        function loadPreferences() {
+            const saved = localStorage.getItem('nexus_prefs');
+
+            if (saved) {
+                const prefs = JSON.parse(saved);
+
+                state = {
+                    ...state,
+                    ...prefs
+                }
+
+                    ;
+            }
+        }
+
+        function savePreferences() {
+            localStorage.setItem('nexus_prefs', JSON.stringify({
+                theme: state.theme,
+                view: state.view,
+                mode: state.mode,
+                level: state.level,
+                period: state.period
+            }));
+        }
+
+        function applyTheme() {
+            document.documentElement.className = state.theme;
+            const moonIcon = document.querySelector('[data-lucide="moon"]');
+            const sunIcon = document.querySelector('[data-lucide="sun"]');
+            // Update icons if needed
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            applyTheme();
+            savePreferences();
+            // Redraw charts to update colors
+            if (state.view === 'summary') renderSummaryCharts();
+        }
+
+        function switchView(viewId) {
+            state.view = viewId;
+            savePreferences();
+
+            // Update UI
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.toggle('bg-indigo-500/20', btn.dataset.view === viewId);
+                btn.classList.toggle('text-indigo-400', btn.dataset.view === viewId);
+            });
+
+            const titles = {
+                summary: {
+                    t: "Executive Summary", s: "Real-time portfolio health and delivery metrics."
+                }
+
+                ,
+                projects: {
+                    t: "Project Portfolio", s: "Detailed tracking of all active organizational initiatives."
+                }
+
+                ,
+                timeline: {
+                    t: "Delivery Timeline", s: "Strategic roadmap and milestone tracking."
+                }
+
+                ,
+                resources: {
+                    t: "Resource Center", s: "Human capital allocation and capacity planning."
+                }
+
+                ,
+                risks: {
+                    t: "Risk Matrix", s: "Proactive identification and mitigation of project threats."
+                }
+
+                ,
+                operations: {
+                    t: "Ops & Automation", s: "System health, API performance, and automation ROI."
+                }
+            }
+
+                ;
+
+            document.getElementById('view-title').innerText = titles[viewId].t;
+            document.getElementById('view-subtitle').innerText = titles[viewId].s;
+
+            const container = document.getElementById('main-view-container');
+
+            const template = document.getElementById(`tpl-$ {
+                    viewId
+                }
+
+                `);
+            container.innerHTML = '';
+            container.appendChild(template.content.cloneNode(true));
+
+            lucide.createIcons();
+
+            // View-specific initialization
+            if (viewId === 'summary') {
+                renderSummaryCharts();
+            }
+
+            else if (viewId === 'projects') {
+                renderProjects();
+            }
+
+            else if (viewId === 'timeline') {
+                renderTimeline();
+            }
+
+            else if (viewId === 'resources') {
+                renderResources();
+            }
+
+            else if (viewId === 'risks') {
+                renderRisks();
+            }
+
+            else if (viewId === 'operations') {
+                renderOperations();
+            }
+        }
+
+        function setMode(m) {
+            state.mode = m;
+            document.getElementById('mode-agile').classList.toggle('active', m === 'agile');
+            document.getElementById('mode-waterfall').classList.toggle('active', m === 'waterfall');
+            savePreferences();
+            if (state.view === 'projects') renderProjects();
+        }
+
+        function setLevel(l) {
+            state.level = l;
+            document.getElementById('level-portfolio').classList.toggle('active', l === 'portfolio');
+            document.getElementById('level-program').classList.toggle('active', l === 'program');
+            document.getElementById('level-project').classList.toggle('active', l === 'project');
+            savePreferences();
+        }
+
+        function setPeriod(p) {
+            state.period = p;
+            document.getElementById('period-weekly').classList.toggle('active', p === 'weekly');
+            document.getElementById('period-monthly').classList.toggle('active', p === 'monthly');
+            document.getElementById('period-quarterly').classList.toggle('active', p === 'quarterly');
+            savePreferences();
+        }
+
+        // --- PROJECT VIEW LOGIC ---
+        function renderProjects() {
+            const grid = document.getElementById('projects-grid');
+            const tableBody = document.getElementById('projects-table-body');
+
+            const filtered = DATA.projects.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(state.filter.search.toLowerCase());
+                const matchesStatus = state.filter.status === 'all' || p.status === state.filter.status;
+                const matchesDept = state.filter.dept === 'all' || p.dept === state.filter.dept;
+                return matchesSearch && matchesStatus && matchesDept;
+
+            }).sort((a, b) => {
+                let valA = a[state.sortKey];
+                let valB = b[state.sortKey];
+
+                if (typeof valA === 'string') {
+                    return state.sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+
+                return state.sortDir === 'asc' ? valA - valB : valB - valA;
+            });
+
+            document.getElementById('project-count').innerText = filtered.length;
+
+            // Render Cards
+            grid.innerHTML = filtered.map(p => ` <div class="glass p-6 rounded-3xl hover:neon-border-primary transition-all cursor-pointer group" > <div class="flex justify-between items-start mb-4" > <span class="status-pill status-${p.status}" >$ {
+                    p.status.replace('-', ' ')
+                }
+
+                </span> <div class="text-right" > <p class="text-xs text-slate-400" >Health Score</p> <p class="text-xl font-bold mono ${p.health > 80 ? 'text-success' : p.health > 60 ? 'text-warning' : 'text-danger'}" >$ {
+                    p.health
+                }
+
+                %</p> </div> </div> <h4 class="text-lg font-bold mb-4 group-hover:text-indigo-400 transition-colors" >$ {
+                    p.name
+                }
+
+                </h4> <div class="grid grid-cols-2 gap-4 mb-6" > <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700" > <p class="text-[10px] uppercase text-slate-400 font-bold" >Progress</p> <p class="text-lg font-bold mono" >$ {
+                    p.progress
+                }
+
+                %</p> </div> <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700" > <p class="text-[10px] uppercase text-slate-400 font-bold" >Team Size</p> <p class="text-lg font-bold mono" >$ {
+                    p.team
+                }
+
+                </p> </div> <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700" > <p class="text-[10px] uppercase text-slate-400 font-bold" >Open Risks</p> <p class="text-lg font-bold mono ${p.risks > 3 ? 'text-danger' : ''}" >$ {
+                    p.risks
+                }
+
+                </p> </div> <div class="p-3 rounded-xl bg-slate-800/50 border border-slate-700" > <p class="text-[10px] uppercase text-slate-400 font-bold" >Blocked</p> <p class="text-lg font-bold mono ${p.blocked > 0 ? 'text-danger' : ''}" >$ {
+                    p.blocked
+                }
+
+                </p> </div> </div> <div class="flex justify-between items-center pt-4 border-t border-slate-700" > <div class="flex items-center gap-2" > <div class="w-6 h-6 rounded-full bg-slate-600 text-[10px] flex items-center justify-center font-bold" >$ {
+                    p.owner[0]
+                }
+
+                </div> <span class="text-xs text-slate-400" >$ {
+                    p.owner
+                }
+
+                </span> </div> <span class="text-xs mono text-slate-500" >$ {
+                    p.date
+                }
+
+                </span> </div> </div> `).join('');
+
+            // Render Table
+            tableBody.innerHTML = filtered.map(p => ` <tr class="border-b border-slate-800 hover:bg-slate-800/30 transition-colors cursor-pointer group" onclick="toggleRow(${p.id})" > <td class="p-4 font-medium" >$ {
+                    p.name
+                }
+
+                </td> <td class="p-4" > <div class="flex items-center gap-2" > <div class="w-16 bg-slate-700 h-1.5 rounded-full overflow-hidden" > <div class="bg-indigo-500 h-full" style="width: ${p.progress}%" ></div> </div> <span class="mono text-xs" >$ {
+                    p.progress
+                }
+
+                %</span> </div> </td> <td class="p-4 mono ${p.health > 80 ? 'text-success' : p.health > 60 ? 'text-warning' : 'text-danger'}" >$ {
+                    p.health
+                }
+
+                %</td> <td class="p-4 mono" >$$ {
+                    (p.budget/1000000).toFixed(1)
+                }
+
+                M</td> <td class="p-4 mono" >$$ {
+                    (p.spend/1000000).toFixed(1)
+                }
+
+                M</td> <td class="p-4 text-slate-400" >$ {
+                    p.owner
+                }
+
+                </td> <td class="p-4" ><span class="status-pill status-${p.status}" >$ {
+                    p.status
+                }
+
+                </span></td> </tr> <tr id="row-${p.id}" class="hidden bg-slate-900/50" > <td colspan="7" class="p-6" > <div class="grid grid-cols-1 md:grid-cols-3 gap-8" > <div class="space-y-3" > <h5 class="text-xs font-bold uppercase text-indigo-400" >Financial Detail</h5> <div class="flex justify-between text-sm" ><span>Total Budget:</span><span class="mono" >$$ {
+                    p.budget.toLocaleString()
+                }
+
+                </span></div> <div class="flex justify-between text-sm" ><span>Actual Spend:</span><span class="mono" >$$ {
+                    p.spend.toLocaleString()
+                }
+
+                </span></div> <div class="flex justify-between text-sm" ><span>Remaining:</span><span class="mono" >$$ {
+                    (p.budget - p.spend).toLocaleString()
+                }
+
+                </span></div> <div class="flex justify-between text-sm" ><span>Variance:</span><span class="mono ${p.spend > p.budget ? 'text-danger' : 'text-success'}" >$ {
+                    (((p.spend-p.budget)/p.budget)*100).toFixed(1)
+                }
+
+                %</span></div> </div> <div class="space-y-3" > <h5 class="text-xs font-bold uppercase text-indigo-400" >Delivery Metrics</h5> <div class="flex justify-between text-sm" ><span>Team Velocity:</span><span class="mono" >42 pts/sprint</span></div> <div class="flex justify-between text-sm" ><span>Cycle Time:</span><span class="mono" >6.2 days</span></div> <div class="flex justify-between text-sm" ><span>Lead Time:</span><span class="mono" >14.1 days</span></div> <div class="flex justify-between text-sm" ><span>Throughput:</span><span class="mono" >8 tasks/week</span></div> </div> <div class="space-y-3" > <h5 class="text-xs font-bold uppercase text-indigo-400" >Project Governance</h5> <div class="flex justify-between text-sm" ><span>Dept:</span><span class="mono" >$ {
+                    p.dept
+                }
+
+                </span></div> <div class="flex justify-between text-sm" ><span>Priority:</span><span class="mono" >P1 - Critical</span></div> <div class="flex justify-between text-sm" ><span>Quarter:</span><span class="mono" >Q4 2024</span></div> <div class="flex justify-between text-sm" ><span>Fiscal Year:</span><span class="mono" >FY25</span></div> </div> </div> </td> </tr> `).join('');
+        }
+
+        function filterProjects() {
+            state.filter.search = document.getElementById('project-search').value;
+            state.filter.status = document.getElementById('filter-status').value;
+            state.filter.dept = document.getElementById('filter-dept').value;
+            renderProjects();
+        }
+
+        function sortProjects(key) {
+            if (state.sortKey === key) {
+                state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+            }
+
+            else {
+                state.sortKey = key;
+                state.sortDir = 'asc';
+            }
+
+            renderProjects();
+        }
+
+        function toggleRow(id) {
+            const row = document.getElementById(`row-$ {
+                    id
+                }
+
+                `);
+            row.classList.toggle('hidden');
+        }
+
+        // --- TIMELINE VIEW LOGIC ---
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            const tableBody = document.getElementById('milestone-table-body');
+
+            // Group projects for timeline
+            const projects = DATA.projects.slice(0, 4);
+
+            container.innerHTML = projects.map(p => ` <div class="space-y-4" > <div class="flex items-center justify-between" > <h4 class="font-bold text-indigo-400" >$ {
+                    p.name
+                }
+
+                </h4> <span class="text-xs mono text-slate-500" >$ {
+                    p.progress
+                }
+
+                % Complete</span> </div> <div class="relative h-12 w-full bg-slate-800/50 rounded-2xl border border-slate-700 flex items-center px-4 gap-4 overflow-hidden" > <div class="absolute left-0 top-0 h-full bg-indigo-600/30 transition-all duration-1000" style="width: ${p.progress}%" ></div> <div class="flex w-full justify-between items-center relative z-10" > <div class="flex items-center gap-2" > <div class="w-3 h-3 rounded-full bg-indigo-500 neon-border-primary" ></div> <span class="text-[10px] font-bold uppercase" >Kickoff</span> </div> <div class="flex items-center gap-2" > <div class="w-3 h-3 rounded-full bg-indigo-500 neon-border-primary" ></div> <span class="text-[10px] font-bold uppercase" >MVP</span> </div> <div class="flex items-center gap-2" > <div class="w-3 h-3 rounded-full ${p.progress > 80 ? 'bg-indigo-500 neon-border-primary' : 'bg-slate-600'}" ></div> <span class="text-[10px] font-bold uppercase" >Beta</span> </div> <div class="flex items-center gap-2" > <div class="w-3 h-3 rounded-full ${p.progress > 95 ? 'bg-indigo-500 neon-border-primary' : 'bg-slate-600'}" ></div> <span class="text-[10px] font-bold uppercase" >Release</span> </div> </div> </div> </div> `).join('');
+
+            tableBody.innerHTML = DATA.milestones.map(m => ` <tr class="border-b border-slate-800 hover:bg-slate-800/30 transition-colors cursor-pointer group" onclick="toggleMilestoneRow(${m.id})" > <td class="p-4 font-medium" >Sprint $ {
+                    Math.floor(Math.random()*10)+1
+                }
+
+                </td> <td class="p-4" >$ {
+                    m.name
+                }
+
+                </td> <td class="p-4 mono" >$ {
+                    m.date
+                }
+
+                </td> <td class="p-4" ><span class="status-pill status-${m.status === 'completed' ? 'on-track' : m.status === 'delayed' ? 'delayed' : 'at-risk'}" >$ {
+                    m.status
+                }
+
+                </span></td> <td class="p-4 text-slate-400" >$ {
+                    m.owner
+                }
+
+                </td> <td class="p-4" ><span class="text-xs font-bold ${m.risk === 'High' ? 'text-danger' : m.risk === 'Medium' ? 'text-warning' : 'text-success'}" >$ {
+                    m.risk
+                }
+
+                </span></td> </tr> <tr id="ms-row-${m.id}" class="hidden bg-slate-900/50" > <td colspan="6" class="p-6" > <div class="grid grid-cols-1 md:grid-cols-3 gap-8" > <div class="space-y-3" > <h5 class="text-xs font-bold uppercase text-indigo-400" >Task Breakdown</h5> <div class="flex items-center gap-2 text-sm" ><i data-lucide="check-circle-2" class="w-4 h-4 text-success" ></i> Initial Requirements</div> <div class="flex items-center gap-2 text-sm" ><i data-lucide="check-circle-2" class="w-4 h-4 text-success" ></i> Architecture Design</div> <div class="flex items-center gap-2 text-sm" ><i data-lucide="circle" class="w-4 h-4 text-slate-500" ></i> Integration Testing</div> </div> <div class="space-y-3" > <h5 class="text-xs font-bold uppercase text-indigo-400" >Blockers & Dependencies</h5> <div class="p-2 rounded bg-rose-500/10 border border-rose-500/30 text-xs text-rose-400" > <strong>Blocker:</strong> Waiting on Security sign-off for API Gateway. </div> <div class="p-2 rounded bg-slate-800 border border-slate-700 text-xs text-slate-400" > <strong>Dependency:</strong> Requires completion of Project Alpha's Auth module.
+ </div> </div> <div class="space-y-3" > <h5 class="text-xs font-bold uppercase text-indigo-400" >Comments</h5> <p class="text-xs text-slate-400 italic" >"The delay in data lake integration is causing a ripple effect on the dashboard MVP. We are exploring a mock-data approach for the first demo." - Marcus</p> </div> </div> </td> </tr> `).join('');
+            lucide.createIcons();
+        }
+
+        function toggleMilestoneRow(id) {
+            document.getElementById(`ms-row-$ {
+                    id
+                }
+
+                `).classList.toggle('hidden');
+        }
+
+        // --- RESOURCE VIEW LOGIC ---
+        function renderResources() {
+            const list = document.getElementById('resource-list');
+
+            list.innerHTML = DATA.resources.map(r => ` <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700 space-y-4" > <div class="flex justify-between items-center" > <h4 class="font-bold" >$ {
+                    r.name
+                }
+
+                </h4> <span class="text-xs font-bold ${r.status === 'Overloaded' ? 'text-danger' : 'text-success'}" >$ {
+                    r.status
+                }
+
+                </span> </div> <div class="grid grid-cols-3 gap-4" > <div class="text-center" > <p class="text-[10px] uppercase text-slate-400 font-bold" >Utilization</p> <p class="text-lg font-bold mono" >$ {
+                    r.utilization
+                }
+
+                %</p> </div> <div class="text-center" > <p class="text-[10px] uppercase text-slate-400 font-bold" >Capacity</p> <p class="text-lg font-bold mono" >$ {
+                    r.capacity
+                }
+
+                %</p> </div> <div class="text-center" > <p class="text-[10px] uppercase text-slate-400 font-bold" >OT Risk</p> <p class="text-lg font-bold mono ${r.overtimeRisk === 'High' || r.overtimeRisk === 'Critical' ? 'text-danger' : ''}" >$ {
+                    r.overtimeRisk
+                }
+
+                </p> </div> </div> <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden" > <div class="h-full transition-all duration-1000 ${r.utilization > 100 ? 'bg-rose-500' : r.utilization > 80 ? 'bg-amber-500' : 'bg-indigo-500'}" style="width: ${Math.min(r.utilization, 100)}%" ></div> </div> </div> `).join('');
+        }
+
+        // --- RISK VIEW LOGIC ---
+        function renderRisks() {
+            const body = document.getElementById('risk-table-body');
+
+            body.innerHTML = DATA.risks.map(r => ` <tr class="border-b border-slate-800 hover:bg-slate-800/30 transition-colors" > <td class="p-4" >$ {
+                    r.desc
+                }
+
+                </td> <td class="p-4" ><span class="status-pill ${r.severity === 'Critical' ? 'status-delayed' : r.severity === 'High' ? 'status-at-risk' : 'status-on-track'}" >$ {
+                    r.severity
+                }
+
+                </span></td> <td class="p-4 mono" >$ {
+                    r.prob
+                }
+
+                </td> <td class="p-4 mono" >$ {
+                    r.impact
+                }
+
+                </td> <td class="p-4 text-slate-400 text-xs" >$ {
+                    r.mitigation
+                }
+
+                </td> <td class="p-4 font-medium" >$ {
+                    r.owner
+                }
+
+                </td> </tr> `).join('');
+        }
+
+        // --- OPERATIONS VIEW LOGIC ---
+        function renderOperations() {
+            const list = document.getElementById('integrations-list');
+
+            list.innerHTML = DATA.integrations.map(i => ` <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-800/40 border border-slate-700" > <div class="flex items-center gap-3" > <div class="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center" > <i data-lucide="${i.icon}" class="w-5 h-5" ></i> </div> <div> <p class="text-sm font-bold" >$ {
+                    i.name
+                }
+
+                </p> <p class="text-[10px] text-slate-400" >Last sync: $ {
+                    i.sync
+                }
+
+                </p> </div> </div> <div class="text-right" > <div class="flex items-center gap-2 justify-end" > <span class="w-2 h-2 rounded-full ${i.status === 'online' ? 'bg-emerald-500' : 'bg-amber-500'}" ></span> <span class="text-xs font-bold uppercase ${i.status === 'online' ? 'text-emerald-500' : 'text-amber-500'}" >$ {
+                    i.status
+                }
+
+                </span> </div> <p class="text-[10px] mono text-slate-500" >$ {
+                    i.latency
+                }
+
+                </p> </div> </div> `).join('');
+            lucide.createIcons();
+        }
+
+        // --- CHARTING LOGIC ---
+        function renderSummaryCharts() {
+            const isDark = state.theme === 'dark';
+
+            const colors = {
+                primary: '#6366f1',
+                success: '#10b981',
+                warning: '#f59e0b',
+                danger: '#ef4444',
+                text: isDark ? '#94a3b8' : '#64748b',
+                grid: isDark ? 'rgba(51, 65, 85, 0.2)' : 'rgba(226, 232, 240, 0.5)'
+            }
+
+                ;
+
+            const chartConfig = (type, data, options = {}) => ({
+
+                type,
+                data,
+                options: {
+
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+
+                        ,
+                        tooltip: {
+                            backgroundColor: isDark ? '#1e293b' : '#fff',
+                            titleColor: isDark ? '#f8fafc' : '#1e293b',
+                            bodyColor: isDark ? '#94a3b8' : '#64748b',
+                            borderColor: colors.primary,
+                            borderWidth: 1
+                        }
+                    }
+
+                    ,
+                    scales: {
+                        y: {
+                            grid: {
+                                color: colors.grid
+                            }
+
+                            ,
+                            ticks: {
+                                color: colors.text, font: {
+                                    family: 'JetBrains Mono'
+                                }
+                            }
+                        }
+
+                        ,
+                        x: {
+                            grid: {
+                                display: false
+                            }
+
+                            ,
+                            ticks: {
+                                color: colors.text, font: {
+                                    family: 'JetBrains Mono'
+                                }
+                            }
+                        }
+                    }
+
+                    ,
+                    ...options
+                }
+            });
+
+            // Completion Trend
+            new Chart(document.getElementById('chart-completion'), chartConfig('line', {
+
+                labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+                datasets: [{
+                    label: 'Completion %',
+                    data: [40, 45, 60, 72, 85, 91],
+                    borderColor: colors.primary,
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: colors.primary
+                }
+
+                ]
+            }));
+
+            // Budget vs Actual
+            new Chart(document.getElementById('chart-budget'), chartConfig('bar', {
+
+                labels: ['P1', 'P2', 'P3', 'P4', 'P5'],
+                datasets: [{
+                    label: 'Budget', data: [1.2, 0.8, 2.5, 0.5, 3.0], backgroundColor: colors.primary
+                }
+
+                    ,
+                {
+                    label: 'Actual', data: [1.1, 0.9, 2.4, 0.3, 1.8], backgroundColor: colors.success
+                }
+
+                ]
+            }));
+
+            // Resource Allocation
+            new Chart(document.getElementById('chart-resources'), chartConfig('doughnut', {
+
+                labels: ['Eng', 'Prod', 'Mkt', 'Ops'],
+                datasets: [{
+                    data: [40, 25, 15, 20],
+                    backgroundColor: [colors.primary, colors.success, colors.warning, colors.danger],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }
+
+                ]
+            }
+
+                , {
+
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: true, position: 'bottom', labels: {
+                                color: colors.text, font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        }
+                    }
+                }));
+
+            // Risks Severity
+            new Chart(document.getElementById('chart-risks'), chartConfig('polarArea', {
+
+                labels: ['Critical', 'High', 'Medium', 'Low'],
+                datasets: [{
+                    data: [2, 5, 8, 12],
+                    backgroundColor: [colors.danger, '#f97316', colors.warning, colors.success],
+                    borderWidth: 0
+                }
+
+                ]
+            }));
+
+            // Velocity
+            new Chart(document.getElementById('chart-velocity'), chartConfig('line', {
+
+                labels: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'],
+                datasets: [{
+                    label: 'Velocity',
+                    data: [30, 35, 32, 45, 40, 48],
+                    borderColor: colors.success,
+                    tension: 0,
+                    borderDash: [5, 5],
+                    pointStyle: 'rectRot',
+                    pointRadius: 6
+                }
+
+                ]
+            }));
+
+            // Milestones
+            new Chart(document.getElementById('chart-milestones'), chartConfig('bar', {
+
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                datasets: [{
+                    label: 'Milestones',
+                    data: [12, 19, 15, 22],
+                    backgroundColor: colors.primary,
+                    borderRadius: 8
+                }
+
+                ]
+            }
+
+                , {
+                    indexAxis: 'y'
+                }));
+        }
+
+    </script>
+</body>
+
+</html>
