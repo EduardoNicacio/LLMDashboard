@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qwen3.7-30B-Open - The Wait is Over</title>
+    <title>Qwopus 3.5 9B Coder Exp - The Wait is Over</title>
     <style>
         :root {
             --bg: #050505;
@@ -809,49 +809,29 @@ print(tokenizer.decode(outputs[0], skip_special_tokens=True))</pre>
 
         // --- Number Counter Animation for Stats ---
         function animateValue(obj, start, end) {
-            let startTimestamp = null;
-            const duration = 1500;
-            const stepTime = Math.abs(Math.floor(duration / (end.length * 2))); // Speed up slightly
-
+            const duration = end.includes('.') ? 2000 : 1500;
             const startTime = Date.now();
 
-            function updateValue() {
+            // Extract numeric value and suffix from strings like "30B", "99.4%", "12ms"
+            const match = end.match(/^([\d.]+)(.*)$/);
+            const targetNum = match ? parseFloat(match[1]) : 0;
+            const suffix = match ? match[2] : '';
+            const isFloat = end.includes('.');
+
+            function update() {
                 const elapsed = Date.now() - startTime;
                 let progress = Math.min(elapsed / duration, 1);
-
-                // Simple easing
                 progress = 1 - Math.pow(1 - progress, 3);
 
-                let currentVal = Math.floor(progress * (end.length) + start).toString();
-
                 if (progress < 1) {
-                    obj.innerHTML = currentVal;
-                    requestAnimationFrame(updateValue);
+                    const current = start + (targetNum - start) * progress;
+                    obj.innerHTML = (isFloat ? current.toFixed(1) : Math.floor(current)) + suffix;
+                    requestAnimationFrame(update);
                 } else {
                     obj.innerHTML = end;
                 }
             }
-
-            // Handle decimals like "99.4%"
-            if (end.includes('.')) {
-                let startTimestamp = Date.now();
-                const duration = 2000;
-                function update() {
-                    let elapsed = Date.now() - startTimestamp;
-                    let progress = Math.min(elapsed / duration, 1);
-                    progress = 1 - Math.pow(1 - progress, 3);
-
-                    if (progress < 1) {
-                        obj.innerHTML = (progress * end).toFixed(1);
-                        requestAnimationFrame(update);
-                    } else {
-                        obj.innerHTML = end;
-                    }
-                }
-                update();
-            } else {
-                updateValue();
-            }
+            update();
         }
 
     </script>

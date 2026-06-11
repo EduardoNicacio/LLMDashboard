@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qwen3.7-30B-Open</title>
+    <title>OpenAI GPT-oss-20B</title>
     <style>
         /* Variables for colors */
         :root {
@@ -171,17 +171,27 @@
             background: #e0e0e0;
             border-radius: 4px;
             overflow: hidden;
+            position: relative;
         }
 
         #benchmark .bar-item {
             position: absolute;
             left: 0;
-            top: 0;
-            width: calc(100% * var(--percent));
-            height: 100%;
+            height: 30px;
             background: var(--accent-light);
             transition: width .5s ease-in-out;
+            line-height: 30px;
+            padding-left: 8px;
+            color: white;
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
+
+        #benchmark .bar-item:nth-child(1) { top: 10px; }
+        #benchmark .bar-item:nth-child(2) { top: 50px; }
+        #benchmark .bar-item:nth-child(3) { top: 90px; }
+        #benchmark .bar-item:nth-child(4) { top: 130px; }
+        #benchmark .bar-item:nth-child(5) { top: 170px; }
 
         /* Download section */
         #download {
@@ -381,7 +391,6 @@
         }
     </style>
 
-    /* Dark mode toggle JS */
     <script>document.addEventListener('DOMContentLoaded', () => {
             const toggle = document.querySelector('.dark-mode-toggle');
 
@@ -418,17 +427,6 @@
                 });
             });
 
-            // Animated card rotation
-            const card = document.querySelector('#model-card');
-
-            card.addEventListener('mouseenter', () => {
-                card.style.animation = 'rotateCard 5s linear infinite';
-            });
-
-            card.addEventListener('mouseleave', () => {
-                card.style.animation = '';
-            });
-
             // Benchmark bar animation
             const bars = document.querySelectorAll('.bar-item');
 
@@ -450,7 +448,7 @@
         <div class="dark-mode-toggle">🌙</div>
         <!-- Hero Section -->
         <section id="hero">
-            <h1>Qwen3.7-30B-Open is finally here</h1>
+            <h1>OpenAI GPT-oss-20B is finally here</h1>
             <p>The community can now stop refreshing Hugging Face every 11 seconds !</p>
         </section>
         <!-- Subheadline -->
@@ -459,13 +457,13 @@
         </section>
         <!-- Model Card -->
         <section id="model-card">
-            <div class="card-header">30B Parameters & Open Weights</div>
+            <div class="card-header">20B Parameters & Open Weights</div>
             <div class="card-body">
-                <div class="card-item"><img src="" alt="Long Context"></div>
-                <div class="card-item"><img src="" alt="Tool Use"></div>
-                <div class="card-item"><img src="" alt="Coding"></div>
-                <div class="card-item"><img src="" alt="Reasoning"></div>
-                <div class="card-item"><img src="" alt="Local Inference"></div>
+                <div class="card-item"><span class="icon"></span>Long Context</div>
+                <div class="card-item"><span class="icon"></span>Tool Use</div>
+                <div class="card-item"><span class="icon"></span>Coding</div>
+                <div class="card-item"><span class="icon"></span>Reasoning</div>
+                <div class="card-item"><span class="icon"></span>Local Inference</div>
             </div>
         </section>
         <!-- Benchmark Section -->
@@ -473,7 +471,7 @@
             <h2>Benchmarks</h2>
             <div class="chart-container">
                 <div class="bar-chart">
-                    <div class="bar-item" data-percent="70">Qwen3.7-30B-Open</div>
+                    <div class="bar-item" data-percent="70">OpenAI GPT-oss-20B</div>
                     <div class="bar-item" data-percent="50">Fake Rival A</div>
                     <div class="bar-item" data-percent="40">Fake Rival B</div>
                 </div>
@@ -496,25 +494,29 @@
         <!-- Code Block -->
         <section id="code-block">
             <h2>Example Usage</h2>
-            <pre># import transformers from transformers import AutoModelForCausalLM,
-        AutoTokenizer model=AutoModelForCausalLM.from_pretrained("Qwen3.7-30B-Open") tokenizer=AutoTokenizer.from_pretrained("Qwen3.7-30B-Open") prompt="Hello world!"
-        input_ids=tokenizer.encode(prompt, return_tensors="pt") output=model.generate(input_ids, max_length=50) print(tokenizer.decode(output[0], skip_special_tokens=True)) </pre>
+            <pre>from transformers import AutoModelForCausalLM, AutoTokenizer
+model = AutoModelForCausalLM.from_pretrained("openai-gpt-oss-20B")
+tokenizer = AutoTokenizer.from_pretrained("openai-gpt-oss-20B")
+prompt = "Hello world!"
+input_ids = tokenizer.encode(prompt, return_tensors="pt")
+output = model.generate(input_ids, max_length=50)
+print(tokenizer.decode(output[0], skip_special_tokens=True))</pre>
         </section>
         <!-- Community Wall -->
         <section id="community-wall">
-            <div class="post"><img src="" alt="User1"></div>
+            <div class="post"><span class="icon"></span></div>
             <p>🎉 Finally ! 🎉</p>
-            <div class="post"><img src="" alt="User2"></div>
+            <div class="post"><span class="icon"></span></div>
             <p>Stop refreshing forever !</p>
-            <div class="post"><img src="" alt="User3"></div>
+            <div class="post"><span class="icon"></span></div>
             <p>We can now run locally ! 🚀</p>
         </section>
         <!-- Run Local Section -->
         <section id="run-local">
             <h2>Run Locally</h2>
-            <div class="info">Dual 3090s (12GB each) recommended for full inference.
+            <div class="info">Dual 3090s (24GB each) recommended for full inference.
             </div>
-            <div class="info">Single 3090 (8GB) can handle partial inference.</div>
+            <div class="info">Single 3090 (24GB) can handle partial inference.</div>
         </section>
         <!-- Background Animation -->
         <div class="background-animation"></div>
