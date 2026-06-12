@@ -504,7 +504,13 @@
             hourlyLabels: document.getElementById('hourly-labels'),
             bgLayer: document.getElementById('bg-layer'),
             compareModal: document.getElementById('comparison-modal'),
-            toast: document.getElementById('toast')
+            toast: document.getElementById('toast'),
+            humidityBar: document.getElementById('humidity-bar'),
+            windBar: document.getElementById('wind-bar'),
+            pressureBar: document.getElementById('pressure-bar'),
+            uvBar: document.getElementById('uv-bar'),
+            aqiBar: document.getElementById('aqi-bar'),
+            weatherIcon: document.getElementById('weather-icon')
         };
 
         // --- CHARTS ---
@@ -547,10 +553,15 @@
             els.loading.classList.toggle('hidden', !show);
         }
 
-        function updateBackground(condition, isDay) {
+        function updateBackground(wCode, isDay) {
             const body = document.body;
             body.className = body.className.split(' ').filter(function (c) { return !c.startsWith('condition-') && !c.startsWith('bg-'); }).join(' ');
-            body.classList.add('condition-' + condition.toLowerCase());
+            var condition = 'clear';
+            if (wCode >= 2 && wCode <= 3) condition = 'clouds';
+            else if (wCode >= 45 && wCode <= 48) condition = 'clouds';
+            else if ((wCode >= 51 && wCode <= 67) || (wCode >= 80 && wCode <= 82) || wCode >= 95) condition = 'rain';
+            else if ((wCode >= 71 && wCode <= 77) || (wCode >= 85 && wCode <= 86)) condition = 'snow';
+            body.classList.add('condition-' + condition);
             els.bgLayer.style.opacity = condition === 'clear' ? '0.15' : '0.05';
         }
 
@@ -578,7 +589,7 @@
                 renderCurrentWeather(data, aqi);
                 renderForecast(data.daily);
                 updateCharts(data.hourly);
-                updateBackground(wmoDesc[wCode] || 'clear', data.current.is_day === 1);
+                updateBackground(wCode, data.current.is_day === 1);
 
                 toggleLoading(false);
             } catch (error) {

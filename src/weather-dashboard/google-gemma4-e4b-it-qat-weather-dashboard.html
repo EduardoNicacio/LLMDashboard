@@ -484,6 +484,18 @@
             }
         };
 
+        /** Prepares canvas with explicit size to prevent infinite resize loops */
+        const prepareCanvas = (canvas) => {
+            const parent = canvas.parentElement;
+            const dpr = window.devicePixelRatio || 1;
+            const w = parent.clientWidth;
+            const h = 250;
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+        };
+
         /** Renders the 7-day chart from Open-Meteo daily data */
         const renderChart = (daily) => {
             if (!daily || !daily.time) return;
@@ -494,6 +506,7 @@
 
             if (tempChartInstance) tempChartInstance.destroy();
 
+            prepareCanvas(elements.tempChartCanvas);
             const ctx = elements.tempChartCanvas.getContext('2d');
             tempChartInstance = new Chart(ctx, {
                 type: 'line',
@@ -519,8 +532,7 @@
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: false,
                     plugins: { legend: { labels: { color: '#fff' } } },
                     scales: {
                         y: { beginAtZero: false, ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.1)' } },
@@ -594,6 +606,15 @@
 
             // Initial Load (Default to London or user's location if possible)
             fetchCurrentWeather('London');
+
+            // Debounced resize handler to re-render chart
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if (currentWeatherData) renderChart(currentWeatherData.daily);
+                }, 300);
+            });
         });
     </script>
 </body>

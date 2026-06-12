@@ -358,7 +358,7 @@
         // --- STATE MANAGEMENT ---
         const state = {
             currentCity: {
-                name: "London, UK",
+                name: "New York",
                 temp: 18,
                 feelsLike: 19,
                 condition: "Partly Cloudy",
@@ -457,7 +457,7 @@
                     return this.getMockData(query);
                 }
 
-                const geoRes = await fetch(GEO_URL.replace('{city}', query));
+                const geoRes = await fetch(GEO_URL.replace('{city}', encodeURIComponent(query)));
                 const geoData = await geoRes.json();
                 if (!geoData.results || !geoData.results.length) throw new Error('City not found');
                 const geo = geoData.results[0];
@@ -540,79 +540,83 @@
         const UI = {
             async updateDashboard(cityData) {
                 els.searchLoader.classList.remove('hidden');
+                try {
+                    const data = await WeatherService.fetchWeather(cityData.name || cityData);
+                    state.currentCity = data;
 
-                const data = await WeatherService.fetchWeather(cityData.name || cityData);
-                state.currentCity = data;
+                    // Update Text
+                    els.displayCity.innerText = data.name;
+                    els.displayTemp.innerText = Math.round(data.temp);
+                    els.displayUnitSymbol.innerText = `°${state.units}`;
+                    els.displayCondition.innerText = data.condition;
+                    els.displayFeels.innerText = formatTemp(data.feelsLike);
+                    els.displayHumidity.innerText = `${data.humidity}%`;
+                    els.displayWind.innerText = `${data.wind} km/h`;
+                    els.displayUV.innerText = `${data.uv} (${data.uv < 3 ? 'Low' : data.uv < 6 ? 'Mod' : 'High'})`;
+                    els.displayVis.innerText = `${data.visibility} km`;
+                    els.displayPress.innerText = `${data.pressure} hPa`;
+                    els.displaySunrise.innerText = data.sunrise;
+                    els.displaySunset.innerText = data.sunset;
 
-                // Update Text
-                els.displayCity.innerText = data.name;
-                els.displayTemp.innerText = Math.round(data.temp);
-                els.displayUnitSymbol.innerText = `°${state.units}`;
-                els.displayCondition.innerText = data.condition;
-                els.displayFeels.innerText = formatTemp(data.feelsLike);
-                els.displayHumidity.innerText = `${data.humidity}%`;
-                els.displayWind.innerText = `${data.wind} km/h`;
-                els.displayUV.innerText = `${data.uv} (${data.uv < 3 ? 'Low' : data.uv < 6 ? 'Mod' : 'High'})`;
-                els.displayVis.innerText = `${data.visibility} km`;
-                els.displayPress.innerText = `${data.pressure} hPa`;
-                els.displaySunrise.innerText = data.sunrise;
-                els.displaySunset.innerText = data.sunset;
+                    // Update AQI
+                    const aqiVal = data.aqi;
+                    els.displayAqi.innerText = aqiVal < 50 ? 'Good' : aqiVal < 100 ? 'Moderate' : 'Poor';
+                    els.aqiBar.style.width = `${Math.min(aqiVal, 100)}%`;
+                    els.aqiBar.className = `h-full ${aqiVal < 50 ? 'bg-green-400' : aqiVal < 100 ? 'bg-yellow-400' : 'bg-red-400'}`;
 
-                // Update AQI
-                const aqiVal = data.aqi;
-                els.displayAqi.innerText = aqiVal < 50 ? 'Good' : aqiVal < 100 ? 'Moderate' : 'Poor';
-                els.aqiBar.style.width = `${Math.min(aqiVal, 100)}%`;
-                els.aqiBar.className = `h-full ${aqiVal < 50 ? 'bg-green-400' : aqiVal < 100 ? 'bg-yellow-400' : 'bg-red-400'}`;
+                    // Update Icon
+                    const iconName = getIconForCondition(data.condition);
+                    els.weatherIconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-20 h-20 text-white/90"></i>`;
 
-                // Update Icon
-                const iconName = getIconForCondition(data.condition);
-                els.weatherIconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-20 h-20 text-white/90"></i>`;
+                    // Update Background
+                    updateBackground(data.condition);
 
-                // Update Background
-                updateBackground(data.condition);
+                    // Update Hourly Slider
+                    els.hourlySlider.innerHTML = '';
+                    data.hourly.forEach(h => {
+                        const div = document.createElement('div');
+                        div.className = 'flex-shrink-0 w-16 text-center animate-fade';
+                        div.innerHTML = `
+                            <p class="text-xs text-white/50 mb-2">${h.time}</p>
+                            <i data-lucide="${getIconForCondition(data.condition)}" class="w-6 h-6 mx-auto mb-1"></i>
+                            <p class="font-bold">${Math.round(h.temp)}°</p>
+                        `;
+                        els.hourlySlider.appendChild(div);
+                    });
 
-                // Update Hourly Slider
-                els.hourlySlider.innerHTML = '';
-                data.hourly.forEach(h => {
-                    const div = document.createElement('div');
-                    div.className = 'flex-shrink-0 w-16 text-center animate-fade';
-                    div.innerHTML = `
-                        <p class="text-xs text-white/50 mb-2">${h.time}</p>
-                        <i data-lucide="${getIconForCondition(data.condition)}" class="w-6 h-6 mx-auto mb-1"></i>
-                        <p class="font-bold">${Math.round(h.temp)}°</p>
-                    `;
-                    els.hourlySlider.appendChild(div);
-                });
+                    // Update Daily Forecast
+                    els.dailyForecast.innerHTML = '';
+                    data.daily.forEach(d => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between animate-fade';
+                        div.innerHTML = `
+                            <span class="w-12 font-medium">${d.day}</span>
+                            <i data-lucide="${getIconForCondition(d.condition)}" class="w-6 h-6"></i>
+                            <span class="font-semibold">${Math.round(d.temp)}°</span>
+                        `;
+                        els.dailyForecast.appendChild(div);
+                    });
 
-                // Update Daily Forecast
-                els.dailyForecast.innerHTML = '';
-                data.daily.forEach(d => {
-                    const div = document.createElement('div');
-                    div.className = 'flex items-center justify-between animate-fade';
-                    div.innerHTML = `
-                        <span class="w-12 font-medium">${d.day}</span>
-                        <i data-lucide="${getIconForCondition(d.condition)}" class="w-6 h-6"></i>
-                        <span class="font-semibold">${Math.round(d.temp)}°</span>
-                    `;
-                    els.dailyForecast.appendChild(div);
-                });
+                    // Update Favorites
+                    els.favoritesList.innerHTML = '';
+                    state.favorites.forEach(fav => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center text-sm cursor-pointer hover:text-yellow-400 transition-colors';
+                        li.innerHTML = `<span>${fav}</span> <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i>`;
+                        li.onclick = () => els.cityInput.value = fav;
+                        els.favoritesList.appendChild(li);
+                    });
 
-                // Update Favorites
-                els.favoritesList.innerHTML = '';
-                state.favorites.forEach(fav => {
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center text-sm cursor-pointer hover:text-yellow-400 transition-colors';
-                    li.innerHTML = `<span>${fav}</span> <i data-lucide="chevron-right" class="w-4 h-4 opacity-50"></i>`;
-                    li.onclick = () => els.cityInput.value = fav;
-                    els.favoritesList.appendChild(li);
-                });
+                    // Update Chart
+                    this.renderChart(data);
 
-                // Update Chart
-                this.renderChart(data);
-
-                // Refresh Icons
-                lucide.createIcons();
-                els.searchLoader.classList.add('hidden');
+                    // Refresh Icons
+                    lucide.createIcons();
+                    els.searchLoader.classList.add('hidden');
+                } catch (err) {
+                    els.searchLoader.classList.add('hidden');
+                    console.error(err);
+                }
             },
 
             renderChart(data) {
