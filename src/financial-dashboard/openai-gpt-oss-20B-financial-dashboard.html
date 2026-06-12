@@ -272,7 +272,7 @@
             if (currentView === 'summary') {
                 // Show revenue vs net income 
                 drawLineChart(charts[0].querySelector('canvas'), data.apple.revenue, 'Revenue'); drawLineChart(charts[1].querySelector('canvas'), data.apple.netIncome, 'Net Income'); // Show EBITDA margin trend 
-                drawLineChart(charts[2].querySelector('canvas'), data.apple.EBIDTA, 'EBITDA');
+                drawLineChart(charts[2].querySelector('canvas'), data.apple.EBITDA, 'EBITDA');
             } else if (currentView === 'profitability') { // Show free cash flow vs capital expenditures (mock) 
                 drawLineChart(charts[0].querySelector('canvas'), data.apple.freeCashFlow, 'Free Cash Flow'); drawLineChart(charts[1].querySelector('canvas'), [200, 210, 220, 230, 240], 'Capital Expenditures'); // placeholder 
             } else if (currentView === 'cashflow') {
@@ -304,16 +304,19 @@
             const sortBtns = document.querySelectorAll('.sort-btn'); sortBtns.forEach(btn => { btn.addEventListener('click', () => sortTable(btn.dataset.metric)); });
             // Expand row details 
             const expandBtn = document.querySelectorAll('.expand-btn'); expandBtn.forEach(btn => { btn.addEventListener('click', () => toggleRowDetails(btn.parentElement)); });
+            // Populate table 
+            populateTable();
         });
         /* Placeholder Data for Table */
         const tableData = [{ company: 'Apple Inc.', year: '2021', quarter: 'Q4', revenue: 2400, netIncome: 700, priceToEarnings: 19 }, { company: 'Microsoft Corp.', year: '2021', quarter: 'Q4', revenue: 2900, netIncome: 800, priceToEarnings: 16 }, { company: 'Apple Inc.', year: '2020', quarter: 'Q3', revenue: 2300, netIncome: 650, priceToEarnings: 18 }, { company: 'Microsoft Corp.', year: '2020', quarter: 'Q2', revenue: 2800, netIncome: 750, priceToEarnings: 15 }];
-        // Populate table 
-        const tbody = document.querySelector('#financialTable tbody');
-        tableData.forEach(row => {
-            const tr = document.createElement('tr'); tr.dataset.company = row.company; tr.dataset.year = row.year; tr.dataset.quarter = row.quarter; tr.dataset.revenue = row.revenue; tr.dataset.netIncome = row.netIncome; tr.dataset.priceToEarnings = row.priceToEarnings; const td1 = document.createElement('td'); td1.textContent = row.company; const td2 = document.createElement('td'); td2.textContent = row.year; const td3 = document.createElement('td'); td3.textContent = row.quarter; const td4 = document.createElement('td'); td4.textContent = row.revenue; const td5 = document.createElement('td'); td5.textContent = row.netIncome; const td6 = document.createElement('td'); td6.textContent = row.priceToEarnings; tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
-            // Detail div (hidden by default) 
-            const detailDiv = document.createElement('div'); detailDiv.style.display = 'none'; detailDiv.className = 'detail-row'; detailDiv.textContent = `Detailed line items: Revenue by segment, SG&A expenses, interest expense...`; tr.appendChild(detailDiv); tbody.appendChild(tr);
-        }); 
+        function populateTable() {
+            const tbody = document.querySelector('#financialTable tbody');
+            if (!tbody) return;
+            tableData.forEach(row => {
+                const tr = document.createElement('tr'); tr.dataset.company = row.company; tr.dataset.year = row.year; tr.dataset.quarter = row.quarter; tr.dataset.revenue = row.revenue; tr.dataset.netIncome = row.netIncome; tr.dataset.priceToEarnings = row.priceToEarnings; const td1 = document.createElement('td'); td1.textContent = row.company; const td2 = document.createElement('td'); td2.textContent = row.year; const td3 = document.createElement('td'); td3.textContent = row.quarter; const td4 = document.createElement('td'); td4.textContent = row.revenue; const td5 = document.createElement('td'); td5.textContent = row.netIncome; const td6 = document.createElement('td'); td6.textContent = row.priceToEarnings; tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
+                const detailDiv = document.createElement('div'); detailDiv.style.display = 'none'; detailDiv.className = 'detail-row'; detailDiv.textContent = `Detailed line items: Revenue by segment, SG&A expenses, interest expense...`; tr.appendChild(detailDiv); tbody.appendChild(tr);
+            });
+        }
     </script>
 </head>
 

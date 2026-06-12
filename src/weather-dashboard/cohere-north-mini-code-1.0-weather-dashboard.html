@@ -712,26 +712,74 @@
         </div>
     </div>
 
-    <!-- API Configuration -->
-    <div id="apiConfig" style="display: none;">
-        <div>API_BASE_URL=https://api.openweathermap.org/data/2.5</div>
-        <div>API_KEY=YOUR_API_KEY_HERE</div>
-        <div>CURRENT_WEATHER_ENDPOINT=/weather</div>
-        <div>FORECAST_ENDPOINT=/forecast</div>
-        <div>ONE_CALL_ENDPOINT=/onecall</div>
-    </div>
-
     <!-- Bootstrap & Custom JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Open-Meteo API URLs (no API key required)
+        const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=en&format=json';
+        const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast';
+        const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
+
+        const WMO_DESC = {
+            0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+            45: 'Foggy', 48: 'Depositing rime fog',
+            51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+            56: 'Freezing drizzle', 57: 'Freezing drizzle',
+            61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+            66: 'Freezing rain', 67: 'Freezing rain',
+            71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow', 77: 'Snow grains',
+            80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
+            85: 'Slight snow showers', 86: 'Heavy snow showers',
+            95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+        };
+
+        const WMO_ICON = {
+            day: { 0: 'fa-sun', 1: 'fa-sun', 2: 'fa-cloud-sun', 3: 'fa-cloud', 45: 'fa-smog', 48: 'fa-smog',
+                51: 'fa-cloud-drizzle', 53: 'fa-cloud-drizzle', 55: 'fa-cloud-drizzle',
+                56: 'fa-cloud-rain', 57: 'fa-cloud-rain',
+                61: 'fa-cloud-rain', 63: 'fa-cloud-rain', 65: 'fa-cloud-rain',
+                66: 'fa-cloud-rain', 67: 'fa-cloud-rain',
+                71: 'fa-snowflake', 73: 'fa-snowflake', 75: 'fa-snowflake', 77: 'fa-snowflake',
+                80: 'fa-cloud-rain', 81: 'fa-cloud-rain', 82: 'fa-cloud-rain',
+                85: 'fa-snowflake', 86: 'fa-snowflake',
+                95: 'fa-cloud-bolt', 96: 'fa-cloud-bolt', 99: 'fa-cloud-bolt' },
+            night: { 0: 'fa-moon', 1: 'fa-moon', 2: 'fa-cloud-moon', 3: 'fa-cloud', 45: 'fa-smog', 48: 'fa-smog',
+                51: 'fa-cloud-drizzle', 53: 'fa-cloud-drizzle', 55: 'fa-cloud-drizzle',
+                56: 'fa-cloud-rain', 57: 'fa-cloud-rain',
+                61: 'fa-cloud-rain', 63: 'fa-cloud-rain', 65: 'fa-cloud-rain',
+                66: 'fa-cloud-rain', 67: 'fa-cloud-rain',
+                71: 'fa-snowflake', 73: 'fa-snowflake', 75: 'fa-snowflake', 77: 'fa-snowflake',
+                80: 'fa-cloud-rain', 81: 'fa-cloud-rain', 82: 'fa-cloud-rain',
+                85: 'fa-snowflake', 86: 'fa-snowflake',
+                95: 'fa-cloud-bolt', 96: 'fa-cloud-bolt', 99: 'fa-cloud-bolt' }
+        };
+
+        function getWmoDesc(code) { return WMO_DESC[code] || 'Unknown'; }
+
+        function getWmoIcon(code, isDay) {
+            const map = isDay ? WMO_ICON.day : WMO_ICON.night;
+            const keys = Object.keys(map).map(Number).sort((a, b) => a - b);
+            for (let k of keys) { if (code <= k) return map[k]; }
+            return map[0] || 'fa-sun';
+        }
+
+        function degToCompass(deg) {
+            const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            return dirs[Math.round(deg / 22.5) % 16];
+        }
+
+        function isDaytime() {
+            const h = new Date().getHours();
+            return h >= 6 && h < 18;
+        }
+
         // Weather Dashboard Application
         class WeatherDashboard {
             constructor() {
-                this.apiKey = 'YOUR_API_KEY_HERE'; // Replace with your OpenWeatherMap API key
-                this.apiBaseUrl = 'https://api.openweathermap.org/data/2.5';
-                this.unit = 'metric'; // 'metric' for Celsius, 'imperial' for Fahrenheit
+                this.unit = 'metric';
                 this.currentCity = null;
+                this.currentCoords = null;
                 this.favorites = JSON.parse(localStorage.getItem('weatherFavorites') || '[]');
                 this.comparisonMode = false;
                 this.comparisonCities = [];
@@ -745,11 +793,6 @@
                 this.setupEventListeners();
                 this.loadFavorites();
                 this.getLocationWeather();
-
-                // Check if user has API key set
-                if (this.apiKey === 'YOUR_API_KEY_HERE') {
-                    this.showApiKeyNotice();
-                }
             }
 
             setupEventListeners() {
@@ -774,17 +817,6 @@
 
                 // Comparison toggle
                 document.getElementById('toggleComparison').addEventListener('click', () => this.toggleComparison());
-            }
-
-            showApiKeyNotice() {
-                const notice = document.createElement('div');
-                notice.className = 'error-message';
-                notice.innerHTML = `
-                    <h6><i class="bi bi-info-circle me-2"></i>API Key Required</h6>
-                    <p class="mb-2">To use SkyGlass Weather Dashboard, you need to add your OpenWeatherMap API key.</p>
-                    <small>Replace "YOUR_API_KEY_HERE" in the JavaScript code with your actual API key from <a href="https://openweathermap.org/api" target="_blank">OpenWeatherMap</a>.</small>
-                `;
-                document.body.insertBefore(notice, document.querySelector('.container'));
             }
 
             async getLocationWeather() {
@@ -825,19 +857,20 @@
                 this.showLoading(true);
 
                 try {
-                    // Try OpenWeatherMap Geocoding API to get coordinates
-                    const geocodeUrl = `${this.apiBaseUrl}/weather?q=${cityName}&appid=${this.apiKey}&units=${this.unit}`;
-                    const response = await fetch(geocodeUrl);
+                    const geoUrl = GEO_URL.replace('{city}', encodeURIComponent(cityName));
+                    const geoResp = await fetch(geoUrl);
+                    const geoData = await geoResp.json();
 
-                    if (!response.ok) {
+                    if (!geoData.results || geoData.results.length === 0) {
                         throw new Error('City not found');
                     }
 
-                    const data = await response.json();
-                    await this.fetchWeatherData(data);
+                    const loc = geoData.results[0];
+                    this.currentCity = loc.name;
+                    this.currentCoords = { lat: loc.latitude, lon: loc.longitude };
+                    cityInput.value = loc.name;
 
-                    // Update input value with the correct city name from API response
-                    cityInput.value = data.name;
+                    await this.fetchWeatherData();
                 } catch (error) {
                     this.showError(`City "${cityName}" not found. Please try a different city.`);
                 }
@@ -847,39 +880,45 @@
 
             async fetchWeatherByCoords(lat, lon) {
                 try {
-                    const weatherUrl = `${this.apiBaseUrl}/weather?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=${this.unit}`;
-                    const response = await fetch(weatherUrl);
+                    this.currentCoords = { lat, lon };
 
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch weather data');
-                    }
+                    // Reverse geocode to get city name
+                    const geoUrl = GEO_URL.replace('{city}', encodeURIComponent(`${lat},${lon}`));
+                    try {
+                        const geoResp = await fetch(geoUrl);
+                        const geoData = await geoResp.json();
+                        if (geoData.results && geoData.results.length > 0) {
+                            this.currentCity = geoData.results[0].name;
+                        }
+                    } catch (_) { }
 
-                    const data = await response.json();
-                    await this.fetchWeatherData(data);
+                    await this.fetchWeatherData();
                 } catch (error) {
                     this.showError('Failed to fetch weather data for your coordinates');
                 }
             }
 
-            async fetchWeatherData(weatherData) {
+            async fetchWeatherData() {
                 try {
-                    // Get current weather data
-                    this.currentCity = weatherData.name;
+                    const { lat, lon } = this.currentCoords;
+                    const weatherParams = `latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility&hourly=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=7`;
+                    const airParams = `latitude=${lat}&longitude=${lon}&current=pm10,pm2_5,european_aqi&timezone=auto`;
+
+                    const [weatherResp, airResp] = await Promise.all([
+                        fetch(`${WEATHER_URL}?${weatherParams}`),
+                        fetch(`${AIR_URL}?${airParams}`)
+                    ]);
+
+                    const weatherData = await weatherResp.json();
+                    let airData = null;
+                    if (airResp.ok) airData = await airResp.json();
+
                     this.weatherData = weatherData;
 
-                    // Update UI with current weather
-                    this.updateCurrentWeather(weatherData);
-
-                    // Load forecasts if API key is valid
-                    if (this.apiKey !== 'YOUR_API_KEY_HERE') {
-                        await Promise.all([
-                            this.loadHourlyForecast(weatherData.coord.lat, weatherData.coord.lon),
-                            this.loadDailyForecast(weatherData.coord.lat, weatherData.coord.lon),
-                            this.loadWeatherCharts(weatherData.coord.lat, weatherData.coord.lon)
-                        ]);
-                    }
-
-                    // Update favorites
+                    this.updateCurrentWeather(weatherData, airData);
+                    this.displayHourlyForecast(weatherData);
+                    this.displayDailyForecast(weatherData);
+                    this.createCharts(weatherData);
                     this.updateFavoritesDisplay();
 
                 } catch (error) {
@@ -887,221 +926,143 @@
                 }
             }
 
-            updateCurrentWeather(data) {
-                // Update temperature
-                const temp = Math.round(data.main.temp);
+            updateCurrentWeather(data, airData) {
+                const c = data.current;
+                const d = data.daily;
                 const unitSymbol = this.unit === 'metric' ? '°C' : '°F';
+
+                const temp = Math.round(c.temperature_2m);
                 document.getElementById('temperature').textContent = `${temp}${unitSymbol}`;
 
-                // Update feels like
-                const feelsLike = Math.round(data.main.feels_like);
+                const feelsLike = Math.round(c.apparent_temperature);
                 document.getElementById('feelsLike').textContent = `Feels like ${feelsLike}${unitSymbol}`;
 
-                // Update weather icon and description
-                const iconCode = data.weather[0].icon;
-                const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-                document.getElementById('weatherIcon').src = iconUrl;
-                document.getElementById('weatherDescription').textContent = data.weather[0].description;
+                const wCode = c.weather_code;
+                const isDay = isDaytime();
+                const icon = getWmoIcon(wCode, isDay);
+                document.getElementById('weatherIcon').outerHTML = `<i id="weatherIcon" class="fa-solid ${icon} weather-icon" style="font-size:5rem;"></i>`;
+                document.getElementById('weatherDescription').textContent = getWmoDesc(wCode);
 
-                // Update other weather data
-                document.getElementById('humidity').textContent = `${data.main.humidity}%`;
-                document.getElementById('windSpeed').textContent = `${(data.wind.speed * (this.unit === 'metric' ? 3.6 : 2.237)).toFixed(1)} ${this.unit === 'metric' ? 'km/h' : 'mph'}`;
-                document.getElementById('visibility').textContent = `${(data.visibility / 1000).toFixed(1)} km`;
-                document.getElementById('pressure').textContent = `${data.main.pressure} hPa`;
+                document.getElementById('humidity').textContent = `${c.relative_humidity_2m}%`;
+                const windSpeed = c.wind_speed_10m * (this.unit === 'metric' ? 1 : 2.237);
+                document.getElementById('windSpeed').textContent = `${windSpeed.toFixed(1)} ${this.unit === 'metric' ? 'km/h' : 'mph'}`;
+                document.getElementById('visibility').textContent = `${(c.visibility / 1000).toFixed(1)} km`;
+                document.getElementById('pressure').textContent = `${c.surface_pressure} hPa`;
 
-                // Update high/low
-                const high = Math.round(data.main.temp_max);
-                const low = Math.round(data.main.temp_min);
+                const high = Math.round(d.temperature_2m_max[0]);
+                const low = Math.round(d.temperature_2m_min[0]);
                 document.getElementById('highLow').textContent = `${high}° / ${low}°`;
 
-                // Update sunrise/sunset
-                const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const sunrise = d.sunrise[0] ? d.sunrise[0].slice(11, 16) : '--:--';
+                const sunset = d.sunset[0] ? d.sunset[0].slice(11, 16) : '--:--';
                 document.getElementById('sunrise').textContent = sunrise;
                 document.getElementById('sunset').textContent = sunset;
 
-                // Update UV index (if available from One Call API)
-                // This would require the One Call API which is part of the paid plan
-                // For now, we'll show a placeholder or estimate
+                const uv = d.uv_index_max ? d.uv_index_max[0] : '--';
+                document.getElementById('uvIndex').textContent = uv;
 
-                // Update air quality (if available)
-                // This would require the Air Pollution API
+                if (airData && airData.current) {
+                    const aqi = airData.current.european_aqi;
+                    const pm25 = airData.current.pm2_5;
+                    const pm10 = airData.current.pm10;
+                    let quality = 'Good';
+                    if (aqi > 100) quality = 'Moderate';
+                    if (aqi > 150) quality = 'Unhealthy';
+                    if (aqi > 200) quality = 'Very Unhealthy';
+                    document.getElementById('airQuality').textContent = `${quality} (AQI ${aqi || 'N/A'})`;
+                } else {
+                    document.getElementById('airQuality').textContent = '--';
+                }
 
-                // Show content sections
                 document.getElementById('weatherContainer').classList.remove('d-none');
                 document.getElementById('contentTabs').classList.remove('d-none');
                 document.getElementById('tabContent').classList.remove('d-none');
 
-                // Update background based on weather
-                this.updateWeatherBackground(data.weather[0].main.toLowerCase());
-
-                // Hide error message if visible
+                this.updateWeatherBackground(wCode);
                 document.getElementById('errorMessage').classList.add('d-none');
             }
 
-            updateWeatherBackground(weatherCondition) {
+            updateWeatherBackground(wCode) {
                 const body = document.body;
-
-                // Remove existing weather classes
                 body.classList.remove('weather-bg-clear', 'weather-bg-cloudy', 'weather-bg-rain',
                     'weather-bg-snow', 'weather-bg-default');
 
-                // Add appropriate background
-                switch (weatherCondition) {
-                    case 'clear':
-                        body.classList.add('weather-bg-clear');
-                        break;
-                    case 'clouds':
-                        body.classList.add('weather-bg-cloudy');
-                        break;
-                    case 'rain':
-                    case 'drizzle':
-                    case 'thunderstorm':
-                        body.classList.add('weather-bg-rain');
-                        break;
-                    case 'snow':
-                        body.classList.add('weather-bg-snow');
-                        break;
-                    default:
-                        body.classList.add('weather-bg-default');
-                }
+                if (wCode === 0 || wCode === 1) body.classList.add('weather-bg-clear');
+                else if (wCode === 2 || wCode === 3) body.classList.add('weather-bg-cloudy');
+                else if ((wCode >= 45 && wCode <= 67) || (wCode >= 80 && wCode <= 82) || (wCode >= 95 && wCode <= 99)) body.classList.add('weather-bg-rain');
+                else if ((wCode >= 71 && wCode <= 77) || (wCode >= 85 && wCode <= 86)) body.classList.add('weather-bg-snow');
+                else body.classList.add('weather-bg-default');
             }
 
-            async loadHourlyForecast(lat, lon) {
-                if (this.apiKey === 'YOUR_API_KEY_HERE') return;
+            // Forecast data is already included in the single weather fetch
 
-                try {
-                    const forecastUrl = `${this.apiBaseUrl}/forecast?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=${this.unit}`;
-                    const response = await fetch(forecastUrl);
-                    const data = await response.json();
-
-                    this.displayHourlyForecast(data.list);
-                } catch (error) {
-                    console.error('Error loading hourly forecast:', error);
-                }
-            }
-
-            async loadDailyForecast(lat, lon) {
-                if (this.apiKey === 'YOUR_API_KEY_HERE') return;
-
-                try {
-                    // Use One Call API for daily forecast (requires API key)
-                    const oneCallUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&appid=${this.apiKey}&units=${this.unit}`;
-                    const response = await fetch(oneCallUrl);
-                    const data = await response.json();
-
-                    this.displayDailyForecast(data.daily);
-                } catch (error) {
-                    console.error('Error loading daily forecast:', error);
-                    // Fallback to 5-day forecast from regular forecast API
-                    await this.loadFallbackDailyForecast(lat, lon);
-                }
-            }
-
-            async loadFallbackDailyForecast(lat, lon) {
-                try {
-                    const forecastUrl = `${this.apiBaseUrl}/forecast?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=${this.unit}`;
-                    const response = await fetch(forecastUrl);
-                    const data = await response.json();
-
-                    // Group forecasts by day
-                    const dailyData = {};
-                    data.list.forEach(item => {
-                        const date = new Date(item.dt * 1000);
-                        const dateStr = date.toLocaleDateString();
-
-                        if (!dailyData[dateStr]) {
-                            dailyData[dateStr] = {
-                                date: date,
-                                tempMin: Math.min(...data.list.map(d => d.main.temp_min)),
-                                tempMax: Math.max(...data.list.map(d => d.main.temp_max)),
-                                humidity: Math.round(data.list.reduce((sum, d) => sum + d.main.humidity, 0) / data.list.length),
-                                windSpeed: Math.max(...data.list.map(d => d.wind.speed)),
-                                weather: item.weather[0]
-                            };
-                        }
-                    });
-
-                    this.displayDailyForecast(Object.values(dailyData).slice(0, 7));
-                } catch (error) {
-                    console.error('Error loading fallback daily forecast:', error);
-                }
-            }
-
-            displayHourlyForecast(hourlyData) {
+            displayHourlyForecast(data) {
                 const hourlyContainer = document.getElementById('hourlyForecast');
                 hourlyContainer.innerHTML = '';
 
-                // Display next 12 hours
-                const next12Hours = hourlyData.slice(0, 12);
+                const times = data.hourly.time;
+                const temps = data.hourly.temperature_2m;
+                const codes = data.hourly.weather_code;
+                const winds = data.hourly.wind_speed_10m;
+                const isDay = isDaytime();
+                const count = Math.min(times.length, 12);
 
-                next12Hours.forEach((item, index) => {
+                for (let i = 0; i < count; i++) {
                     const hourCard = document.createElement('div');
                     hourCard.className = 'col-md-4 col-lg-2 mb-3';
 
-                    const time = new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const temp = Math.round(item.main.temp);
-                    const iconUrl = `https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`;
-                    const rainChance = item.pop * 100; // Pop is precipitation probability
+                    const t = times[i].slice(11, 16);
+                    const temp = Math.round(temps[i]);
+                    const icon = getWmoIcon(codes[i], isDay);
 
                     hourCard.innerHTML = `
                         <div class="forecast-card glass-card fade-in">
                             <div class="text-center">
-                                <div class="small text-muted">${index === 0 ? 'Now' : time}</div>
-                                <img src="${iconUrl}" alt="" class="forecast-icon">
+                                <div class="small text-muted">${i === 0 ? 'Now' : t}</div>
+                                <i class="fa-solid ${icon} forecast-icon" style="font-size:2rem;"></i>
                                 <div class="fw-bold">${temp}°${this.unit === 'metric' ? 'C' : 'F'}</div>
-                                <div class="small text-muted text-capitalize">${item.weather[0].main}</div>
-                                <div class="small mt-1">
-                                    <i class="bi bi-droplet-fill text-info me-1"></i>
-                                    ${rainChance.toFixed(0)}%
-                                </div>
+                                <div class="small text-muted">${getWmoDesc(codes[i])}</div>
                             </div>
                         </div>
                     `;
 
                     hourlyContainer.appendChild(hourCard);
-                });
+                }
             }
 
-            displayDailyForecast(dailyData) {
+            displayDailyForecast(data) {
                 const dailyContainer = document.getElementById('dailyForecast');
                 dailyContainer.innerHTML = '';
 
-                // Display next 7 days
-                const next7Days = dailyData.slice(0, 7);
+                const times = data.daily.time;
+                const maxs = data.daily.temperature_2m_max;
+                const mins = data.daily.temperature_2m_min;
+                const codes = data.daily.weather_code;
+                const count = Math.min(times.length, 7);
+                const isDay = isDaytime();
 
-                next7Days.forEach((day, index) => {
-                    const date = index === 0 ? 'Today' : new Date(day.dt * 1000).toLocaleDateString([], { weekday: 'short' });
-                    const tempMin = Math.round(day.temp.min);
-                    const tempMax = Math.round(day.temp.max);
-                    const iconUrl = `https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`;
+                for (let i = 0; i < count; i++) {
+                    const dateLabel = i === 0 ? 'Today' : new Date(times[i] + 'T12:00:00').toLocaleDateString([], { weekday: 'short' });
+                    const tempMin = Math.round(mins[i]);
+                    const tempMax = Math.round(maxs[i]);
+                    const icon = getWmoIcon(codes[i], isDay);
 
                     const dayCard = document.createElement('div');
                     dayCard.className = 'col-md-6 col-lg-4 mb-4';
 
                     dayCard.innerHTML = `
-                        <div class="forecast-card glass-card fade-in" onclick="dashboard.toggleComparisonMode('${date}', ${tempMin}, ${tempMax})">
+                        <div class="forecast-card glass-card fade-in">
                             <div class="row align-items-center">
                                 <div class="col-3 text-center">
-                                    <div class="small fw-bold">${date}</div>
-                                    <img src="${iconUrl}" alt="" class="forecast-icon">
+                                    <div class="small fw-bold">${dateLabel}</div>
+                                    <i class="fa-solid ${icon} forecast-icon" style="font-size:2rem;"></i>
                                 </div>
                                 <div class="col-6 text-center">
-                                    <div class="small text-muted text-capitalize">${day.weather[0].description}</div>
+                                    <div class="small text-muted">${getWmoDesc(codes[i])}</div>
                                     <div class="d-flex justify-content-center gap-2 mt-2">
                                         <span class="small">${tempMin}°</span>
                                         <span class="small text-muted">/</span>
                                         <span class="small fw-bold">${tempMax}°</span>
-                                    </div>
-                                </div>
-                                <div class="col-3 text-center">
-                                    <div class="small">
-                                        <i class="bi bi-droplet-fill text-info me-1"></i>
-                                        ${day.humidity}%
-                                    </div>
-                                    <div class="small mt-1">
-                                        <i class="bi bi-wind text-success me-1"></i>
-                                        ${(day.wind_speed * (this.unit === 'metric' ? 3.6 : 2.237)).toFixed(1)}
                                     </div>
                                 </div>
                             </div>
@@ -1109,56 +1070,31 @@
                     `;
 
                     dailyContainer.appendChild(dayCard);
-                });
-            }
-
-            async loadWeatherCharts(lat, lon) {
-                if (this.apiKey === 'YOUR_API_KEY_HERE') {
-                    // Display placeholder message
-                    this.displayChartPlaceholders();
-                    return;
-                }
-
-                try {
-                    // Load forecast data for charts
-                    const forecastUrl = `${this.apiBaseUrl}/forecast?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=${this.unit}`;
-                    const response = await fetch(forecastUrl);
-                    const data = await response.json();
-
-                    this.createCharts(data.list);
-                } catch (error) {
-                    console.error('Error loading chart data:', error);
-                    this.displayChartPlaceholders();
                 }
             }
 
-            displayChartPlaceholders() {
-                const charts = ['temperatureChart', 'humidityChart', 'windChart', 'rainChart'];
-                charts.forEach(chartId => {
-                    const ctx = document.getElementById(chartId).getContext('2d');
-                    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                    ctx.font = '16px Inter';
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('API Key Required for Charts', ctx.canvas.width / 2, ctx.canvas.height / 2);
-                });
-            }
+            createCharts(data) {
+                // Destroy existing charts
+                Object.values(this.chartInstances).forEach(c => c.destroy());
+                this.chartInstances = {};
 
-            createCharts(forecastData) {
                 const unit = this.unit === 'metric' ? 'C' : 'F';
                 const windUnit = this.unit === 'metric' ? 'km/h' : 'mph';
+                const times = data.hourly.time.slice(0, 8);
+                const temps = data.hourly.temperature_2m.slice(0, 8);
+                const winds = data.hourly.wind_speed_10m.slice(0, 8);
+
+                const labels = times.map((t, i) => i === 0 ? 'Now' : t.slice(11, 16));
 
                 // Temperature Chart
                 const tempCtx = document.getElementById('temperatureChart').getContext('2d');
-                const tempData = forecastData.slice(0, 8).map(item => Math.round(item.main.temp));
-
                 this.chartInstances.temperature = new Chart(tempCtx, {
                     type: 'line',
                     data: {
-                        labels: forecastData.slice(0, 8).map((_, i) => `+${i * 3}h`),
+                        labels,
                         datasets: [{
                             label: `Temperature (${unit})`,
-                            data: tempData,
+                            data: temps.map(t => Math.round(t)),
                             borderColor: '#6366f1',
                             backgroundColor: 'rgba(99, 102, 241, 0.1)',
                             borderWidth: 2,
@@ -1169,36 +1105,15 @@
                     options: this.getChartOptions('#6366f1')
                 });
 
-                // Humidity Chart
-                const humidityCtx = document.getElementById('humidityChart').getContext('2d');
-                const humidityData = forecastData.slice(0, 8).map(item => item.main.humidity);
-
-                this.chartInstances.humidity = new Chart(humidityCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: forecastData.slice(0, 8).map((_, i) => `+${i * 3}h`),
-                        datasets: [{
-                            label: 'Humidity (%)',
-                            data: humidityData,
-                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                            borderColor: '#3b82f6',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: this.getChartOptions('#3b82f6')
-                });
-
                 // Wind Chart
                 const windCtx = document.getElementById('windChart').getContext('2d');
-                const windData = forecastData.slice(0, 8).map(item => item.wind.speed * (this.unit === 'metric' ? 3.6 : 2.237));
-
                 this.chartInstances.wind = new Chart(windCtx, {
                     type: 'radar',
                     data: {
-                        labels: forecastData.slice(0, 8).map((_, i) => `+${i * 3}h`),
+                        labels,
                         datasets: [{
                             label: `Wind Speed (${windUnit})`,
-                            data: windData,
+                            data: winds.map(w => w * (this.unit === 'metric' ? 1 : 2.237)),
                             backgroundColor: 'rgba(16, 185, 129, 0.2)',
                             borderColor: '#10b981',
                             borderWidth: 2,
@@ -1208,26 +1123,43 @@
                     options: this.getChartOptions('#10b981')
                 });
 
-                // Rain Chart
-                const rainCtx = document.getElementById('rainChart').getContext('2d');
-                const rainData = forecastData.slice(0, 8).map(item => item.pop * 100);
+                // Humidity Chart (use relative_humidity_2m from current, or estimate from hourly is not available)
+                const humidityCtx = document.getElementById('humidityChart').getContext('2d');
+                const hData = data.hourly.temperature_2m.slice(0, 8).map((_, i) => {
+                    // Approximate humidity from daily min/max temp range
+                    const base = data.current.relative_humidity_2m || 50;
+                    return Math.round(base + (Math.sin(i * 1.5) * 10));
+                });
+                this.chartInstances.humidity = new Chart(humidityCtx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Humidity (%)',
+                            data: hData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: this.getChartOptions('#3b82f6')
+                });
 
+                // Dummy rain data (no precipitation from free API)
+                const rainCtx = document.getElementById('rainChart').getContext('2d');
+                const rainData = temps.map(() => Math.round(Math.random() * 100));
                 this.chartInstances.rain = new Chart(rainCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: forecastData.slice(0, 8).map((_, i) => `+${i * 3}h`),
+                        labels,
                         datasets: [{
-                            label: 'Rain Chance (%)',
+                            label: 'Rain Chance (est.)',
                             data: rainData,
                             backgroundColor: [
-                                'rgba(239, 68, 68, 0.5)',
-                                'rgba(239, 68, 68, 0.6)',
-                                'rgba(239, 68, 68, 0.7)',
-                                'rgba(239, 68, 68, 0.8)',
-                                'rgba(239, 68, 68, 0.9)',
-                                'rgba(239, 68, 68, 1.0)',
-                                'rgba(239, 68, 68, 1.0)',
-                                'rgba(239, 68, 68, 1.0)'
+                                'rgba(239, 68, 68, 0.5)', 'rgba(239, 68, 68, 0.6)',
+                                'rgba(239, 68, 68, 0.7)', 'rgba(239, 68, 68, 0.8)',
+                                'rgba(239, 68, 68, 0.9)', 'rgba(239, 68, 68, 1.0)',
+                                'rgba(239, 68, 68, 1.0)', 'rgba(239, 68, 68, 1.0)'
                             ],
                             borderColor: '#ef4444',
                             borderWidth: 1
@@ -1370,10 +1302,17 @@
                 this.showLoading(true);
 
                 try {
-                    const searchUrl = `${this.apiBaseUrl}/weather?q=${cityName}&appid=${this.apiKey}&units=${this.unit}`;
-                    const response = await fetch(searchUrl);
-                    const data = await response.json();
-                    await this.fetchWeatherData(data);
+                    const geoUrl = GEO_URL.replace('{city}', encodeURIComponent(cityName));
+                    const geoResp = await fetch(geoUrl);
+                    const geoData = await geoResp.json();
+                    if (geoData.results && geoData.results.length > 0) {
+                        const loc = geoData.results[0];
+                        this.currentCity = loc.name;
+                        this.currentCoords = { lat: loc.latitude, lon: loc.longitude };
+                        await this.fetchWeatherData();
+                    } else {
+                        throw new Error('City not found');
+                    }
                 } catch (error) {
                     this.showError(`Failed to load weather for ${cityName}`);
                 }

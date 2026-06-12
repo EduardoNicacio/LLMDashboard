@@ -325,6 +325,11 @@
             border: 1px solid var(--border-color);
         }
 
+        .chart-card canvas,
+        .resource-card canvas {
+            max-height: 300px;
+        }
+
         .chart-title {
             font-size: 16px;
             font-weight: bold;
@@ -1072,19 +1077,38 @@
         // Restore saved preferences
         const savedView = localStorage.getItem('view');
         if (savedView) {
-            document.querySelector(`.view-btn[data-view="${savedView}"]`).classList.add('active');
-            document.getElementById(`${savedView}View`).style.display = 'block';
+            const viewBtn = document.querySelector(`.view-btn[data-view="${savedView}"]`);
+            if (viewBtn) viewBtn.classList.add('active');
+            const viewEl = document.getElementById(`${savedView}View`);
+            if (viewEl) viewEl.style.display = 'block';
         }
 
         const savedMode = localStorage.getItem('mode');
         if (savedMode) {
-            document.querySelector(`.mode-btn[data-mode="${savedMode}"]`).classList.add('active');
+            const modeBtn = document.querySelector(`.mode-btn[data-mode="${savedMode}"]`);
+            if (modeBtn) modeBtn.classList.add('active');
         }
 
         // Initialize Charts
+        const charts = {};
+        function prepareCanvas(id) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const parent = canvas.parentElement;
+            const w = parent.clientWidth || 300;
+            const h = Math.min(parent.clientHeight || 300, 300);
+            const dpr = window.devicePixelRatio || 1;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
+        }
         function initCharts() {
+            // Destroy existing charts before reinitializing
+            Object.values(charts).forEach(c => { if (c) c.destroy(); });
             // Completion Trend Chart
-            new Chart(document.getElementById('completionChart'), {
+            prepareCanvas('completionChart');
+            charts.completionChart = new Chart(document.getElementById('completionChart'), {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -1103,7 +1127,7 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
@@ -1114,7 +1138,8 @@
             });
 
             // Budget Chart
-            new Chart(document.getElementById('budgetChart'), {
+            prepareCanvas('budgetChart');
+            charts.budgetChart = new Chart(document.getElementById('budgetChart'), {
                 type: 'bar',
                 data: {
                     labels: ['Mobile Platform', 'Analytics Initiative'],
@@ -1129,13 +1154,14 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false
                 }
             });
 
             // Velocity Chart
-            new Chart(document.getElementById('velocityChart'), {
+            prepareCanvas('velocityChart');
+            charts.velocityChart = new Chart(document.getElementById('velocityChart'), {
                 type: 'bar',
                 data: {
                     labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5'],
@@ -1150,13 +1176,14 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false
                 }
             });
 
             // Resource Allocation Chart
-            new Chart(document.getElementById('resourceChart'), {
+            prepareCanvas('resourceChart');
+            charts.resourceChart = new Chart(document.getElementById('resourceChart'), {
                 type: 'doughnut',
                 data: {
                     labels: ['Engineering', 'Analytics', 'Product', 'Design'],
@@ -1171,13 +1198,14 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false
                 }
             });
 
             // Risk Severity Chart
-            new Chart(document.getElementById('riskChart'), {
+            prepareCanvas('riskChart');
+            charts.riskChart = new Chart(document.getElementById('riskChart'), {
                 type: 'bar',
                 data: {
                     labels: ['Low', 'Medium', 'High'],
@@ -1192,13 +1220,14 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false
                 }
             });
 
             // Milestone Chart
-            new Chart(document.getElementById('milestoneChart'), {
+            prepareCanvas('milestoneChart');
+            charts.milestoneChart = new Chart(document.getElementById('milestoneChart'), {
                 type: 'bar',
                 data: {
                     labels: ['Mobile Platform', 'Analytics Initiative'],
@@ -1213,13 +1242,14 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false
                 }
             });
 
             // Utilization Chart
-            new Chart(document.getElementById('utilizationChart'), {
+            prepareCanvas('utilizationChart');
+            charts.utilizationChart = new Chart(document.getElementById('utilizationChart'), {
                 type: 'bar',
                 data: {
                     labels: ['Engineering', 'Analytics', 'Product', 'Design'],
@@ -1235,13 +1265,14 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false
                 }
             });
 
             // Overtime Chart
-            new Chart(document.getElementById('overtimeChart'), {
+            prepareCanvas('overtimeChart');
+            charts.overtimeChart = new Chart(document.getElementById('overtimeChart'), {
                 type: 'bar',
                 data: {
                     labels: ['Engineering', 'Analytics', 'Product'],
@@ -1256,13 +1287,14 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false
                 }
             });
 
             // Automation Chart
-            new Chart(document.getElementById('automationChart'), {
+            prepareCanvas('automationChart');
+            charts.automationChart = new Chart(document.getElementById('automationChart'), {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
@@ -1275,7 +1307,7 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false
                 }
             });
@@ -1288,6 +1320,30 @@
         body.addEventListener('transitionend', () => {
             // Reinitialize charts to pick up new theme colors
             setTimeout(initCharts, 100);
+        });
+
+        // Resize handler with debounce
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                Object.values(charts).forEach(c => {
+                    if (c) {
+                        const canvas = c.canvas;
+                        if (canvas) {
+                            const parent = canvas.parentElement;
+                            const w = parent.clientWidth || 300;
+                            const h = Math.min(parent.clientHeight || 300, 300);
+                            const dpr = window.devicePixelRatio || 1;
+                            canvas.style.width = w + 'px';
+                            canvas.style.height = h + 'px';
+                            canvas.width = Math.round(w * dpr);
+                            canvas.height = Math.round(h * dpr);
+                            c.resize();
+                        }
+                    }
+                });
+            }, 250);
         });
     </script>
 </body>

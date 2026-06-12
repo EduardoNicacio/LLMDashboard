@@ -161,8 +161,8 @@
         }
 
         canvas {
-            width: 100% !important;
-            height: 100% !important;
+            width: 100%;
+            height: 100%;
         }
 
         /* Filter group */
@@ -262,17 +262,14 @@
 
         /* Theme toggle button */
         #theme-toggle {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
             background: var(--accent);
             color: white;
             border: none;
+            border-radius: 6px;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .3);
             transition: background .3s ease;
         }
 
@@ -504,7 +501,20 @@
             const data = sampleData;
 
             /* ---------- Chart References ---------- */
+            const charts = {};
             let completionTrendChart, budgetActualChart, velocitySprintChart, resourceAllocationChart, risksSeverityChart, milestoneProgressChart, timelinePerformanceChart;
+            function prepareCanvas(id) {
+                const canvas = document.getElementById(id);
+                if (!canvas) return;
+                const parent = canvas.parentElement;
+                const w = parent.clientWidth || 300;
+                const h = parent.clientHeight || 300;
+                const dpr = window.devicePixelRatio || 1;
+                canvas.style.width = w + 'px';
+                canvas.style.height = h + 'px';
+                canvas.width = Math.round(w * dpr);
+                canvas.height = Math.round(h * dpr);
+            }
 
             /* ---------- State Variables ---------- */
             let theme = localStorage.getItem('theme') || 'light';
@@ -629,7 +639,7 @@
                 const chartColors = theme === 'light' ? { primary: '#0066ff', secondary: '#3399ff', success: '#00cc66', warning: '#ff9900', danger: '#ff3333' } : { primary: '#3399ff', secondary: '#66b2ff', success: '#33ff99', warning: '#ffbb66', danger: '#ff6666' };
 
                 const commonOptions = {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
@@ -638,6 +648,7 @@
                 };
 
                 // Completion trend chart
+                prepareCanvas('completion-trend-chart');
                 completionTrendChart = new Chart(document.getElementById('completion-trend-chart'), {
                     type: 'line',
                     data: generateCompletionTrendData(),
@@ -647,6 +658,7 @@
                 completionTrendChart.data.datasets[0].borderColor = chartColors.primary;
 
                 // Budget vs actual chart
+                prepareCanvas('budget-actual-chart');
                 budgetActualChart = new Chart(document.getElementById('budget-actual-chart'), {
                     type: 'bar',
                     data: generateBudgetActualData(),
@@ -658,6 +670,7 @@
                 budgetActualChart.data.datasets[1].borderColor = chartColors.secondary;
 
                 // Velocity & sprint throughput chart (agile mode)
+                prepareCanvas('velocity-sprint-chart');
                 velocitySprintChart = new Chart(document.getElementById('velocity-sprint-chart'), {
                     type: 'bar',
                     data: generateVelocitySprintData(),
@@ -669,6 +682,7 @@
                 });
 
                 // Resource allocation by department
+                prepareCanvas('resource-allocation-chart');
                 resourceAllocationChart = new Chart(document.getElementById('resource-allocation-chart'), {
                     type: 'doughnut',
                     data: generateResourceAllocationData(),
@@ -678,6 +692,7 @@
                 resourceAllocationChart.data.datasets[0].backgroundColor = resColors;
 
                 // Open risks by severity
+                prepareCanvas('risks-severity-chart');
                 risksSeverityChart = new Chart(document.getElementById('risks-severity-chart'), {
                     type: 'pie',
                     data: generateRisksSeverityData(),
@@ -687,6 +702,7 @@
                 risksSeverityChart.data.datasets[0].backgroundColor = riskColors;
 
                 // Milestone completion progress (horizontal bar)
+                prepareCanvas('milestone-progress-chart');
                 milestoneProgressChart = new Chart(document.getElementById('milestone-progress-chart'), {
                     type: 'bar',
                     data: generateMilestoneProgressData(),
@@ -696,6 +712,7 @@
                 milestoneProgressChart.data.datasets[0].borderColor = chartColors.primary;
 
                 // Planned vs actual timeline performance
+                prepareCanvas('timeline-performance-chart');
                 timelinePerformanceChart = new Chart(document.getElementById('timeline-performance-chart'), {
                     type: 'line',
                     data: generateTimelinePerformanceData(),
@@ -1103,6 +1120,30 @@
 
             /* ---------- Helper ---------- */
             function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+        });
+
+        // Resize handler with debounce
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                [completionTrendChart, budgetActualChart, velocitySprintChart, resourceAllocationChart, risksSeverityChart, milestoneProgressChart, timelinePerformanceChart].forEach(ch => {
+                    if (ch) {
+                        const canvas = ch.canvas;
+                        if (canvas) {
+                            const parent = canvas.parentElement;
+                            const w = parent.clientWidth || 300;
+                            const h = parent.clientHeight || 300;
+                            const dpr = window.devicePixelRatio || 1;
+                            canvas.style.width = w + 'px';
+                            canvas.style.height = h + 'px';
+                            canvas.width = Math.round(w * dpr);
+                            canvas.height = Math.round(h * dpr);
+                            ch.resize();
+                        }
+                    }
+                });
+            }, 250);
         });
     </script>
 </body>

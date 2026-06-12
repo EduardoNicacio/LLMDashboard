@@ -239,15 +239,11 @@
     </div>
 
     <script>
-        /** 
-         * API CONFIGURATION
-         * Get your free key at https://openweathermap.org/api
-         */
-        const API_CONFIG = {
-            API_KEY: 'YOUR_API_KEY_HERE', // <--- REPLACE THIS WITH YOUR KEY
-            BASE_URL: 'https://api.openweathermap.org/data/2.5/',
-            GEO_URL: 'http://api.openweathermap.org/geo/1.0/direct'
-        };
+        const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=en&format=json';
+        const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility&hourly=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=7';
+        const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=pm10,pm2_5,european_aqi&timezone=auto';
+
+        const wmoDesc = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Depositing rime fog',51:'Light drizzle',53:'Moderate drizzle',55:'Dense drizzle',61:'Slight rain',63:'Moderate rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',71:'Slight snow',73:'Moderate snow',75:'Heavy snow',77:'Snow grains',80:'Slight rain showers',81:'Moderate rain showers',82:'Violent rain showers',85:'Slight snow showers',86:'Heavy snow showers',95:'Thunderstorm',96:'Thunderstorm with slight hail',99:'Thunderstorm with heavy hail'};
 
         // App State
         const state = {
@@ -293,25 +289,30 @@
         // --- API Logic ---
 
         async function fetchWeather(city) {
-            if (API_CONFIG.API_KEY === 'YOUR_API_KEY_HERE') {
-                alert('Please provide a valid OpenWeatherMap API Key in the script section of the HTML file!');
-                return null;
-            }
-
             showLoading(true);
             try {
-                const unitParam = state.units === 'metric' ? 'metric' : 'imperial';
-                
-                // 1. Current Weather
-                const currentRes = await fetch(`${API_CONFIG.BASE_URL}weather?q=${city}&units=${unitParam}&appid=${API_CONFIG.API_KEY}`);
-                if (!currentRes.ok) throw new Error('City not found');
-                const currentData = await currentRes.json();
+                const geoRes = await fetch(GEO_URL.replace('{city}', city));
+                const geoData = await geoRes.json();
+                if (!geoData.results || !geoData.results.length) throw new Error('City not found');
+                const geo = geoData.results[0];
+                const lat = geo.latitude;
+                const lon = geo.longitude;
+                const cityName = `${geo.name}${geo.country ? ', ' + geo.country : ''}`;
 
-                // 2. Forecast (5 day / 3 hour)
-                const forecastRes = await fetch(`${API_CONFIG.BASE_URL}forecast?q=${city}&units=${unitParam}&appid=${API_CONFIG.API_KEY}`);
-                const forecastData = await forecastRes.json();
+                const [weatherRes, airRes] = await Promise.all([
+                    fetch(WEATHER_URL.replace('{lat}', lat).replace('{lon}', lon)),
+                    fetch(AIR_URL.replace('{lat}', lat).replace('{lon}', lon))
+                ]);
+                const weather = await weatherRes.json();
+                const airData = await airRes.json();
 
-                return { current: currentData, forecast: forecastData };
+                return {
+                    current: weather.current,
+                    daily: weather.daily,
+                    hourly: weather.hourly,
+                    cityName: cityName,
+                    airQuality: airData.current?.european_aqi || 0
+                };
             } catch (err) {
                 alert(err.message);
                 return null;
@@ -323,16 +324,22 @@
         async function fetchByCoords(lat, lon) {
             showLoading(true);
             try {
-                const unitParam = state.units === 'metric' ? 'metric' : 'imperial';
-                const currentRes = await fetch(`${API_CONFIG.BASE_URL}weather?lat=${lat}&lon=${lon}&units=${unitParam}&appid=${API_CONFIG.API_KEY}`);
-                const currentData = await currentRes.json();
+                const [weatherRes, airRes] = await Promise.all([
+                    fetch(WEATHER_URL.replace('{lat}', lat).replace('{lon}', lon)),
+                    fetch(AIR_URL.replace('{lat}', lat).replace('{lon}', lon))
+                ]);
+                const weather = await weatherRes.json();
+                const airData = await airRes.json();
 
-                const forecastRes = await fetch(`${API_CONFIG.BASE_URL}forecast?lat=${lat}&lon=${lon}&units=${unitParam}&appid=${API_CONFIG.API_KEY}`);
-                const forecastData = await forecastRes.json();
-
-                return { current: currentData, forecast: forecastData };
+                return {
+                    current: weather.current,
+                    daily: weather.daily,
+                    hourly: weather.hourly,
+                    cityName: 'Current Location',
+                    airQuality: airData.current?.european_aqi || 0
+                };
             } catch (err) {
-                alert('Error fetching location weather. ' + err.message);
+                alert('Error fetching location weather.');
                 return null;
             } finally {
                 showLoading(false);
@@ -342,35 +349,34 @@
         // --- UI Updates ---
 
         function updateUI(data) {
-            const { current, forecast } = data;
-            state.currentCity = current.name;
+            const c = data.current;
+            const d = data.daily;
+            const isMetric = state.units === 'metric';
+            const unitSymbol = isMetric ? '°C' : '°F';
+            const speedUnit = isMetric ? 'km/h' : 'mph';
+            const convertTemp = (t) => isMetric ? t : (t * 9 / 5) + 32;
 
-            // Basic Info
-            elements.cityName.innerText = `${current.name}, ${current.sys.country}`;
-            elements.mainTemp.innerText = Math.round(current.main.temp);
-            elements.weatherDesc.innerText = current.weather[0].description;
-            elements.feelsLike.innerText = Math.round(current.main.feels_like);
-            elements.humidity.innerText = current.main.humidity;
-            elements.windSpeed.innerText = `${current.wind.speed} ${state.units === 'metric' ? 'm/s' : 'mph'}`;
-            elements.pressure.innerText = `${current.main.pressure} hPa`;
-            elements.visibility.innerText = `${(current.visibility / 1000).toFixed(1)} km`;
-            elements.uvIndex.innerText = 'N/A'; // Free API doesn't provide UV in standard call, requires OneCall
+            state.currentCity = data.cityName;
+
+            elements.cityName.innerText = data.cityName;
+            elements.mainTemp.innerText = Math.round(convertTemp(c.temperature_2m));
+            elements.weatherDesc.innerText = wmoDesc[c.weather_code] || 'Unknown';
+            elements.feelsLike.innerText = Math.round(convertTemp(c.apparent_temperature));
+            elements.humidity.innerText = c.relative_humidity_2m;
+            elements.windSpeed.innerText = `${c.wind_speed_10m.toFixed(1)} ${speedUnit}`;
+            elements.pressure.innerText = `${c.surface_pressure} hPa`;
+            elements.visibility.innerText = c.visibility ? `${(c.visibility / 1000).toFixed(1)} km` : 'N/A';
+            elements.uvIndex.innerText = d.uv_index_max ? Math.round(d.uv_index_max[0]) : 'N/A';
 
             elements.currentDate.innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-            document.getElementById('tempUnitLabel').innerText = state.units === 'metric' ? '°C' : '°F';
+            document.getElementById('tempUnitLabel').innerText = unitSymbol;
 
-            // Weather Icon & Background
-            updateVisuals(current.weather[0].id, current.weather[0].main);
+            updateVisuals(c.weather_code);
+            renderChart(data);
+            renderDailyForecast(data);
 
-            // Forecast Chart
-            renderChart(forecast);
-
-            // 7 Day (Simulated from 5-day/3-hour API)
-            renderDailyForecast(forecast);
-
-            // Alerts (Mocked as free API alerts are limited)
-            if (current.weather[0].main === 'Thunderstorm') {
-                showAlert(`Severe weather warning for ${current.name}: Thunderstorms expected.`);
+            if (c.weather_code >= 95) {
+                showAlert(`Severe weather warning for ${data.cityName}: Thunderstorms expected.`);
             } else {
                 elements.alertBox.classList.add('hidden-element');
             }
@@ -378,25 +384,18 @@
             updateFavoritesUI();
         }
 
-        function updateVisuals(id, main) {
+        function updateVisuals(wmoCode) {
             let bgClass = 'bg-clear';
             let icon = 'sun';
 
-            if (id >= 200 && id < 600) {
-                bgClass = 'bg-rain';
-                icon = 'cloud-rain';
-            } else if (id >= 600 && id < 700) {
-                bgClass = 'bg-snow';
-                icon = 'snowflake';
-            } else if (id >= 700 && id < 800) {
-                bgClass = 'bg-clouds';
-                icon = 'cloud';
-            } else if (main === 'Clear') {
-                bgClass = 'bg-clear';
-                icon = 'sun';
-            }
+            if (wmoCode <= 1) { bgClass = 'bg-clear'; icon = 'sun'; }
+            else if (wmoCode === 2) { bgClass = 'bg-clouds'; icon = 'cloud-sun'; }
+            else if (wmoCode === 3) { bgClass = 'bg-clouds'; icon = 'cloud'; }
+            else if (wmoCode >= 45 && wmoCode <= 48) { bgClass = 'bg-clouds'; icon = 'cloud'; }
+            else if (wmoCode >= 51 && wmoCode <= 67) { bgClass = 'bg-rain'; icon = 'cloud-rain'; }
+            else if (wmoCode >= 71 && wmoCode <= 86) { bgClass = 'bg-snow'; icon = 'snowflake'; }
+            else if (wmoCode >= 95 && wmoCode <= 99) { bgClass = 'bg-storm'; icon = 'cloud-lightning'; }
 
-            // Time of day check
             const hour = new Date().getHours();
             if (hour < 6 || hour > 18) bgClass = 'bg-night';
 
@@ -405,32 +404,52 @@
             initIcons();
         }
 
-        function renderDailyForecast(forecast) {
-            elements.dailyForecast.innerHTML = '';
-            // The 5-day API gives data every 3 hours. We pick one per day.
-            const dailyData = forecast.list.filter((item, index) => index % 8 === 0).slice(0, 7);
+        function renderDailyForecast(data) {
+            const d = data.daily;
+            const isMetric = state.units === 'metric';
+            const convertTemp = (t) => isMetric ? t : (t * 9 / 5) + 32;
 
-            dailyData.forEach(day => {
-                const date = new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
-                const temp = Math.round(day.main.temp);
-                const iconCode = day.weather[0].icon;
-                const iconUrl = `https://openweathermap.org/img/wn/${iconCode}.png`;
+            const getIcon = (code) => {
+                if (code <= 1) return 'sun';
+                if (code === 2) return 'cloud-sun';
+                if (code === 3) return 'cloud';
+                if (code >= 45 && code <= 48) return 'cloud';
+                if (code >= 51 && code <= 55) return 'cloud-drizzle';
+                if (code >= 61 && code <= 67) return 'cloud-rain';
+                if (code >= 71 && code <= 86) return 'snowflake';
+                if (code >= 95 && code <= 99) return 'cloud-lightning';
+                return 'cloud';
+            };
+
+            elements.dailyForecast.innerHTML = '';
+            for (let i = 0; i < d.time.length; i++) {
+                const date = new Date(d.time[i]).toLocaleDateString('en-US', { weekday: 'short' });
+                const temp = Math.round(convertTemp(d.temperature_2m_max[i]));
+                const icon = getIcon(d.weather_code[i]);
 
                 elements.dailyForecast.innerHTML += `
                     <div class="glass p-4 rounded-3xl flex flex-col items-center justify-center transition-transform hover:scale-105">
                         <span class="text-xs font-bold opacity-70">${date}</span>
-                        <img src="${iconUrl}" alt="weather" class="w-12 h-12">
+                        <i data-lucide="${icon}" class="w-8 h-8 my-1"></i>
                         <span class="text-lg font-bold">${temp}°</span>
                     </div>
                 `;
-            });
+            }
+            initIcons();
         }
 
-        function renderChart(forecast) {
+        function renderChart(data) {
             const ctx = document.getElementById('weatherChart').getContext('2d');
-            const labels = forecast.list.slice(0, 8).map(i => new Date(i.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-            const tempData = forecast.list.slice(0, 8).map(i => i.main.temp);
-            const rainData = forecast.list.slice(0, 8).map(i => i.pop * 100 || 0);
+            const h = data.hourly;
+            const count = Math.min(8, h.time.length);
+            const isMetric = state.units === 'metric';
+            const convertTemp = (t) => isMetric ? t : (t * 9 / 5) + 32;
+
+            const labels = Array.from({ length: count }, (_, i) => {
+                return new Date(h.time[i]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            });
+            const tempData = Array.from({ length: count }, (_, i) => convertTemp(h.temperature_2m[i]));
+            const rainData = Array.from({ length: count }, (_, i) => 0);
 
             if (state.chartInstance) state.chartInstance.destroy();
 
@@ -523,14 +542,16 @@
             if (data1 && data2) {
                 elements.compareGrid.innerHTML = '';
                 [data1, data2].forEach(d => {
+                    const c = d.current;
+                    const convertTemp = (t) => state.units === 'metric' ? t : (t * 9 / 5) + 32;
                     elements.compareGrid.innerHTML += `
                         <div class="glass p-6 rounded-3xl text-center">
-                            <h4 class="text-2xl font-bold mb-4">${d.current.name}</h4>
-                            <p class="text-5xl font-black mb-4">${Math.round(d.current.main.temp)}°</p>
-                            <p class="capitalize opacity-80">${d.current.weather[0].description}</p>
+                            <h4 class="text-2xl font-bold mb-4">${d.cityName}</h4>
+                            <p class="text-5xl font-black mb-4">${Math.round(convertTemp(c.temperature_2m))}°</p>
+                            <p class="capitalize opacity-80">${wmoDesc[c.weather_code] || 'Unknown'}</p>
                             <div class="mt-6 grid grid-cols-2 gap-2 text-sm">
-                                <div class="bg-white/10 p-2 rounded-lg">Hum: ${d.current.main.humidity}%</div>
-                                <div class="bg-white/10 p-2 rounded-lg">Wind: ${d.current.wind.speed}</div>
+                                <div class="bg-white/10 p-2 rounded-lg">Hum: ${c.relative_humidity_2m}%</div>
+                                <div class="bg-white/10 p-2 rounded-lg">Wind: ${c.wind_speed_10m} ${state.units === 'metric' ? 'km/h' : 'mph'}</div>
                             </div>
                         </div>
                     `;

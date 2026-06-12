@@ -1665,11 +1665,12 @@
                 const neonPrimary = isDark ? '#38bdf8' : '#4f46e5';
                 const neonSecondary = isDark ? '#fb923c' : '#ff6b6b';
                 const neonSuccess = isDark ? '#4ade80' : '#51cf66';
+                const neonWarning = isDark ? '#fbbf24' : '#f59e0b';
+                const filtered = this.getFilteredProjects();
 
                 // Chart 1: Project completion trend over time (line)
                 const completionCtx = document.getElementById('completion-trend-chart');
                 if (completionCtx) {
-                    const filtered = this.getFilteredProjects();
                     const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
                     const data = filtered.map(p => p.completionPct);
                     if (app.charts.completionTrend) app.charts.completionTrend.destroy();
@@ -1707,7 +1708,6 @@
                 // Chart 2: Budget vs actual spend (bar)
                 const budgetCtx = document.getElementById('budget-vs-actual-chart');
                 if (budgetCtx) {
-                    const filtered = this.getFilteredProjects();
                     if (app.charts.budgetVsActual) app.charts.budgetVsActual.destroy();
                     app.charts.budgetVsActual = new Chart(budgetCtx.getContext('2d'), {
                         type: 'bar',
@@ -1807,7 +1807,7 @@
 
                 // Chart 5: Open risks by severity (bar)
                 const risksCtx = document.getElementById('open-risks-chart');
-                if (r && isksCtx) {
+                if (risksCtx) {
                     const severityCounts = { High: 0, Medium: 0, Low: 0 };
                     filtered.forEach(p => {
                         p.risks.forEach(r => {

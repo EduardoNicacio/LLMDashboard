@@ -335,20 +335,24 @@
     </div>
 
     <script>
-        /**
-         * CONFIGURATION
-         * ---------------------------------------------------------
-         * 1. To use real data: 
-         *    - Get a free API key from https://openweathermap.org/
-         *    - Set USE_MOCK_DATA = false
-         *    - Set API_KEY = 'your_key_here'
-         * 2. Note: Free tier OpenWeatherMap has limitations on 7-day/hourly data.
-         *    The Mock Data below is designed to show all features perfectly.
-         */
         const CONFIG = {
-            USE_MOCK_DATA: false,
-            API_KEY: 'YOUR_API_KEY_HERE',
-            BASE_URL: 'https://api.openweathermap.org/data/2.5/'
+            USE_MOCK_DATA: false
+        };
+
+        const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=en&format=json';
+        const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility&hourly=temperature_2m,weather_code,wind_speed_10m,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=7';
+        const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=pm10,pm2_5,european_aqi&timezone=auto';
+
+        const wmoToCondition = (code) => {
+            if (code <= 1) return 'Clear';
+            if (code === 2) return 'Partly Cloudy';
+            if (code === 3) return 'Clouds';
+            if (code >= 45 && code <= 48) return 'Mist';
+            if (code >= 51 && code <= 55) return 'Drizzle';
+            if (code >= 61 && code <= 67) return 'Rain';
+            if (code >= 71 && code <= 86) return 'Snow';
+            if (code >= 95 && code <= 99) return 'Thunderstorm';
+            return 'Clouds';
         };
 
         // --- STATE MANAGEMENT ---
@@ -405,6 +409,7 @@
             dailyForecast: document.getElementById('daily-forecast'),
             favoritesList: document.getElementById('favorites-list'),
             chartCanvas: document.getElementById('mainChart'),
+            weatherIconContainer: document.getElementById('weather-icon-container'),
             compareLeft: document.getElementById('compare-left'),
             compareRight: document.getElementById('compare-right'),
             alertBar: document.getElementById('alert-bar'),
@@ -451,11 +456,49 @@
                 if (CONFIG.USE_MOCK_DATA) {
                     return this.getMockData(query);
                 }
-                // Real API implementation would go here
-                // For brevity in a single file, we simulate the fetch delay
-                return new Promise(resolve => {
-                    setTimeout(() => resolve(this.getMockData(query)), 800);
-                });
+
+                const geoRes = await fetch(GEO_URL.replace('{city}', query));
+                const geoData = await geoRes.json();
+                if (!geoData.results || !geoData.results.length) throw new Error('City not found');
+                const geo = geoData.results[0];
+
+                const [weatherRes, airRes] = await Promise.all([
+                    fetch(WEATHER_URL.replace('{lat}', geo.latitude).replace('{lon}', geo.longitude)),
+                    fetch(AIR_URL.replace('{lat}', geo.latitude).replace('{lon}', geo.longitude))
+                ]);
+                const weather = await weatherRes.json();
+                const air = await airRes.json();
+
+                const c = weather.current;
+                const d = weather.daily;
+                const h = weather.hourly;
+                const code = c.weather_code;
+
+                return {
+                    name: `${geo.name}${geo.country ? ', ' + geo.country : ''}`,
+                    temp: c.temperature_2m,
+                    feelsLike: c.apparent_temperature,
+                    condition: wmoToCondition(code),
+                    humidity: c.relative_humidity_2m,
+                    wind: c.wind_speed_10m,
+                    pressure: c.surface_pressure,
+                    uv: d.uv_index_max ? Math.round(d.uv_index_max[0]) : 0,
+                    visibility: c.visibility ? Math.round(c.visibility / 1000) : 10,
+                    sunrise: d.sunrise ? d.sunrise[0].split('T')[1]?.slice(0, 5) : '--:--',
+                    sunset: d.sunset ? d.sunset[0].split('T')[1]?.slice(0, 5) : '--:--',
+                    aqi: air.current?.european_aqi || 0,
+                    tempRange: { high: d.temperature_2m_max[0], low: d.temperature_2m_min[0] },
+                    hourly: Array.from({ length: Math.min(h.time.length, 24) }, (_, i) => ({
+                        time: h.time[i].split('T')[1]?.slice(0, 5) || '',
+                        temp: h.temperature_2m[i],
+                        rain: h.precipitation_probability ? h.precipitation_probability[i] : 0
+                    })),
+                    daily: Array.from({ length: d.time.length }, (_, i) => ({
+                        day: new Date(d.time[i]).toLocaleDateString('en-US', { weekday: 'short' }),
+                        temp: d.temperature_2m_max[i],
+                        condition: wmoToCondition(d.weather_code[i])
+                    }))
+                };
             },
 
             getMockData(query) {

@@ -912,7 +912,7 @@
     const dom = {
         loader: document.getElementById('loader'),
         controls: document.querySelectorAll('.btn-control'),
-        filters: document.querySelectorAll('.filter-btn'),
+        filters: document.querySelectorAll('.filter-btn[data-model]'),
         sortBtns: document.querySelectorAll('th, [data-sort]'),
         main: document.getElementById('main-content'),
         tableBody: document.getElementById('table-body'),
@@ -1184,12 +1184,14 @@
         
         // Update UI indicators
         dom.sortBtns.forEach(b => {
+            const icon = b.querySelector('.sort-icon');
+            if (!icon) return;
             if (b.dataset.sort === key) {
-                b.querySelector('.sort-icon').classList.toggle('asc');
-                b.querySelector('.sort-icon').classList.toggle('desc');
-                b.querySelector('.sort-icon').style.opacity = '1';
+                icon.classList.toggle('asc');
+                icon.classList.toggle('desc');
+                icon.style.opacity = '1';
             } else {
-                b.querySelector('.sort-icon').style.opacity = '0.5';
+                icon.style.opacity = '0.5';
             }
         });
 

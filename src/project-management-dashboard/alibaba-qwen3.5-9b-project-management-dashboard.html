@@ -216,11 +216,8 @@
         }
 
         /* KPI Cards */
-        .kpi-grid {
-            grid-column: span 3;
-        }
-
         .kpi-card {
+            grid-column: span 3;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -306,7 +303,7 @@
         }
 
         .chart-card {
-            grid-column: span 8;
+            grid-column: span 6;
             min-height: 400px;
         }
 
@@ -375,9 +372,9 @@
         .timeline-container {
             grid-column: span 12;
             position: relative;
-            padding-left: 2rem;
+            padding-left: 3rem;
             border-left: 2px solid var(--border);
-            margin-left: 1rem;
+            margin-left: 0;
         }
 
         .timeline-item {
@@ -691,12 +688,12 @@
                     <table id="projectTable">
                         <thead>
                             <tr>
-                                <th onclick="sortTable('name')">Project Name</th>
-                                <th onclick="sortTable('status')">Status</th>
-                                <th onclick="sortTable('health')">Health Score</th>
-                                <th onclick="sortTable('budget')">Budget Util.</th>
-                                <th onclick="sortTable('completion')">Completion %</th>
-                                <th onclick="sortTable('risks')">Risks</th>
+                                <th onclick="sortTable(0)">Project Name</th>
+                                <th onclick="sortTable(1)">Status</th>
+                                <th onclick="sortTable(2)">Health Score</th>
+                                <th onclick="sortTable(3)">Budget Util.</th>
+                                <th onclick="sortTable(4)">Completion %</th>
+                                <th onclick="sortTable(5)">Risks</th>
                             </tr>
                         </thead>
                         <tbody id="projectTableBody">
@@ -706,7 +703,7 @@
                 </div>
 
                 <!-- Timeline -->
-                <div class="card timeline-container" style="grid-column: span 12;">
+                <div class="timeline-container card" style="grid-column: span 12;">
                     <div class="card-header"><span class="card-title">Delivery Timeline</span></div>
                     <div id="timelineContent">
                         <!-- JS Populated -->
@@ -801,8 +798,23 @@
 
         const chartInstances = {};
 
+        function prepareCanvas(id) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const parent = canvas.parentElement;
+            const w = parent.clientWidth || 300;
+            const h = parent.clientHeight || 300;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
+        }
+
         function initCharts() {
+            Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
             // Completion Trend (Line)
+            prepareCanvas('completionChart');
             const ctxComp = document.getElementById('completionChart').getContext('2d');
             chartInstances.completion = new Chart(ctxComp, {
                 type: 'line',
@@ -817,10 +829,11 @@
                         tension: 0.4
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { responsive: false, maintainAspectRatio: false }
             });
 
             // Budget (Bar)
+            prepareCanvas('budgetChart');
             const ctxBud = document.getElementById('budgetChart').getContext('2d');
             chartInstances.budget = new Chart(ctxBud, {
                 type: 'bar',
@@ -831,10 +844,11 @@
                         { label: 'Actual', data: [396, 294, 960], backgroundColor: '#3b82f6' }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { responsive: false, maintainAspectRatio: false }
             });
 
             // Resource (Doughnut)
+            prepareCanvas('resourceChart');
             const ctxRes = document.getElementById('resourceChart').getContext('2d');
             chartInstances.resource = new Chart(ctxRes, {
                 type: 'doughnut',
@@ -845,10 +859,11 @@
                         backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { responsive: false, maintainAspectRatio: false }
             });
 
             // Risk (Polar Area)
+            prepareCanvas('riskChart');
             const ctxRisk = document.getElementById('riskChart').getContext('2d');
             chartInstances.risk = new Chart(ctxRisk, {
                 type: 'polarArea',
@@ -859,7 +874,7 @@
                         backgroundColor: ['#ef4444', '#f59e0b', '#10b981']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { responsive: false, maintainAspectRatio: false }
             });
         }
 
@@ -1034,6 +1049,29 @@
             document.getElementById('current-date').innerText = `Last updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
         });
 
+        // Resize handler with debounce
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                Object.values(chartInstances).forEach(ch => {
+                    if (ch) {
+                        const canvas = ch.canvas;
+                        if (canvas) {
+                            const parent = canvas.parentElement;
+                            const w = parent.clientWidth || 300;
+                            const h = parent.clientHeight || 300;
+                            const dpr = window.devicePixelRatio || 1;
+                            canvas.style.width = w + 'px';
+                            canvas.style.height = h + 'px';
+                            canvas.width = Math.round(w * dpr);
+                            canvas.height = Math.round(h * dpr);
+                            ch.resize();
+                        }
+                    }
+                });
+            }, 250);
+        });
     </script>
 </body>
 

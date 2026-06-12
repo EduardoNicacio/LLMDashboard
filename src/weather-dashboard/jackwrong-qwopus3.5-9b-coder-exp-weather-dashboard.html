@@ -328,23 +328,56 @@
     <!-- JavaScript Logic -->
     <script>
         // ==========================================
-        // API CONFIGURATION
+        // API CONFIGURATION (Open-Meteo - no API key needed)
         // ==========================================
-        const API_URL = "https://api.openweathermap.org/data/2.5";
+        const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=en&format=json';
+        const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast';
+        const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 
-        // ⚠️ REPLACE THIS WITH YOUR OWN OPENWEATHERMAP API KEY
-        // Get a free key at: https://openweathermap.org/api
-        const API_KEY = "YOUR_API_KEY_HERE";
+        // ==========================================
+        // WMO WEATHER CODE MAPPINGS
+        // ==========================================
+        const wmoDesc = {
+            0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+            45: 'Foggy', 48: 'Depositing rime fog',
+            51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+            56: 'Freezing drizzle', 57: 'Freezing drizzle',
+            61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+            66: 'Freezing rain', 67: 'Freezing rain',
+            71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow', 77: 'Snow grains',
+            80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
+            85: 'Slight snow showers', 86: 'Heavy snow showers',
+            95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+        };
+
+        function getWmoIcon(code, isDay) {
+            if (code <= 1) return isDay ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            if (code === 2) return isDay ? 'fa-solid fa-cloud-sun' : 'fa-solid fa-cloud-moon';
+            if (code === 3) return 'fa-solid fa-cloud';
+            if (code >= 45 && code <= 48) return 'fa-solid fa-smog';
+            if (code >= 51 && code <= 55) return 'fa-solid fa-cloud-drizzle';
+            if (code >= 61 && code <= 67) return 'fa-solid fa-cloud-rain';
+            if (code >= 71 && code <= 77) return 'fa-solid fa-snowflake';
+            if (code >= 80 && code <= 82) return 'fa-solid fa-cloud-rain';
+            if (code >= 85 && code <= 86) return 'fa-solid fa-snowflake';
+            if (code >= 95 && code <= 99) return 'fa-solid fa-cloud-bolt';
+            return 'fa-solid fa-sun';
+        }
+
+        function degToCompass(deg) {
+            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+            return dirs[Math.round(deg / 22.5) % 16];
+        }
 
         // ==========================================
         // STATE MANAGEMENT
         // ==========================================
         let state = {
-            unit: 'C', // 'C' or 'F'
+            unit: 'C',
             city: null,
             isComparisonMode: false,
             comparisonCity: null,
-            charts: {} // Store chart instances to destroy them on update
+            charts: {}
         };
 
         // ==========================================
@@ -373,16 +406,12 @@
         // INITIALIZATION
         // ==========================================
         window.addEventListener('DOMContentLoaded', () => {
-            initCharts();
             updateTimeDisplay();
-
             if (navigator.geolocation) {
                 getLocation();
             } else {
-                fetchWeather("London"); // Default fallback
+                fetchWeather("London");
             }
-
-            // Event Listeners
             els.input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') fetchWeather(els.input.value);
             });
@@ -394,52 +423,39 @@
 
         async function fetchWeather(city = null, callback = null) {
             const targetCity = city || els.input.value;
-
             if (!targetCity) return;
-
             showLoading(true);
-
             try {
-                // Fetch Current Weather & 3 Hourly Forecast
-                const currentUrl = `${API_URL}/weather?lat=${getCoords(city)}&lon=${getLon(city)}&appid=${API_KEY}&units=metric`;
+                const geoRes = await fetch(GEO_URL.replace('{city}', encodeURIComponent(targetCity)));
+                if (!geoRes.ok) throw new Error('City not found');
+                const geoData = await geoRes.json();
+                if (!geoData.results || geoData.results.length === 0) throw new Error('City not found');
+                const { latitude, longitude, name } = geoData.results[0];
+                state.city = name;
 
-                // Fetch Daily Forecast (for 7 day view)
-                const dailyUrl = `${API_URL}/forecast?lat=${getCoords(city)}&lon=${getLon(city)}&cnt=40&appid=${API_KEY}`;
+                const weatherUrl = `${WEATHER_URL}?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,is_day&hourly=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=7`;
+                const weatherRes = await fetch(weatherUrl);
+                if (!weatherRes.ok) throw new Error('Weather API failed');
+                const data = await weatherRes.json();
 
-                const [currentRes, dailyRes] = await Promise.all([
-                    fetch(currentUrl),
-                    fetch(dailyUrl)
-                ]);
+                let aqiData = null;
+                try {
+                    const aqiRes = await fetch(`${AIR_URL}?latitude=${latitude}&longitude=${longitude}&current=pm10,pm2_5,european_aqi&timezone=auto`);
+                    if (aqiRes.ok) aqiData = await aqiRes.json();
+                } catch (e) {}
 
-                if (!currentRes.ok) throw new Error("Weather API failed");
-
-                const currentData = await currentRes.json();
-                const dailyData = await dailyRes.json();
-
-                // Parse Data
-                const main = currentData.main;
-                const weather = currentData.weather[0];
-
-                updateCurrentUI(currentData, main, weather);
-                updateCharts(dailyData.list.slice(0, 24)); // First 24 hours for charts
+                updateCurrentUI(data, name, aqiData);
+                updateCharts(data.hourly);
+                updateHourlySlider(data.hourly);
+                updateDailyForecast(data.daily);
 
             } catch (error) {
                 console.error(error);
-                els.alerts.innerHTML = `<li class="text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Failed to load weather data. Please check your API key or internet connection.</li>`;
+                els.alerts.innerHTML = `<li class="text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>${error.message}</li>`;
             } finally {
                 showLoading(false);
                 if (callback) callback();
             }
-        }
-
-        function getCoords(city) {
-            const coords = { "London": 51.5074, "New York": 40.7128, "Tokyo": 35.6762, "Paris": 48.8566 };
-            return coords[city] || 51.5074; // Default to London if unknown
-        }
-
-        function getLon(city) {
-            const lons = { "London": -0.1278, "New York": -74.0060, "Tokyo": 139.6917, "Paris": 2.3522 };
-            return lons[city] || -0.1278;
         }
 
         function getLocation() {
@@ -458,19 +474,27 @@
         }
 
         async function fetchWeatherByCoords(lat, lon) {
-            const url = `${API_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+            showLoading(true);
             try {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error("Geo API failed");
-                const data = await res.json();
+                const weatherUrl = `${WEATHER_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility,is_day&hourly=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=7`;
+                const weatherRes = await fetch(weatherUrl);
+                if (!weatherRes.ok) throw new Error('Weather API failed');
+                const data = await weatherRes.json();
 
-                // Update UI with Geo Data (Reverse geocoding is usually needed for city names, 
-                // but we'll just use the coordinates or a generic name for now to keep it single-file without extra calls)
-                els.city.innerText = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                let aqiData = null;
+                try {
+                    const aqiRes = await fetch(`${AIR_URL}?latitude=${lat}&longitude=${lon}&current=pm10,pm2_5,european_aqi&timezone=auto`);
+                    if (aqiRes.ok) aqiData = await aqiRes.json();
+                } catch (e) {}
 
-                updateCurrentUI(data, data.main, data.weather[0]);
+                updateCurrentUI(data, `${lat.toFixed(4)}, ${lon.toFixed(4)}`, aqiData);
+                updateCharts(data.hourly);
+                updateHourlySlider(data.hourly);
+                updateDailyForecast(data.daily);
             } catch (e) {
                 console.error(e);
+            } finally {
+                showLoading(false);
             }
         }
 
@@ -478,130 +502,97 @@
         // UI UPDATES
         // ==========================================
 
-        function updateCurrentUI(currentData, main, weatherObj) {
-            const temp = Math.round(main.temp);
-            const feels = Math.round(main.feels_like);
+        function updateCurrentUI(data, cityName, aqiData) {
+            const current = data.current;
+            const daily = data.daily;
+            const temp = Math.round(current.temperature_2m);
+            const feels = Math.round(current.apparent_temperature);
+            const weatherCode = current.weather_code;
+            const isDay = current.is_day === 1;
 
-            els.city.innerText = currentData.name || "Unknown Location";
-            els.desc.innerHTML = `<i class="fa-solid ${getIconClass(weatherObj.main)}"></i> <span>${weatherObj.description.charAt(0).toUpperCase() + weatherObj.description.slice(1)}</span>`;
-            els.icon.className = `fa-solid ${getIconClass(weatherObj.main)}`;
+            els.city.innerText = cityName || "Unknown Location";
 
-            // Temperature Formatting
+            const descText = wmoDesc[weatherCode] || 'Unknown';
+            els.desc.innerHTML = `<i class="${getWmoIcon(weatherCode, isDay)}"></i> <span>${descText}</span>`;
+            els.icon.className = getWmoIcon(weatherCode, isDay);
+
             const displayTemp = state.unit === 'F' ? Math.round(temp * 9 / 5 + 32) : temp;
             const feelsDisplay = state.unit === 'F' ? Math.round(feels * 9 / 5 + 32) : feels;
-
             els.temp.innerText = `${displayTemp}°`;
             els.feels.innerText = `${feelsDisplay}°`;
 
-            // High/Low from current data (sometimes provided, if not we take daily forecast high/low)
-            const todayIndex = new Date().getDay() - 1;
-            if (todayIndex < 0) todayIndex += 7;
-            const todaysDaily = dailyData.list[todayIndex];
-
-            els.high.innerText = `${Math.round(todaysDaily.temp_max)}°`;
-            els.low.innerText = `${Math.round(todaysDaily.temp_min)}°`;
-
-            // Sunrise/Sunset
-            const sys = currentData.sys;
-            if (sys.sunrise) {
-                const formatTime = (ts) => new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                els.sunrise.innerText = formatTime(sys.sunrise);
-                els.sunset.innerText = formatTime(sys.sunset);
+            if (daily && daily.temperature_2m_max && daily.temperature_2m_max.length > 0) {
+                const hi = Math.round(daily.temperature_2m_max[0]);
+                const lo = Math.round(daily.temperature_2m_min[0]);
+                els.high.innerText = `${state.unit === 'F' ? Math.round(hi * 9 / 5 + 32) : hi}°`;
+                els.low.innerText = `${state.unit === 'F' ? Math.round(lo * 9 / 5 + 32) : lo}°`;
             }
 
-            // Alerts
-            if (currentData.alert) {
-                const alertHtml = currentData.alert.map(a =>
-                    `<li class="bg-red-500/10 border-l-4 border-red-500 p-3 rounded mb-2 text-red-200">
-                        <strong>${a.event}</strong>: ${a.description}
-                    </li>`
-                ).join('');
-                els.alerts.innerHTML = alertHtml || '<li class="text-gray-500 italic">No active alerts.</li>';
-            } else {
-                els.alerts.innerHTML = '<li class="text-gray-500 italic">No active weather alerts.</li>';
+            if (daily && daily.sunrise && daily.sunrise[0]) {
+                const formatTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                els.sunrise.innerText = formatTime(daily.sunrise[0]);
+                els.sunset.innerText = formatTime(daily.sunset[0]);
             }
 
-            // AQI (if available in currentData)
-            if (currentData.aqi) {
-                const aqiColor = getAQIColor(currentData.aqi);
+            els.alerts.innerHTML = '<li class="text-gray-500 italic">No active weather alerts.</li>';
+
+            if (aqiData && aqiData.current) {
+                const aqi = aqiData.current.european_aqi || 0;
                 els.aqi.innerHTML = `
                     <div class="flex items-center gap-3">
                         <span class="text-gray-400 text-sm">Air Quality Index</span>
-                        <div class="px-3 py-1 rounded-full bg-${aqiColor} text-white font-bold shadow-lg border border-white/20">
-                            ${currentData.aqi.main}
+                        <div class="px-3 py-1 rounded-full ${getAQIColor(aqi)} text-white font-bold shadow-lg border border-white/20">
+                            ${aqi}
                         </div>
                     </div>`;
             } else {
                 els.aqi.innerHTML = '<span class="text-gray-500 text-sm italic">Air Quality data unavailable</span>';
             }
 
-            // Dynamic Background & Theme based on weather/time
-            updateEnvironment(main.temp, main.humidity);
-        }
-
-        function getIconClass(condition) {
-            const map = {
-                Clear: 'fa-sun', Cloudy: 'fa-cloud', Rain: 'fa-cloud-showers-heavy',
-                Snow: 'fa-snowflake', Thunderstorm: 'fa-bolt'
-            };
-            return map[condition] || 'fa-question';
+            updateEnvironment(current.temperature_2m, current.relative_humidity_2m);
         }
 
         function updateEnvironment(temp, humidity) {
-            // Change background blobs based on weather condition and time of day
             const hour = new Date().getHours();
             let gradient = "";
-
             if (temp > 20 && humidity < 50) {
-                // Sunny / Warm
                 gradient = "from-orange-400/30 via-pink-600/30 to-purple-900/80";
             } else if (temp < 10 || humidity > 80) {
-                // Cold / Rainy
                 gradient = "from-blue-600/50 via-cyan-700/40 to-slate-900/90";
             } else {
-                // Default Night/Dusk
                 gradient = "from-indigo-900/80 via-purple-900/60 to-black/90";
             }
-
             if (hour >= 18 || hour < 6) {
-                // Night mode override
                 gradient = "from-slate-900/95 via-blue-900/40 to-black/95";
             } else if (hour >= 6 && hour < 12) {
-                // Morning
                 gradient = "from-orange-300/30 via-yellow-200/20 to-blue-800/60";
             }
-
             els.bgBlobs.innerHTML = `
                 <div class="blob w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply top-[-10%] left-[-10%]" style="background: ${gradient.split(' ')[0]}"></div>
                 <div class="blob w-80 h-80 bg-blue-400 rounded-full mix-blend-overlay bottom-[20%] right-[-5%]" style="background: ${gradient.split(' ')[1]}"></div>
             `;
-
-            // Adjust text opacity based on brightness (simplified)
             document.body.style.filter = gradient.includes("blue") ? "brightness(0.8)" : "brightness(1.2)";
         }
 
         function updateCharts(hourlyData) {
+            if (!hourlyData || !hourlyData.time) return;
             const tempCtx = document.getElementById('tempChart').getContext('2d');
             const windCtx = document.getElementById('windChart').getContext('2d');
-
-            // Destroy existing charts to prevent memory leaks and overlapping
             if (state.charts.temp) state.charts.temp.destroy();
             if (state.charts.wind) state.charts.wind.destroy();
 
-            // Prepare Data
-            const hours = hourlyData.map(d => new Date(d.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-
-            const tempLabels = hours.slice(0, 6); // Show first 6 hours in chart for clarity
-            const windLabels = hours.slice(0, 6);
+            const hours = hourlyData.time.slice(0, 6).map(t =>
+                new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            );
 
             state.charts.temp = new Chart(tempCtx, {
                 type: 'line',
                 data: {
-                    labels: tempLabels,
+                    labels: hours,
                     datasets: [{
                         label: 'Temperature',
-                        data: hourlyData.slice(0, 6).map(d => d.main.temp),
-                        borderColor: '#22d3ee', // Cyan-400
+                        data: hourlyData.temperature_2m.slice(0, 6),
+                        borderColor: '#22d3ee',
                         backgroundColor: 'rgba(34, 211, 238, 0.1)',
                         borderWidth: 2,
                         tension: 0.4,
@@ -620,11 +611,11 @@
             state.charts.wind = new Chart(windCtx, {
                 type: 'bar',
                 data: {
-                    labels: windLabels,
+                    labels: hours,
                     datasets: [{
                         label: 'Wind Speed (m/s)',
-                        data: hourlyData.slice(0, 6).map(d => d.wind.speed),
-                        backgroundColor: 'rgba(168, 85, 247, 0.6)', // Purple-500
+                        data: hourlyData.wind_speed_10m.slice(0, 6),
+                        backgroundColor: 'rgba(168, 85, 247, 0.6)',
                         borderRadius: 4
                     }]
                 },
@@ -638,47 +629,41 @@
         }
 
         function updateHourlySlider(hourlyData) {
-            els.hourlyContainer.innerHTML = hourlyData.map(d => `
+            if (!hourlyData || !hourlyData.time) return;
+            const isDay = new Date().getHours() >= 6 && new Date().getHours() < 18;
+            els.hourlyContainer.innerHTML = hourlyData.time.map((t, i) => `
                 <div class="scroll-snap-item flex flex-col items-center gap-2 min-w-[80px]">
-                    <span class="text-xs text-gray-400">${new Date(d.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span class="text-xs text-gray-400">${new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     <div class="flex flex-col items-center gap-1">
-                        <i class="fa-solid ${getIconClass(d.weather[0].main)} text-xl"></i>
-                        <span class="text-lg font-bold">${Math.round(d.main.temp)}°</span>
+                        <i class="${getWmoIcon(hourlyData.weather_code[i], isDay)} text-xl"></i>
+                        <span class="text-lg font-bold">${Math.round(hourlyData.temperature_2m[i])}°</span>
                     </div>
                 </div>
             `).join('');
         }
 
         function updateDailyForecast(dailyData) {
+            if (!dailyData || !dailyData.time) return;
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const todayIndex = new Date().getDay();
-
-            // Start from tomorrow to avoid duplicate today card
+            const isDay = new Date().getHours() >= 6 && new Date().getHours() < 18;
             let html = '';
-            for (let i = 1; i < 7; i++) {
-                const dateObj = new Date();
-                dateObj.setDate(dateObj.getDate() + i);
+            for (let i = 1; i < dailyData.time.length; i++) {
+                const dateObj = new Date(dailyData.time[i]);
                 const dayName = days[dateObj.getDay()];
-                const index = todayIndex + i;
-
-                if (index >= dailyData.list.length) break;
-
-                const d = dailyData.list[index];
-                const maxTemp = Math.round(d.temp.max - 273.15); // Convert Kelvin to Celsius
-                const minTemp = Math.round(d.temp.min - 273.15);
+                const maxTemp = Math.round(dailyData.temperature_2m_max[i]);
+                const minTemp = Math.round(dailyData.temperature_2m_min[i]);
+                const wCode = dailyData.weather_code[i];
 
                 html += `
                     <div class="glass-card p-4 flex items-center gap-4 relative overflow-hidden group">
                         <span class="text-gray-400 font-medium w-8">${dayName}</span>
-                        <i class="fa-solid ${getIconClass(d.weather[0].main)} text-2xl text-white/50 absolute -right-4 top-1/2 -translate-y-1/2 opacity-30"></i>
-                        
+                        <i class="${getWmoIcon(wCode, isDay)} text-2xl text-white/50 absolute -right-4 top-1/2 -translate-y-1/2 opacity-30"></i>
                         <div class="flex flex-col items-center z-10">
                             <span class="text-xl font-bold">${maxTemp}°</span>
                             <span class="text-xs text-gray-400">${minTemp}°</span>
                         </div>
-
                         <div class="ml-auto w-12 h-12 rounded-full bg-white/5 flex items-center justify-center z-10">
-                             <i class="fa-solid ${getIconClass(d.weather[0].main)} text-xl"></i>
+                            <i class="${getWmoIcon(wCode, isDay)} text-xl"></i>
                         </div>
                     </div>
                 `;
@@ -694,8 +679,6 @@
             state.unit = unit;
             document.getElementById('btn-c').className = unit === 'C' ? "px-3 py-1 text-xs font-medium rounded-md transition-all bg-white/10 text-white shadow-sm" : "px-3 py-1 text-xs font-medium rounded-md transition-all text-gray-400 hover:text-white";
             document.getElementById('btn-f').className = unit === 'F' ? "px-3 py-1 text-xs font-medium rounded-md transition-all bg-white/10 text-white shadow-sm" : "px-3 py-1 text-xs font-medium rounded-md transition-all text-gray-400 hover:text-white";
-
-            // Re-fetch to update displays and charts
             fetchWeather(state.city);
         }
 
@@ -704,8 +687,6 @@
             const footer = document.getElementById('comparison-footer');
             if (state.isComparisonMode) {
                 footer.classList.remove('hidden');
-                // In a real app, we'd prompt for the second city here. 
-                // For now, let's just fetch London as comparison to show functionality
                 setTimeout(() => fetchWeather("London"), 500);
             } else {
                 footer.classList.add('hidden');
@@ -714,9 +695,11 @@
         }
 
         function getAQIColor(aqi) {
-            if (!aqi || !aqi.main) return 'gray';
-            const map = { 1: 'green', 2: 'yellow', 3: 'orange', 4: 'red' };
-            return map[Math.min(Math.floor(aqi.main / 50), 4)] || 'gray';
+            if (aqi === 0 || aqi == null) return 'bg-gray-500';
+            if (aqi <= 50) return 'bg-green-500';
+            if (aqi <= 100) return 'bg-yellow-500';
+            if (aqi <= 150) return 'bg-orange-500';
+            return 'bg-red-500';
         }
 
         function showLoading(show) {
@@ -728,8 +711,7 @@
             document.getElementById('current-time-display').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        setInterval(updateTimeDisplay, 60000); // Update clock every minute
-
+        setInterval(updateTimeDisplay, 60000);
     </script>
 </body>
 

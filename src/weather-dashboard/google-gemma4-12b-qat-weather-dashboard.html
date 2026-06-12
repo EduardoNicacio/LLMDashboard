@@ -130,7 +130,7 @@
 
         <!-- Error Message -->
         <div id="errorMessage" class="hidden mb-8 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-center">
-            <p>Unable to fetch weather data. Please check your API key or city name.</p>
+            <p>Unable to fetch weather data. Please check the city name.</p>
         </div>
 
         <!-- Main Dashboard -->
@@ -236,19 +236,15 @@
         </footer>
     </div>
 
-    <script>
-        /**
-         * CONFIGURATION
-         * Instructions: 
-         * 1. Get a free API key from https://openweathermap.org/
-         * 2. Replace the string below with your actual key.
-         */
-        const API_KEY = 'YOUR_API_KEY_HERE';
-        const BASE_URL = 'https://api.openweathermap.org/data/2.5/';
+        <script>
+        const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=en&format=json';
+        const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility&hourly=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=7';
+        const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=pm10,pm2_5,european_aqi&timezone=auto';
+
+        const wmoDesc = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Depositing rime fog',51:'Light drizzle',53:'Moderate drizzle',55:'Dense drizzle',61:'Slight rain',63:'Moderate rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',71:'Slight snow',73:'Moderate snow',75:'Heavy snow',77:'Snow grains',80:'Slight rain showers',81:'Moderate rain showers',82:'Violent rain showers',85:'Slight snow showers',86:'Heavy snow showers',95:'Thunderstorm',96:'Thunderstorm with slight hail',99:'Thunderstorm with heavy hail'};
 
         // State Management
         let currentData = null;
-        let forecastData = null;
         let unitSystem = 'metric'; // 'metric' for Celsius, 'imperial' for Fahrenheit
         let tempChart = null;
         let humidityChart = null;
@@ -287,11 +283,7 @@
             setupEventListeners();
             renderFavorites();
 
-            if (API_KEY === 'YOUR_OPENWEATHERMAP_API_KEY_HERE') {
-                alert("Please enter your OpenWeatherMap API Key in the script section of the HTML file.");
-            } else {
-                fetchWeather('London');
-            }
+            fetchWeather('London');
         }
 
         function setupEventListeners() {
@@ -336,19 +328,36 @@
             });
         }
 
-        // API Fetching
         async function fetchWeather(query) {
             showLoading(true);
             elements.error.classList.add('hidden');
 
             try {
-                // We fetch in metric by default to have a consistent base for our JS math conversions
-                const currentRes = await fetch(`${BASE_URL}weather?q=${query}&units=metric&appid=${API_KEY}`);
-                if (!currentRes.ok) throw new Error('City not found');
-                currentData = await currentRes.json();
+                let lat, lon, cityName;
+                if (query.startsWith('lat=')) {
+                    const parts = query.split('&');
+                    lat = parts[0].split('=')[1];
+                    lon = parts[1].split('=')[1];
+                    cityName = 'Current Location';
+                } else {
+                    const geoRes = await fetch(GEO_URL.replace('{city}', query));
+                    const geoData = await geoRes.json();
+                    if (!geoData.results || geoData.results.length === 0) throw new Error('City not found');
+                    lat = geoData.results[0].latitude;
+                    lon = geoData.results[0].longitude;
+                    cityName = geoData.results[0].name;
+                }
 
-                const forecastRes = await fetch(`${BASE_URL}forecast?q=${query}&units=metric&appid=${API_KEY}`);
-                forecastData = await forecastRes.json();
+                const [weatherRes, airRes] = await Promise.all([
+                    fetch(WEATHER_URL.replace('{lat}', lat).replace('{lon}', lon)),
+                    fetch(AIR_URL.replace('{lat}', lat).replace('{lon}', lon))
+                ]);
+                currentData = await weatherRes.json();
+                currentData.cityName = cityName;
+                currentData.name = cityName;
+
+                const airData = await airRes.json();
+                currentData.airQuality = airData.current?.european_aqi || 0;
 
                 updateUI();
                 initCharts();
@@ -366,67 +375,71 @@
             const unitSymbol = isMetric ? '°C' : '°F';
             const speedUnit = isMetric ? 'km/h' : 'mph';
 
-            // Helper functions for conversion
             const convertTemp = (c) => isMetric ? c : (c * 9 / 5) + 32;
             const convertWind = (kmh) => isMetric ? kmh : kmh * 0.621371;
 
-            elements.cityName.innerText = data.name;
+            const c = data.current;
+            const d = data.daily;
+            const wmoCode = c.weather_code;
+
+            elements.cityName.innerText = data.cityName;
             elements.currentDate.innerText = new Date().toLocaleDateString('en-US', {
                 weekday: 'long', day: 'numeric', month: 'long'
             });
 
-            // Apply conversions to all temperature fields
-            elements.mainTemp.innerText = `${Math.round(convertTemp(data.main.temp))}${unitSymbol}`;
-            elements.feelsLike.innerText = `${Math.round(convertTemp(data.main.feels_like))}${unitSymbol}`;
-            elements.tempHigh.innerText = `${Math.round(convertTemp(data.main.temp_max))}${unitSymbol}`;
-            elements.tempLow.innerText = `${Math.round(convertTemp(data.main.temp_min))}${unitSymbol}`;
+            elements.mainTemp.innerText = `${Math.round(convertTemp(c.temperature_2m))}${unitSymbol}`;
+            elements.feelsLike.innerText = `${Math.round(convertTemp(c.apparent_temperature))}${unitSymbol}`;
+            elements.tempHigh.innerText = `${Math.round(convertTemp(d.temperature_2m_max[0]))}${unitSymbol}`;
+            elements.tempLow.innerText = `${Math.round(convertTemp(d.temperature_2m_min[0]))}${unitSymbol}`;
 
-            elements.weatherDesc.innerText = data.weather[0].description;
-            elements.humidity.innerText = `${data.main.humidity}%`;
-            elements.windSpeed.innerText = `${convertWind(data.wind.speed).toFixed(1)} ${speedUnit}`;
-            elements.visibility.innerText = `${(data.visibility / 1000).toFixed(1)} km`;
-
-            elements.uvIndex.innerText = Math.floor(Math.random() * 10);
+            elements.weatherDesc.innerText = wmoDesc[wmoCode] || 'Unknown';
+            elements.humidity.innerText = `${c.relative_humidity_2m}%`;
+            elements.windSpeed.innerText = `${convertWind(c.wind_speed_10m).toFixed(1)} ${speedUnit}`;
+            elements.visibility.innerText = c.visibility ? `${(c.visibility / 1000).toFixed(1)} km` : 'N/A';
+            elements.uvIndex.innerText = d.uv_index_max ? Math.round(d.uv_index_max[0]) : 'N/A';
 
             // Update Hourly Slider
             elements.hourlyContainer.innerHTML = '';
-            const hourly = forecastData.list.slice(0, 8);
-            hourly.forEach(item => {
-                const time = new Date(item.dt * 1000).getHours();
+            const hourlyCount = Math.min(8, data.hourly.time.length);
+            for (let i = 0; i < hourlyCount; i++) {
+                const time = data.hourly.time[i].split('T')[1]?.slice(0, 2) || '';
+                const temp = data.hourly.temperature_2m[i];
+                const code = data.hourly.weather_code[i];
                 const div = document.createElement('div');
                 div.className = "glass-card p-4 min-w-[100px] text-center transition-all hover:scale-105";
                 div.innerHTML = `
                     <p class="text-xs text-slate-400">${time}:00</p>
-                    <p class="text-xl font-bold my-2">${Math.round(convertTemp(item.main.temp))}${unitSymbol}</p>
-                    <i data-lucide="${getWeatherIcon(item.weather[0].main)}" class="w-6 h-6 mx-auto"></i>
+                    <p class="text-xl font-bold my-2">${Math.round(convertTemp(temp))}${unitSymbol}</p>
+                    <i data-lucide="${getWeatherIcon(code)}" class="w-6 h-6 mx-auto"></i>
                 `;
                 elements.hourlyContainer.appendChild(div);
-            });
+            }
             lucide.createIcons();
 
-            updateDynamicBackground(data.weather[0].main);
+            updateDynamicBackground(wmoCode);
         }
 
-        function updateDynamicBackground(condition) {
+        function updateDynamicBackground(wmoCode) {
             elements.bgOverlay.className = 'fixed inset-0 opacity-40 transition-all duration-1000';
 
-            if (condition.includes('Clear')) elements.bgOverlay.classList.add('weather-gradient-sunny');
-            else if (condition.includes('Rain')) elements.bgOverlay.classList.add('weather-gradient-rainy');
-            else if (condition.includes('Clouds')) elements.bgOverlay.classList.add('weather-gradient-cloudy');
-            else if (condition.includes('Snow')) elements.bgOverlay.classList.add('weather-gradient-snowy');
+            if (wmoCode <= 2) elements.bgOverlay.classList.add('weather-gradient-sunny');
+            else if (wmoCode === 3 || (wmoCode >= 45 && wmoCode <= 48)) elements.bgOverlay.classList.add('weather-gradient-cloudy');
+            else if ((wmoCode >= 51 && wmoCode <= 67) || (wmoCode >= 80 && wmoCode <= 82)) elements.bgOverlay.classList.add('weather-gradient-rainy');
+            else if ((wmoCode >= 71 && wmoCode <= 77) || (wmoCode >= 85 && wmoCode <= 86)) elements.bgOverlay.classList.add('weather-gradient-snowy');
+            else if (wmoCode >= 95) elements.bgOverlay.classList.add('weather-gradient-rainy');
             else elements.bgOverlay.classList.add('weather-gradient-night');
         }
 
-        function getWeatherIcon(condition) {
-            const map = {
-                'Clear': 'sun',
-                'Clouds': 'cloud',
-                'Rain': 'cloud-rain',
-                'Snow': 'snowflake',
-                'Thunderstorm': 'cloud-lightning',
-                'Mist': 'fog'
-            };
-            return map[condition] || 'cloud';
+        function getWeatherIcon(wmoCode) {
+            if (wmoCode <= 1) return 'sun';
+            if (wmoCode === 2) return 'cloud-sun';
+            if (wmoCode === 3) return 'cloud';
+            if (wmoCode >= 45 && wmoCode <= 48) return 'fog';
+            if (wmoCode >= 51 && wmoCode <= 55) return 'cloud-drizzle';
+            if (wmoCode >= 61 && wmoCode <= 67) return 'cloud-rain';
+            if (wmoCode >= 71 && wmoCode <= 86) return 'snowflake';
+            if (wmoCode >= 95 && wmoCode <= 99) return 'cloud-lightning';
+            return 'cloud';
         }
 
         function showLoading(isLoading) {
@@ -439,7 +452,6 @@
             }
         }
 
-        // Charts Logic
         function initCharts() {
             const ctxTemp = document.getElementById('tempChart').getContext('2d');
             const ctxHum = document.getElementById('humidityChart').getContext('2d');
@@ -448,16 +460,17 @@
             if (humidityChart) humidityChart.destroy();
 
             const convertTemp = (c) => unitSystem === 'metric' ? c : (c * 9 / 5) + 32;
+            const d = currentData.daily;
 
-            const dailyData = forecastData.list.filter((_, index) => index % 8 === 0);
+            const labels = d.time.map(t => new Date(t).toLocaleDateString('en-US', { weekday: 'short' }));
 
             tempChart = new Chart(ctxTemp, {
                 type: 'line',
                 data: {
-                    labels: dailyData.map(d => new Date(d.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })),
+                    labels: labels,
                     datasets: [{
-                        label: 'Temp',
-                        data: dailyData.map(d => convertTemp(d.main.temp)),
+                        label: 'Max Temp',
+                        data: d.temperature_2m_max.map(t => convertTemp(t)),
                         borderColor: '#60a5fa',
                         backgroundColor: 'rgba(96, 165, 250, 0.2)',
                         fill: true,
@@ -478,10 +491,10 @@
             humidityChart = new Chart(ctxHum, {
                 type: 'bar',
                 data: {
-                    labels: dailyData.map(d => new Date(d.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })),
+                    labels: labels,
                     datasets: [{
-                        label: 'Humidity %',
-                        data: dailyData.map(d => d.main.humidity),
+                        label: 'Min Temp',
+                        data: d.temperature_2m_min.map(t => convertTemp(t)),
                         backgroundColor: 'rgba(34, 197, 94, 0.5)',
                         borderRadius: 5
                     }]

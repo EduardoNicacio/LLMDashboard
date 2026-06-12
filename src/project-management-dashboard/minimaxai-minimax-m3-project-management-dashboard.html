@@ -633,7 +633,6 @@
             place-items: center;
             position: relative;
             box-shadow: 0 0 24px rgba(168, 85, 247, 0.4);
-            animation: rotate 12s linear infinite;
         }
 
         .h2h-vs::after {
@@ -715,14 +714,41 @@
         .chart-wrap {
             position: relative;
             height: 260px;
+            overflow: hidden;
+        }
+
+        .chart-wrap canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .chart-wrap.tall {
             height: 320px;
+            overflow: hidden;
+        }
+
+        .chart-wrap.tall canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .chart-wrap.short {
             height: 180px;
+            overflow: hidden;
+        }
+
+        .chart-wrap.short canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         /* ============= PROJECT CARDS ============= */
@@ -2370,7 +2396,7 @@
         function commonOpts() {
             const c = chartColors();
             return {
-                responsive: true, maintainAspectRatio: false,
+                responsive: false, maintainAspectRatio: false,
                 plugins: {
                     legend: { labels: { color: c.text, font: { family: 'Inter', size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' } },
                     tooltip: {
@@ -2390,6 +2416,21 @@
             };
         }
         function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+        function prepareCanvas(id) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const parent = canvas.parentElement;
+            if (!parent.classList.contains('chart-wrap')) return;
+            const w = parent.clientWidth || 300;
+            let h = 260;
+            if (parent.classList.contains('tall')) h = 320;
+            else if (parent.classList.contains('short')) h = 180;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(h * dpr);
+        }
 
         /* ===========================================================
            KPI CARDS
@@ -2441,6 +2482,7 @@
                 if (!ctx) return;
                 destroyChart('spark' + i);
                 const cm = COLOR_MAP[k.color];
+                prepareCanvas('spark' + i);
                 charts['spark' + i] = new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -2452,7 +2494,7 @@
                             borderWidth: 1.5, fill: true, tension: 0.45, pointRadius: 0,
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
+                    options: { responsive: false, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
                 });
             });
         }
@@ -2482,7 +2524,7 @@
       <div class="proj-meta">${a.code} · ${a.owner} · ${a.team}</div>
       <div class="h2h-row"><span class="lbl">Schedule Progress</span><span class="val">${a.completion}%</span></div>
       <div class="h2h-row"><span class="lbl">Budget Variance</span><span class="val">${fmt.pct(a.budgetVariance)}</span></div>
-      <div class="h2h-row"><span class="lbl">Task Completion</span><span class="val">${a.completedMilestones}/${a.milestones}</span></div>
+      <div class="h2h-row"><span class="lbl">Task Completion</span><span class="val">${a.completedMilestones}/${Array.isArray(a.milestones) ? a.milestones.length : a.milestones}</span></div>
       <div class="h2h-row"><span class="lbl">Risk Score</span><span class="val">${a.riskScore}/100</span></div>
       <div class="h2h-row"><span class="lbl">Resource Utilization</span><span class="val">${a.resourceUtil}%</span></div>
       <div class="h2h-row"><span class="lbl">Stakeholder Sat.</span><span class="val">${a.stakeholderSat}/100</span></div>
@@ -2493,7 +2535,7 @@
       <div class="proj-meta">${b.code} · ${b.owner} · ${b.team}</div>
       <div class="h2h-row"><span class="lbl">Schedule Progress</span><span class="val">${b.completion}%</span></div>
       <div class="h2h-row"><span class="lbl">Budget Variance</span><span class="val">${fmt.pct(b.budgetVariance)}</span></div>
-      <div class="h2h-row"><span class="lbl">Task Completion</span><span class="val">${b.completedMilestones}/${b.milestones}</span></div>
+      <div class="h2h-row"><span class="lbl">Task Completion</span><span class="val">${b.completedMilestones}/${Array.isArray(b.milestones) ? b.milestones.length : b.milestones}</span></div>
       <div class="h2h-row"><span class="lbl">Risk Score</span><span class="val">${b.riskScore}/100</span></div>
       <div class="h2h-row"><span class="lbl">Resource Utilization</span><span class="val">${b.resourceUtil}%</span></div>
       <div class="h2h-row"><span class="lbl">Stakeholder Sat.</span><span class="val">${b.stakeholderSat}/100</span></div>
@@ -2631,7 +2673,7 @@
         <div class="s"><div class="k">Actual</div><div class="v" style="color:var(--accent-cyan)">${fmt.money(p.actual)}</div></div>
         <div class="s"><div class="k">Remaining</div><div class="v" style="color:var(--accent-green)">${fmt.money(p.budget - p.actual)}</div></div>
         <div class="s"><div class="k">Team</div><div class="v">${p.teamSize}</div></div>
-        <div class="s"><div class="k">Milestones</div><div class="v">${p.completedMilestones}/${p.milestones}</div></div>
+        <div class="s"><div class="k">Milestones</div><div class="v">${p.completedMilestones}/${Array.isArray(p.milestones) ? p.milestones.length : p.milestones}</div></div>
         <div class="s"><div class="k">Open Risks</div><div class="v" style="color:${p.openRisks > 5 ? 'var(--accent-red)' : 'var(--accent-amber)'}">${p.openRisks}</div></div>
         <div class="s"><div class="k">Blocked</div><div class="v" style="color:${p.blockedTasks > 2 ? 'var(--accent-red)' : 'var(--text)'}">${p.blockedTasks}</div></div>
         <div class="s"><div class="k">Budget Used</div><div class="v">${budgetUsed}%</div></div>
@@ -2702,7 +2744,7 @@
     <tr class="expand-row" data-expand="${p.id}" style="display:none"><td colspan="11">
       <div class="expand-content">
         <div class="ex-col"><h5>Overview</h5><ul><li>${p.description}</li></ul></div>
-        <div class="ex-col"><h5>Recent Milestones</h5><ul>${(p.milestones || []).slice(0, 4).map(m => `<li>${m.name} <span class="tiny muted">- ${fmt.date(m.date)} · ${m.status}</span></li>`).join('')}</ul></div>
+        <div class="ex-col"><h5>Recent Milestones</h5><ul>${(Array.isArray(p.milestones) ? p.milestones : []).slice(0, 4).map(m => `<li>${m.name} <span class="tiny muted">- ${fmt.date(m.date)} · ${m.status}</span></li>`).join('')}</ul></div>
         <div class="ex-col"><h5>Key Metrics</h5><ul>
           <li>Schedule Variance: <strong style="color:${p.scheduleVariance < 0 ? 'var(--accent-red)' : 'var(--accent-green)'}">${fmt.pct(p.scheduleVariance)}</strong></li>
           <li>Budget Variance: <strong style="color:${p.budgetVariance < 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${fmt.pct(p.budgetVariance)}</strong></li>
@@ -2922,10 +2964,11 @@
             const wrap = document.getElementById('milestoneProgress');
             const items = PROJECTS.filter(p => p.flagship || p.completion > 50).slice(0, 6);
             wrap.innerHTML = items.map(p => {
-                const pct = Math.round((p.completedMilestones / p.milestones) * 100);
+                const msTotal = Array.isArray(p.milestones) ? p.milestones.length : p.milestones;
+                const pct = Math.round((p.completedMilestones / msTotal) * 100);
                 return `<div style="margin-bottom:14px">
       <div class="flex between center" style="margin-bottom:5px">
-        <div class="tiny" style="font-weight:600">${p.name} <span class="muted">· ${p.completedMilestones}/${p.milestones} milestones</span></div>
+        <div class="tiny" style="font-weight:600">${p.name} <span class="muted">· ${p.completedMilestones}/${msTotal} milestones</span></div>
         <div class="mono tiny" style="color:${p.color1}"><strong>${pct}%</strong></div>
       </div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%; --proj-color-1:${p.color1}; --proj-color-2:${p.color2}"></div></div>
@@ -2953,6 +2996,7 @@
                 actual = [10, 20, 30, 38, 47, 56, 65, 70, 76, 82, 87, 91];
             }
             destroyChart('chartTrend');
+            prepareCanvas('chartTrend');
             charts.chartTrend = new Chart(document.getElementById('chartTrend'), {
                 type: 'line',
                 data: {
@@ -2969,6 +3013,7 @@
             const c = chartColors();
             const labels = PROJECTS.slice(0, 6).map(p => p.code);
             destroyChart('chartBudget');
+            prepareCanvas('chartBudget');
             charts.chartBudget = new Chart(document.getElementById('chartBudget'), {
                 type: 'bar',
                 data: {
@@ -2990,6 +3035,7 @@
             const committed = [180, 195, 210, 200, 220, 215, 230, 240];
             const completed = [168, 188, 205, 192, 218, 198, 226, 218];
             destroyChart('chartVelocity');
+            prepareCanvas('chartVelocity');
             charts.chartVelocity = new Chart(document.getElementById('chartVelocity'), {
                 type: 'bar',
                 data: {
@@ -3013,6 +3059,7 @@
         function renderResourceChart() {
             const c = chartColors();
             destroyChart('chartResource');
+            prepareCanvas('chartResource');
             charts.chartResource = new Chart(document.getElementById('chartResource'), {
                 type: 'doughnut',
                 data: {
@@ -3037,6 +3084,7 @@
         function renderRisksChart() {
             const c = chartColors();
             destroyChart('chartRisks');
+            prepareCanvas('chartRisks');
             charts.chartRisks = new Chart(document.getElementById('chartRisks'), {
                 type: 'bar',
                 data: {
@@ -3054,6 +3102,7 @@
         function renderSPIChart() {
             const c = chartColors();
             destroyChart('chartSPI');
+            prepareCanvas('chartSPI');
             charts.chartSPI = new Chart(document.getElementById('chartSPI'), {
                 type: 'bar',
                 data: {
@@ -3071,6 +3120,7 @@
             const depts = ['Engineering', 'Data', 'Design', 'Operations'];
             const data = depts.map(d => TEAMS.filter(t => t.dept === d).reduce((s, t) => s + t.headcount, 0));
             destroyChart('chartDept');
+            prepareCanvas('chartDept');
             charts.chartDept = new Chart(document.getElementById('chartDept'), {
                 type: 'bar',
                 data: {
@@ -3087,6 +3137,7 @@
         function renderMitigationChart() {
             const c = chartColors();
             destroyChart('chartMitigation');
+            prepareCanvas('chartMitigation');
             charts.chartMitigation = new Chart(document.getElementById('chartMitigation'), {
                 type: 'radar',
                 data: {
@@ -3114,6 +3165,7 @@
             const success = days.map(() => 7000 + Math.random() * 3000);
             const failed = days.map(() => 200 + Math.random() * 400);
             destroyChart('chartWebhook');
+            prepareCanvas('chartWebhook');
             charts.chartWebhook = new Chart(document.getElementById('chartWebhook'), {
                 type: 'line',
                 data: {
@@ -3146,8 +3198,16 @@
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
             document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
             savePrefs();
-            // Trigger Chart.js resize on switch
-            setTimeout(() => Object.values(charts).forEach(ch => ch && ch.resize && ch.resize()), 50);
+            // Only resize charts in the now-visible view (hidden parents have clientWidth=0)
+            setTimeout(() => {
+                const activeView = document.getElementById('view-' + view);
+                Object.entries(charts).forEach(([id, ch]) => {
+                    if (ch && ch.resize && activeView && activeView.contains(ch.canvas)) {
+                        prepareCanvas(id);
+                        ch.resize();
+                    }
+                });
+            }, 50);
         }
         function setToggleGroup(group, key, attr) {
             group.querySelectorAll('.toggle-btn').forEach(b => {
@@ -3226,11 +3286,10 @@
             document.getElementById('addNoteBtn').addEventListener('click', addNote);
 
             // initial render
-            renderKPIs();
             renderH2H();
             renderWinners();
             renderMilestoneProgress();
-            refreshAllCharts();
+            renderKPIs();
             renderFilters();
             renderProjects();
             renderProjectTable();
@@ -3242,11 +3301,46 @@
             renderAutomation();
             renderNotes();
 
+            // Create charts (synchronous - uses fallback width 300 if layout not ready)
+            refreshAllCharts();
+
+            // Re-size charts after layout settles so we get correct parent widths
+            function fitCharts() {
+                const activeView = document.querySelector('.view.active');
+                Object.entries(charts).forEach(([id, ch]) => {
+                    if (ch && ch.resize && activeView && activeView.contains(ch.canvas)) {
+                        prepareCanvas(id);
+                        ch.resize();
+                    }
+                });
+            }
+            // First pass: before first paint (layout is ready, fonts may not be)
+            requestAnimationFrame(fitCharts);
+            // Second pass: after web fonts finish loading (may change container widths)
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => requestAnimationFrame(fitCharts));
+            }
+
             // live clock for lastSync
             setInterval(() => {
                 const el = document.getElementById('lastSync');
                 if (el) el.textContent = 'just now';
             }, 30000);
+
+            // manual resize handler (responsive:false means no ResizeObserver)
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    const activeView = document.querySelector('.view.active');
+                    Object.entries(charts).forEach(([id, ch]) => {
+                        if (ch && ch.resize && activeView && activeView.contains(ch.canvas)) {
+                            prepareCanvas(id);
+                            ch.resize();
+                        }
+                    });
+                }, 150);
+            });
         }
         init();
     </script>

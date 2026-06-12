@@ -108,6 +108,10 @@
             animation: fadeIn 0.5s ease-out forwards;
         }
 
+        .glass-panel canvas {
+            max-height: 320px;
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -1576,7 +1580,11 @@
         }
 
         // --- Charts ---
+        const chartInstances = {};
         function renderCharts() {
+            // Destroy existing chart instances before recreating
+            Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
+
             const ctx1 = document.getElementById('chart-completion-trend').getContext('2d');
             const ctx2 = document.getElementById('chart-budget-actual').getContext('2d');
             const ctx3 = document.getElementById('chart-velocity').getContext('2d');
@@ -1597,7 +1605,7 @@
             });
 
             // Chart 1: Project Completion Trend
-            new Chart(ctx1, {
+            chartInstances.completion = new Chart(ctx1, {
                 type: 'line',
                 data: {
                     labels,
@@ -1652,7 +1660,7 @@
             });
 
             // Chart 2: Budget vs Actual
-            new Chart(ctx2, {
+            chartInstances.budget = new Chart(ctx2, {
                 type: 'bar',
                 data: {
                     labels: ['Mobile Platform', 'Customer Analytics', 'Internal Tools', 'Cloud Migration', 'HR Portal'],
@@ -1702,7 +1710,7 @@
             });
 
             // Chart 3: Team Velocity (Agile only)
-            new Chart(ctx3, {
+            chartInstances.velocity = new Chart(ctx3, {
                 type: 'line',
                 data: {
                     labels,
@@ -1780,7 +1788,7 @@
                     },
                 ],
             };
-            new Chart(ctx4, {
+            chartInstances.resource = new Chart(ctx4, {
                 type: 'pie',
                 data: deptData,
                 options: {
@@ -1798,7 +1806,7 @@
             });
 
             // Chart 5: Open Risks by Severity
-            new Chart(ctx5, {
+            chartInstances.risks = new Chart(ctx5, {
                 type: 'doughnut',
                 data: {
                     labels: ['High', 'Medium', 'Low'],
@@ -1834,7 +1842,7 @@
             });
 
             // Chart 6: Milestone Completion Progress
-            new Chart(ctx6, {
+            chartInstances.milestones = new Chart(ctx6, {
                 type: 'bar',
                 data: {
                     labels: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5'],
@@ -1882,7 +1890,7 @@
             });
 
             // Chart 7: Planned vs Actual Timeline
-            new Chart(ctx7, {
+            chartInstances.timeline = new Chart(ctx7, {
                 type: 'scatter',
                 data: {
                     datasets: [
@@ -1948,7 +1956,7 @@
             });
 
             // Chart 8: Team Workload
-            new Chart(ctx8, {
+            chartInstances.workload = new Chart(ctx8, {
                 type: 'radar',
                 data: {
                     labels: ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Mark', 'Lisa', 'Nancy', 'Tom', 'Sara'],
@@ -1996,7 +2004,7 @@
             });
 
             // Chart 9: Risk Distribution (Gauge style)
-            new Chart(ctx9, {
+            chartInstances.riskDist = new Chart(ctx9, {
                 type: 'pie',
                 data: {
                     labels: ['High', 'Medium', 'Low'],

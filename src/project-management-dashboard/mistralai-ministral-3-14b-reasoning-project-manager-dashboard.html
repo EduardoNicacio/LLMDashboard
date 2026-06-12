@@ -6,6 +6,331 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Premium Project Management Command Center</title>
     <style>
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a3e;
+            --text-primary: #e8eaf6;
+            --text-secondary: #b3c1ff;
+            --accent-color: #4a6bff;
+            --accent-secondary: #00d2d3;
+            --glass-effect: rgba(255, 255, 255, 0.05);
+            --success: #11ce29;
+            --warning: #ffa31a;
+            --danger: #ff4757;
+            --info: #3399ff;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-controls select {
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--glass-effect);
+            color: var(--text-primary);
+        }
+
+        .gap {
+            gap: 0.75rem;
+        }
+
+        .flex { display: flex; }
+        .align-center { align-items: center; }
+
+        .view-toggle {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--glass-effect);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-toggle:hover {
+            background: rgba(74, 107, 255, 0.15);
+        }
+
+        .view-toggle.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .theme-toggle {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--glass-effect);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .theme-toggle.dark::after {
+            content: '☀️ Light';
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 0;
+            min-height: calc(100vh - 80px);
+        }
+
+        .sidebar {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sidebar h3, .sidebar h4 {
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .sidebar h4 {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .filter-control {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--glass-effect);
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-checkbox {
+            margin-right: 0.5rem;
+        }
+
+        .status-filters {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-filters label {
+            padding: 0.3rem 0;
+            font-size: 0.9rem;
+        }
+
+        .mt-1 { margin-top: 0.75rem; }
+        .mt-2 { margin-top: 1.5rem; }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--glass-effect);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-card h3 {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card p {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--glass-effect);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-card h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .chart-container {
+            width: 100%;
+            position: relative;
+        }
+
+        .chart-container canvas {
+            width: 100%;
+            max-height: 300px;
+        }
+
+        .timeline-section {
+            background: var(--glass-effect);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-section > p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .timeline-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .comparison-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .comparison-card {
+            background: var(--glass-effect);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-toggles {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .mode-toggle input[type="checkbox"] {
+            margin: 0;
+        }
+
+        select, button {
+            font-family: inherit;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            .hero-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero-summary {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
         /* Previous CSS remains the same */
         /* Adding more specific styles for new functionality */
 
@@ -376,37 +701,37 @@
             <div class="charts-section gap">
                 <div class="chart-card chart-glow">
                     <h3>Project Completion Trend</h3>
-                    <div class="chart-container" id="completionChart"></div>
+                    <div class="chart-container"><canvas id="completionChart"></canvas></div>
                 </div>
 
                 <div class="chart-card chart-glow">
                     <h3>Budget vs Actual Spend</h3>
-                    <div class="chart-container" id="budgetChart"></div>
+                    <div class="chart-container"><canvas id="budgetChart"></canvas></div>
                 </div>
 
                 <div class="chart-card chart-glow">
                     <h3>Team Velocity and Sprint Throughput</h3>
-                    <div class="chart-container" id="velocityChart"></div>
+                    <div class="chart-container"><canvas id="velocityChart"></canvas></div>
                 </div>
 
                 <div class="chart-card chart-glow">
                     <h3>Resource Allocation by Department</h3>
-                    <div class="chart-container" id="resourceChart"></div>
+                    <div class="chart-container"><canvas id="resourceChart"></canvas></div>
                 </div>
 
                 <div class="chart-card chart-glow">
                     <h3>Open Risks by Severity</h3>
-                    <div class="chart-container" id="risksChart"></div>
+                    <div class="chart-container"><canvas id="risksChart"></canvas></div>
                 </div>
 
                 <div class="chart-card chart-glow">
                     <h3>Milestone Completion Progress</h3>
-                    <div class="chart-container" id="milestonesChart"></div>
+                    <div class="chart-container"><canvas id="milestonesChart"></canvas></div>
                 </div>
 
                 <div class="chart-card chart-glow">
                     <h3>Planned vs Actual Timeline Performance</h3>
-                    <div class="chart-container" id="timelineChart"></div>
+                    <div class="chart-container"><canvas id="timelineChart"></canvas></div>
                 </div>
             </div>
 
@@ -535,12 +860,12 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="chart-card chart-glow">
                         <h3>Resource Utilization</h3>
-                        <div class="chart-container" id="utilizationChart"></div>
+                        <div class="chart-container"><canvas id="utilizationChart"></canvas></div>
                     </div>
 
                     <div class="chart-card chart-glow">
                         <h3>Overtime Risk</h3>
-                        <div class="chart-container" id="overtimeChart"></div>
+                        <div class="chart-container"><canvas id="overtimeChart"></canvas></div>
                     </div>
                 </div>
 
@@ -596,7 +921,7 @@
                 <div style="margin-top: 1rem;">
                     <h4>Integration Health</h4>
                     <div class="chart-card chart-glow" style="height: 200px;">
-                        <div class="chart-container" id="integrationsHealthChart"></div>
+                        <div class="chart-container"><canvas id="integrationsHealthChart"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -609,7 +934,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="chart-card chart-glow">
                         <h3>Workflow Executions</h3>
-                        <div class="chart-container" id="workflowChart"></div>
+                        <div class="chart-container"><canvas id="workflowChart"></canvas></div>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -654,7 +979,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="chart-card chart-glow">
                         <h3>Risk Distribution</h3>
-                        <div class="chart-container" id="riskDistributionChart"></div>
+                        <div class="chart-container"><canvas id="riskDistributionChart"></canvas></div>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -699,7 +1024,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="chart-card chart-glow">
                         <h3>Schedule Adherence</h3>
-                        <div class="chart-container" id="scheduleChart"></div>
+                        <div class="chart-container"><canvas id="scheduleChart"></canvas></div>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -996,9 +1321,23 @@
                 });
             });
 
+            const charts = {};
+            function prepareCanvas(id) {
+                const canvas = document.getElementById(id);
+                if (!canvas) return;
+                const parent = canvas.parentElement;
+                const w = parent.clientWidth || 300;
+                const h = Math.min(parent.clientHeight || 300, 300);
+                const dpr = window.devicePixelRatio || 1;
+                canvas.style.width = w + 'px';
+                canvas.style.height = h + 'px';
+                canvas.width = Math.round(w * dpr);
+                canvas.height = Math.round(h * dpr);
+            }
             // Initialize charts (using Chart.js)
             function initializeCharts() {
                 if (typeof Chart === 'undefined') return;
+                Object.values(charts).forEach(c => { if (c) c.destroy(); });
 
                 // Sample data for all charts
                 const completionData = {
@@ -1232,11 +1571,13 @@
 
                 // Create all charts if Chart.js is available
                 if (window.Chart) {
-                    new Chart(document.getElementById('completionChart'), {
+                    prepareCanvas('completionChart');
+                    charts.completionChart = new Chart(document.getElementById('completionChart'), {
                         type: 'line',
                         data: completionData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1252,11 +1593,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('budgetChart'), {
+                    prepareCanvas('budgetChart');
+                    charts.budgetChart = new Chart(document.getElementById('budgetChart'), {
                         type: 'bar',
                         data: budgetData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1271,11 +1614,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('velocityChart'), {
+                    prepareCanvas('velocityChart');
+                    charts.velocityChart = new Chart(document.getElementById('velocityChart'), {
                         type: 'line',
                         data: velocityData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1293,11 +1638,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('resourceChart'), {
+                    prepareCanvas('resourceChart');
+                    charts.resourceChart = new Chart(document.getElementById('resourceChart'), {
                         type: 'doughnut',
                         data: resourceData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1310,11 +1657,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('risksChart'), {
+                    prepareCanvas('risksChart');
+                    charts.risksChart = new Chart(document.getElementById('risksChart'), {
                         type: 'doughnut',
                         data: risksData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1327,11 +1676,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('milestonesChart'), {
+                    prepareCanvas('milestonesChart');
+                    charts.milestonesChart = new Chart(document.getElementById('milestonesChart'), {
                         type: 'line',
                         data: milestonesData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1347,11 +1698,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('timelineChart'), {
+                    prepareCanvas('timelineChart');
+                    charts.timelineChart = new Chart(document.getElementById('timelineChart'), {
                         type: 'line',
                         data: timelineData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1367,11 +1720,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('utilizationChart'), {
+                    prepareCanvas('utilizationChart');
+                    charts.utilizationChart = new Chart(document.getElementById('utilizationChart'), {
                         type: 'line',
                         data: utilizationData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1386,11 +1741,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('overtimeChart'), {
+                    prepareCanvas('overtimeChart');
+                    charts.overtimeChart = new Chart(document.getElementById('overtimeChart'), {
                         type: 'bar',
                         data: overtimeData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1405,11 +1762,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('integrationsHealthChart'), {
+                    prepareCanvas('integrationsHealthChart');
+                    charts.integrationsHealthChart = new Chart(document.getElementById('integrationsHealthChart'), {
                         type: 'bar',
                         data: integrationsData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1425,11 +1784,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('workflowChart'), {
+                    prepareCanvas('workflowChart');
+                    charts.workflowChart = new Chart(document.getElementById('workflowChart'), {
                         type: 'bar',
                         data: workflowData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1444,11 +1805,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('riskDistributionChart'), {
+                    prepareCanvas('riskDistributionChart');
+                    charts.riskDistributionChart = new Chart(document.getElementById('riskDistributionChart'), {
                         type: 'doughnut',
                         data: riskDistributionData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1461,11 +1824,13 @@
                         }
                     });
 
-                    new Chart(document.getElementById('scheduleChart'), {
+                    prepareCanvas('scheduleChart');
+                    charts.scheduleChart = new Chart(document.getElementById('scheduleChart'), {
                         type: 'bar',
                         data: scheduleData,
                         options: {
-                            responsive: true,
+                            responsive: false,
+                            maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
@@ -1961,6 +2326,30 @@
                     row.style.display = '';
                 });
             }
+        });
+
+        // Resize handler with debounce
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                Object.values(charts).forEach(c => {
+                    if (c) {
+                        const canvas = c.canvas;
+                        if (canvas) {
+                            const parent = canvas.parentElement;
+                            const w = parent.clientWidth || 300;
+                            const h = Math.min(parent.clientHeight || 300, 300);
+                            const dpr = window.devicePixelRatio || 1;
+                            canvas.style.width = w + 'px';
+                            canvas.style.height = h + 'px';
+                            canvas.width = Math.round(w * dpr);
+                            canvas.height = Math.round(h * dpr);
+                            c.resize();
+                        }
+                    }
+                });
+            }, 250);
         });
     </script>
 </body>

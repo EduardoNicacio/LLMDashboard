@@ -270,13 +270,13 @@
             const completedProjects = PROJECTS_DATA.filter(p => p.status === 'Completed').length;
 
             // Portfolio Health Score: Average of all project health scores
-            const avgHealthScore = (PROJECT_DATA.reduce((sum, p) => sum + p.healthScore, 0) / PROJECT_DATA.length).toFixed(1);
+            const avgHealthScore = (PROJECTS_DATA.reduce((sum, p) => sum + p.healthScore, 0) / PROJECTS_DATA.length).toFixed(1);
 
             const totalBudget = PROJECTS_DATA.reduce((sum, p) => sum + p.budget, 0);
             const actualSpendTotal = PROJECTS_DATA.reduce((sum, p) => sum + p.actualSpend, 0);
             const budgetUtilizationPct = ((actualSpendTotal / totalBudget) * 100).toFixed(1);
 
-            const onTimeDeliveryRate = (PROJECT_DATA.filter(p => p.status === 'Completed' && p.completionPct === 100).length / PROJECT_DATA.filter(p => p.status === 'Completed').length || 0) * 100;
+            const onTimeDeliveryRate = (PROJECTS_DATA.filter(p => p.status === 'Completed' && p.completionPct === 100).length / PROJECTS_DATA.filter(p => p.status === 'Completed').length || 0) * 100;
 
             const totalTeamMembers = TEAMS_DATA.reduce((sum, t) => sum + t.size, 0);
 
@@ -336,11 +336,10 @@
         }
 
         function createProjectCardView(project, title) {
-            // Reusing the card structure but making it more detailed for comparison
-            const healthColor = project.healthScore > 75 ? "bg-green-600" : project.healthScore > 50 ? "bg-yellow-600" : "bg-red-600";
+            const healthBorder = project.healthScore > 75 ? "border-green-500" : project.healthScore > 50 ? "border-yellow-500" : "border-red-500";
 
             return `
-                <div class="glass p-6 rounded-xl transition duration-300 hover:shadow-lg border-t-4 ${healthColor} transform hover:-translate-y-1">
+                <div class="glass p-6 rounded-xl transition duration-300 hover:shadow-lg border-t-4 ${healthBorder} transform hover:-translate-y-1">
                     <h2 class="text-2xl font-bold mb-2 text-cyan-300">${title}</h2>
                     <p class="text-sm text-gray-400 mb-4">${project.id} | ${project.status}</p>
 
@@ -364,7 +363,7 @@
                     <div class="mt-6 pt-4 border-t border-white/10">
                          <div class="flex justify-between items-center mb-3">
                             <span class="text-lg font-semibold text-cyan-300">Project Health</span>
-                            <div class="w-28 h-28 rounded-full flex items-center justify-center ${healthColor} shadow-xl transition duration-500">${project.healthScore}%</div>
+                            <div class="w-28 h-28 rounded-full flex items-center justify-center border-4 ${healthBorder} shadow-xl transition duration-500">${project.healthScore}%</div>
                         </div>
                         <p class="text-xs text-gray-400 mt-1">Projected Completion: ${project.projectCompletionDate}</p>
                     </div>
@@ -459,11 +458,10 @@
             `;
         }
 
-        function renderResourcesView() {
+        function renderResourcePanels() {
             return `
-                <div class="grid lg:grid-cols-3 gap-6">
                     <!-- Team Workload Panel -->
-                    <div class="glass p-6 rounded-xl col-span-1">
+                    <div class="glass p-6 rounded-xl">
                         <h2 class="text-2xl font-bold mb-4 text-cyan-300 flex items-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a4.97 4.97 0 011.54-1.916m0 0l3.536-3.536M12 14v-2"></path></svg> Team Workload & Capacity</h2>
                         <div class="space-y-4">
                             ${TEAMS_DATA.map(team => `
@@ -477,7 +475,7 @@
                     </div>
 
                     <!-- Integrations Status Panel -->
-                    <div class="glass p-6 rounded-xl col-span-1">
+                    <div class="glass p-6 rounded-xl">
                          <h2 class="text-2xl font-bold mb-4 text-cyan-300 flex items-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Integrations Status</h2>
                          <div class="space-y-3">
                              ${INTEGRATIONS_DATA.map(int => `
@@ -493,7 +491,7 @@
                     </div>
 
                      <!-- API Usage Panel -->
-                    <div class="glass p-6 rounded-xl col-span-1">
+                    <div class="glass p-6 rounded-xl">
                          <h2 class="text-2xl font-bold mb-4 text-cyan-300 flex items-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Automation & API Usage</h2>
                          <div class="space-y-4">
                              <div class="p-3 rounded bg-slate-800/50 border-l-4 border-cyan-500">
@@ -510,21 +508,19 @@
                              </div>
                          </div>
                     </div>
-                </div>
             `;
+        }
+
+        function renderResourcesView() {
+            return `<div class="grid lg:grid-cols-3 gap-6">${renderResourcePanels()}</div>`;
         }
 
         function renderRiskManagementView() {
             return `
-                <div class="glass p-8 rounded-2xl max-w-5xl mx-auto">
-                    <h2 class="text-3xl font-bold mb-6 text-cyan-300 border-b pb-3 border-white/10 flex justify-between items-center">
-                        Risk Register <span class="text-sm bg-red-900/50 px-3 py-1 rounded-full">Active Risks: ${RISKS_DATA.length}</span>
+                <div class="glass p-6 rounded-2xl">
+                    <h2 class="text-xl font-bold mb-4 text-cyan-300 border-b pb-2 border-white/10 flex justify-between items-center">
+                        Risk Register <span class="text-xs bg-red-900/50 px-2 py-1 rounded-full">${RISKS_DATA.length} Active</span>
                     </h2>
-
-                    <div class="mb-6 flex gap-4">
-                         <input type="text" placeholder="Search risks by description or owner..." class="flex-grow p-3 glass rounded-lg border border-white/10 focus:ring-cyan-500 focus:border-cyan-500 outline-none">
-                         <select id="riskSeverityFilter" class="p-3 glass rounded-lg border border-white/10 text-sm"></select>
-                    </div>
 
                     <!-- Risk Table -->
                     <div class="overflow-x-auto">
@@ -582,15 +578,18 @@
                         <!-- Key Project Cards (Overview) -->
                         <section id="projectCards" class="mb-12">${renderProjectCardsView()}</section>
 
-                        <!-- Integrated Panels: Risks, Integrations, API Usage -->
-                        <div class="grid lg:grid-cols-3 gap-6">
-                            ${view === 'summary' ? renderRiskManagementView() : ''}
-                            ${view === 'summary' ? renderResourcesView() : ''}
-                            <!-- Placeholder for Executive Commentary/Notes -->
-                             <div class="glass p-6 rounded-xl lg:col-span-1 h-[300px] flex flex-col">
-                                <h2 class="text-2xl font-bold mb-4 text-cyan-300">Executive Commentary</h2>
-                                <textarea id="executiveNotes" rows="8" class="w-full p-3 glass rounded-lg border border-white/10 focus:ring-cyan-500 outline-none resize-y"></textarea>
-                            </div>
+                        <!-- Risk Register -->
+                        <section class="mb-6">${renderRiskManagementView()}</section>
+
+                        <!-- Resource Panels -->
+                        <div class="grid lg:grid-cols-3 gap-6 mb-6">
+                            ${renderResourcePanels()}
+                        </div>
+
+                        <!-- Executive Commentary -->
+                        <div class="glass p-6 rounded-xl">
+                            <h2 class="text-2xl font-bold mb-4 text-cyan-300">Executive Commentary</h2>
+                            <textarea id="executiveNotes" rows="4" class="w-full p-3 glass rounded-lg border border-white/10 focus:ring-cyan-500 outline-none resize-y"></textarea>
                         </div>
                     `;
                     break;
