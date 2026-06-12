@@ -301,7 +301,7 @@
         }
 
         function degToCompass(deg) {
-            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+            const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
             return dirs[Math.round(deg / 22.5) % 16];
         }
 
@@ -478,7 +478,7 @@
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: hourlyData.time.slice(0, 24).map(function(t) { return new Date(t).getHours() + ':00'; }),
+                    labels: hourlyData.time.slice(0, 24).map(function (t) { return new Date(t).getHours() + ':00'; }),
                     datasets: [{
                         label: 'Temperature (°C)',
                         data: hourlyData.temperature_2m.slice(0, 24),
@@ -497,7 +497,7 @@
                     plugins: {
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '°C';
                                 }
                             }
@@ -513,14 +513,14 @@
                 favoritesList.innerHTML = '<li class="list-group-item">No favorite cities added yet.</li>';
                 return;
             }
-            favorites.forEach(function(city) {
+            favorites.forEach(function (city) {
                 var li = document.createElement('li');
                 li.className = 'list-group-item d-flex justify-content-between align-items-center';
                 li.innerHTML = city + ' <button class="btn btn-sm btn-outline-danger" data-city="' + city + '">Remove</button>';
                 favoritesList.appendChild(li);
             });
-            document.querySelectorAll('[data-city]').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
+            document.querySelectorAll('[data-city]').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
                     var city = e.target.getAttribute('data-city');
                     removeFavorite(city);
                     renderFavorites();
@@ -557,34 +557,34 @@
             }
         }
 
-        searchBtn.addEventListener('click', function() {
+        searchBtn.addEventListener('click', function () {
             var city = citySearchInput.value.trim();
             if (city) {
                 showLoading();
                 fetchWeatherData(city)
-                    .then(function() {
+                    .then(function () {
                         renderCurrentWeather();
                         renderHourlyForecast();
                         renderSevenDayForecast();
                         hideLoading();
                         initializeCharts();
                     })
-                    .catch(function(error) {
+                    .catch(function (error) {
                         showError(error.message);
                         hideLoading();
                     });
             }
         });
 
-        citySearchInput.addEventListener('keypress', function(e) {
+        citySearchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') searchBtn.click();
         });
 
-        locationBtn.addEventListener('click', function() {
+        locationBtn.addEventListener('click', function () {
             if (navigator.geolocation) {
                 showLoading();
                 navigator.geolocation.getCurrentPosition(
-                    async function(position) {
+                    async function (position) {
                         try {
                             var lat = position.coords.latitude;
                             var lon = position.coords.longitude;
@@ -598,7 +598,7 @@
                             try {
                                 var aqiRes = await fetch(AIR_URL + '?latitude=' + lat + '&longitude=' + lon + '&current=pm10,pm2_5,european_aqi&timezone=auto');
                                 if (aqiRes.ok) airQualityData = await aqiRes.json();
-                            } catch (e) {}
+                            } catch (e) { }
                             renderCurrentWeather();
                             renderHourlyForecast();
                             renderSevenDayForecast();
@@ -609,7 +609,7 @@
                             hideLoading();
                         }
                     },
-                    function(error) {
+                    function (error) {
                         showError('Geolocation error: ' + error.message);
                         hideLoading();
                     }
@@ -621,7 +621,7 @@
 
         unitToggleBtn.addEventListener('click', toggleUnit);
 
-        addFavoriteBtn.addEventListener('click', function() {
+        addFavoriteBtn.addEventListener('click', function () {
             if (currentCity && favorites.indexOf(currentCity) === -1) {
                 addToFavorites(currentCity);
             } else if (favorites.indexOf(currentCity) !== -1) {
@@ -633,16 +633,13 @@
             initializeCharts();
         }
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (e.target.closest('#favorites-btn')) {
                 toggleComparisonMode();
             }
         });
-</script>
+    </script>
 
 </body>
 
 </html>
-
-
-

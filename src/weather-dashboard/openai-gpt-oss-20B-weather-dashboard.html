@@ -66,8 +66,8 @@
         const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
         const FORECAST_PARAMS = 'current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,visibility&hourly=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=7';
 
-        const wmoIcons = {0:'fa-solid fa-sun',1:'fa-solid fa-sun',2:'fa-solid fa-cloud-sun',3:'fa-solid fa-cloud',45:'fa-solid fa-smog',48:'fa-solid fa-smog',51:'fa-solid fa-cloud-drizzle',53:'fa-solid fa-cloud-drizzle',55:'fa-solid fa-cloud-drizzle',61:'fa-solid fa-cloud-rain',63:'fa-solid fa-cloud-rain',65:'fa-solid fa-cloud-rain',71:'fa-solid fa-snowflake',73:'fa-solid fa-snowflake',75:'fa-solid fa-snowflake',77:'fa-solid fa-snowflake',80:'fa-solid fa-cloud-rain',81:'fa-solid fa-cloud-rain',82:'fa-solid fa-cloud-rain',85:'fa-solid fa-snowflake',86:'fa-solid fa-snowflake',95:'fa-solid fa-cloud-bolt',96:'fa-solid fa-cloud-bolt',99:'fa-solid fa-cloud-bolt'};
-        const wmoDesc = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Depositing rime fog',51:'Light drizzle',53:'Moderate drizzle',55:'Dense drizzle',61:'Slight rain',63:'Moderate rain',65:'Heavy rain',71:'Slight snow',73:'Moderate snow',75:'Heavy snow',77:'Snow grains',80:'Slight rain showers',81:'Moderate rain showers',82:'Violent rain showers',85:'Slight snow showers',86:'Heavy snow showers',95:'Thunderstorm',96:'Thunderstorm with slight hail',99:'Thunderstorm with heavy hail'};
+        const wmoIcons = { 0: 'fa-solid fa-sun', 1: 'fa-solid fa-sun', 2: 'fa-solid fa-cloud-sun', 3: 'fa-solid fa-cloud', 45: 'fa-solid fa-smog', 48: 'fa-solid fa-smog', 51: 'fa-solid fa-cloud-drizzle', 53: 'fa-solid fa-cloud-drizzle', 55: 'fa-solid fa-cloud-drizzle', 61: 'fa-solid fa-cloud-rain', 63: 'fa-solid fa-cloud-rain', 65: 'fa-solid fa-cloud-rain', 71: 'fa-solid fa-snowflake', 73: 'fa-solid fa-snowflake', 75: 'fa-solid fa-snowflake', 77: 'fa-solid fa-snowflake', 80: 'fa-solid fa-cloud-rain', 81: 'fa-solid fa-cloud-rain', 82: 'fa-solid fa-cloud-rain', 85: 'fa-solid fa-snowflake', 86: 'fa-solid fa-snowflake', 95: 'fa-solid fa-cloud-bolt', 96: 'fa-solid fa-cloud-bolt', 99: 'fa-solid fa-cloud-bolt' };
+        const wmoDesc = { 0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Foggy', 48: 'Depositing rime fog', 51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle', 61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain', 71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow', 77: 'Snow grains', 80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers', 85: 'Slight snow showers', 86: 'Heavy snow showers', 95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail' };
         function getIcon(c) { return wmoIcons[c] || 'fa-solid fa-cloud'; }
         function getDesc(c) { return wmoDesc[c] || 'Unknown'; }
 
@@ -216,7 +216,7 @@
                     const time = new Date(hourly.time[i]);
                     const t = Math.round(convertTemp(hourly.temperature_2m[i], unit));
                     hourlySlider.innerHTML += `<div class="text-center p-2" style="min-width:80px;background:rgba(255,255,255,0.1);border-radius:8px">
-                        <small>${time.toLocaleTimeString([],{hour:'2-digit'})}</small><br>
+                        <small>${time.toLocaleTimeString([], { hour: '2-digit' })}</small><br>
                         <i class="${getIcon(hourly.weather_code[i])}"></i><br>
                         <strong>${t}°</strong>
                     </div>`;
@@ -232,7 +232,7 @@
                     const low = Math.round(convertTemp(daily.temperature_2m_min[i], unit));
                     dailyForecast.innerHTML += `<div class="col-md-4 col-6 mb-2">
                         <div class="text-center p-2" style="background:rgba(255,255,255,0.1);border-radius:8px">
-                            <strong>${date.toLocaleDateString('en-US',{weekday:'short'})}</strong><br>
+                            <strong>${date.toLocaleDateString('en-US', { weekday: 'short' })}</strong><br>
                             <i class="${getIcon(daily.weather_code[i])}"></i><br>
                             <span>H: ${high}° L: ${low}°</span>
                         </div>

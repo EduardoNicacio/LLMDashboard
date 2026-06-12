@@ -5,16 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkyGlass | Premium Weather Dashboard</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
 
@@ -59,17 +59,19 @@
         ::-webkit-scrollbar {
             width: 8px;
         }
+
         ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1); 
+            background: rgba(0, 0, 0, 0.1);
         }
+
         ::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3); 
+            background: rgba(255, 255, 255, 0.3);
             border-radius: 4px;
         }
 
         /* Loader */
         .loader {
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top: 3px solid #fff;
             width: 24px;
@@ -78,8 +80,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Gradient Background Animation */
@@ -100,43 +107,50 @@
             border-radius: 50%;
             background: #fff;
             cursor: pointer;
-            margin-top: -6px; 
+            margin-top: -6px;
         }
     </style>
 </head>
+
 <body class="flex items-center justify-center p-4">
 
     <!-- Dynamic Background -->
     <div id="bg-canvas" class="w-full h-full"></div>
 
     <!-- Main Container -->
-    <main class="glass-panel w-full max-w-6xl rounded-3xl p-6 md:p-8 relative overflow-hidden min-h-[90vh] flex flex-col">
-        
+    <main
+        class="glass-panel w-full max-w-6xl rounded-3xl p-6 md:p-8 relative overflow-hidden min-h-[90vh] flex flex-col">
+
         <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-white/10 pb-6">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-cyan-300 flex items-center justify-center shadow-lg">
+                <div
+                    class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-cyan-300 flex items-center justify-center shadow-lg">
                     <i class="fa-solid fa-cloud-bolt text-white"></i>
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight">SkyGlass</h1>
-                    <div id="loading-indicator" class="text-xs text-blue-200 flex items-center gap-2"><span class="loader w-4 h-4"></span> Fetching data...</div>
+                    <div id="loading-indicator" class="text-xs text-blue-200 flex items-center gap-2"><span
+                            class="loader w-4 h-4"></span> Fetching data...</div>
                 </div>
             </div>
 
             <div class="flex items-center gap-3 w-full md:w-auto">
                 <!-- Search -->
                 <div class="relative flex-grow md:flex-grow-0 group">
-                    <input type="text" id="city-input" placeholder="Search city..." 
+                    <input type="text" id="city-input" placeholder="Search city..."
                         class="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-400 transition-colors placeholder-white/60">
-                    <i class="fa-solid fa-location-crosshairs absolute left-3 top-2.5 text-white/50 group-focus-within:text-blue-400"></i>
+                    <i
+                        class="fa-solid fa-location-crosshairs absolute left-3 top-2.5 text-white/50 group-focus-within:text-blue-400"></i>
                 </div>
-                
+
                 <!-- Actions -->
-                <button onclick="useCurrentLocation()" class="glass-button p-2.5 rounded-xl" title="Use Current Location">
+                <button onclick="useCurrentLocation()" class="glass-button p-2.5 rounded-xl"
+                    title="Use Current Location">
                     <i class="fa-solid fa-location-dot text-lg"></i>
                 </button>
-                <button onclick="toggleUnits()" id="unit-toggle" class="glass-button px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2">
+                <button onclick="toggleUnits()" id="unit-toggle"
+                    class="glass-button px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2">
                     <span id="unit-label">°C</span>
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
                 </button>
@@ -145,36 +159,40 @@
 
         <!-- Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
-            
+
             <!-- Left Column: Current Weather & Details -->
             <div class="lg:col-span-2 space-y-6">
-                
+
                 <!-- Main Weather Card -->
                 <section class="glass-panel rounded-2xl p-6 relative overflow-hidden group">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <i id="main-icon" class="fa-solid fa-sun text-9xl"></i>
                     </div>
-                    
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+
+                    <div
+                        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
                         <div>
                             <h2 id="city-name" class="text-3xl font-bold mb-1">Loading...</h2>
                             <p id="weather-desc" class="text-blue-200 text-lg capitalize">Fetching details</p>
                             <div class="flex items-center gap-4 mt-2 text-sm text-white/70">
-                                <span><i class="fa-solid fa-location-dot mr-1"></i> <span id="coordinates">--</span></span>
+                                <span><i class="fa-solid fa-location-dot mr-1"></i> <span
+                                        id="coordinates">--</span></span>
                                 <span><i class="fa-solid fa-wind mr-1"></i> <span id="wind-speed">--</span> km/h</span>
                             </div>
                         </div>
 
                         <div class="text-center md:text-right">
                             <div class="text-[5rem] font-bold tracking-tighter leading-none" id="current-temp">--°</div>
-                            <div class="flex items-center justify-center md:justify-end gap-2 text-white/80 bg-black/20 w-fit rounded-full px-3 py-1">
+                            <div
+                                class="flex items-center justify-center md:justify-end gap-2 text-white/80 bg-black/20 w-fit rounded-full px-3 py-1">
                                 <i class="fa-solid fa-fire"></i> Feels like <span id="feels-like">--°</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Alerts Banner -->
-                    <div id="alert-banner" class="hidden mt-4 bg-red-500/20 border border-red-500/30 rounded-lg p-3 flex items-start gap-3">
+                    <div id="alert-banner"
+                        class="hidden mt-4 bg-red-500/20 border border-red-500/30 rounded-lg p-3 flex items-start gap-3">
                         <i class="fa-solid fa-triangle-exclamation text-red-300 mt-1"></i>
                         <div>
                             <h4 class="font-bold text-red-200 text-sm">Weather Alert</h4>
@@ -239,8 +257,8 @@
                         <div class="text-xl font-bold" id="sunset-val">--:--</div>
                     </div>
 
-                     <!-- Air Quality -->
-                     <div class="glass-panel rounded-xl p-4 flex flex-col justify-between hover:bg-white/5 transition">
+                    <!-- Air Quality -->
+                    <div class="glass-panel rounded-xl p-4 flex flex-col justify-between hover:bg-white/5 transition">
                         <div class="flex items-center gap-3 text-blue-200 mb-2">
                             <i class="fa-solid fa-wind"></i>
                             <span class="text-xs font-bold uppercase tracking-wider">Air Quality</span>
@@ -248,8 +266,8 @@
                         <div class="text-xl font-bold" id="aqi-val">--</div>
                     </div>
 
-                     <!-- Wind Direction -->
-                     <div class="glass-panel rounded-xl p-4 flex flex-col justify-between hover:bg-white/5 transition">
+                    <!-- Wind Direction -->
+                    <div class="glass-panel rounded-xl p-4 flex flex-col justify-between hover:bg-white/5 transition">
                         <div class="flex items-center gap-3 text-blue-200 mb-2">
                             <i class="fa-solid fa-arrows-spinning"></i>
                             <span class="text-xs font-bold uppercase tracking-wider">Direction</span>
@@ -274,17 +292,18 @@
 
             <!-- Right Column: Forecast & Favorites -->
             <div class="space-y-6">
-                
+
                 <!-- Hourly Slider -->
                 <section class="glass-panel rounded-2xl p-5">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="font-bold text-lg">Hourly Forecast</h3>
                         <span class="text-xs bg-blue-500/20 text-blue-200 px-2 py-1 rounded">Next 24h</span>
                     </div>
-                    
+
                     <!-- Custom Slider -->
-                    <input type="range" id="hourly-slider" min="0" max="23" value="0" class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-400">
-                    
+                    <input type="range" id="hourly-slider" min="0" max="23" value="0"
+                        class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-400">
+
                     <div class="flex justify-between mt-4 overflow-x-auto pb-2 scrollbar-hide">
                         <!-- Hourly Items injected via JS -->
                         <div id="hourly-container" class="flex gap-3 w-full"></div>
@@ -303,7 +322,8 @@
                 <section class="glass-panel rounded-2xl p-5">
                     <h3 class="font-bold text-lg mb-4 flex justify-between items-center">
                         <span>Favorites</span>
-                        <button onclick="clearFavorites()" class="text-xs text-red-300 hover:text-red-100">Clear All</button>
+                        <button onclick="clearFavorites()" class="text-xs text-red-300 hover:text-red-100">Clear
+                            All</button>
                     </h3>
                     <ul id="favorites-list" class="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
                         <!-- Favorites injected via JS -->
@@ -326,13 +346,13 @@
         // ==========================================
         // CONFIGURATION & API SETUP
         // ==========================================
-        
+
         // NOTE: This uses Open-Meteo (Free, No Key required for basic usage).
         // To use OpenWeatherMap or others, replace the URLs below.
         const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
         const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast';
         const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
-        
+
         // State
         let state = {
             lat: 51.5074,
@@ -357,7 +377,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
             loadFavorites();
-            
+
             // Initial Load (London)
             fetchWeather(state.lat, state.lon);
 
@@ -365,7 +385,7 @@
             document.getElementById('city-input').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') searchCity(e.target.value);
             });
-            
+
             document.getElementById('hourly-slider').addEventListener('input', updateHourlyView);
         });
 
@@ -469,14 +489,14 @@
 
             // Temp Conversion
             let tempC = current.temperature_2m;
-            if (state.unit === 'fahrenheit') tempC = (tempC * 9/5) + 32;
+            if (state.unit === 'fahrenheit') tempC = (tempC * 9 / 5) + 32;
 
             let feelsC = current.apparent_temperature;
-            if (state.unit === 'fahrenheit') feelsC = (feelsC * 9/5) + 32;
+            if (state.unit === 'fahrenheit') feelsC = (feelsC * 9 / 5) + 32;
 
             document.getElementById('current-temp').innerText = `${Math.round(tempC)}°`;
             document.getElementById('feels-like').innerText = `${Math.round(feelsC)}°`;
-            
+
             // Weather Code to Icon & Text
             const code = current.weather_code;
             const descMap = {
@@ -485,7 +505,7 @@
                 61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain', 71: 'Slight snow',
                 80: 'Showers', 95: 'Thunderstorm'
             };
-            
+
             const desc = descMap[code] || 'Unknown';
             document.getElementById('weather-desc').innerText = desc;
 
@@ -500,9 +520,9 @@
             document.getElementById('pressure-val').innerText = `${current.surface_pressure} hPa`;
             document.getElementById('visibility-val').innerText = `${(weatherData.current.visibility / 1000).toFixed(1)} km`;
             document.getElementById('uv-val').innerText = weatherData.daily.uv_index_max[0];
-            
-            const sunrise = new Date(weatherData.daily.sunrise[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const sunset = new Date(weatherData.daily.sunset[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            const sunrise = new Date(weatherData.daily.sunrise[0]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const sunset = new Date(weatherData.daily.sunset[0]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             document.getElementById('sunrise-val').innerText = sunrise;
             document.getElementById('sunset-val').innerText = sunset;
 
@@ -545,7 +565,7 @@
         function toggleUnits() {
             state.unit = state.unit === 'celsius' ? 'fahrenheit' : 'celsius';
             document.getElementById('unit-label').innerText = state.unit.toUpperCase();
-            
+
             // Re-fetch to convert temps immediately without delay
             fetchWeather(state.lat, state.lon);
         }
@@ -572,7 +592,7 @@
 
         function updateBackground(code, isDay) {
             const bg = document.getElementById('bg-canvas');
-            
+
             if (!isDay) {
                 // Night gradients
                 if (code === 0 || code === 1) bg.style.background = 'linear-gradient(to bottom right, #0f172a, #312e81)';
@@ -591,7 +611,7 @@
         function updateIcon(code, isDay) {
             const iconEl = document.getElementById('main-icon');
             let iconClass = '';
-            
+
             if (code === 0 || code === 1) iconClass = 'fa-solid fa-sun';
             else if (code === 2) iconClass = 'fa-solid fa-cloud-sun';
             else if (code > 40 && code < 50) iconClass = 'fa-solid fa-smog'; // Fog
@@ -648,7 +668,7 @@
 
         function updateCharts(hourlyData) {
             const temps = hourlyData.temperature_2m.map(t =>
-                state.unit === 'fahrenheit' ? (t * 9/5) + 32 : t
+                state.unit === 'fahrenheit' ? (t * 9 / 5) + 32 : t
             );
             const labels = hourlyData.time.map(t =>
                 new Date(t).toLocaleTimeString([], { hour: '2-digit' })
@@ -671,18 +691,18 @@
         function renderHourlySlider(hourlyData) {
             const container = document.getElementById('hourly-container');
             container.innerHTML = '';
-            
+
             // Open-Meteo hourly data is usually 24 points for a day, but can be more. 
             // We'll limit to the next 24 hours or available data.
             const maxIndex = Math.min(hourlyData.time.length - 1, 23);
 
             for (let i = 0; i <= maxIndex; i++) {
-                const timeStr = new Date(hourlyData.time[i]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const timeStr = new Date(hourlyData.time[i]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const tempC = state.unit === 'fahrenheit'
-                    ? (hourlyData.temperature_2m[i] * 9/5) + 32
+                    ? (hourlyData.temperature_2m[i] * 9 / 5) + 32
                     : hourlyData.temperature_2m[i];
                 const code = hourlyData.weather_code[i];
-                
+
                 // Icon logic for slider
                 let iconClass = 'fa-solid fa-sun';
                 if (code > 40) iconClass = 'fa-solid fa-cloud-rain';
@@ -697,7 +717,7 @@
                     </div>
                     <span class="font-bold mt-1">${Math.round(tempC)}°</span>
                 `;
-                
+
                 // Click to jump slider (optional enhancement)
                 div.onclick = () => {
                     const slider = document.getElementById('hourly-slider');
@@ -714,12 +734,12 @@
             container.innerHTML = '';
 
             dailyData.time.forEach((time, index) => {
-                const date = new Date(time).toLocaleDateString([], {weekday: 'short', day: 'numeric'});
+                const date = new Date(time).toLocaleDateString([], { weekday: 'short', day: 'numeric' });
                 let maxTempC = dailyData.temperature_2m_max[index];
                 let minTempC = dailyData.temperature_2m_min[index];
                 if (state.unit === 'fahrenheit') {
-                    maxTempC = (maxTempC * 9/5) + 32;
-                    minTempC = (minTempC * 9/5) + 32;
+                    maxTempC = (maxTempC * 9 / 5) + 32;
+                    minTempC = (minTempC * 9 / 5) + 32;
                 }
                 const code = dailyData.weather_code[index];
 
@@ -747,7 +767,7 @@
         function updateHourlyView(index) {
             // Update charts to show specific hour range (simplified for demo: just updates current view)
             // In a real app, you'd slice the data based on index.
-            renderHourlySlider(state.hourlyData); 
+            renderHourlySlider(state.hourlyData);
         }
 
         // ==========================================
@@ -800,4 +820,5 @@
         }
     </script>
 </body>
+
 </html>

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Command Center | Model Testing Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+
     <style>
         /* CORE STYLES & RESET */
         :root {
@@ -36,13 +39,16 @@
             background-color: var(--bg);
             color: var(--text-main);
             overflow-x: hidden;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 15% 15%, rgba(0, 243, 255, 0.05), transparent 50%),
                 radial-gradient(circle at 85% 85%, rgba(188, 19, 254, 0.05), transparent 50%);
         }
 
         /* TYPOGRAPHY & UTILS */
-        h1, h2, h3, .mono {
+        h1,
+        h2,
+        h3,
+        .mono {
             font-family: 'JetBrains Mono', monospace;
         }
 
@@ -60,7 +66,10 @@
         .glass-panel::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
             background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
         }
 
@@ -183,7 +192,8 @@
             display: flex;
             flex-direction: column;
             gap: 24px;
-            min-width: 0; /* Fix for flex overflow */
+            min-width: 0;
+            /* Fix for flex overflow */
         }
 
         /* HERO SECTION */
@@ -235,7 +245,10 @@
         .model-card::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 4px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
             background: currentColor;
         }
 
@@ -253,8 +266,17 @@
             display: inline-block;
         }
 
-        .local-badge { background: rgba(0, 255, 157, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
-        .frontier-badge { background: rgba(188, 19, 254, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+        .local-badge {
+            background: rgba(0, 255, 157, 0.2);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+        }
+
+        .frontier-badge {
+            background: rgba(188, 19, 254, 0.2);
+            color: var(--accent-purple);
+            border: 1px solid var(--accent-purple);
+        }
 
         .score-ring {
             width: 120px;
@@ -279,7 +301,9 @@
         }
 
         @keyframes scoreAnim {
-            to { stroke-dashoffset: 56.55; }
+            to {
+                stroke-dashoffset: 56.55;
+            }
         }
 
         /* CHARTS */
@@ -361,8 +385,15 @@
             margin-right: 12px;
         }
 
-        .status-success { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
-        .status-fail { background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }
+        .status-success {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .status-fail {
+            background: var(--accent-red);
+            box-shadow: 0 0 10px var(--accent-red);
+        }
 
         .prompt-details {
             padding: 0 16px 16px;
@@ -447,7 +478,8 @@
             text-align: left;
         }
 
-        th, td {
+        th,
+        td {
             padding: 12px 16px;
             border-bottom: 1px solid var(--glass-border);
         }
@@ -481,8 +513,16 @@
             margin-left: 4px;
             opacity: 0.5;
         }
-        .sort-icon.asc { opacity: 1; }
-        .sort-icon.desc { opacity: 1; transform: rotate(180deg); display: inline-block; }
+
+        .sort-icon.asc {
+            opacity: 1;
+        }
+
+        .sort-icon.desc {
+            opacity: 1;
+            transform: rotate(180deg);
+            display: inline-block;
+        }
 
         /* NOTES */
         .notes-section {
@@ -503,16 +543,22 @@
             padding: 10px;
             outline: none;
         }
-        textarea::placeholder { color: var(--text-muted); }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
 
         /* VIEWS & UTILS */
-        .view-hidden { display: none !important; }
-        
+        .view-hidden {
+            display: none !important;
+        }
+
         .winner-breakdown {
             display: flex;
             gap: 16px;
             margin-top: 16px;
         }
+
         .winner-col {
             flex: 1;
             padding: 16px;
@@ -520,11 +566,13 @@
             border-radius: 8px;
             border-left: 4px solid currentColor;
         }
+
         .winner-title {
             font-size: 0.8rem;
             color: var(--text-muted);
             margin-bottom: 8px;
         }
+
         .winner-name {
             font-size: 1.1rem;
             font-weight: bold;
@@ -533,7 +581,10 @@
         /* LOADER */
         #loader {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: #000;
             z-index: 9999;
             display: flex;
@@ -542,6 +593,7 @@
             flex-direction: column;
             transition: opacity 0.5s;
         }
+
         .loader-bar {
             width: 200px;
             height: 4px;
@@ -550,501 +602,582 @@
             position: relative;
             overflow: hidden;
         }
+
         .loader-progress {
             position: absolute;
-            top: 0; left: 0; height: 100%;
+            top: 0;
+            left: 0;
+            height: 100%;
             background: var(--accent-cyan);
             width: 0%;
             box-shadow: 0 0 10px var(--accent-cyan);
             animation: load 1.5s ease-out forwards;
         }
+
         @keyframes load {
-            to { width: 100%; }
+            to {
+                width: 100%;
+            }
         }
 
         /* RESPONSIVE */
         @media (max-width: 1200px) {
-            #app { grid-template-columns: 1fr; }
-            aside { display: none; }
+            #app {
+                grid-template-columns: 1fr;
+            }
+
+            aside {
+                display: none;
+            }
         }
+
         @media (max-width: 768px) {
-            .hero-grid { grid-template-columns: 1fr; }
-            .h2h-container { flex-direction: column; }
-            .charts-grid { grid-template-columns: 1fr; }
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .h2h-container {
+                flex-direction: column;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<div id="loader">
-    <div class="logo">AI Command Center</div>
-    <div class="loader-bar"><div class="loader-progress"></div></div>
-</div>
-
-<div id="app">
-    <header>
+    <div id="loader">
         <div class="logo">AI Command Center</div>
-        <div class="controls">
-            <button class="btn-control active" data-view="summary">Summary</button>
-            <button class="btn-control" data-view="speed">Speed</button>
-            <button class="btn-control" data-view="quality">Quality</button>
-            <button class="btn-control" data-view="cost">Cost</button>
-            <button class="btn-control" data-view="hardware">Hardware</button>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
         </div>
-    </header>
+    </div>
 
-    <aside>
-        <div class="glass-panel sidebar-section">
-            <div class="sidebar-title">Model Filter</div>
-            <button class="filter-btn active" data-model="all">
-                <span>All Models</span>
-                <span id="count-all">12</span>
-            </button>
-            <button class="filter-btn" data-model="qwen">
-                <span>Qwen3.6 27B (Local)</span>
-                <span id="count-qwen">6</span>
-            </button>
-            <button class="filter-btn" data-model="claude">
-                <span>Claude Opus 4.8 (Frontier)</span>
-                <span id="count-claude">6</span>
-            </button>
-        </div>
+    <div id="app">
+        <header>
+            <div class="logo">AI Command Center</div>
+            <div class="controls">
+                <button class="btn-control active" data-view="summary">Summary</button>
+                <button class="btn-control" data-view="speed">Speed</button>
+                <button class="btn-control" data-view="quality">Quality</button>
+                <button class="btn-control" data-view="cost">Cost</button>
+                <button class="btn-control" data-view="hardware">Hardware</button>
+            </div>
+        </header>
 
-        <div class="glass-panel sidebar-section">
-            <div class="sidebar-title">Sort By</div>
-            <button class="filter-btn" data-sort="score">
-                <span>Score (Quality)</span>
-                <span class="sort-icon">▲</span>
-            </button>
-            <button class="filter-btn" data-sort="speed">
-                <span>Speed (TPS)</span>
-                <span class="sort-icon">▲</span>
-            </button>
-            <button class="filter-btn" data-sort="cost">
-                <span>API Cost</span>
-                <span class="sort-icon">▲</span>
-            </button>
-        </div>
-    </aside>
-
-    <main id="main-content">
-        <!-- VIEW: SUMMARY -->
-        <div id="view-summary" class="view-active">
-            <div class="hero-grid">
-                <div class="glass-panel metric-card">
-                    <div class="metric-value glow-text" id="total-tests">142</div>
-                    <div class="metric-label">Total Tests</div>
-                </div>
-                <div class="glass-panel metric-card">
-                    <div class="metric-value" id="avg-tps">1050 <span style="font-size:0.6em; color:var(--text-muted)">TPS</span></div>
-                    <div class="metric-label">Average Throughput</div>
-                </div>
-                <div class="glass-panel metric-card">
-                    <div class="metric-value glow-text" id="best-model">Claude Opus 4.8</div>
-                    <div class="metric-label">Best Overall</div>
-                </div>
-                <div class="glass-panel metric-card">
-                    <div class="metric-value" id="total-cost">$152.40</div>
-                    <div class="metric-label">Total API Spend</div>
-                </div>
-                <div class="glass-panel metric-card">
-                    <div class="metric-value" id="local-runtime">12.4 <span style="font-size:0.6em; color:var(--text-muted)">hrs</span></div>
-                    <div class="metric-label">Local Compute Time</div>
-                </div>
+        <aside>
+            <div class="glass-panel sidebar-section">
+                <div class="sidebar-title">Model Filter</div>
+                <button class="filter-btn active" data-model="all">
+                    <span>All Models</span>
+                    <span id="count-all">12</span>
+                </button>
+                <button class="filter-btn" data-model="qwen">
+                    <span>Qwen3.6 27B (Local)</span>
+                    <span id="count-qwen">6</span>
+                </button>
+                <button class="filter-btn" data-model="claude">
+                    <span>Claude Opus 4.8 (Frontier)</span>
+                    <span id="count-claude">6</span>
+                </button>
             </div>
 
-            <div class="h2h-container">
-                <div class="model-card" style="color: var(--accent-cyan);">
-                    <div class="model-name">Qwen3.6 27B</div>
-                    <div class="model-badge local-badge">Local Model</div>
-                    <div class="score-ring">
-                        <svg><circle class="score-ring__circle" r="54" cx="60" cy="60" style="stroke: var(--accent-cyan);"/></svg>
+            <div class="glass-panel sidebar-section">
+                <div class="sidebar-title">Sort By</div>
+                <button class="filter-btn" data-sort="score">
+                    <span>Score (Quality)</span>
+                    <span class="sort-icon">▲</span>
+                </button>
+                <button class="filter-btn" data-sort="speed">
+                    <span>Speed (TPS)</span>
+                    <span class="sort-icon">▲</span>
+                </button>
+                <button class="filter-btn" data-sort="cost">
+                    <span>API Cost</span>
+                    <span class="sort-icon">▲</span>
+                </button>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            <!-- VIEW: SUMMARY -->
+            <div id="view-summary" class="view-active">
+                <div class="hero-grid">
+                    <div class="glass-panel metric-card">
+                        <div class="metric-value glow-text" id="total-tests">142</div>
+                        <div class="metric-label">Total Tests</div>
                     </div>
-                    <div style="margin-bottom: 8px;">Overall Grade: <strong>A-</strong></div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Speed King</div>
-                </div>
-                <div style="font-size: 2rem; color: var(--text-muted); font-family: monospace;">VS</div>
-                <div class="model-card" style="color: var(--accent-purple);">
-                    <div class="model-name">Claude Opus 4.8</div>
-                    <div class="model-badge frontier-badge">Frontier Model</div>
-                    <div class="score-ring">
-                        <svg><circle class="score-ring__circle" r="54" cx="60" cy="60" style="stroke: var(--accent-purple);"/></svg>
+                    <div class="glass-panel metric-card">
+                        <div class="metric-value" id="avg-tps">1050 <span
+                                style="font-size:0.6em; color:var(--text-muted)">TPS</span></div>
+                        <div class="metric-label">Average Throughput</div>
                     </div>
-                    <div style="margin-bottom: 8px;">Overall Grade: <strong>A</strong></div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Quality Titan</div>
-                </div>
-            </div>
-
-            <div class="charts-grid">
-                <div class="glass-panel chart-card">
-                    <div class="chart-header"><div class="chart-title">Tokens Per Second</div><div style="font-size: 0.8rem; color: var(--accent-cyan);">TPS</div></div>
-                    <svg class="chart-svg" id="chart-tps"></svg>
-                </div>
-                <div class="glass-panel chart-card">
-                    <div class="chart-header"><div class="chart-title">Completion Time (ms)</div><div style="font-size: 0.8rem; color: var(--accent-purple);">Latency</div></div>
-                    <svg class="chart-svg" id="chart-time"></svg>
-                </div>
-                <div class="glass-panel chart-card">
-                    <div class="chart-header"><div class="chart-title">Quality Score</div><div style="font-size: 0.8rem; color: var(--accent-green);">Accuracy</div></div>
-                    <svg class="chart-svg" id="chart-quality"></svg>
-                </div>
-                <div class="glass-panel chart-card">
-                    <div class="chart-header"><div class="chart-title">API Cost Comparison</div><div style="font-size: 0.8rem; color: var(--accent-red);">Spend</div></div>
-                    <svg class="chart-svg" id="chart-cost"></svg>
-                </div>
-            </div>
-
-            <div class="glass-panel">
-                <div class="prompt-list" id="prompt-history"></div>
-            </div>
-        </div>
-
-        <!-- VIEW: SPEED -->
-        <div id="view-speed" class="view-hidden">
-            <div class="hardware-grid">
-                <div class="glass-panel hardware-gauge" style="color: var(--accent-cyan);">
-                    <svg class="gauge-svg"><circle class="gauge-bg" r="40" cx="50" cy="50"/><circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: var(--accent-cyan);"/></svg>
-                    <div class="hardware-label">Qwen TPS</div>
-                    <div class="hardware-val">1245</div>
-                </div>
-                <div class="glass-panel hardware-gauge" style="color: var(--accent-purple);">
-                    <svg class="gauge-svg"><circle class="gauge-bg" r="40" cx="50" cy="50"/><circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: var(--accent-purple);"/></svg>
-                    <div class="hardware-label">Claude TPS</div>
-                    <div class="hardware-val">892</div>
-                </div>
-            </div>
-            <div class="charts-grid" style="margin-top: 24px;">
-                 <div class="glass-panel chart-card" style="grid-column: span 2;">
-                    <div class="chart-header"><div class="chart-title">Speed Evolution Over Tests</div></div>
-                    <svg class="chart-svg" id="chart-speed-detailed"></svg>
-                </div>
-            </div>
-        </div>
-
-        <!-- VIEW: QUALITY -->
-        <div id="view-quality" class="view-hidden">
-            <div class="winner-breakdown">
-                <div class="winner-col" style="color: var(--accent-cyan);">
-                    <div class="winner-title">Creativity Score</div>
-                    <div class="winner-name">Qwen3.6 27B</div>
-                    <div style="margin-top: 8px; font-size: 0.9rem;">8.2 / 10</div>
-                </div>
-                <div class="winner-col" style="color: var(--accent-purple);">
-                    <div class="winner-title">Instruction Following</div>
-                    <div class="winner-name">Claude Opus 4.8</div>
-                    <div style="margin-top: 8px; font-size: 0.9rem;">9.5 / 10</div>
-                </div>
-                <div class="winner-col" style="color: var(--accent-green);">
-                    <div class="winner-title">Coding Accuracy</div>
-                    <div class="winner-name">Tie</div>
-                    <div style="margin-top: 8px; font-size: 0.9rem;">9.0 / 10</div>
-                </div>
-            </div>
-            <div class="charts-grid" style="margin-top: 24px;">
-                <div class="glass-panel chart-card">
-                    <div class="chart-header"><div class="chart-title">Quality Score Distribution</div></div>
-                    <svg class="chart-svg" id="chart-quality-dist"></svg>
-                </div>
-                <div class="glass-panel chart-card">
-                    <div class="chart-header"><div class="chart-title">Creativity vs Speed</div></div>
-                    <svg class="chart-svg" id="chart-creativity"></svg>
-                </div>
-            </div>
-        </div>
-
-        <!-- VIEW: COST -->
-        <div id="view-cost" class="view-hidden">
-            <div class="hardware-grid">
-                <div class="glass-panel hardware-gauge" style="color: var(--accent-red);">
-                    <svg class="gauge-svg"><circle class="gauge-bg" r="40" cx="50" cy="50"/><circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: var(--accent-red);"/></svg>
-                    <div class="hardware-label">Claude API Cost</div>
-                    <div class="hardware-val">$45.20</div>
-                </div>
-                <div class="glass-panel hardware-gauge" style="color: var(--accent-green);">
-                    <svg class="gauge-svg"><circle class="gauge-bg" r="40" cx="50" cy="50"/><circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: var(--accent-green);"/></svg>
-                    <div class="hardware-label">Local Cost (Electricity)</div>
-                    <div class="hardware-val">$12.50</div>
-                </div>
-            </div>
-            <div class="glass-panel" style="margin-top: 24px;">
-                <div class="chart-header" style="padding: 16px;"><div class="chart-title">Cost Breakdown</div></div>
-                <div style="padding: 16px; display: flex; gap: 20px; align-items: center;">
-                    <div style="width: 50px; height: 50px; background: rgba(188, 19, 254, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-purple);">
-                        <span style="color: var(--accent-purple); font-size: 1.2rem;">$</span>
+                    <div class="glass-panel metric-card">
+                        <div class="metric-value glow-text" id="best-model">Claude Opus 4.8</div>
+                        <div class="metric-label">Best Overall</div>
                     </div>
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-purple);">Claude Opus 4.8</div>
-                        <div style="font-size: 0.9rem; color: var(--text-muted);">Input: 12.5K tokens | Output: 8.2K tokens</div>
+                    <div class="glass-panel metric-card">
+                        <div class="metric-value" id="total-cost">$152.40</div>
+                        <div class="metric-label">Total API Spend</div>
+                    </div>
+                    <div class="glass-panel metric-card">
+                        <div class="metric-value" id="local-runtime">12.4 <span
+                                style="font-size:0.6em; color:var(--text-muted)">hrs</span></div>
+                        <div class="metric-label">Local Compute Time</div>
+                    </div>
+                </div>
+
+                <div class="h2h-container">
+                    <div class="model-card" style="color: var(--accent-cyan);">
+                        <div class="model-name">Qwen3.6 27B</div>
+                        <div class="model-badge local-badge">Local Model</div>
+                        <div class="score-ring">
+                            <svg>
+                                <circle class="score-ring__circle" r="54" cx="60" cy="60"
+                                    style="stroke: var(--accent-cyan);" />
+                            </svg>
+                        </div>
+                        <div style="margin-bottom: 8px;">Overall Grade: <strong>A-</strong></div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Speed King</div>
+                    </div>
+                    <div style="font-size: 2rem; color: var(--text-muted); font-family: monospace;">VS</div>
+                    <div class="model-card" style="color: var(--accent-purple);">
+                        <div class="model-name">Claude Opus 4.8</div>
+                        <div class="model-badge frontier-badge">Frontier Model</div>
+                        <div class="score-ring">
+                            <svg>
+                                <circle class="score-ring__circle" r="54" cx="60" cy="60"
+                                    style="stroke: var(--accent-purple);" />
+                            </svg>
+                        </div>
+                        <div style="margin-bottom: 8px;">Overall Grade: <strong>A</strong></div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Quality Titan</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="glass-panel chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Tokens Per Second</div>
+                            <div style="font-size: 0.8rem; color: var(--accent-cyan);">TPS</div>
+                        </div>
+                        <svg class="chart-svg" id="chart-tps"></svg>
+                    </div>
+                    <div class="glass-panel chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Completion Time (ms)</div>
+                            <div style="font-size: 0.8rem; color: var(--accent-purple);">Latency</div>
+                        </div>
+                        <svg class="chart-svg" id="chart-time"></svg>
+                    </div>
+                    <div class="glass-panel chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Quality Score</div>
+                            <div style="font-size: 0.8rem; color: var(--accent-green);">Accuracy</div>
+                        </div>
+                        <svg class="chart-svg" id="chart-quality"></svg>
+                    </div>
+                    <div class="glass-panel chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">API Cost Comparison</div>
+                            <div style="font-size: 0.8rem; color: var(--accent-red);">Spend</div>
+                        </div>
+                        <svg class="chart-svg" id="chart-cost"></svg>
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <div class="prompt-list" id="prompt-history"></div>
+                </div>
+            </div>
+
+            <!-- VIEW: SPEED -->
+            <div id="view-speed" class="view-hidden">
+                <div class="hardware-grid">
+                    <div class="glass-panel hardware-gauge" style="color: var(--accent-cyan);">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" r="40" cx="50" cy="50" />
+                            <circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: var(--accent-cyan);" />
+                        </svg>
+                        <div class="hardware-label">Qwen TPS</div>
+                        <div class="hardware-val">1245</div>
+                    </div>
+                    <div class="glass-panel hardware-gauge" style="color: var(--accent-purple);">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" r="40" cx="50" cy="50" />
+                            <circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: var(--accent-purple);" />
+                        </svg>
+                        <div class="hardware-label">Claude TPS</div>
+                        <div class="hardware-val">892</div>
+                    </div>
+                </div>
+                <div class="charts-grid" style="margin-top: 24px;">
+                    <div class="glass-panel chart-card" style="grid-column: span 2;">
+                        <div class="chart-header">
+                            <div class="chart-title">Speed Evolution Over Tests</div>
+                        </div>
+                        <svg class="chart-svg" id="chart-speed-detailed"></svg>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- VIEW: HARDWARE -->
-        <div id="view-hardware" class="view-hidden">
-            <div class="hardware-grid">
-                <div class="glass-panel hardware-gauge" style="color: #00ff9d;">
-                    <svg class="gauge-svg"><circle class="gauge-bg" r="40" cx="50" cy="50"/><circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: #00ff9d;"/></svg>
-                    <div class="hardware-label">GPU Utilization</div>
-                    <div class="hardware-val">87%</div>
+            <!-- VIEW: QUALITY -->
+            <div id="view-quality" class="view-hidden">
+                <div class="winner-breakdown">
+                    <div class="winner-col" style="color: var(--accent-cyan);">
+                        <div class="winner-title">Creativity Score</div>
+                        <div class="winner-name">Qwen3.6 27B</div>
+                        <div style="margin-top: 8px; font-size: 0.9rem;">8.2 / 10</div>
+                    </div>
+                    <div class="winner-col" style="color: var(--accent-purple);">
+                        <div class="winner-title">Instruction Following</div>
+                        <div class="winner-name">Claude Opus 4.8</div>
+                        <div style="margin-top: 8px; font-size: 0.9rem;">9.5 / 10</div>
+                    </div>
+                    <div class="winner-col" style="color: var(--accent-green);">
+                        <div class="winner-title">Coding Accuracy</div>
+                        <div class="winner-name">Tie</div>
+                        <div style="margin-top: 8px; font-size: 0.9rem;">9.0 / 10</div>
+                    </div>
                 </div>
-                <div class="glass-panel hardware-gauge" style="color: #00f3ff;">
-                    <svg class="gauge-svg"><circle class="gauge-bg" r="40" cx="50" cy="50"/><circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: #00f3ff;"/></svg>
-                    <div class="hardware-label">VRAM Usage</div>
-                    <div class="hardware-val">21.8 GB / 24 GB</div>
-                </div>
-                <div class="glass-panel hardware-gauge" style="color: #ff3b3b;">
-                    <svg class="gauge-svg"><circle class="gauge-bg" r="40" cx="50" cy="50"/><circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: #ff3b3b;"/></svg>
-                    <div class="hardware-label">Temperature</div>
-                    <div class="hardware-val">68°C</div>
-                </div>
-                <div class="glass-panel hardware-gauge" style="color: #bc13fe;">
-                    <svg class="gauge-svg"><circle class="gauge-bg" r="40" cx="50" cy="50"/><circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: #bc13fe;"/></svg>
-                    <div class="hardware-label">Power Draw</div>
-                    <div class="hardware-val">320W</div>
+                <div class="charts-grid" style="margin-top: 24px;">
+                    <div class="glass-panel chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Quality Score Distribution</div>
+                        </div>
+                        <svg class="chart-svg" id="chart-quality-dist"></svg>
+                    </div>
+                    <div class="glass-panel chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Creativity vs Speed</div>
+                        </div>
+                        <svg class="chart-svg" id="chart-creativity"></svg>
+                    </div>
                 </div>
             </div>
-            <div class="glass-panel" style="margin-top: 24px;">
-                <div class="chart-header" style="padding: 16px;"><div class="chart-title">Hardware Timeline</div></div>
-                <svg class="chart-svg" id="chart-hardware" style="height: 200px;"></svg>
+
+            <!-- VIEW: COST -->
+            <div id="view-cost" class="view-hidden">
+                <div class="hardware-grid">
+                    <div class="glass-panel hardware-gauge" style="color: var(--accent-red);">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" r="40" cx="50" cy="50" />
+                            <circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: var(--accent-red);" />
+                        </svg>
+                        <div class="hardware-label">Claude API Cost</div>
+                        <div class="hardware-val">$45.20</div>
+                    </div>
+                    <div class="glass-panel hardware-gauge" style="color: var(--accent-green);">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" r="40" cx="50" cy="50" />
+                            <circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: var(--accent-green);" />
+                        </svg>
+                        <div class="hardware-label">Local Cost (Electricity)</div>
+                        <div class="hardware-val">$12.50</div>
+                    </div>
+                </div>
+                <div class="glass-panel" style="margin-top: 24px;">
+                    <div class="chart-header" style="padding: 16px;">
+                        <div class="chart-title">Cost Breakdown</div>
+                    </div>
+                    <div style="padding: 16px; display: flex; gap: 20px; align-items: center;">
+                        <div
+                            style="width: 50px; height: 50px; background: rgba(188, 19, 254, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-purple);">
+                            <span style="color: var(--accent-purple); font-size: 1.2rem;">$</span>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent-purple);">Claude Opus
+                                4.8</div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted);">Input: 12.5K tokens | Output: 8.2K
+                                tokens</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- TABLE SECTION (Always visible or context dependent, let's keep it in summary but accessible) -->
-        <div id="table-section" class="view-active">
-            <div class="glass-panel data-table-container">
-                <table id="results-table">
-                    <thead>
-                        <tr>
-                            <th data-sort="model">Model</th>
-                            <th data-sort="prompt">Prompt ID</th>
-                            <th data-sort="score">Quality Score</th>
-                            <th data-sort="speed">TPS</th>
-                            <th data-sort="latency">Latency</th>
-                            <th data-sort="cost">Cost</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body"></tbody>
-                </table>
+            <!-- VIEW: HARDWARE -->
+            <div id="view-hardware" class="view-hidden">
+                <div class="hardware-grid">
+                    <div class="glass-panel hardware-gauge" style="color: #00ff9d;">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" r="40" cx="50" cy="50" />
+                            <circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: #00ff9d;" />
+                        </svg>
+                        <div class="hardware-label">GPU Utilization</div>
+                        <div class="hardware-val">87%</div>
+                    </div>
+                    <div class="glass-panel hardware-gauge" style="color: #00f3ff;">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" r="40" cx="50" cy="50" />
+                            <circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: #00f3ff;" />
+                        </svg>
+                        <div class="hardware-label">VRAM Usage</div>
+                        <div class="hardware-val">21.8 GB / 24 GB</div>
+                    </div>
+                    <div class="glass-panel hardware-gauge" style="color: #ff3b3b;">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" r="40" cx="50" cy="50" />
+                            <circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: #ff3b3b;" />
+                        </svg>
+                        <div class="hardware-label">Temperature</div>
+                        <div class="hardware-val">68°C</div>
+                    </div>
+                    <div class="glass-panel hardware-gauge" style="color: #bc13fe;">
+                        <svg class="gauge-svg">
+                            <circle class="gauge-bg" r="40" cx="50" cy="50" />
+                            <circle class="gauge-fill" r="40" cx="50" cy="50" style="stroke: #bc13fe;" />
+                        </svg>
+                        <div class="hardware-label">Power Draw</div>
+                        <div class="hardware-val">320W</div>
+                    </div>
+                </div>
+                <div class="glass-panel" style="margin-top: 24px;">
+                    <div class="chart-header" style="padding: 16px;">
+                        <div class="chart-title">Hardware Timeline</div>
+                    </div>
+                    <svg class="chart-svg" id="chart-hardware" style="height: 200px;"></svg>
+                </div>
             </div>
-        </div>
 
-        <div class="glass-panel notes-section view-active">
-            <div class="sidebar-title" style="margin-bottom: 12px; display: block;">Final Testing Observations</div>
-            <textarea placeholder="Log your insights, anomalies, and conclusions here...">Initial run shows Qwen excelling in raw speed and coding benchmarks, while Claude maintains superior instruction following and creative reasoning. Local hardware (RTX 3090) remained stable at 68C throughout extended testing. API cost for Claude was significantly higher than local electricity cost, but justified by quality output. Recommend using Qwen for code generation pipelines and Claude for creative writing and complex reasoning tasks.</textarea>
-        </div>
-    </main>
-</div>
+            <!-- TABLE SECTION (Always visible or context dependent, let's keep it in summary but accessible) -->
+            <div id="table-section" class="view-active">
+                <div class="glass-panel data-table-container">
+                    <table id="results-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="model">Model</th>
+                                <th data-sort="prompt">Prompt ID</th>
+                                <th data-sort="score">Quality Score</th>
+                                <th data-sort="speed">TPS</th>
+                                <th data-sort="latency">Latency</th>
+                                <th data-sort="cost">Cost</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
 
-<script>
-    // --- DATA GENERATOR ---
-    function generateData() {
-        const baseTime = Date.now();
-        const models = {
-            qwen: { name: 'Qwen3.6 27B', type: 'local', color: 'cyan', badge: 'local-badge', baseScore: 8.5, baseSpeed: 1200, baseCost: 0.05 },
-            claude: { name: 'Claude Opus 4.8', type: 'frontier', color: 'purple', badge: 'frontier-badge', baseScore: 9.2, baseSpeed: 900, baseCost: 0.80 }
+            <div class="glass-panel notes-section view-active">
+                <div class="sidebar-title" style="margin-bottom: 12px; display: block;">Final Testing Observations</div>
+                <textarea
+                    placeholder="Log your insights, anomalies, and conclusions here...">Initial run shows Qwen excelling in raw speed and coding benchmarks, while Claude maintains superior instruction following and creative reasoning. Local hardware (RTX 3090) remained stable at 68C throughout extended testing. API cost for Claude was significantly higher than local electricity cost, but justified by quality output. Recommend using Qwen for code generation pipelines and Claude for creative writing and complex reasoning tasks.</textarea>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DATA GENERATOR ---
+        function generateData() {
+            const baseTime = Date.now();
+            const models = {
+                qwen: { name: 'Qwen3.6 27B', type: 'local', color: 'cyan', badge: 'local-badge', baseScore: 8.5, baseSpeed: 1200, baseCost: 0.05 },
+                claude: { name: 'Claude Opus 4.8', type: 'frontier', color: 'purple', badge: 'frontier-badge', baseScore: 9.2, baseSpeed: 900, baseCost: 0.80 }
+            };
+
+            const tests = [];
+            const prompts = [
+                "Write a Python script to scrape a website respecting robots.txt.",
+                "Explain quantum entanglement in simple terms for a 5th grader.",
+                "Design a futuristic city layout with sustainable energy sources.",
+                "Debug this React component that isn't rendering correctly.",
+                "Create a marketing email for a new AI-powered productivity tool.",
+                "Summarize the plot of 'Inception' in one sentence.",
+                "Generate a regex to validate email addresses.",
+                "Write a haiku about machine learning.",
+                "Explain the difference between supervised and unsupervised learning.",
+                "Create a budget plan for a startup with $500K funding."
+            ];
+
+            for (let i = 0; i < 12; i++) {
+                const model = i % 2 === 0 ? 'qwen' : 'claude';
+                const m = models[model];
+
+                // Add some noise/variance
+                const noiseScore = (Math.random() - 0.5) * 1.2;
+                const noiseSpeed = (Math.random() - 0.5) * 200;
+                const noiseLatency = (Math.random() - 0.5) * 200;
+
+                const score = Math.max(0, Math.min(10, m.baseScore + noiseScore));
+                const speed = Math.max(100, Math.min(3000, m.baseSpeed + noiseSpeed));
+                const latency = Math.max(100, Math.min(5000, 1000 + noiseLatency));
+                const tokens = Math.floor(Math.random() * 500) + 200;
+                const cost = (tokens * m.baseCost / 1000).toFixed(2);
+
+                const test = {
+                    id: `test-${i + 1}`,
+                    model: m.name,
+                    modelType: model,
+                    prompt: prompts[Math.floor(i / 2)] || "Complex multi-step instruction",
+                    quality: score,
+                    tps: speed,
+                    latency: latency,
+                    tokens: tokens,
+                    cost: parseFloat(cost),
+                    status: Math.random() > 0.05 ? 'success' : 'fail',
+                    timestamp: baseTime - (i * 86400000) // Last 12 days
+                };
+                tests.push(test);
+            }
+            return tests;
+        }
+
+        const allTests = generateData();
+        let filteredTests = [...allTests];
+        let sortConfig = { key: 'score', direction: 'desc' };
+
+        // --- STATE & DOM ---
+        const state = {
+            view: 'summary',
+            filter: 'all',
+            hardwareSim: {
+                temp: 68,
+                vram: 21.5,
+                power: 320,
+                gpu: 85
+            }
         };
 
-        const tests = [];
-        const prompts = [
-            "Write a Python script to scrape a website respecting robots.txt.",
-            "Explain quantum entanglement in simple terms for a 5th grader.",
-            "Design a futuristic city layout with sustainable energy sources.",
-            "Debug this React component that isn't rendering correctly.",
-            "Create a marketing email for a new AI-powered productivity tool.",
-            "Summarize the plot of 'Inception' in one sentence.",
-            "Generate a regex to validate email addresses.",
-            "Write a haiku about machine learning.",
-            "Explain the difference between supervised and unsupervised learning.",
-            "Create a budget plan for a startup with $500K funding."
-        ];
+        const dom = {
+            loader: document.getElementById('loader'),
+            controls: document.querySelectorAll('.btn-control'),
+            filters: document.querySelectorAll('.filter-btn[data-model]'),
+            sortBtns: document.querySelectorAll('th, [data-sort]'),
+            main: document.getElementById('main-content'),
+            tableBody: document.getElementById('table-body'),
+            promptHistory: document.getElementById('prompt-history'),
+            gauges: {
+                qwen: document.querySelector('.hardware-gauge:nth-child(1) .gauge-fill'),
+                claude: document.querySelector('.hardware-gauge:nth-child(2) .gauge-fill')
+            }
+        };
 
-        for (let i = 0; i < 12; i++) {
-            const model = i % 2 === 0 ? 'qwen' : 'claude';
-            const m = models[model];
-            
-            // Add some noise/variance
-            const noiseScore = (Math.random() - 0.5) * 1.2;
-            const noiseSpeed = (Math.random() - 0.5) * 200;
-            const noiseLatency = (Math.random() - 0.5) * 200;
-            
-            const score = Math.max(0, Math.min(10, m.baseScore + noiseScore));
-            const speed = Math.max(100, Math.min(3000, m.baseSpeed + noiseSpeed));
-            const latency = Math.max(100, Math.min(5000, 1000 + noiseLatency));
-            const tokens = Math.floor(Math.random() * 500) + 200;
-            const cost = (tokens * m.baseCost / 1000).toFixed(2);
+        // --- RENDER LOGIC ---
+        function renderHero() {
+            const totalTests = filteredTests.length;
+            const avgTps = filteredTests.reduce((a, b) => a + b.tps, 0) / totalTests;
+            const totalCost = filteredTests.reduce((a, b) => a + b.cost, 0).toFixed(2);
+            const bestModel = filteredTests.reduce((best, curr) => curr.quality > best.quality ? curr : best, filteredTests[0]);
 
-            const test = {
-                id: `test-${i+1}`,
-                model: m.name,
-                modelType: model,
-                prompt: prompts[Math.floor(i / 2)] || "Complex multi-step instruction",
-                quality: score,
-                tps: speed,
-                latency: latency,
-                tokens: tokens,
-                cost: parseFloat(cost),
-                status: Math.random() > 0.05 ? 'success' : 'fail',
-                timestamp: baseTime - (i * 86400000) // Last 12 days
-            };
-            tests.push(test);
-        }
-        return tests;
-    }
-
-    const allTests = generateData();
-    let filteredTests = [...allTests];
-    let sortConfig = { key: 'score', direction: 'desc' };
-
-    // --- STATE & DOM ---
-    const state = {
-        view: 'summary',
-        filter: 'all',
-        hardwareSim: {
-            temp: 68,
-            vram: 21.5,
-            power: 320,
-            gpu: 85
-        }
-    };
-
-    const dom = {
-        loader: document.getElementById('loader'),
-        controls: document.querySelectorAll('.btn-control'),
-        filters: document.querySelectorAll('.filter-btn[data-model]'),
-        sortBtns: document.querySelectorAll('th, [data-sort]'),
-        main: document.getElementById('main-content'),
-        tableBody: document.getElementById('table-body'),
-        promptHistory: document.getElementById('prompt-history'),
-        gauges: {
-            qwen: document.querySelector('.hardware-gauge:nth-child(1) .gauge-fill'),
-            claude: document.querySelector('.hardware-gauge:nth-child(2) .gauge-fill')
-        }
-    };
-
-    // --- RENDER LOGIC ---
-    function renderHero() {
-        const totalTests = filteredTests.length;
-        const avgTps = filteredTests.reduce((a, b) => a + b.tps, 0) / totalTests;
-        const totalCost = filteredTests.reduce((a, b) => a + b.cost, 0).toFixed(2);
-        const bestModel = filteredTests.reduce((best, curr) => curr.quality > best.quality ? curr : best, filteredTests[0]);
-
-        document.getElementById('total-tests').innerText = totalTests;
-        document.getElementById('avg-tps').innerText = Math.round(avgTps);
-        document.getElementById('best-model').innerText = bestModel.model;
-        document.getElementById('total-cost').innerText = `$${totalCost}`;
-        document.getElementById('count-all').innerText = allTests.length;
-        document.getElementById('count-qwen').innerText = allTests.filter(t => t.modelType === 'qwen').length;
-        document.getElementById('count-claude').innerText = allTests.filter(t => t.modelType === 'claude').length;
-    }
-
-    function renderHeadToHead() {
-        const qwenTests = allTests.filter(t => t.modelType === 'qwen');
-        const claudeTests = allTests.filter(t => t.modelType === 'claude');
-
-        const qScore = qwenTests.reduce((a, b) => a + b.quality, 0) / qwenTests.length;
-        const cScore = claudeTests.reduce((a, b) => a + b.quality, 0) / claudeTests.length;
-
-        // Update rings visually (simple approximation for demo)
-        document.querySelectorAll('.score-ring__circle').forEach((c, i) => {
-            const val = i === 0 ? qScore : cScore;
-            const offset = 565.48 - (val / 10) * 565.48;
-            c.style.strokeDashoffset = offset;
-        });
-    }
-
-    function createChart(id, data, color, type = 'line') {
-        const svg = document.getElementById(id);
-        const width = svg.clientWidth || 400;
-        const height = svg.clientHeight || 120;
-        const padding = 20;
-
-        // Clear previous
-        svg.innerHTML = '';
-
-        // Grid
-        const gridLines = 5;
-        for(let i=0; i<=gridLines; i++) {
-            const y = padding + (height - 2*padding) * i / gridLines;
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", padding);
-            line.setAttribute("x2", width - padding);
-            line.setAttribute("y1", y);
-            line.setAttribute("y2", y);
-            line.setAttribute("stroke", "rgba(255,255,255,0.05)");
-            line.setAttribute("stroke-width", "1");
-            svg.appendChild(line);
+            document.getElementById('total-tests').innerText = totalTests;
+            document.getElementById('avg-tps').innerText = Math.round(avgTps);
+            document.getElementById('best-model').innerText = bestModel.model;
+            document.getElementById('total-cost').innerText = `$${totalCost}`;
+            document.getElementById('count-all').innerText = allTests.length;
+            document.getElementById('count-qwen').innerText = allTests.filter(t => t.modelType === 'qwen').length;
+            document.getElementById('count-claude').innerText = allTests.filter(t => t.modelType === 'claude').length;
         }
 
-        if (!data || data.length === 0) return;
+        function renderHeadToHead() {
+            const qwenTests = allTests.filter(t => t.modelType === 'qwen');
+            const claudeTests = allTests.filter(t => t.modelType === 'claude');
 
-        // Line
-        const pathData = [];
-        const step = (width - 2 * padding) / (data.length - 1);
-        
-        data.forEach((point, i) => {
-            const x = padding + i * step;
-            const y = padding + (height - 2 * padding) * (1 - (point / 10)); // Normalize 0-10 to height
-            pathData.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
-        });
+            const qScore = qwenTests.reduce((a, b) => a + b.quality, 0) / qwenTests.length;
+            const cScore = claudeTests.reduce((a, b) => a + b.quality, 0) / claudeTests.length;
 
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", pathData.join(" "));
-        path.setAttribute("fill", "none");
-        path.setAttribute("stroke", color);
-        path.setAttribute("stroke-width", "3");
-        path.setAttribute("stroke-linejoin", "round");
-        path.setAttribute("filter", `drop-shadow(0 0 10px ${color})`);
-        svg.appendChild(path);
+            // Update rings visually (simple approximation for demo)
+            document.querySelectorAll('.score-ring__circle').forEach((c, i) => {
+                const val = i === 0 ? qScore : cScore;
+                const offset = 565.48 - (val / 10) * 565.48;
+                c.style.strokeDashoffset = offset;
+            });
+        }
 
-        // Dots
-        data.forEach((point, i) => {
-            const x = padding + i * step;
-            const y = padding + (height - 2 * padding) * (1 - (point / 10));
-            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttribute("cx", x);
-            circle.setAttribute("cy", y);
-            circle.setAttribute("r", "4");
-            circle.setAttribute("fill", color);
-            circle.setAttribute("opacity", "0.8");
-            svg.appendChild(circle);
-        });
-    }
+        function createChart(id, data, color, type = 'line') {
+            const svg = document.getElementById(id);
+            const width = svg.clientWidth || 400;
+            const height = svg.clientHeight || 120;
+            const padding = 20;
 
-    function renderCharts() {
-        const qwenData = allTests.filter(t => t.modelType === 'qwen').slice(-10);
-        const claudeData = allTests.filter(t => t.modelType === 'claude').slice(-10);
+            // Clear previous
+            svg.innerHTML = '';
 
-        // TPS Chart
-        const tpsData = filteredTests.slice(-10).map(t => t.tps / 100); // Normalize
-        createChart('chart-tps', tpsData, 'var(--accent-cyan)');
+            // Grid
+            const gridLines = 5;
+            for (let i = 0; i <= gridLines; i++) {
+                const y = padding + (height - 2 * padding) * i / gridLines;
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", padding);
+                line.setAttribute("x2", width - padding);
+                line.setAttribute("y1", y);
+                line.setAttribute("y2", y);
+                line.setAttribute("stroke", "rgba(255,255,255,0.05)");
+                line.setAttribute("stroke-width", "1");
+                svg.appendChild(line);
+            }
 
-        // Time Chart
-        const timeData = filteredTests.slice(-10).map(t => t.latency / 1000);
-        createChart('chart-time', timeData, 'var(--accent-purple)');
+            if (!data || data.length === 0) return;
 
-        // Quality Chart
-        const qualData = filteredTests.slice(-10).map(t => t.quality);
-        createChart('chart-quality', qualData, 'var(--accent-green)');
+            // Line
+            const pathData = [];
+            const step = (width - 2 * padding) / (data.length - 1);
 
-        // Cost Chart
-        const costData = filteredTests.slice(-10).map(t => t.cost);
-        createChart('chart-cost', costData, 'var(--accent-red)');
-    }
+            data.forEach((point, i) => {
+                const x = padding + i * step;
+                const y = padding + (height - 2 * padding) * (1 - (point / 10)); // Normalize 0-10 to height
+                pathData.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+            });
 
-    function renderPromptHistory() {
-        dom.promptHistory.innerHTML = '';
-        const recent = filteredTests.slice(-10);
-        
-        recent.forEach(test => {
-            const item = document.createElement('div');
-            item.className = 'prompt-item';
-            item.onclick = () => toggleDetails(item);
-            
-            const statusColor = test.status === 'success' ? 'status-success' : 'status-fail';
-            
-            item.innerHTML = `
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData.join(" "));
+            path.setAttribute("fill", "none");
+            path.setAttribute("stroke", color);
+            path.setAttribute("stroke-width", "3");
+            path.setAttribute("stroke-linejoin", "round");
+            path.setAttribute("filter", `drop-shadow(0 0 10px ${color})`);
+            svg.appendChild(path);
+
+            // Dots
+            data.forEach((point, i) => {
+                const x = padding + i * step;
+                const y = padding + (height - 2 * padding) * (1 - (point / 10));
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", x);
+                circle.setAttribute("cy", y);
+                circle.setAttribute("r", "4");
+                circle.setAttribute("fill", color);
+                circle.setAttribute("opacity", "0.8");
+                svg.appendChild(circle);
+            });
+        }
+
+        function renderCharts() {
+            const qwenData = allTests.filter(t => t.modelType === 'qwen').slice(-10);
+            const claudeData = allTests.filter(t => t.modelType === 'claude').slice(-10);
+
+            // TPS Chart
+            const tpsData = filteredTests.slice(-10).map(t => t.tps / 100); // Normalize
+            createChart('chart-tps', tpsData, 'var(--accent-cyan)');
+
+            // Time Chart
+            const timeData = filteredTests.slice(-10).map(t => t.latency / 1000);
+            createChart('chart-time', timeData, 'var(--accent-purple)');
+
+            // Quality Chart
+            const qualData = filteredTests.slice(-10).map(t => t.quality);
+            createChart('chart-quality', qualData, 'var(--accent-green)');
+
+            // Cost Chart
+            const costData = filteredTests.slice(-10).map(t => t.cost);
+            createChart('chart-cost', costData, 'var(--accent-red)');
+        }
+
+        function renderPromptHistory() {
+            dom.promptHistory.innerHTML = '';
+            const recent = filteredTests.slice(-10);
+
+            recent.forEach(test => {
+                const item = document.createElement('div');
+                item.className = 'prompt-item';
+                item.onclick = () => toggleDetails(item);
+
+                const statusColor = test.status === 'success' ? 'status-success' : 'status-fail';
+
+                item.innerHTML = `
                 <div class="prompt-header">
                     <div style="display: flex; align-items: center;">
                         <div class="prompt-status ${statusColor}"></div>
@@ -1060,23 +1193,23 @@
                     <div class="detail-row"><span>Cost:</span> <span class="detail-val">$${test.cost}</span></div>
                 </div>
             `;
-            dom.promptHistory.appendChild(item);
-        });
-    }
+                dom.promptHistory.appendChild(item);
+            });
+        }
 
-    function renderTable() {
-        dom.tableBody.innerHTML = '';
-        const sorted = [...filteredTests].sort((a, b) => {
-            const valA = a[sortConfig.key];
-            const valB = b[sortConfig.key];
-            if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
+        function renderTable() {
+            dom.tableBody.innerHTML = '';
+            const sorted = [...filteredTests].sort((a, b) => {
+                const valA = a[sortConfig.key];
+                const valB = b[sortConfig.key];
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
 
-        sorted.forEach(test => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
+            sorted.forEach(test => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
                 <td>${test.model}</td>
                 <td>${test.prompt.substring(0, 30)}...</td>
                 <td>${test.quality.toFixed(1)}</td>
@@ -1085,148 +1218,149 @@
                 <td>$${test.cost}</td>
                 <td><span style="color: ${test.status === 'success' ? 'var(--accent-green)' : 'var(--accent-red)'}; font-size: 0.8rem;">${test.status}</span></td>
             `;
-            dom.tableBody.appendChild(row);
-        });
-    }
+                dom.tableBody.appendChild(row);
+            });
+        }
 
-    function renderHardware() {
-        // Update Gauges
-        const qwenGauge = dom.gauges.qwen;
-        const claudeGauge = dom.gauges.claude;
-        
-        // Simulate slight jitter
-        state.hardwareSim.temp += (Math.random() - 0.5) * 0.5;
-        state.hardwareSim.vram += (Math.random() - 0.5) * 0.1;
-        state.hardwareSim.power += (Math.random() - 0.5) * 5;
-        state.hardwareSim.gpu += (Math.random() - 0.5) * 1;
+        function renderHardware() {
+            // Update Gauges
+            const qwenGauge = dom.gauges.qwen;
+            const claudeGauge = dom.gauges.claude;
 
-        // Clamp values
-        state.hardwareSim.temp = Math.max(60, Math.min(85, state.hardwareSim.temp));
-        state.hardwareSim.vram = Math.max(20, Math.min(24, state.hardwareSim.vram));
-        state.hardwareSim.power = Math.max(300, Math.min(400, state.hardwareSim.power));
-        state.hardwareSim.gpu = Math.max(70, Math.min(95, state.hardwareSim.gpu));
+            // Simulate slight jitter
+            state.hardwareSim.temp += (Math.random() - 0.5) * 0.5;
+            state.hardwareSim.vram += (Math.random() - 0.5) * 0.1;
+            state.hardwareSim.power += (Math.random() - 0.5) * 5;
+            state.hardwareSim.gpu += (Math.random() - 0.5) * 1;
 
-        // Qwen Gauge (Speed proxy)
-        const qwenOffset = 565.48 - (state.hardwareSim.gpu / 100) * 565.48;
-        qwenGauge.style.strokeDashoffset = qwenOffset;
-        
-        // Claude Gauge (Cost proxy / Temp proxy)
-        const claudeVal = (state.hardwareSim.temp - 60) / 25; // 0 to 1
-        const claudeOffset = 565.48 - claudeVal * 565.48;
-        claudeGauge.style.strokeDashoffset = claudeOffset;
-    }
+            // Clamp values
+            state.hardwareSim.temp = Math.max(60, Math.min(85, state.hardwareSim.temp));
+            state.hardwareSim.vram = Math.max(20, Math.min(24, state.hardwareSim.vram));
+            state.hardwareSim.power = Math.max(300, Math.min(400, state.hardwareSim.power));
+            state.hardwareSim.gpu = Math.max(70, Math.min(95, state.hardwareSim.gpu));
 
-    // --- INTERACTIONS ---
-    function toggleDetails(element) {
-        const details = element.querySelector('.prompt-details');
-        const isExpanded = details.style.maxHeight === '200px';
-        details.style.maxHeight = isExpanded ? '0px' : '200px';
-    }
+            // Qwen Gauge (Speed proxy)
+            const qwenOffset = 565.48 - (state.hardwareSim.gpu / 100) * 565.48;
+            qwenGauge.style.strokeDashoffset = qwenOffset;
 
-    function switchView(v) {
-        state.view = v;
-        // Update UI classes
-        dom.controls.forEach(b => b.classList.remove('active'));
-        dom.controls.forEach(b => b.style.display = 'none'); // Hide all
-        const activeBtn = Array.from(dom.controls).find(b => b.dataset.view === v);
-        activeBtn.classList.add('active');
-        
-        // Show specific sections
-        document.querySelectorAll('.view-active').forEach(el => el.classList.remove('view-active'));
-        document.querySelectorAll(`#view-${v}`).forEach(el => el.classList.add('view-active'));
-        
-        // Re-render relevant parts
-        if (v === 'summary') {
+            // Claude Gauge (Cost proxy / Temp proxy)
+            const claudeVal = (state.hardwareSim.temp - 60) / 25; // 0 to 1
+            const claudeOffset = 565.48 - claudeVal * 565.48;
+            claudeGauge.style.strokeDashoffset = claudeOffset;
+        }
+
+        // --- INTERACTIONS ---
+        function toggleDetails(element) {
+            const details = element.querySelector('.prompt-details');
+            const isExpanded = details.style.maxHeight === '200px';
+            details.style.maxHeight = isExpanded ? '0px' : '200px';
+        }
+
+        function switchView(v) {
+            state.view = v;
+            // Update UI classes
+            dom.controls.forEach(b => b.classList.remove('active'));
+            dom.controls.forEach(b => b.style.display = 'none'); // Hide all
+            const activeBtn = Array.from(dom.controls).find(b => b.dataset.view === v);
+            activeBtn.classList.add('active');
+
+            // Show specific sections
+            document.querySelectorAll('.view-active').forEach(el => el.classList.remove('view-active'));
+            document.querySelectorAll(`#view-${v}`).forEach(el => el.classList.add('view-active'));
+
+            // Re-render relevant parts
+            if (v === 'summary') {
+                renderHero();
+                renderHeadToHead();
+                renderCharts();
+                renderPromptHistory();
+                renderTable();
+            } else if (v === 'hardware') {
+                renderHardware();
+                // Re-render hardware chart
+                const data = Array(20).fill().map(() => Math.floor(Math.random() * 40) + 60);
+                createChart('chart-hardware', data, 'var(--accent-cyan)');
+            } else if (v === 'speed') {
+                createChart('chart-speed-detailed', filteredTests.map(t => t.tps / 100), 'var(--accent-cyan)');
+            } else if (v === 'quality') {
+                createChart('chart-quality-dist', filteredTests.map(t => t.quality), 'var(--accent-green)');
+                createChart('chart-creativity', filteredTests.map(t => t.quality + (Math.random() - 0.5) * 2), 'var(--accent-purple)');
+            } else if (v === 'cost') {
+                // Cost chart
+                createChart('chart-cost-detailed', filteredTests.map(t => t.cost), 'var(--accent-red)');
+            }
+        }
+
+        function filterModel(m) {
+            state.filter = m;
+            if (m === 'all') filteredTests = [...allTests];
+            else filteredTests = allTests.filter(t => t.modelType === m);
+
+            // Update counts
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-model="${m}"]`).classList.add('active');
+
+            // Re-render everything dependent on data
             renderHero();
             renderHeadToHead();
             renderCharts();
             renderPromptHistory();
             renderTable();
-        } else if (v === 'hardware') {
-            renderHardware();
-            // Re-render hardware chart
-            const data = Array(20).fill().map(() => Math.floor(Math.random() * 40) + 60);
-            createChart('chart-hardware', data, 'var(--accent-cyan)');
-        } else if (v === 'speed') {
-            createChart('chart-speed-detailed', filteredTests.map(t => t.tps/100), 'var(--accent-cyan)');
-        } else if (v === 'quality') {
-            createChart('chart-quality-dist', filteredTests.map(t => t.quality), 'var(--accent-green)');
-            createChart('chart-creativity', filteredTests.map(t => t.quality + (Math.random()-0.5)*2), 'var(--accent-purple)');
-        } else if (v === 'cost') {
-            // Cost chart
-            createChart('chart-cost-detailed', filteredTests.map(t => t.cost), 'var(--accent-red)');
+
+            // If in hardware view, update gauges logic slightly or just re-sim
+            if (state.view === 'hardware') renderHardware();
         }
-    }
 
-    function filterModel(m) {
-        state.filter = m;
-        if (m === 'all') filteredTests = [...allTests];
-        else filteredTests = allTests.filter(t => t.modelType === m);
+        function sortTable(key) {
+            sortConfig.key = key;
+            sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
 
-        // Update counts
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`[data-model="${m}"]`).classList.add('active');
+            // Update UI indicators
+            dom.sortBtns.forEach(b => {
+                const icon = b.querySelector('.sort-icon');
+                if (!icon) return;
+                if (b.dataset.sort === key) {
+                    icon.classList.toggle('asc');
+                    icon.classList.toggle('desc');
+                    icon.style.opacity = '1';
+                } else {
+                    icon.style.opacity = '0.5';
+                }
+            });
 
-        // Re-render everything dependent on data
-        renderHero();
-        renderHeadToHead();
-        renderCharts();
-        renderPromptHistory();
-        renderTable();
-        
-        // If in hardware view, update gauges logic slightly or just re-sim
-        if (state.view === 'hardware') renderHardware();
-    }
+            renderTable();
+        }
 
-    function sortTable(key) {
-        sortConfig.key = key;
-        sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-        
-        // Update UI indicators
-        dom.sortBtns.forEach(b => {
-            const icon = b.querySelector('.sort-icon');
-            if (!icon) return;
-            if (b.dataset.sort === key) {
-                icon.classList.toggle('asc');
-                icon.classList.toggle('desc');
-                icon.style.opacity = '1';
-            } else {
-                icon.style.opacity = '0.5';
+        // --- INITIALIZATION ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                dom.loader.style.opacity = '0';
+                dom.loader.style.pointerEvents = 'none';
+                // Initial render
+                renderHero();
+                renderHeadToHead();
+                renderCharts();
+                renderPromptHistory();
+                renderTable();
+
+                // Hardware animation loop
+                setInterval(renderHardware, 1000);
+            }, 1500);
+        });
+
+        // EVENT LISTENERS
+        dom.controls.forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+        dom.filters.forEach(b => b.addEventListener('click', () => filterModel(b.dataset.model)));
+        dom.sortBtns.forEach(b => b.addEventListener('click', () => sortTable(b.dataset.sort)));
+
+        // RESIZE HANDLER for charts
+        window.addEventListener('resize', () => {
+            if (document.getElementById('view-summary').classList.contains('view-active')) {
+                renderCharts();
             }
         });
 
-        renderTable();
-    }
-
-    // --- INITIALIZATION ---
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            dom.loader.style.opacity = '0';
-            dom.loader.style.pointerEvents = 'none';
-            // Initial render
-            renderHero();
-            renderHeadToHead();
-            renderCharts();
-            renderPromptHistory();
-            renderTable();
-            
-            // Hardware animation loop
-            setInterval(renderHardware, 1000);
-        }, 1500);
-    });
-
-    // EVENT LISTENERS
-    dom.controls.forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
-    dom.filters.forEach(b => b.addEventListener('click', () => filterModel(b.dataset.model)));
-    dom.sortBtns.forEach(b => b.addEventListener('click', () => sortTable(b.dataset.sort)));
-
-    // RESIZE HANDLER for charts
-    window.addEventListener('resize', () => {
-        if (document.getElementById('view-summary').classList.contains('view-active')) {
-            renderCharts();
-        }
-    });
-
-</script>
+    </script>
 </body>
+
 </html>

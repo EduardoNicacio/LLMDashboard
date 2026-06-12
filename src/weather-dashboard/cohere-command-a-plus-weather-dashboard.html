@@ -431,7 +431,7 @@
 
     </div>
 
-        <script>
+    <script>
         // API Configuration (Open-Meteo - no API key needed)
         const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=en&format=json';
         const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast';
@@ -466,7 +466,7 @@
         }
 
         function degToCompass(deg) {
-            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+            const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
             return dirs[Math.round(deg / 22.5) % 16];
         }
 
@@ -549,7 +549,7 @@
 
         function updateBackground(condition, isDay) {
             const body = document.body;
-            body.className = body.className.split(' ').filter(function(c) { return !c.startsWith('condition-') && !c.startsWith('bg-'); }).join(' ');
+            body.className = body.className.split(' ').filter(function (c) { return !c.startsWith('condition-') && !c.startsWith('bg-'); }).join(' ');
             body.classList.add('condition-' + condition.toLowerCase());
             els.bgLayer.style.opacity = condition === 'clear' ? '0.15' : '0.05';
         }
@@ -572,7 +572,7 @@
                     var aqiRes = await fetch(AIR_URL + '?latitude=' + lat + '&longitude=' + lon + '&current=pm10,pm2_5,european_aqi&timezone=auto');
                     var aqiData = await aqiRes.json();
                     aqi = aqiData.current?.european_aqi || 0;
-                } catch (e) {}
+                } catch (e) { }
 
                 var wCode = data.current.weather_code;
                 renderCurrentWeather(data, aqi);
@@ -698,7 +698,7 @@
 
             var c2 = els.compareModal.querySelector('#compare-city-2');
             if (state.comparisonCity) {
-                fetchWeatherData(state.comparisonCity.lat, state.comparisonCity.lon).then(function() {
+                fetchWeatherData(state.comparisonCity.lat, state.comparisonCity.lon).then(function () {
                     c2.querySelector('.text-lg.font-bold').innerText = state.comparisonCity.name || 'City 2';
                     c2.querySelector('#comp-temp-2').innerText = Math.round(state.currentData.current.temperature_2m) + '°';
                     c2.querySelector('#comp-hum-2').innerText = state.currentData.current.relative_humidity_2m + '%';
@@ -721,11 +721,11 @@
 
         function getLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(pos) {
+                navigator.geolocation.getCurrentPosition(function (pos) {
                     state.lat = pos.coords.latitude;
                     state.lon = pos.coords.longitude;
                     fetchWeatherData(state.lat, state.lon);
-                }, function(err) {
+                }, function (err) {
                     showToast('Location access denied. Using default.');
                 });
             }
@@ -737,7 +737,7 @@
         }
 
         // --- INIT ---
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             fetchWeatherData(state.lat, state.lon);
         });
 
