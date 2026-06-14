@@ -27,26 +27,26 @@ This configuration represents a typical high-end local development environment f
 
 The 18 models used to generate these dashboards span open-weight and proprietary frontier LLMs:
 
-| Provider | Model | Total Params | Active Params | Architecture | Context Length | License |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Alibaba | Qwen3.5-9B | 9B | 9B | Dense (Hybrid Attention) | 262K | Apache 2.0 |
-| Alibaba | Qwen3.6-27B | 27B | 27B | Dense (Hybrid Attention) | 262K | Apache 2.0 |
-| Anthropic | Claude Sonnet 4.6 | ~180B | ~70B | MoE (16 experts, 2 active) | 1M | Proprietary |
-| Cohere | Command A+ | 218B | 25B | Sparse MoE (128 experts, 8+1 active) | 128K | Apache 2.0 |
-| Cohere | North Mini Code 1.0 | 30B | 3B | Sparse MoE (128 experts, 8 active) | 256K | Apache 2.0 |
-| DeepSeek | DeepSeek-V4-Flash | 284B | 13B | MoE (256 experts, 6 active) + Hybrid Attn | 1M | MIT |
-| Google | Gemma 4 12B QAT | 11.95B | 11.95B | Dense (Encoder-Free Unified) | 256K | Apache 2.0 |
-| Google | Gemma 4 26B A4B QAT | 25.2B | 3.8B | MoE (128 total, 8 active) | 256K | Apache 2.0 |
-| Google | Gemma 4 31B QAT | 30.7B | 30.7B | Dense | 256K | Apache 2.0 |
-| Google | Gemma 4 E4B IT QAT | 4.5B eff (8B w/ emb) | - | MoE | 128K | Apache 2.0 |
-| JackWrong | Qwopus 3.5 9B Coder Exp | 9B | 9B | Dense (Qwen3.5 finetune) | 32K | Apache 2.0 |
-| MiniMax | MiniMax-M3 | ~428B | ~23B | MoE (128 experts, 4 active) + MSA | 1M | Apache 2.0 |
-| Mistral AI | Devstral Small 2 24B | 24B | 24B | Dense | 256K | Apache 2.0 |
-| Mistral AI | Ministral 3 14B Instruct | 14B | 14B | Dense | 256K | Apache 2.0 |
-| Mistral AI | Ministral 3 14B Reasoning | 14B | 14B | Dense | 256K | Apache 2.0 |
-| OpenAI | GPT-5.5 | Undisclosed | Undisclosed | Proprietary | 1.05M | Proprietary |
-| OpenAI | GPT-OSS-20B | 21B | 3.6B | MoE | 128K | MIT |
-| Xiaomi | MiMo V2.5 | 310B | 15B | Sparse MoE (256 experts, 8 active) | 1M | MIT |
+| Provider | Model | Total Params | Active Params | Architecture | Max Context Length | Quantization | License |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Alibaba | Qwen3.5-9B | 9B | 9B | Dense (Hybrid Attention) | 262K | Q4_K_M | Apache 2.0 |
+| Alibaba | Qwen3.6-27B | 27B | 27B | Dense (Hybrid Attention) | 262K | Q4_K_M | Apache 2.0 |
+| Anthropic | Claude Sonnet 4.6 | ~180B | ~70B | MoE (16 experts, 2 active) | 1M | n/a | Proprietary |
+| Cohere | Command A+ | 218B | 25B | Sparse MoE (128 experts, 8+1 active) | 128K | n/a | Apache 2.0 |
+| Cohere | North Mini Code 1.0 | 30B | 3B | Sparse MoE (128 experts, 8 active) | 256K | n/a | Apache 2.0 |
+| DeepSeek | DeepSeek-V4-Flash | 284B | 13B | MoE (256 experts, 6 active) + Hybrid Attn | 1M | n/a | MIT |
+| Google | Gemma 4 12B QAT | 11.95B | 11.95B | Dense (Encoder-Free Unified) | 256K | Q4_0 | Apache 2.0 |
+| Google | Gemma 4 26B A4B QAT | 25.2B | 3.8B | MoE (128 total, 8 active) | 256K | Q4_0 | Apache 2.0 |
+| Google | Gemma 4 31B QAT | 30.7B | 30.7B | Dense | 256K | Q4_0 | Apache 2.0 |
+| Google | Gemma 4 E4B IT QAT | 4.5B eff (8B w/ emb) | - | MoE | 128K | Q4_0 | Apache 2.0 |
+| JackWrong | Qwopus 3.5 9B Coder Exp | 9B | 9B | Dense (Qwen3.5 finetune) | 32K | Q4_K_S | Apache 2.0 |
+| MiniMax | MiniMax-M3 | ~428B | ~23B | MoE (128 experts, 4 active) + MSA | 1M | n/a | Apache 2.0 |
+| Mistral AI | Devstral Small 2 24B | 24B | 24B | Dense | 256K | Q4_K_M | Apache 2.0 |
+| Mistral AI | Ministral 3 14B Instruct | 14B | 14B | Dense | 256K | Q4_K_M | Apache 2.0 |
+| Mistral AI | Ministral 3 14B Reasoning | 14B | 14B | Dense | 256K | Q4_K_M | Apache 2.0 |
+| OpenAI | GPT-5.5 | Undisclosed | Undisclosed | Proprietary | 1.05M | n/a | Proprietary |
+| OpenAI | GPT-OSS-20B | 21B | 3.6B | MoE | 128K | MXFP4 | MIT |
+| Xiaomi | MiMo V2.5 | 310B | 15B | Sparse MoE (256 experts, 8 active) | 1M | n/a | MIT |
 
 ---
 
