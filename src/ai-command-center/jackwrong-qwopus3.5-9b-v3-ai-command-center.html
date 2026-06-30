@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI Command Center | Model Benchmarking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #050508;
+            --glass-bg: rgba(20, 20, 25, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary-neon: #00ff9d;
+            /* Cyber Green */
+            --secondary-neon: #7000ff;
+            /* Electric Purple */
+            --accent-blue: #00ccff;
+            --danger-red: #ff3b3b;
+            --text-main: #e0e0e0;
+            --text-muted: #858590;
+
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --glow-green: 0 0 20px rgba(0, 255, 157, 0.3);
+            --glow-purple: 0 0 20px rgba(112, 0, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(112, 0, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 255, 157, 0.05) 0%, transparent 40%);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+
+        /* Layout */
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Glass Panel Base */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3 {
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .text-neon-green {
+            color: var(--primary-neon);
+            text-shadow: 0 0 10px rgba(0, 255, 157, 0.4);
+        }
+
+        .text-neon-purple {
+            color: var(--secondary-neon);
+            text-shadow: 0 0 10px rgba(112, 0, 255, 0.4);
+        }
+
+        /* Header */
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-neon);
+            border-radius: 50%;
+            box-shadow: var(--glow-green);
+            animation: pulse 2s infinite;
+        }
+
+        /* Navigation/Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(90deg, var(--secondary-neon), transparent);
+            color: white;
+            box-shadow: 0 4px 15px rgba(112, 0, 255, 0.3);
+        }
+
+        /* Hero Section */
+        .hero-grid {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid var(--primary-neon);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            inset: -20%;
+            background: radial-gradient(circle at center, rgba(0, 255, 157, 0.1), transparent 60%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Matchup Section */
+        .matchup-container {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .model-card {
+            position: relative;
+            padding: 2rem;
+            border-radius: 16px;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .model-qwen {
+            background: linear-gradient(145deg, rgba(0, 20, 40, 0.8), rgba(0, 0, 0, 0.9));
+            border-top: 1px solid var(--primary-neon);
+            box-shadow: inset 0 0 30px rgba(0, 255, 157, 0.05);
+        }
+
+        .model-claude {
+            background: linear-gradient(145deg, rgba(40, 0, 20, 0.8), rgba(0, 0, 0, 0.9));
+            border-top: 1px solid var(--secondary-neon);
+            box-shadow: inset 0 0 30px rgba(112, 0, 255, 0.05);
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            z-index: 2;
+            position: relative;
+        }
+
+        .model-badge {
+            font-family: var(--font-mono);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-qwen {
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--primary-neon);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+        }
+
+        .badge-claude {
+            background: rgba(112, 0, 255, 0.1);
+            color: var(--secondary-neon);
+            border: 1px solid rgba(112, 0, 255, 0.3);
+        }
+
+        /* Charts */
+        .chart-container {
+            margin-top: auto;
+            height: 200px;
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        /* Hardware Monitor */
+        .hardware-panel {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .hw-stat {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .hw-value {
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .hw-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+            position: relative;
+        }
+
+        .data-table th:hover {
+            color: #fff;
+        }
+
+        .data-table th::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .data-table th:hover::after {
+            opacity: 1;
+        }
+
+        .data-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #ccc;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Utility */
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Scrollable area */
+        .scroll-area {
+            overflow-y: auto;
+            max-height: calc(100vh - 250px);
+            padding-right: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="status-dot"></span>
+                NEXUS<span style="font-weight:300; color:#666;">AI</span> COMMAND CENTER
+            </div>
+            <div style="text-align: right; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">
+                SYSTEM STATUS: <span class="text-neon-green" style="color:#fff;">ONLINE</span><br>
+                SERVER: LOCALHOST:8080
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs scroll-area">
+            <button class="tab-btn active" onclick="filterView('all')">ALL DATA</button>
+            <button class="tab-btn" onclick="filterView('qwen')">QWEN 3.6 (LOCAL)</button>
+            <button class="tab-btn" onclick="filterView('claude')">CLAUDE OPUS (API)</button>
+            <button class="tab-btn" onclick="filterView('hardware')">HARDWARE</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="scroll-area">
+
+            <!-- Hero Stats -->
+            <section id="hero-stats" class="hero-grid">
+                <div class="glass-panel stat-card">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px;">TOTAL TESTS RUN</div>
+                    <div style="font-size: 2rem; font-weight: 700;" id="stat-tests">1,402</div>
+                </div>
+                <div class="glass-panel stat-card" style="border-color: var(--secondary-neon);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px;">AVG TOKENS/SEC (LOCAL)
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 700;" id="stat-tps">482</div>
+                </div>
+                <div class="glass-panel stat-card" style="border-color: var(--danger-red);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px;">TOTAL API COST
+                        (CLAUDE)</div>
+                    <div style="font-size: 2rem; font-weight: 700;" id="stat-cost">$42.18</div>
+                </div>
+                <div class="glass-panel stat-card" style="border-color: var(--accent-blue);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px;">BEST OVERALL MODEL
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 600;" class="text-neon-green">QWEN 3.6 (27B)</div>
+                </div>
+            </section>
+
+            <!-- Matchup Section -->
+            <section id="matchup-section" style="margin-bottom: 2rem;">
+
+                <!-- Left Side: Qwen -->
+                <div class="glass-panel model-card model-qwen">
+                    <div class="model-header">
+                        <div>
+                            <span class="model-badge badge-qwen">Local Model</span>
+                            <h1 style="margin-top: 0.5rem;">QWEN 3.6 (27B)</h1>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Running on RTX
+                                3090</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="model-badge badge-qwen" style="font-size: 1.2rem; padding: 8px 16px;">A+</span>
+                        </div>
+                    </div>
+
+                    <!-- Qwen Charts -->
+                    <div class="chart-container">
+                        <svg viewBox="0 0 300 150" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="gradQwen" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:var(--primary-neon);stop-opacity:0.5" />
+                                    <stop offset="100%" style="stop-color:transparent;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <!-- Grid lines -->
+                            <path d="M0,30 H300 M0,60 H300 M0,90 H300" stroke="#2a2a35" stroke-width="1" />
+
+                            <!-- Bar Chart for Speed -->
+                            <rect x="40" y="70" width="80" height="80" rx="4" fill="url(#gradQwen)" />
+                            <rect x="40" y="70" width="80" height="80" rx="4" fill="#00ff9d" opacity="0.6" />
+
+                            <!-- Bar Chart for Quality -->
+                            <rect x="120" y="50" width="80" height="100" rx="4" fill="url(#gradQwen)" />
+                            <rect x="120" y="50" width="80" height="100" rx="4" fill="#7000ff" opacity="0.6" />
+
+                            <!-- Bar Chart for Cost (Lower is better) -->
+                            <rect x="200" y="90" width="80" height="60" rx="4" fill="url(#gradQwen)" />
+                            <rect x="200" y="90" width="80" height="60" rx="4" fill="#00ccff" opacity="0.6" />
+                        </svg>
+                    </div>
+
+                    <div style="margin-top: 1rem; display: flex; justify-content: space-between;">
+                        <div>
+                            <span class="text-muted">Speed</span><br>
+                            <strong class="text-neon-green" id="qwen-speed">482 t/s</strong>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="text-muted">Quality</span><br>
+                            <strong id="qwen-quality">94.5%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Claude -->
+                <div class="glass-panel model-card model-claude">
+                    <div class="model-header">
+                        <div>
+                            <span class="model-badge badge-claude">Frontier API</span>
+                            <h1 style="margin-top: 0.5rem;">CLAUDE OPUS 4.8</h1>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">via API Endpoint
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="model-badge badge-claude"
+                                style="font-size: 1.2rem; padding: 8px 16px;">A</span>
+                        </div>
+                    </div>
+
+                    <!-- Claude Charts -->
+                    <div class="chart-container">
+                        <svg viewBox="0 0 300 150" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="gradClaude" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:var(--secondary-neon);stop-opacity:0.5" />
+                                    <stop offset="100%" style="stop-color:transparent;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <!-- Grid lines -->
+                            <path d="M0,30 H300 M0,60 H300 M0,90 H300" stroke="#2a2a35" stroke-width="1" />
+
+                            <!-- Bar Chart for Speed -->
+                            <rect x="40" y="70" width="80" height="80" rx="4" fill="url(#gradClaude)" />
+                            <rect x="40" y="70" width="80" height="80" rx="4" fill="#7000ff" opacity="0.6" />
+
+                            <!-- Bar Chart for Quality -->
+                            <rect x="120" y="50" width="80" height="100" rx="4" fill="url(#gradClaude)" />
+                            <rect x="120" y="50" width="80" height="100" rx="4" fill="#ff3b3b" opacity="0.6" />
+
+                            <!-- Bar Chart for Cost (Lower is better) -->
+                            <rect x="200" y="90" width="80" height="60" rx="4" fill="url(#gradClaude)" />
+                            <rect x="200" y="90" width="80" height="60" rx="4" fill="#ff3b3b" opacity="0.6" />
+                        </svg>
+                    </div>
+
+                    <div style="margin-top: 1rem; display: flex; justify-content: space-between;">
+                        <div>
+                            <span class="text-muted">Speed</span><br>
+                            <strong id="claude-speed" style="color: var(--secondary-neon)">85 t/s (API)</strong>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="text-muted">Quality</span><br>
+                            <strong id="claude-quality"
+                                style="color: #ff3b3b; text-shadow: 0 0 5px rgba(255,59,59,0.4)">88.2%</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Hardware Monitor -->
+            <section id="hardware-monitor" class="glass-panel">
+                <h3 style="margin-bottom: 1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span
+                        style="width:8px; height:8px; background:#ff3b3b; border-radius:50%; box-shadow: 0 0 10px #ff3b3b;"></span>
+                    HARDWARE TELEMETRY (RTX 3090)
+                </h3>
+
+                <div class="hardware-panel">
+                    <!-- VRAM -->
+                    <div class="hw-stat" style="border-left: 2px solid var(--primary-neon);">
+                        <div class="hw-value" id="vram-display">14.2 GB</div>
+                        <div class="hw-label">VRAM USAGE (16GB)</div>
+                        <div style="height:4px; background:#333; margin-top:8px; border-radius:2px;">
+                            <div id="vram-bar"
+                                style="width: 70%; height:100%; background: var(--primary-neon); box-shadow: var(--glow-green); transition: width 0.5s;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Temp -->
+                    <div class="hw-stat" style="border-left: 2px solid var(--secondary-neon);">
+                        <div class="hw-value" id="temp-display">68°C</div>
+                        <div class="hw-label">GPU TEMPERATURE</div>
+                        <div style="height:4px; background:#333; margin-top:8px; border-radius:2px;">
+                            <div id="temp-bar"
+                                style="width: 70%; height:100%; background: var(--secondary-neon); box-shadow: var(--glow-purple); transition: width 0.5s;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Power -->
+                    <div class="hw-stat" style="border-left: 2px solid #ffaa00;">
+                        <div class="hw-value" id="power-display">184 W</div>
+                        <div class="hw-label">POWER DRAW (TDP)</div>
+                        <div style="height:4px; background:#333; margin-top:8px; border-radius:2px;">
+                            <div id="power-bar"
+                                style="width: 70%; height:100%; background: #ffaa00; transition: width 0.5s;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Load -->
+                    <div class="hw-stat" style="border-left: 2px solid var(--accent-blue);">
+                        <div class="hw-value" id="load-display">89%</div>
+                        <div class="hw-label">GPU LOAD</div>
+                        <div style="height:4px; background:#333; margin-top:8px; border-radius:2px;">
+                            <div id="load-bar"
+                                style="width: 70%; height:100%; background: var(--accent-blue); transition: width 0.5s;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Prompts Table -->
+                <div style="margin-top: 2rem;">
+                    <h3 style="font-size: 1rem; margin-bottom: 0.8rem;">RECENT PROMPT HISTORY</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Prompt ID</th>
+                                <th>Type</th>
+                                <th>Model</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prompt-history">
+                            <!-- JS Generated -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- Sidebar / Previous Tests -->
+        <aside class="glass-panel" style="height: fit-content; position: sticky; top: 2rem;">
+
+            <h3 style="margin-bottom: 1rem;">PREVIOUS TESTS</h3>
+            <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                <input type="text" placeholder="Search model..."
+                    style="flex:1; background:#111; border:none; color:white; padding:8px 12px; border-radius:6px; font-family:var(--font-mono);"
+                    onkeyup="filterTable(this.value)">
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Model</th>
+                        <th style="width: 25%;">Speed</th>
+                        <th style="width: 25%;">Quality</th>
+                        <th style="width: 20%;">Grade</th>
+                    </tr>
+                </thead>
+                <tbody id="previous-tests">
+                    <!-- JS Generated -->
+                </tbody>
+            </table>
+
+            <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                <h4 style="font-size:0.85rem; color:#666; margin-bottom:0.5rem;">TESTING NOTES</h4>
+                <textarea
+                    style="width:100%; height:120px; background:rgba(0,0,0,0.3); border:none; color:#aaa; font-family:var(--font-mono); resize:none;"
+                    placeholder="Enter observations here..."></textarea>
+            </div>
+
+        </aside>
+
+    </div>
+
+    <script>
+        // --- Data Generation ---
+
+        const models = [
+            { name: "Qwen3.6", version: "27B Instruct", type: "local", speed: 482, quality: 94.5, coding: 92.1, creativity: 88.0 },
+            { name: "Claude Opus", version: "4.8", type: "api", speed: 85, quality: 88.2, coding: 96.5, creativity: 91.0 },
+            { name: "Llama 3.1", version: "70B", type: "local", speed: 320, quality: 89.4, coding: 88.0, creativity: 85.0 },
+            { name: "GPT-4o", version: "Mini", type: "api", speed: 120, quality: 90.1, coding: 93.0, creativity: 87.0 }
+        ];
+
+        const previousTests = [
+            { id: "T-001", model: "Qwen3.6", speed: 450, quality: 92.0 },
+            { id: "T-002", model: "Llama 3.1", speed: 310, quality: 88.5 },
+            { id: "T-003", model: "GPT-4o", speed: 115, quality: 91.0 },
+            { id: "T-004", model: "Qwen3.6", speed: 482, quality: 94.5 }, // Current run
+        ];
+
+        const prompts = [
+            { id: "P-992", type: "Coding", model: "Qwen3.6", status: "Success", time: "12ms" },
+            { id: "P-991", type: "Reasoning", model: "Claude Opus", status: "Success", time: "450ms" },
+            { id: "P-990", type: "Creative", model: "Qwen3.6", status: "Success", time: "8ms" },
+            { id: "P-989", type: "Coding", model: "Llama 3.1", status: "Error", time: "N/A" },
+        ];
+
+        // --- Initialization ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPreviousTests();
+            renderPromptHistory();
+            startHardwareSimulation();
+
+            // Tab Logic
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    if (e.target.innerText.includes("HARDWARE")) {
+                        // Just visual feedback for now, but could filter table
+                    } else {
+                        // Simple filter logic based on model name in previousTests
+                        const val = e.target.innerText.toLowerCase();
+                        const tbody = document.getElementById('previous-tests');
+                        if (val === 'all') {
+                            tbody.innerHTML = '';
+                            previousTests.forEach(t => {
+                                let row = `<tr>
+                                <td>${t.model}</td>
+                                <td class="text-neon-green">${t.speed} t/s</td>
+                                <td>${t.quality}%</td>
+                                <td><span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">A-</span></td>
+                            </tr>`;
+                                tbody.innerHTML += row;
+                            });
+                        } else if (val.includes('qwen')) {
+                            const filtered = previousTests.filter(t => t.model.toLowerCase().includes('qwen'));
+                            filtered.forEach(t => {
+                                let row = `<tr>
+                                <td>${t.model}</td>
+                                <td class="text-neon-green">${t.speed} t/s</td>
+                                <td>${t.quality}%</td>
+                                <td><span style="background:rgba(0,255,157,0.1); color:#00ff9d; padding:2px 6px; border-radius:4px;">A+</span></td>
+                            </tr>`;
+                                tbody.innerHTML += row;
+                            });
+                        } else if (val.includes('claude')) {
+                            const filtered = previousTests.filter(t => t.model.toLowerCase().includes('claude'));
+                            filtered.forEach(t => {
+                                let row = `<tr>
+                                <td>${t.model}</td>
+                                <td class="text-neon-purple">${t.speed} t/s</td>
+                                <td>${t.quality}%</td>
+                                <td><span style="background:rgba(112,0,255,0.1); color:#7000ff; padding:2px 6px; border-radius:4px;">A</span></td>
+                            </tr>`;
+                                tbody.innerHTML += row;
+                            });
+                        } else {
+                            // Default render all again if search cleared or generic filter
+                            previousTests.forEach(t => {
+                                let row = `<tr>
+                                <td>${t.model}</td>
+                                <td class="text-neon-green">${t.speed} t/s</td>
+                                <td>${t.quality}%</td>
+                                <td><span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">A-</span></td>
+                            </tr>`;
+                                tbody.innerHTML += row;
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Search Logic
+            function filterTable(query) {
+                const rows = document.querySelectorAll('#previous-tests tr');
+                const lowerQ = query.toLowerCase();
+
+                if (lowerQ === '') {
+                    previousTests.forEach(t => {
+                        let row = `<tr>
+                                <td>${t.model}</td>
+                                <td class="text-neon-green">${t.speed} t/s</td>
+                                <td>${t.quality}%</td>
+                                <td><span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">A-</span></td>
+                            </tr>`;
+                        document.getElementById('previous-tests').innerHTML += row;
+                    });
+                } else {
+                    let html = '';
+                    previousTests.forEach(t => {
+                        if (t.model.toLowerCase().includes(lowerQ)) {
+                            let row = `<tr>
+                                <td>${t.model}</td>
+                                <td class="text-neon-green">${t.speed} t/s</td>
+                                <td>${t.quality}%</td>
+                                <td><span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">A-</span></td>
+                            </tr>`;
+                            html += row;
+                        }
+                    });
+                    document.getElementById('previous-tests').innerHTML = html || '<tr><td colspan="4" style="text-align:center; color:#555;">No results found</td></tr>';
+                }
+            }
+
+        });
+
+        // --- Hardware Simulation ---
+
+        function startHardwareSimulation() {
+            setInterval(() => {
+                // VRAM fluctuation (simulating context window usage)
+                let vram = 14.0 + Math.random() * 2 - 1;
+                if (vram > 15) vram = 15;
+
+                document.getElementById('vram-display').innerText = `${vram.toFixed(1)} GB`;
+                document.getElementById('vram-bar').style.width = `${(vram / 16) * 100}%`;
+
+                // Temp fluctuation
+                let temp = 68 + Math.random() * 5 - 2.5;
+                if (temp > 80) temp = 80;
+
+                document.getElementById('temp-display').innerText = `${Math.floor(temp)}°C`;
+                document.getElementById('temp-bar').style.width = `${(temp / 90) * 100}%`;
+
+                // Power fluctuation
+                let power = 184 + Math.random() * 20 - 10;
+
+                document.getElementById('power-display').innerText = `${Math.floor(power)} W`;
+                document.getElementById('power-bar').style.width = `${(power / 350) * 100}%`;
+
+            }, 1000); // Update every second
+
+            // Occasional prompt log injection
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    const newPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+                    const tbody = document.getElementById('prompt-history');
+                    const row = `<tr style="animation: fadeIn 0.5s ease;">
+                    <td>${newPrompt.id}</td>
+                    <td><span class="text-neon-green">${newPrompt.type}</span></td>
+                    <td>${newPrompt.model}</td>
+                    <td style="color:#00ff9d">${newPrompt.status}</td>
+                    <td>${newPrompt.time}</td>
+                </tr>`;
+
+                    // Add to top, remove bottom if too many (keep last 10)
+                    tbody.insertAdjacentHTML('afterbegin', row);
+                    if (tbody.children.length > 8) {
+                        tbody.lastElementChild.remove();
+                    }
+                }
+            }, 3000);
+
+        }
+
+        // --- Render Functions ---
+
+        function renderPreviousTests() {
+            const tbody = document.getElementById('previous-tests');
+            previousTests.forEach(t => {
+                let row = `<tr>
+                                <td>${t.model}</td>
+                                <td class="text-neon-green">${t.speed} t/s</td>
+                                <td>${t.quality}%</td>
+                                <td><span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">A-</span></td>
+                            </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function renderPromptHistory() {
+            const tbody = document.getElementById('prompt-history');
+            prompts.forEach(p => {
+                let row = `<tr style="animation: fadeIn 0.5s ease;">
+                <td>${p.id}</td>
+                <td><span class="text-neon-green">${p.type}</span></td>
+                <td>${p.model}</td>
+                <td style="color:#00ff9d">${p.status}</td>
+                <td>${p.time}</td>
+            </tr>`;
+
+                // Add to top, remove bottom if too many (keep last 10)
+                tbody.insertAdjacentHTML('afterbegin', row);
+                if (tbody.children.length > 8) {
+                    tbody.lastElementChild.remove();
+                }
+            });
+        }
+
+    </script>
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+</body>
+
+</html>

@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open | The Wait is Over</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --surface: #0f0f0f;
+            --surface-light: #1a1a1a;
+            --primary: #3b82f6;
+            /* Blue */
+            --accent: #8b5cf6;
+            /* Purple */
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+            --glow: 0 0 80px rgba(59, 130, 246, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- Animations & Utilities --- */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #9ca3af 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        /* --- Background FX --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .grid-bg {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        /* --- Layout Components --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        h1,
+        h2,
+        h3 {
+            letter-spacing: -0.02em;
+            font-weight: 700;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 32px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
+            background: #2563eb;
+        }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.05);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border-color: var(--border);
+            color: white;
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            filter: blur(80px);
+            z-index: -1;
+            animation: pulse 10s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                opacity: 0.5;
+                transform: translateX(-50%) scale(1);
+            }
+
+            to {
+                opacity: 0.8;
+                transform: translateX(-50%) scale(1.2);
+            }
+        }
+
+        .hero-content {
+            max-width: 900px;
+            z-index: 2;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            margin-bottom: 30px;
+        }
+
+        /* --- Model Card Grid --- */
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 60px;
+        }
+
+        .spec-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 32px;
+            border-radius: 16px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spec-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: var(--glow);
+        }
+
+        .spec-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            display: block;
+            opacity: 0.8;
+        }
+
+        .spec-title {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .spec-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* --- Timeline Section --- */
+        .timeline-container {
+            position: relative;
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 40px 20px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+            transform: translateX(-50%);
+        }
+
+        .tl-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 60px;
+            position: relative;
+            opacity: 0;
+            transition: all 0.6s ease;
+        }
+
+        .tl-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .tl-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 8px;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px var(--primary);
+            z-index: 2;
+        }
+
+        .tl-dot::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            filter: blur(15px);
+            opacity: 0.4;
+            top: -6px;
+            left: -6px;
+            border-radius: 50%;
+        }
+
+        .tl-content {
+            padding-right: 32px;
+            width: 100%;
+        }
+
+        .tl-date {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* --- Benchmark Section --- */
+        .benchmark-container {
+            background: var(--surface-light);
+            border-radius: 24px;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 40px;
+        }
+
+        .chart-label {
+            width: 200px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .bar-container {
+            flex-grow: 1;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            width: 0;
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+        }
+
+        .bar-fill::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: -4px;
+            height: 48px;
+            width: 48px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.2;
+            filter: blur(10px);
+        }
+
+        .bar-value {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 2;
+        }
+
+        /* --- Code Section --- */
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 16px;
+            padding: 32px;
+            font-family: 'Menlo', monospace;
+            color: #d4d4d4;
+            position: relative;
+            box-shadow: var(--glow);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 16px;
+        }
+
+        .file-name {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* --- Community Wall --- */
+        .wall-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .comment-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .comment-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 50%;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .username {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* --- Footer --- */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 60px 0;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        /* --- Toast Notification --- */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            padding: 16px 24px;
+            border-radius: 999px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="grid-bg"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-glow"></div>
+        <div class="container hero-content fade-in-up" style="transition-delay: 0.2s;">
+            <span class="badge glow-text">Official Release</span>
+            <h1>Qwen3.7-30B-Open is finally here.</h1>
+            <p style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 48px;">
+                The community can now stop refreshing Hugging Face every 11 seconds and actually do work.
+            </p>
+            <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                <a href="#download" class="btn btn-primary">Download Weights</a>
+                <a href="#" onclick="copyCode()" class="btn btn-glass">View Code Example</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Specs -->
+    <section id="features">
+        <div class="container fade-in-up">
+            <h2>The Model Card</h2>
+            <p style="text-align: center; color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+                We spent years refining the open-weight release. The result is a model that fits on your GPU and
+                actually thinks.
+            </p>
+
+            <div class="specs-grid">
+                <!-- Card 1 -->
+                <div class="spec-card fade-in-up" style="transition-delay: 0.1s;">
+                    <span class="spec-icon">⚡</span>
+                    <h3 class="spec-title">Local Inference First</h3>
+                    <p class="spec-desc">Optimized for consumer hardware. Run it on dual RTX 3090s or a single A6000
+                        with quantization.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="spec-card fade-in-up" style="transition-delay: 0.2s;">
+                    <span class="spec-icon">🧠</span>
+                    <h3 class="spec-title">Reasoning & Coding</h3>
+                    <p class="spec-desc">Olympiad-level math and complex code generation (Python, C++, JS) built into
+                        the base weights.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="spec-card fade-in-up" style="transition-delay: 0.3s;">
+                    <span class="spec-icon">📜</span>
+                    <h3 class="spec-title">256k Context Window</h3>
+                    <p class="spec-desc">Read entire codebases or long-form documents in one shot without losing
+                        coherence.</p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="spec-card fade-in-up" style="transition-delay: 0.4s;">
+                    <span class="spec-icon">🛠️</span>
+                    <h3 class="spec-title">Tool Use & API</h3>
+                    <p class="spec-desc">Native support for function calling and external APIs, making it a true agent.
+                    </p>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="spec-card fade-in-up" style="transition-delay: 0.5s;">
+                    <span class="spec-icon">🔒</span>
+                    <h3 class="spec-title">Open Weights</h3>
+                    <p class="spec-desc">No API keys required. No paywalls. Just raw, open weights ready for your local
+                        environment.</p>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="spec-card fade-in-up" style="transition-delay: 0.6s;">
+                    <span class="spec-icon">🎨</span>
+                    <h3 class="spec-title">Multilingual</h3>
+                    <p class="spec-desc">Native support for English, Chinese, and over 100 other languages with high
+                        fidelity.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline -->
+    <section id="timeline" style="background: var(--surface);">
+        <div class="container fade-in-up">
+            <h2>The Long Road to Release</h2>
+
+            <div class="timeline-container">
+                <div class="timeline-line"></div>
+
+                <!-- Item 1 -->
+                <div class="tl-item fade-in-up" style="transition-delay: 0.1s;">
+                    <div class="tl-dot"></div>
+                    <div class="tl-content">
+                        <span class="tl-date">2024-12-31</span>
+                        <h3>The "Soon™" Update</h3>
+                        <p style="color: var(--text-muted)">We found one more eval. Just one.</p>
+                    </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="tl-item fade-in-up" style="transition-delay: 0.2s;">
+                    <div class="tl-dot"></div>
+                    <div class="tl-content">
+                        <span class="tl-date">2025-01-01</span>
+                        <h3>Final Safety Pass</h3>
+                        <p style="color: var(--text-muted)">We made sure it doesn't accidentally solve physics problems.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="tl-item fade-in-up" style="transition-delay: 0.3s;">
+                    <div class="tl-dot"></div>
+                    <div class="tl-content">
+                        <span class="tl-date">2025-01-07</span>
+                        <h3>Actually Soon</h3>
+                        <p style="color: var(--text-muted)">We fixed the quantization script.</p>
+                    </div>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="tl-item fade-in-up" style="transition-delay: 0.4s;">
+                    <div class="tl-dot"></div>
+                    <div class="tl-content">
+                        <span class="tl-date">TODAY</span>
+                        <h3 style="color: var(--primary)">Qwen3.7-30B-Open Released</h3>
+                        <p style="color: var(--text-muted)">The wait is officially over.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benchmarks -->
+    <section id="benchmarks">
+        <div class="container fade-in-up">
+            <h2>Benchmark Results</h2>
+
+            <div style="display: grid; gap: 40px;">
+                <!-- Chart 1 -->
+                <div class="benchmark-container">
+                    <div class="chart-row">
+                        <div class="chart-label">MMLU (Reasoning)</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 85%;" data-width="85%"></div>
+                            <span class="bar-value">84.2%</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-row">
+                        <div class="chart-label">HumanEval (Coding)</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 78%;" data-width="78%"></div>
+                            <span class="bar-value">62.5%</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-row">
+                        <div class="chart-label">Your Current Coping Mechanism</div>
+                        <div class="bar-container"
+                            style="background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.2);">
+                            <div class="bar-fill" style="width: 4%; background: #ef4444; box-shadow: none;"
+                                data-width="4%"></div>
+                            <span class="bar-value" style="color: #ef4444;">12%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 2 -->
+                <div class="benchmark-container">
+                    <div class="chart-row">
+                        <div class="chart-label">Context Window</div>
+                        <div class="bar-container" style="flex-grow: 0; width: 300px;">
+                            <div class="bar-fill" style="width: 100%; background: var(--accent);"></div>
+                            <span class="bar-value">256k</span>
+                        </div>
+                    </div>
+
+                    <div class="chart-row">
+                        <div class="chart-label">VRAM Efficiency (FP8)</div>
+                        <div class="bar-container" style="flex-grow: 0; width: 300px;">
+                            <div class="bar-fill" style="width: 95%; background: var(--primary);"></div>
+                            <span class="bar-value">12GB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Example -->
+    <section id="code" style="background: var(--surface);">
+        <div class="container fade-in-up">
+            <h2>Start Coding Locally</h2>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="file-name">main.py</span>
+                    <button onclick="copyCode()"
+                        style="background:none; border:none; color:var(--text-muted); cursor:pointer;">Copy</button>
+                </div>
+                <pre><code id="code-content">from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "Qwen/Qwen3.7-30B-Open"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name, 
+    torch_dtype=torch.float16, # or bfloat16 for Ampere GPUs
+    device_map="auto",
+    trust_remote_code=True
+)
+
+prompt = "Explain quantum entanglement in simple terms."
+inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+outputs = model.generate(**inputs, max_new_tokens=50)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community Wall -->
+    <section id="community">
+        <div class="container fade-in-up">
+            <h2>Community Reaction</h2>
+
+            <div class="wall-grid">
+                <!-- Post 1 -->
+                <div class="comment-card fade-in-up" style="transition-delay: 0.1s;">
+                    <div class="avatar">J</div>
+                    <div class="username">@james_ai_dev</div>
+                    <p class="comment-text">I've been refreshing HF for 3 years straight. I'm crying happy tears right
+                        now.</p>
+                </div>
+
+                <!-- Post 2 -->
+                <div class="comment-card fade-in-up" style="transition-delay: 0.2s;">
+                    <div class="avatar" style="background: linear-gradient(135deg, #ef4444, #f97316);">M</div>
+                    <div class="username">@mike_local</div>
+                    <p class="comment-text">Just downloaded the GGUF version. It runs on my dual 3090s without OOM
+                        errors. Finally.</p>
+                </div>
+
+                <!-- Post 3 -->
+                <div class="comment-card fade-in-up" style="transition-delay: 0.3s;">
+                    <div class="avatar" style="background: linear-gradient(135deg, #10b981, #3b82f6);">S</div>
+                    <div class="username">@sam_security</div>
+                    <p class="comment-text">The fact that this is open weights and not a closed API with $20k/month
+                        pricing is insane.</p>
+                </div>
+
+                <!-- Post 4 -->
+                <div class="comment-card fade-in-up" style="transition-delay: 0.4s;">
+                    <div class="avatar">T</div>
+                    <div class="username">@tech_enthusiast</div>
+                    <p class="comment-text">Does it have tool use? Yes. Does it run locally? Yes. Is it better than
+                        Llama-Open-30B? Absolutely.</p>
+                </div>
+
+                <!-- Post 5 -->
+                <div class="comment-card fade-in-up" style="transition-delay: 0.5s;">
+                    <div class="avatar" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">P</div>
+                    <div class="username">@python_guy</div>
+                    <p class="comment-text">I'm integrating this into my personal assistant immediately. No more API
+                        calls.</p>
+                </div>
+
+                <!-- Post 6 -->
+                <div class="comment-card fade-in-up" style="transition-delay: 0.6s;">
+                    <div class="avatar">A</div>
+                    <div class="username">@ai_researcher</div>
+                    <p class="comment-text">The eval scores are impressive, but the open weights policy is what matters
+                        most here.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download -->
+    <section id="download" style="background: linear-gradient(180deg, var(--bg) 0%, #0a0a0a 100%);">
+        <div class="container fade-in-up" style="text-align: center;">
+            <h2>Get Qwen3.7-30B-Open</h2>
+            <p
+                style="color: var(--text-muted); margin-bottom: 48px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Choose your preferred format for local deployment or API access.
+            </p>
+
+            <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
+                <a href="#" class="btn btn-primary" onclick="simulateDownload(this)">Hugging Face (PyTorch)</a>
+                <a href="#" class="btn btn-glass" onclick="simulateDownload(this)">GGUF (Ollama/LM Studio)</a>
+                <a href="#" class="btn btn-glass" onclick="simulateDownload(this)">API Access</a>
+                <a href="#" class="btn btn-glass" onclick="simulateDownload(this)">Torrent (.torrent)</a>
+            </div>
+
+            <p style="margin-top: 32px; font-size: 0.8rem; color: var(--text-muted);">
+                *API Access requires a waitlist signup. We found one more eval.
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container fade-in-up">
+            <h3 style="margin-bottom: 16px;">Qwen3.7-30B-Open</h3>
+            <p>&copy; 2025 Qwen Team. Open Weights Released under Apache 2.0.</p>
+            <div style="display: flex; justify-content: center; gap: 24px; margin-top: 24px;">
+                <a href="#" style="color: var(--text-muted); text-decoration: none;">GitHub</a>
+                <a href="#" style="color: var(--text-muted); text-decoration: none;">Hugging Face</a>
+                <a href="#" style="color: var(--text-muted); text-decoration: none;">Discord</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+        <span id="toast-msg">Copied to clipboard!</span>
+    </div>
+
+    <script>
+        // --- Intersection Observer for Animations ---
+        const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // Trigger charts specifically when in view
+                    if (entry.target.id === 'benchmarks') triggerCharts();
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+
+        // --- Canvas Background FX (Floating Tokens) ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 4 + 2;
+                this.color = `rgba(59, 130, 246, ${Math.random() * 0.5})`; // Blue tint
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < -10) this.x = width + 10;
+                if (this.x > width + 10) this.x = -10;
+                if (this.y < -10) this.y = height + 10;
+                if (this.y > height + 10) this.y = -10;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                // Draw a rounded rect or circle to look like a token shard
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Add a glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.min(window.innerWidth / 15, 60); // Responsive density
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw subtle grid lines on canvas too
+            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+            }
+            for (let y = 0; y < height; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+            }
+
+            particles.forEach(p => { p.update(); p.draw(); });
+
+            requestAnimationFrame(animateCanvas);
+        }
+
+        window.addEventListener('resize', () => { resize(); initParticles(); });
+
+        // --- Interactions ---
+
+        function simulateDownload(btn) {
+            const originalText = btn.innerText;
+            btn.innerHTML = 'Downloading...';
+            btn.style.opacity = '0.7';
+
+            setTimeout(() => {
+                btn.innerHTML = 'Download Started!';
+                btn.classList.remove('btn-primary', 'btn-glass');
+                btn.style.background = '#1a1a1a';
+
+                // Reset after a few seconds
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.opacity = '1';
+                    if (btn.classList.contains('btn-primary')) return; // Keep glass style reset logic simple for now
+
+                    // Re-apply styles roughly
+                    if (originalText.includes("Hugging")) btn.className = "btn btn-primary";
+                    else if (originalText.includes("GGUF")) btn.className = "btn btn-glass";
+                }, 2000);
+            }, 1500);
+        }
+
+        function copyCode() {
+            const code = document.getElementById('code-content').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast();
+            });
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-msg');
+
+            // Randomize message slightly
+            const msgs = ["Copied to clipboard!", "Code snippet saved.", "Check your clipboard."];
+            msg.innerText = msgs[Math.floor(Math.random() * msgs.length)];
+
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- Chart Animation Trigger ---
+        function triggerCharts() {
+            const bars = document.querySelectorAll('.bar-fill[data-width]');
+            bars.forEach(bar => {
+                if (bar.dataset.width) {
+                    bar.style.width = bar.dataset.width;
+                }
+            });
+        }
+
+        // Initialize
+        window.onload = () => {
+            resize();
+            initParticles();
+            animateCanvas();
+
+            // Trigger hero animation manually on load since it's not in DOM initially? 
+            // No, hero is in HTML. Just need to ensure chart bars start at 0 width or animate from 0.
+            // Actually, CSS transition handles the 0 -> width if we set initial style inline.
+
+            // Let's force charts to be visible immediately for demo purposes, or wait for scroll? 
+            // Better to wait for scroll so it feels like a real site.
+        };
+
+    </script>
+</body>
+
+</html>
