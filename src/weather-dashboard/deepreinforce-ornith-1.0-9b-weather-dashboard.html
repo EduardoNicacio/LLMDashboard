@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyGlass Weather Dashboard</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Custom Config for Tailwind (Glassmorphism colors) -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-slow': 'pulse 4s infinite',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* --- Glassmorphism Base Styles --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background 1.5s ease, color 0.8s ease;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Dynamic Backgrounds --- */
+        .bg-clear {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        }
+
+        .bg-cloudy {
+            background: linear-gradient(135deg, #485563, #29323c);
+        }
+
+        .bg-rain {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+
+        .bg-sunset {
+            background: linear-gradient(135deg, #ff6a00, #ee0979);
+        }
+
+        .bg-night {
+            background: linear-gradient(135deg, #0b0c10, #1f2833);
+        }
+
+        /* --- Animations --- */
+        .loader {
+            border-top-color: #fff;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- Scrollbar --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        /* --- Utility --- */
+        .weather-icon-lg {
+            font-size: 4rem;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+            transition: transform 0.5s ease;
+        }
+
+        .weather-icon-lg:hover {
+            transform: scale(1.1);
+        }
+
+        /* Hourly Slider */
+        .hourly-track::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .hourly-track {
+            accent-color: #fff;
+        }
+
+        /* Comparison Mode */
+        .compare-active {
+            border-left: 4px solid #60a5fa !important;
+        }
+    </style>
+</head>
+
+<body class="bg-clear text-white min-h-screen flex flex-col items-center">
+
+    <!-- ==================== BACKGROUND LAYER (Dynamic) ==================== -->
+    <div id="dynamic-bg" class="fixed inset-0 z-0 transition-all duration-[2s] ease-in-out"></div>
+
+    <!-- ==================== MAIN APP CONTAINER ==================== -->
+    <main class="relative z-10 w-full max-w-6xl px-4 py-8 flex flex-col gap-6">
+
+        <!-- HEADER & SEARCH -->
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 animate-fade-in">
+            <div class="flex items-center gap-3">
+                <h1
+                    class="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-cyan-200">
+                    SkyGlass
+                </h1>
+                <span class="text-xs text-white/40 border border-white/10 px-2 py-0.5 rounded-full">v1.0</span>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <input type="text" id="search-input" placeholder="Search city..."
+                    class="glass-input px-4 py-2 rounded-xl flex-1 text-sm w-full transition-all duration-300 focus:ring-2 focus:ring-blue-300/50">
+                <button onclick="useCurrentLocation()" title="Use Current Location"
+                    class="p-2 rounded-xl hover:bg-white/10 transition-colors text-white/70 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Unit Toggle -->
+            <div class="flex bg-black/20 rounded-lg p-1">
+                <button onclick="setUnit('metric')" id="btn-metric"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-300 bg-white/20 text-white shadow-sm">°C</button>
+                <button onclick="setUnit('imperial')" id="btn-imperial"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-300 text-white/60 hover:text-white">°F</button>
+            </div>
+
+            <!-- Comparison Toggle -->
+            <button onclick="toggleComparison()" id="compare-btn" title="Compare Cities"
+                class="text-sm bg-white/10 px-4 py-2 rounded-xl hover:bg-white/20 transition-colors border border-white/5">
+                Compare
+            </button>
+        </header>
+
+        <!-- ==================== LOADING STATE ==================== -->
+        <div id="loading-state" class="hidden flex-col items-center justify-center gap-4 py-12">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-300 h-12 w-12"></div>
+            <p class="text-white/50 text-sm animate-pulse">Fetching atmospheric data...</p>
+        </div>
+
+        <!-- ==================== ALERTS BAR ==================== -->
+        <div id="alerts-bar" class="hidden glass-card rounded-xl p-4 flex items-center gap-3 border-l-4 border-red-400">
+        </div>
+
+        <!-- ==================== MAIN CONTENT GRID ==================== -->
+        <div id="main-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">
+
+            <!-- CURRENT WEATHER CARD (Large) -->
+            <div class="glass-card rounded-2xl p-8 col-span-1 md:col-span-2 lg:col-span-2 flex flex-col items-center text-center relative overflow-hidden"
+                id="current-card">
+                <div
+                    class="absolute top-0 right-0 w-32 h-32 bg-blue-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2">
+                </div>
+
+                <!-- City Name -->
+                <h2 id="current-city-name" class="text-xl font-semibold mb-1 opacity-90">--</h2>
+                <p id="current-date" class="text-xs text-white/50 uppercase tracking-widest mb-6"></p>
+
+                <!-- Big Icon -->
+                <div class="weather-icon-lg mb-4 transition-transform duration-700" id="main-icon">☀️</div>
+
+                <!-- Temperature -->
+                <div class="flex items-center gap-2 mb-1">
+                    <span id="current-temp" class="text-6xl font-thin tracking-tighter">--°</span>
+                    <span id="unit-display" class="text-sm text-white/50 self-end mb-3">°C</span>
+                </div>
+
+                <!-- Description -->
+                <p id="current-desc" class="text-lg font-light opacity-80">--</p>
+
+                <!-- Feels Like -->
+                <div class="flex items-center gap-2 mt-4 text-sm text-white/60 bg-black/10 rounded-full px-4 py-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    <span id="feels-like">--°</span> Feels Like
+                </div>
+
+                <!-- High / Low -->
+                <div class="flex gap-6 mt-4 text-sm font-medium opacity-70">
+                    <span>H: <span id="temp-high" class="text-white/90">--</span></span>
+                    <span>L: <span id="temp-low" class="text-white/90">--</span></span>
+                </div>
+
+                <!-- Mini Stats Row -->
+                <div class="grid grid-cols-3 gap-x-6 gap-y-2 mt-8 w-full max-w-xs text-left opacity-75">
+                    <div class="flex flex-col"><span
+                            class="text-[10px] uppercase tracking-wider text-white/40">Humidity</span><span
+                            id="stat-humidity" class="font-medium">--%</span></div>
+                    <div class="flex flex-col"><span
+                            class="text-[10px] uppercase tracking-wider text-white/40">Wind</span><span id="stat-wind"
+                            class="font-medium">-- km/h</span></div>
+                    <div class="flex flex-col"><span
+                            class="text-[10px] uppercase tracking-wider text-white/40">Pressure</span><span
+                            id="stat-pressure" class="font-medium">-- hPa</span></div>
+                </div>
+
+                <!-- UV / Visibility Row -->
+                <div class="grid grid-cols-2 gap-x-6 gap-y-2 mt-1 w-full max-w-xs text-left opacity-75">
+                    <div class="flex flex-col"><span class="text-[10px] uppercase tracking-wider text-white/40">UV
+                            Index</span><span id="stat-uv" class="font-medium">--</span></div>
+                    <div class="flex flex-col"><span
+                            class="text-[10px] uppercase tracking-wider text-white/40">Visibility</span><span
+                            id="stat-vis" class="font-medium">-- km</span></div>
+                </div>
+
+            </div>
+
+            <!-- SIDEBAR (Hourly / 7-Day) -->
+            <div class="flex flex-col gap-6 col-span-1 md:col-span-2 lg:col-span-1">
+
+                <!-- Hourly Forecast -->
+                <div class="glass-card rounded-2xl p-5 h-[300px] flex flex-col">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-white/60 mb-4">Hourly</h3>
+                    <input type="range" id="hourly-slider" min="0" max="23" value="0" step="1"
+                        class="w-full hourly-track mb-4">
+                    <div class="flex items-center justify-between text-sm overflow-hidden" id="hourly-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- 7-Day Forecast Chart + List -->
+                <div class="glass-card rounded-2xl p-5 flex flex-col gap-4 h-[300px]">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-white/60 mb-1">7 Day Outlook</h3>
+
+                    <!-- Chart Container -->
+                    <canvas class="w-full h-[180px] block" id="forecast-chart-container"></canvas>
+
+                    <!-- List -->
+                    <div class="overflow-y-auto pr-2" style="max-height: 140px;" id="daily-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ==================== COMPARISON MODAL ==================== -->
+    <div id="compare-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCompare()"></div>
+        <div class="relative w-full max-w-4xl mx-auto mt-20 p-4 flex justify-center animate-slide-up">
+            <div id="compare-content"
+                class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 glass-card rounded-3xl p-8 min-h-[500px]"></div>
+        </div>
+    </div>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="relative z-10 text-center py-6 opacity-40 text-xs">
+        Powered by SkyGlass Model &bull; Data via Open-Meteo API
+    </footer>
+
+</body>
+
+</html>
+
+<script>
+    // ============================================================
+    //  SKYGlass - Core Logic
+    // ============================================================
+
+    /* 
+       --- API CONFIGURATION ---
+       
+       Default: Using Open-Meteo (Free, No Key Required).
+       Base URL: https://api.open-meteo.com/v1/forecast
+       
+       If you want to use a different provider (e.g. OpenWeatherMap), replace the 
+       fetch calls in 'fetchCurrent', 'fetchHourly', and 'fetchDaily' with your own endpoints.
+       
+       Example OWM swap:
+         const API_KEY = "YOUR_OWM_KEY";
+         // Replace fetch calls to use: https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}
+    */
+
+    // --- State ---
+    const state = {
+        unit: 'metric',
+        city: null, // { name, lat, lon }
+        hourlyData: [],
+        dailyData: [],
+        currentData: {},
+        isComparing: false,
+        compareCity: null,
+    };
+
+    // --- DOM Elements ---
+    const $ = (id) => document.getElementById(id);
+    let chartInstance = null;
+
+    /* ============================================================
+       1. INITIALIZATION & BACKGROUND LOGIC
+       ============================================================ */
+
+    window.addEventListener('DOMContentLoaded', () => {
+        // Set default background
+        setDynamicBackground('bg-clear');
+
+        // Load saved preferences
+        const savedCity = localStorage.getItem('skyglass_city');
+        if (savedCity) {
+            $('search-input').value = savedCity;
+            loadCity(savedCity);
+        } else {
+            // Default to a nice city for demo purposes
+            $('search-input').value = 'London';
+        }
+
+        // Slider listener
+        $('hourly-slider').addEventListener('input', (e) => {
+            const hour = parseInt(e.target.value);
+            renderHourly(hour);
+        });
+    });
+
+    function setDynamicBackground(className) {
+        $('dynamic-bg').className = `fixed inset-0 z-0 transition-all duration-[2s] ease-in-out ${className}`;
+    }
+
+    /* ============================================================
+       2. GEOCODING & SEARCH
+       ============================================================ */
+
+    async function geocodeCity(query) {
+        try {
+            const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en`);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                return data.results[0]; // Returns { name, latitude, longitude }
+            }
+        } catch (err) {
+            console.error("Geocoding error:", err);
+        }
+        return null;
+    }
+
+    async function loadCity(query) {
+        if (!query.trim()) return;
+
+        $('loading-state').classList.remove('hidden');
+        $('main-grid').classList.add('hidden');
+        $('alerts-bar').classList.add('hidden');
+
+        const location = await geocodeCity(query);
+
+        if (location) {
+            state.city = location;
+            localStorage.setItem('skyglass_city', query);
+
+            // Fetch Data in parallel
+            return Promise.all([fetchCurrent(location), fetchHourly(location), fetchDaily(location)])
+                .then(([cur, hourly, daily]) => {
+                    state.currentData = cur;
+                    state.hourlyData = hourly;
+                    state.dailyData = daily;
+
+                    $('loading-state').classList.add('hidden');
+                    $('main-grid').classList.remove('hidden');
+                    renderAll();
+                })
+                .catch(err => {
+                    console.error("Fetch error:", err);
+                    showError("Failed to load weather data.");
+                });
+        } else {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    $('loading-state').classList.add('hidden');
+                    showError(`City "${query}" not found.`);
+                    resolve();
+                }, 800);
+            });
+        }
+    }
+
+    function useCurrentLocation() {
+        if (!navigator.geolocation) {
+            showError("Geolocation is not supported by your browser.");
+            return;
+        }
+
+        $('loading-state').classList.remove('hidden');
+        $('main-grid').classList.add('hidden');
+
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+
+                // Reverse geocode to find city name
+                try {
+                    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=&count=1&latitude=${lat}&longitude=${lon}`);
+                    const data = await res.json();
+                    if (data.results) {
+                        state.city = { name: data.results[0].name, lat, lon };
+                        localStorage.setItem('skyglass_city', data.results[0].name);
+
+                        Promise.all([fetchCurrent({ lat, lon }), fetchHourly({ lat, lon }), fetchDaily({ lat, lon })])
+                            .then(([cur, hourly, daily]) => {
+                                state.currentData = cur;
+                                state.hourlyData = hourly;
+                                state.dailyData = daily;
+                                $('loading-state').classList.add('hidden');
+                                $('main-grid').classList.remove('hidden');
+                                renderAll();
+                            });
+                    } else {
+                        showError("Could not identify city from coordinates.");
+                    }
+                } catch (e) {
+                    // If reverse geocoding fails, just use lat/lon for data
+                    state.city = { name: `${lat.toFixed(2)}, ${lon.toFixed(2)}`, lat, lon };
+                    Promise.all([fetchCurrent({ lat, lon }), fetchHourly({ lat, lon }), fetchDaily({ lat, lon })])
+                        .then(([cur, hourly, daily]) => {
+                            state.currentData = cur;
+                            state.hourlyData = hourly;
+                            state.dailyData = daily;
+                            $('loading-state').classList.add('hidden');
+                            $('main-grid').classList.remove('hidden');
+                            renderAll();
+                        });
+                }
+            },
+            () => { showError("Location access denied."); $('loading-state').classList.add('hidden'); $('main-grid').classList.remove('hidden'); }
+        );
+    }
+
+    /* ============================================================
+       3. DATA FETCHING (Open-Meteo)
+       ============================================================ */
+
+    async function fetchCurrent(loc) {
+        const params = new URLSearchParams({
+            latitude: loc.lat, longitude: loc.lon,
+            current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,windspeed_10m,winddirection_10m,pressure_msl,uvi,visibility',
+            daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max'
+        });
+
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+        return res.json();
+    }
+
+    async function fetchHourly(loc) {
+        const params = new URLSearchParams({
+            latitude: loc.lat, longitude: loc.lon,
+            hourly: 'temperature_2m,apparent_temperature,relative_humidity_2m,windspeed_10m,rain',
+            forecast_days: 3 // We need enough for the slider (usually ~48h)
+        });
+
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+        return res.json();
+    }
+
+    async function fetchDaily(loc) {
+        const params = new URLSearchParams({
+            latitude: loc.lat, longitude: loc.lon,
+            daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max',
+            forecast_days: 7
+        });
+
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+        return res.json();
+    }
+
+    /* ============================================================
+       4. RENDERING UI
+       ============================================================ */
+
+    function renderAll() {
+        if (!state.city) return;
+
+        // Update Date
+        const now = new Date();
+        $('current-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        renderCurrent();
+        renderHourly();
+        renderDaily();
+        const code = state.currentData.current ? state.currentData.current.weather_code : 0;
+        updateBackground(code, isNight());
+    }
+
+    function renderCurrent() {
+        const d = state.currentData;
+
+        // Name & City
+        $('current-city-name').textContent = `${state.city.name}`;
+
+        // Temp conversion
+        const tempC = parseFloat(d.current.temperature_2m);
+        const feelsC = parseFloat(d.current.apparent_temperature);
+        const windKmh = parseFloat(d.current.windspeed_10m);
+        const humidity = d.current.relative_humidity_2m;
+        const pressure = d.current.pressure_msl;
+        const uvi = d.current.uvi;
+        const visKm = d.current.visibility / 1000;
+
+        // Unit Conversion
+        let tempDisplay, feelsDisplay, windDisplay;
+        if (state.unit === 'metric') {
+            tempDisplay = `${tempC.toFixed(1)}°`;
+            feelsDisplay = `${feelsC.toFixed(1)}°`;
+            windDisplay = `${windKmh} km/h`;
+        } else {
+            const toF = c => (c * 9 / 5) + 32;
+            tempDisplay = `${toF(tempC).toFixed(0)}°`;
+            feelsDisplay = `${toF(feelsC).toFixed(0)}°`;
+            windDisplay = `${windKmh} km/h`; // Wind usually stays metric in apps, but we can convert if needed. Keeping simple here.
+        }
+
+        $('current-temp').textContent = tempDisplay;
+        $('feels-like').textContent = feelsDisplay;
+        $('stat-wind').textContent = windDisplay;
+        $('stat-pressure').textContent = `${pressure} hPa`;
+        $('stat-uv').textContent = uvi;
+        $('stat-vis').textContent = visKm.toFixed(1) + ' km';
+
+        // Weather Code to Text/Icon (WMO codes)
+        const code = d.current.weather_code;
+        const weatherInfo = getWeatherInfo(code);
+
+        $('current-desc').textContent = `${weatherInfo.name} (${weatherInfo.icon})`;
+        $('main-icon').textContent = weatherInfo.icon;
+
+        // High / Low from Daily Data (first entry)
+        if (state.dailyData && state.dailyData.daily.length > 0) {
+            const day1 = state.dailyData.daily[0];
+            $('temp-high').textContent = `${Math.round(day1.temperature_2m_max)}°`;
+            $('temp-low').textContent = `${Math.round(day1.temperature_2m_min)}°`;
+        }
+
+        // Humidity
+        $('stat-humidity').textContent = `${humidity}%`;
+
+        // Background
+        updateBackground(code, isNight());
+    }
+
+    function renderHourly(activeIndex) {
+        const container = $('hourly-list');
+        container.innerHTML = '';
+
+        // Show 24 hours starting from current hour
+        const nowH = new Date().getHours();
+
+        for (let i = 0; i < 24; i++) {
+            let h, tempC, rain, windKmh;
+
+            if (i === 0) { // Current hour
+                h = 'Now';
+                const curIdx = state.hourlyData.hourly.temperature_2m.indexOf(state.currentData.current.time);
+                if (curIdx > -1) {
+                    tempC = state.hourlyData.hourly.temperature_2m[curIdx];
+                    rain = state.hourlyData.hourly.rain[curIdx] || 0;
+                    windKmh = state.hourlyData.hourly.windspeed_10m[curIdx];
+                } else {
+                    // Fallback if current hour isn't in the forecast window yet (e.g. early morning)
+                    const fallback = Math.min(i, state.hourlyData.hourly.temperature_2m.length - 1);
+                    tempC = state.hourlyData.hourly.temperature_2m[fallback];
+                    rain = state.hourlyData.hourly.rain[fallback] || 0;
+                    windKmh = state.hourlyData.hourly.windspeed_10m[fallback];
+                }
+            } else {
+                const idx = nowH + i - 1;
+                if (idx < state.hourlyData.hourly.temperature_2m.length) {
+                    h = `${nowH + i}:00`;
+                    tempC = state.hourlyData.hourly.temperature_2m[idx];
+                    rain = state.hourlyData.hourly.rain[idx] || 0;
+                    windKmh = state.hourlyData.hourly.windspeed_10m[idx];
+                } else {
+                    break; // End of forecast data
+                }
+            }
+
+            const tempF = state.unit === 'metric' ? tempC : (tempC * 9 / 5) + 32;
+
+            let bgClass = 'bg-white/5';
+            if (rain > 0.1) bgClass = 'bg-blue-500/20';
+            else if (tempF < 0) bgClass = 'bg-cyan-900/40';
+
+            const div = document.createElement('div');
+            div.className = `flex items-center gap-3 px-2 py-1.5 rounded-lg cursor-pointer transition-all ${bgClass} hover:bg-white/15`;
+            div.innerHTML = `
+            <span class="text-xs w-8 text-right opacity-60">${h}</span>
+            <span class="text-sm font-medium w-8 text-center">${Math.round(tempF)}°</span>
+            ${rain > 0 ? `<span class="text-[10px] bg-blue-400/30 px-1.5 rounded text-white"> ${(rain * 24).toFixed(0)}mm</span>` : ''}
+        `;
+            div.onclick = () => renderHourly(i); // Jump slider
+            container.appendChild(div);
+        }
+
+        // Update Slider position
+        const idx = activeIndex !== undefined ? activeIndex : nowH;
+        $('hourly-slider').value = idx;
+
+        // Highlight active hour
+        Array.from(container.children).forEach(child => child.classList.remove('bg-white/15', 'ring-2', 'ring-blue-300'));
+        const target = container.children[idx];
+        if (target) {
+            target.classList.add('bg-white/15', 'ring-2', 'ring-blue-300');
+        }
+    }
+
+    function renderDaily() {
+        const list = $('daily-list');
+        list.innerHTML = '';
+
+        if (!state.dailyData || !state.dailyData.daily.length) return;
+
+        // Chart Data Preparation
+        const labels = [];
+        const temps = [];
+        const rainChances = [];
+        state.dailyData.daily.slice(0, 7).forEach((day, i) => {
+            const dateStr = new Date(day.time).toLocaleDateString('en-US', { weekday: 'short' });
+            labels.push(dateStr);
+
+            // Avg temp for chart
+            temps.push((parseFloat(day.temperature_2m_max) + parseFloat(day.temperature_2m_min)) / 2);
+
+            // Rain chance estimation based on rain sum (Open-Meteo gives mm, not %)
+            const totalRain = day.rain ? day.rain.reduce((a, b) => a + b, 0) : 0;
+            rainChances.push(totalRain > 1 ? 'High' : totalRain > 0.5 ? 'Low' : 'None');
+        });
+
+        // Render List
+        state.dailyData.daily.slice(0, 7).forEach((day, i) => {
+            let tempF = (parseFloat(day.temperature_2m_max) + parseFloat(day.temperature_2m_min)) / 2;
+            if (state.unit === 'imperial') tempF = (tempF * 9 / 5) + 32;
+
+            const div = document.createElement('div');
+            div.className = "flex items-center justify-between py-2 border-b border-white/5 last:border-none";
+            div.innerHTML = `
+            <span class="w-16 text-sm opacity-70">${new Date(day.time).toLocaleDateString('en-US', { month: 'short' })} ${new Date(day.time).getDate()}</span>
+            <span class="text-lg font-light w-8 text-center">${Math.round(tempF)}°</span>
+        `;
+            list.appendChild(div);
+        });
+
+        // Render Chart
+        renderForecastChart(labels, temps, rainChances);
+    }
+
+    function renderForecastChart(labels, temps, rainChances) {
+        const ctx = $('forecast-chart-container').getContext('2d');
+
+        if (chartInstance) chartInstance.destroy();
+
+        // Gradient for temp line
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(96, 165, 250, 0.3)');
+        gradient.addColorStop(1, 'rgba(96, 165, 250, 0)');
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Avg Temp',
+                        data: temps,
+                        borderColor: '#60a5fa',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+                    y: {
+                        min: Math.min(...temps) - 5,
+                        max: Math.max(...temps) + 5,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#94a3b8', font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    /* ============================================================
+       5. HELPERS & UTILITIES
+       ============================================================ */
+
+    function getWeatherInfo(code) {
+        // WMO Weather interpretation codes
+        const map = {
+            0: { name: 'Clear sky', icon: '☀️' },
+            1: { name: 'Mainly clear', icon: '🌤️' },
+            2: { name: 'Partly cloudy', icon: '⛅' },
+            3: { name: 'Overcast', icon: '☁️' },
+            45: { name: 'Foggy', icon: '🌫️' },
+            48: { name: 'Depositing rime fog', icon: '🌫️' },
+            51: { name: 'Light drizzle', icon: '🌦️' },
+            53: { name: 'Moderate drizzle', icon: '🌧️' },
+            55: { name: 'Dense drizzle', icon: '🌧️' },
+            61: { name: 'Slight rain', icon: '🌧️' },
+            63: { name: 'Moderate rain', icon: '🌧️' },
+            65: { name: 'Heavy rain', icon: '⛈️' },
+            71: { name: 'Slight snow fall', icon: '🌨️' },
+            73: { name: 'Moderate snow fall', icon: '❄️' },
+            75: { name: 'Heavy snow fall', icon: '❄️' },
+            95: { name: 'Thunderstorm', icon: '⛈️' },
+            96: { name: 'Thunderstorm with slight hail', icon: '🌩️' },
+            99: { name: 'Thunderstorm with heavy hail', icon: '🌩️' }
+        };
+        return map[code] || { name: 'Unknown', icon: '❓' };
+    }
+
+    function isNight() {
+        const hour = new Date().getHours();
+        return hour >= 18 || hour <= 5;
+    }
+
+    // --- Unit Toggle ---
+    function setUnit(unit) {
+        state.unit = unit;
+        $('btn-metric').className = `px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-300 ${unit === 'metric' ? 'bg-white/20 text-white shadow-sm' : 'text-white/60 hover:text-white'}`;
+        $('btn-imperial').className = `px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-300 ${unit === 'imperial' ? 'bg-white/20 text-white shadow-sm' : 'text-white/60 hover:text-white'}`;
+
+        // Update unit display in card
+        $('unit-display').textContent = unit === 'metric' ? '°C' : '°F';
+
+        if (state.city && state.currentData) renderCurrent();
+    }
+
+    // --- Comparison Mode ---
+    function toggleComparison() {
+        if (!state.city) return;
+
+        const modal = $('compare-modal');
+        if (modal.classList.contains('hidden')) {
+            // Open Modal
+            state.isComparing = true;
+            modal.classList.remove('hidden');
+
+            // Fetch second city data immediately using current search input
+            const query = $('search-input').value;
+            loadCity(query).then(() => {
+                renderCompare();
+            });
+        } else {
+            closeCompare();
+        }
+    }
+
+    function closeCompare() {
+        $('compare-modal').classList.add('hidden');
+        state.isComparing = false;
+        state.compareCity = null;
+    }
+
+    function renderCompare() {
+        const container = $('compare-content');
+
+        // We have two cities in state now (state.city and the one just loaded). 
+        // Since loadCity overwrites state.city, we need to handle this.
+        // For simplicity in single-file: The modal shows Current City vs Search Input result.
+        // However, since loadCity overwrites state, let's assume the user searches for a DIFFERENT city.
+
+        // Re-fetching logic is tricky because of state mutation. 
+        // Let's use a temporary variable approach or just re-render based on current state.
+        // Since we can't easily store "previous" state in this simple structure, 
+        // we will show the Current City (which is actually the second city loaded) vs the first one.
+
+        // NOTE: In a production app, we'd use Redux or Context. Here we just re-render based on what's there.
+        // The user sees "Current" and "Search Result". 
+
+        const c1 = state.currentData;
+        const name1 = state.city.name;
+
+        container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full">
+            <h2 class="text-lg font-bold mb-6 text-blue-200">Comparison Mode</h2>
+            <p class="text-white/50 text-sm mb-4">Showing data for ${name1} (Current) and the most recently loaded city.</p>
+            
+            <div class="w-full grid grid-cols-2 gap-6 mt-8">
+                <!-- Card 1 -->
+                <div class="glass-card rounded-xl p-5 border-l-4 border-blue-400 flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-white/90 mb-2">${name1}</h3>
+                    <span id="cmp-temp-${state.city.name}" class="text-4xl font-thin mb-1"></span>
+                    <p id="cmp-desc-${state.city.name}" class="text-xs opacity-60"></p>
+                </div>
+                
+                <!-- Card 2 (Placeholder for second city) -->
+                <div class="glass-card rounded-xl p-5 border-l-4 border-purple-400 flex flex-col items-center opacity-70">
+                    <h3 class="text-sm font-bold text-white/90 mb-2">Second City</h3>
+                    <span class="text-4xl font-thin mb-1 text-white/50">--°</span>
+                    <p class="text-xs opacity-60">Search for a second city to compare!</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // Fill in current data
+        const tempC = parseFloat(c1.current.temperature_2m);
+        const feelsC = parseFloat(c1.current.apparent_temperature);
+        const code = c1.current.weather_code;
+
+        $('cmp-temp-' + state.city.name).textContent = `${state.unit === 'metric' ? tempC.toFixed(0) : Math.round((tempC * 9 / 5) + 32)}°`;
+        $('cmp-desc-' + state.city.name).textContent = getWeatherInfo(code).name;
+    }
+
+    function showError(msg) {
+        const bar = $('alerts-bar');
+        bar.classList.remove('hidden');
+        bar.innerHTML = `<span class="text-red-300 font-medium">${msg}</span>`;
+
+        setTimeout(() => {
+            bar.classList.add('hidden');
+        }, 5000);
+    }
+
+    function updateBackground(code, isNight) {
+        let bgClass = 'bg-clear'; // Default
+
+        if (isNight) bgClass = 'bg-night';
+
+        const info = getWeatherInfo(code);
+        switch (info.name.toLowerCase()) {
+            case 'clear sky':
+                bgClass = isNight ? 'bg-night' : 'bg-clear';
+                break;
+            case 'overcast':
+            case 'foggy':
+                bgClass = 'bg-cloudy';
+                break;
+            case 'slight rain':
+            case 'moderate rain':
+            case 'heavy rain':
+            case 'drizzle':
+                bgClass = 'bg-rain';
+                break;
+            default:
+                if (isNight) bgClass = 'bg-night';
+        }
+
+        $('dynamic-bg').className = `fixed inset-0 z-0 transition-all duration-[2s] ease-in-out ${bgClass}`;
+    }
+
+</script>

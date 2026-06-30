@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Financial | Premium Analysis Dashboard</title>
+    <style>
+        :root {
+            --bg-primary: #f4f6f9;
+            --bg-secondary: #ffffff;
+            --bg-glass: rgba(255, 255, 255, 0.7);
+            --text-primary: #1a1a2e;
+            --text-secondary: #555;
+            --accent: #4f6ef7;
+            --accent-glow: rgba(79, 110, 247, 0.3);
+            --success: #00c897;
+            --warning: #ffae00;
+            --danger: #e53170;
+            --border: rgba(0, 0, 0, 0.06);
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d2e;
+            --bg-glass: rgba(26, 29, 46, 0.6);
+            --text-primary: #e8eaed;
+            --text-secondary: #9ca3af;
+            --accent: #7b9aff;
+            --accent-glow: rgba(123, 154, 255, 0.15);
+            --border: rgba(255, 255, 255, 0.08);
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            z-index: 10;
+        }
+
+        .brand {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand span {
+            font-size: 1.6rem;
+        }
+
+        .nav-section h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-glow);
+            color: var(--accent);
+            font-weight: 600;
+            box-shadow: inset 0 0 0 1px rgba(79, 110, 247, 0.1);
+        }
+
+        .theme-toggle {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.6rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 3rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(20px);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            border-color: rgba(79, 110, 247, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Grid */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 14px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.5;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover::after {
+            opacity: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 4px;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .up {
+            color: var(--success);
+            background: rgba(0, 200, 151, 0.1);
+        }
+
+        .down {
+            color: var(--danger);
+            background: rgba(229, 49, 112, 0.1);
+        }
+
+        /* H2H Panel */
+        .h2h-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .company-col {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .company-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .company-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .apple-logo {
+            background: #a4c639;
+        }
+
+        .msft-logo {
+            background: #f25022;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .metric-item {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .metric-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .tab-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            background: transparent;
+            border: none;
+        }
+
+        .tab-btn:hover {
+            color: var(--accent);
+            background: rgba(79, 110, 247, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--bg-primary);
+            background: var(--accent);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Statement Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        th:hover {
+            color: var(--accent);
+            background: rgba(79, 110, 247, 0.03);
+        }
+
+        td {
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        tr:hover td {
+            background: rgba(79, 110, 247, 0.03);
+            color: var(--text-primary);
+        }
+
+        .expand-btn {
+            cursor: pointer;
+            color: var(--accent);
+            font-weight: bold;
+            padding-left: 5px;
+            transition: transform 0.2s;
+        }
+
+        .expand-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* API Panel */
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .api-card {
+            border-left: 3px solid var(--accent);
+            padding-left: 1rem;
+        }
+
+        .api-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Winner Breakdown */
+        .winner-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .winner-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .winner-label {
+            color: var(--text-secondary);
+        }
+
+        .winner-val {
+            font-weight: 700;
+        }
+
+        /* Notes */
+        textarea {
+            width: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .bg-accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 80px 1fr;
+            }
+
+            .sidebar h3,
+            .nav-item span:not(.icon),
+            .brand-text {
+                display: none;
+            }
+
+            .brand {
+                justify-content: center;
+            }
+        }
+
+        /* Custom SVG Chart Styles */
+        svg text {
+            font-family: 'Inter', sans-serif;
+            fill: var(--text-secondary);
+            font-size: 10px;
+        }
+
+        .chart-grid-line {
+            stroke: var(--border);
+            stroke-dasharray: 2, 4;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand"><span>◆</span><span class="brand-text">Nexus Financial</span></div>
+
+            <nav>
+                <div class="nav-section">
+                    <h3>Analysis</h3>
+                    <div class="nav-item active" onclick="switchTab('summary', this)">
+                        <span style="font-size:1.2rem">●</span><span>Executive Summary</span>
+                    </div>
+                    <div class="nav-item" onclick="switchTab('revenue', this)">
+                        <span style="font-size:1.2rem">$</span><span>Revenue Analysis</span>
+                    </div>
+                    <div class="nav-item" onclick="switchTab('profitability', this)">
+                        <span style="font-size:1.2rem">▲</span><span>Profitability</span>
+                    </div>
+                    <div class="nav-item" onclick="switchTab('cashflow', this)">
+                        <span style="font-size:1.2rem">→</span><span>Cash Flow</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <h3>Data</h3>
+                    <div class="nav-item" onclick="switchTab('statements', this)">
+                        <span style="font-size:1.2rem">📄</span><span>Financial Statements</span>
+                    </div>
+                    <div class="nav-item" onclick="switchTab('marketdata', this)">
+                        <span style="font-size:1.2rem">⚡</span><span>Market Data Feed</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <h3>Tools</h3>
+                    <div class="nav-item" onclick="switchTab('api', this)">
+                        <span style="font-size:1.2rem">🔌</span><span>API Usage</span>
+                    </div>
+                    <div class="nav-item" onclick="switchTab('notes', this)">
+                        <span style="font-size:1.2rem">✎</span><span>Analyst Notes</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="theme-toggle" id="themeToggle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M12 3a6 6 0 0 0 9.9 4.5A6 6 0 0 0 18.3 1C17.6 0.3 16.7 0 15.7 0H8.3c-1 0-1.9.3-2.6 1a6 6 0 0 0-.9 12.5A6 6 0 0 0 12 21" />
+                </svg>
+                <span id="themeLabel">Dark Mode</span>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+
+            <!-- Header -->
+            <div class="header-bar">
+                <h1 class="page-title" id="pageTitle">Executive Summary</h1>
+                <div style="display:flex; gap:1rem; align-items:center;">
+                    <select id="companyFilter" onchange="applyFilters()"
+                        style="background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border); padding:.5rem 1rem; border-radius:8px; font-size:.9rem;">
+                        <option value="all">All Companies</option>
+                        <option value="apple">Apple Inc.</option>
+                        <option value="msft">Microsoft Corp.</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- VIEW: SUMMARY -->
+            <section id="view-summary" class="tab-content">
+                <div class="hero-grid" id="heroGrid"></div>
+
+                <div class="h2h-grid">
+                    <div class="company-col">
+                        <div class="company-header">
+                            <span class="company-name">Apple Inc.</span>
+                            <div class="company-logo apple-logo">A</div>
+                        </div>
+                        <div class="metrics-grid" id="appleMetrics"></div>
+                    </div>
+                    <div class="company-col">
+                        <div class="company-header">
+                            <span class="company-name">Microsoft Corp.</span>
+                            <div class="company-logo msft-logo">M</div>
+                        </div>
+                        <div class="metrics-grid" id="msftMetrics"></div>
+                    </div>
+                </div>
+
+                <!-- Winner Breakdown -->
+                <div class="card">
+                    <h3 style="margin-bottom:1rem;">Winner Breakdown</h3>
+                    <ul class="winner-list" id="winnerList"></ul>
+                </div>
+            </section>
+
+            <!-- VIEW: REVENUE -->
+            <section id="view-revenue" class="tab-content hidden">
+                <div class="card">
+                    <h3 style="margin-bottom:1rem;">Revenue vs Net Income (5-Year Trend)</h3>
+                    <div class="chart-container" id="revChart"></div>
+                </div>
+            </section>
+
+            <!-- VIEW: PROFITABILITY -->
+            <section id="view-profitability" class="tab-content hidden">
+                <div class="card">
+                    <h3 style="margin-bottom:1rem;">EBITDA Margin Trend</h3>
+                    <div class="chart-container" id="ebitdaChart"></div>
+                </div>
+            </section>
+
+            <!-- VIEW: CASHFLOW -->
+            <section id="view-cashflow" class="tab-content hidden">
+                <div class="card">
+                    <h3 style="margin-bottom:1rem;">Free Cash Flow vs CapEx</h3>
+                    <div class="chart-container" id="fcfChart"></div>
+                </div>
+            </section>
+
+            <!-- VIEW: MARKET DATA -->
+            <section id="view-marketdata" class="tab-content hidden">
+                <div class="api-grid">
+                    <div class="card api-card">
+                        <h3 style="margin-bottom:.5rem;">Bloomberg Terminal</h3>
+                        <p><span class="api-status-dot"></span>Status: Connected</p>
+                        <p style="color:var(--text-secondary); font-size:.85rem; margin-top:.2rem;">Latency: 42ms</p>
+                    </div>
+                    <div class="card api-card">
+                        <h3 style="margin-bottom:.5rem;">Alpha Vantage</h3>
+                        <p><span class="api-status-dot"></span>Status: Connected</p>
+                        <p style="color:var(--text-secondary); font-size:.85rem; margin-top:.2rem;">Latency: 120ms</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom:1rem;">Stock Price vs Market Cap</h3>
+                    <div class="chart-container" id="stockChart"></div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom:1rem;">Dividend Yield Comparison</h3>
+                    <div class="chart-container" id="divChart"></div>
+                </div>
+            </section>
+
+            <!-- VIEW: STATEMENTS -->
+            <section id="view-statements" class="tab-content hidden">
+                <div style="display:flex; gap:1rem; margin-bottom:1.5rem;">
+                    <button class="tab-btn active" onclick="toggleQuarterly(true)">Annual</button>
+                    <button class="tab-btn" onclick="toggleQuarterly(false)">Quarterly</button>
+                    <input type="text" id="searchInput" placeholder="Search line items..."
+                        style="flex:1; background:var(--bg-secondary); border:1px solid var(--border); padding:.6rem 1rem; border-radius:8px; color:var(--text-primary);"
+                        onkeyup="filterStatements()">
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="statementsTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(0)">Date</th>
+                                <th onclick="sortTable(1)">Company</th>
+                                <th onclick="sortTable(2)">Revenue</th>
+                                <th onclick="sortTable(3)">Net Income</th>
+                                <th onclick="sortTable(4)">EPS</th>
+                                <th onclick="sortTable(5)">P/E Ratio</th>
+                                <th></th> <!-- Expand -->
+                            </tr>
+                        </thead>
+                        <tbody id="statementsBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Expanded Detail View -->
+                <div class="card hidden" id="detailView">
+                    <h3 id="detailTitle" style="margin-bottom:1rem;"></h3>
+                    <div class="table-wrapper">
+                        <table id="detailTable"></table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: API -->
+            <section id="view-api" class="tab-content hidden">
+                <div class="api-grid">
+                    <div class="card api-card">
+                        <h3>Bloomberg</h3>
+                        <p style="font-size:1.5rem; font-weight:700;">$42.50</p>
+                        <p style="color:var(--text-secondary);">Total Spend</p>
+                        <div style="margin-top:1rem;"><span class="badge bg-accent">1,204 Calls</span></div>
+                    </div>
+                    <div class="card api-card" style="border-left-color: var(--success);">
+                        <h3>Alpha Vantage</h3>
+                        <p style="font-size:1.5rem; font-weight:700;">$8.20</p>
+                        <p style="color:var(--text-secondary);">Total Spend</p>
+                        <div style="margin-top:1rem;"><span class="badge bg-accent"
+                                style="background:var(--success)">340 Calls</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: NOTES -->
+            <section id="view-notes" class="tab-content hidden">
+                <div class="card">
+                    <h3 style="margin-bottom:1rem;">Analyst Commentary</h3>
+                    <textarea placeholder="Add observations, commentary, or future outlook here..."></textarea>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const companies = {
+            apple: { name: "Apple Inc.", symbol: "AAPL", color: "#a4c639" },
+            msft: { name: "Microsoft Corp.", symbol: "MSFT", color: "#f25022" }
+        };
+
+        const years = [2019, 2020, 2021, 2022, 2023, 2024];
+
+        // Mock Data Generation
+        function generateData() {
+            const data = {};
+
+            // Apple
+            data.apple = years.map(y => ({
+                year: y,
+                revenue: [260174, 274515, 365817, 394328, 383285, 391035][y - 2019], // Billions approx
+                netIncome: [55256, 57411, 94321, 73795, 96995, 97000][y - 2019],
+                eps: [3.28, 3.28, 5.67, 3.31, 6.16, 6.16],
+                peRatio: [24.1, 29.6, 28.0, 30.0, 29.5, 30.2],
+                roe: [160.7, 155.3, 150.4, 47.5, 147.3, 147.3], // %
+                debtEquity: [181.7, 192.2, 179.6, 178.7, 179.0, 180.0], // ratio
+                marketCap: [1.45, 1.73, 2.77, 2.81, 2.80, 2.90], // Trillions approx (scaled for chart)
+                stockPrice: [246.8, 73.3, 336.4, 122.1, 175.3, 170.0],
+                dividendYield: [1.9, 2.1, 1.6, 1.5, 0.5, 0.5], // %
+                ebitdaMargin: [34.8, 35.0, 36.7, 30.5, 33.0, 32.5], // %
+                fcf: [16690, 18274, 20997, 19432, 20080, 20000], // Billions approx
+                capex: [13633, 14337, 19915, 23708, 26096, 28000]
+            }));
+
+            // Microsoft
+            data.msft = years.map(y => ({
+                year: y,
+                revenue: [103400, 143000, 168000, 198000, 211000, 227500][y - 2019], // Billions approx
+                netIncome: [16728, 44281, 61271, 72361, 80576, 88136][y - 2019],
+                eps: [1.67, 5.77, 8.05, 9.65, 10.08, 11.05],
+                peRatio: [34.6, 36.8, 34.2, 33.1, 34.2, 33.5],
+                roe: [49.7, 48.7, 45.0, 43.5, 40.0, 38.5], // %
+                debtEquity: [61.7, 52.0, 48.0, 45.0, 42.0, 40.0], // ratio
+                marketCap: [1.09, 1.38, 2.14, 2.21, 2.67, 2.90], // Trillions approx (scaled for chart)
+                stockPrice: [56.3, 85.1, 222.3, 246.2, 338.1, 415.0],
+                dividendYield: [2.7, 2.1, 1.9, 2.0, 2.2, 2.3], // %
+                ebitdaMargin: [46.0, 47.8, 48.5, 46.0, 47.0, 46.5], // %
+                fcf: [19190, 25273, 35800, 46800, 55000, 62000], // Billions approx
+                capex: [13500, 15000, 20000, 23000, 27000, 30000]
+            }));
+
+            return data;
+        }
+
+        const rawData = generateData();
+
+        // --- STATE ---
+        let currentTab = 'summary';
+        let sortCol = -1;
+        let sortDir = 'desc';
+        let isQuarterly = true; // Default to annual view for simplicity in this mock, but toggle UI works
+        let expandedRowId = null;
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSummary();
+        });
+
+        // --- THEME TOGGLE ---
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlEl = document.documentElement;
+        const label = document.getElementById('themeLabel');
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = htmlEl.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                htmlEl.setAttribute('data-theme', 'light');
+                label.textContent = "Light Mode";
+            } else {
+                htmlEl.setAttribute('data-theme', 'dark');
+                label.textContent = "Dark Mode";
+            }
+        });
+
+        // --- TAB SWITCHING ---
+        function switchTab(tabId, el) {
+            currentTab = tabId;
+
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            // Update content visibility
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            const target = document.getElementById(`view-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            // Update Title
+            const titles = {
+                'summary': 'Executive Summary',
+                'revenue': 'Revenue Analysis',
+                'profitability': 'Profitability Metrics',
+                'cashflow': 'Cash Flow Statement',
+                'statements': 'Financial Statements History',
+                'marketdata': 'Market Data Feed',
+                'api': 'API Usage & Costs',
+                'notes': 'Analyst Notes'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabId] || tabId;
+
+            // Re-render specific charts if needed
+            if (tabId === 'revenue') drawDualLineChart('revChart', 'revenue', 'netIncome');
+            if (tabId === 'profitability') drawAreaChart('ebitdaChart', 'ebitdaMargin', true);
+            if (tabId === 'cashflow') drawGroupedBarChart('fcfChart', 'fcf', 'capex');
+            if (tabId === 'marketdata') {
+                drawDualLineChart('stockChart', 'stockPrice', 'marketCap', 'Stock Price ($)', 'Market Cap ($T)');
+                drawAreaChart('divChart', 'dividendYield', true);
+            }
+        }
+
+        // --- SUMMARY RENDER ---
+        function renderSummary() {
+            const heroGrid = document.getElementById('heroGrid');
+            const appleMetrics = document.getElementById('appleMetrics');
+            const msftMetrics = document.getElementById('msftMetrics');
+            const winnerList = document.getElementById('winnerList');
+
+            // Hero Stats (Latest Year)
+            const latestYear = rawData.apple[rawData.apple.length - 1].year;
+
+            heroGrid.innerHTML = `
+        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value">$${formatB(rawData.apple[rawData.apple.length - 1].revenue)}B</div></div>
+        <div class="stat-card"><div class="stat-label">Net Income</div><div class="stat-value">$${formatB(rawData.apple[rawData.apple.length - 1].netIncome)}B</div></div>
+        <div class="stat-card"><div class="stat-label">EPS</div><div class="stat-value">$${rawData.apple[rawData.apple.length - 1].eps}</div></div>
+        <div class="stat-card"><div class="stat-label">P/E Ratio</div><div class="stat-value">${rawData.apple[rawData.apple.length - 1].peRatio}</div></div>
+        <div class="stat-card"><div class="stat-label">Market Cap</div><div class="stat-value">$${formatT(rawData.apple[rawData.apple.length - 1].marketCap)}</div></div>
+    `;
+
+            // H2H Metrics
+            const latest = rawData.apple[rawData.apple.length - 1];
+            const prevYear = rawData.apple[rawData.apple.length - 2];
+
+            function renderMetrics(container, key) {
+                container.innerHTML = `
+            <div class="metric-item">
+                <div class="metric-label">${key} Growth</div>
+                <div class="metric-val" style="${getGrowth(prevYear[key], latest[key]) > 0 ? 'color:var(--success)' : 'color:var(--danger)'}">
+                    ${getGrowth(prevYear[key], latest[key])}%
+                </div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">${key} Margin</div>
+                <div class="metric-val" style="${latest[key] > 30 ? 'color:var(--success)' : 'color:var(--warning)'}">${latest[key]}%</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-label">Score</div>
+                <div class="metric-val" style="${latest[key] > 40 ? 'color:var(--success)' : 'color:var(--warning)'}">${Math.round(latest[key])}</div>
+            </div>
+        `;
+            }
+
+            renderMetrics(appleMetrics, 'revenue');
+            renderMetrics(msftMetrics, 'revenue');
+
+            // Winner List
+            const categories = ['Revenue', 'Net Income', 'EPS', 'P/E Ratio', 'ROE', 'Market Cap'];
+            let html = '';
+            categories.forEach(cat => {
+                const valA = rawData.apple[rawData.apple.length - 1][cat.toLowerCase().replace(' ', '')];
+                const valM = rawData.msft[rawData.msft.length - 1][cat.toLowerCase().replace(' ', '')];
+                let winner, icon;
+                if (valA > valM) { winner = 'Apple'; icon = '🍎'; } else { winner = 'Microsoft'; icon = '💻'; }
+
+                html += `
+            <li class="winner-item">
+                <span class="winner-label">${cat}</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span>${icon} ${winner}</span>
+                    <span class="winner-val" style="${valA > valM ? 'color:var(--success)' : 'color:var(--danger)'}">${valA > valM ? '+' : ''}${Math.round((valA - valM) / valM * 100)}%</span>
+                </div>
+            </li>`;
+            });
+            winnerList.innerHTML = html;
+        }
+
+        // --- CHARTS (Custom SVG Engine) ---
+        function renderCharts() {
+            // Revenue vs Net Income
+            drawDualLineChart('revChart', 'revenue', 'netIncome');
+
+            // EBITDA Margin
+            drawAreaChart('ebitdaChart', 'ebitdaMargin', true);
+
+            // FCF vs CapEx (Bar)
+            drawGroupedBarChart('fcfChart', 'fcf', 'capex');
+
+            // Stock Price vs Market Cap
+            drawDualLineChart('stockChart', 'stockPrice', 'marketCap', 'Stock Price ($)', 'Market Cap ($T)');
+
+            // Dividend Yield
+            drawAreaChart('divChart', 'dividendYield', true);
+        }
+
+        function drawDualLineChart(id, keyA, keyB, labelA = '', labelB = '') {
+            const container = document.getElementById(id);
+            if (!container) return;
+            const dataA = rawData.apple.map(d => d[keyA]);
+            const dataB = rawData.msft.map(d => d[keyB]);
+
+            // Normalize to 0-100 range for visual consistency
+            let maxVal = Math.max(...dataA.concat(dataB).filter(v => typeof v === 'number')) * 1.2;
+            if (!maxVal || maxVal <= 0) return;
+
+            let w = container.clientWidth - 40;
+            if (w <= 0) w = 600;
+            const h = 300;
+
+            // Generate SVG
+            let svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%">`;
+            svg += `<defs><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4f6ef7"/><stop offset="100%" stop-color="#4f6ef7" stop-opacity="0"/></linearGradient><linearGradient id="gB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffae00"/><stop offset="100%" stop-color="#ffae00" stop-opacity="0"/></linearGradient></defs>`;
+
+            // Grid
+            for (let i = 0; i <= 5; i++) {
+                const y = (h / 5) * i;
+                svg += `<line x1="20" y1="${y}" x2="${w - 20}" y2="${y}" class="chart-grid-line"/>`;
+            }
+
+            // Lines
+            function linePath(data, color) {
+                let d = '';
+                data.forEach((val, i) => {
+                    const x = 30 + (i / (data.length - 1)) * (w - 60);
+                    const y = h - ((typeof val === 'number' ? val : 0) / maxVal) * (h - 40) - 20;
+                    d += `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                });
+                return `<path d="${d}" fill="none" stroke="${color}" stroke-width="3" vector-effect="non-scaling-stroke"/>`;
+            }
+
+            svg += linePath(dataA, '#4f6ef7');
+            svg += linePath(dataB, '#ffae00');
+
+            // Dots
+            rawData.apple.forEach((d, i) => {
+                const x = 30 + (i / (rawData.apple.length - 1)) * (w - 60);
+                const yA = h - ((typeof d[keyA] === 'number' ? d[keyA] : 0) / maxVal) * (h - 40) - 20;
+                svg += `<circle cx="${x}" cy="${yA}" r="5" fill="#4f6ef7"/>`;
+            });
+
+            // Labels
+            rawData.apple.forEach((d, i) => {
+                const x = 30 + (i / (rawData.apple.length - 1)) * (w - 60);
+                svg += `<text x="${x}" y="25" text-anchor="middle" fill="var(--text-secondary)" font-size="11">${d.year}</text>`;
+            });
+
+            if (labelA) svg += `<text x="10" y="30" fill="#4f6ef7" font-weight="bold" font-size="12">${labelA}</text>`;
+            if (labelB) svg += `<text x="${w - 10}" y="30" text-anchor="end" fill="#ffae00" font-weight="bold" font-size="12">${labelB}</text>`;
+
+            svg += `</svg>`;
+            container.innerHTML = svg;
+        }
+
+        function drawAreaChart(id, key, isStacked) {
+            const container = document.getElementById(id);
+            if (!container) return;
+            const dataA = rawData.apple.map(d => d[key]);
+            const maxVal = Math.max(...dataA.filter(v => typeof v === 'number')) * 1.2;
+            if (!maxVal || maxVal <= 0) return;
+
+            let w = container.clientWidth - 40;
+            if (w <= 0) w = 600;
+            let h = 300;
+
+            // Generate SVG
+            let svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%">`;
+
+            function areaPath(data, color) {
+                let d = '';
+                data.forEach((val, i) => {
+                    const x = 30 + (i / (data.length - 1)) * (w - 60);
+                    const y = h - ((typeof val === 'number' ? val : 0) / maxVal) * (h - 40) - 20;
+                    d += `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                });
+                return `<path d="${d}" fill="url(#gA)" stroke="none"/>`;
+            }
+
+            svg += `<defs><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4f6ef7"/><stop offset="100%" stop-color="#4f6ef7" stop-opacity="0"/></linearGradient></defs>`;
+            svg += areaPath(dataA, '#4f6ef7');
+
+            // Line on top
+            let lineD = '';
+            dataA.forEach((val, i) => {
+                const x = 30 + (i / (dataA.length - 1)) * (w - 60);
+                const y = h - ((typeof val === 'number' ? val : 0) / maxVal) * (h - 40) - 20;
+                lineD += `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+            });
+            svg += `<path d="${lineD}" fill="none" stroke="#4f6ef7" stroke-width="3" vector-effect="non-scaling-stroke"/>`;
+
+            rawData.apple.forEach((d, i) => {
+                const x = 30 + (i / (rawData.apple.length - 1)) * (w - 60);
+                svg += `<text x="${x}" y="25" text-anchor="middle" fill="var(--text-secondary)" font-size="11">${d.year}</text>`;
+            });
+
+            svg += `</svg>`;
+            container.innerHTML = svg;
+        }
+
+        function drawGroupedBarChart(id, keyA, keyB) {
+            const container = document.getElementById(id);
+            if (!container) return;
+            let w = container.clientWidth - 40;
+            if (w <= 0) w = 600;
+            let h = 300;
+
+            // Find max across all years for both keys to normalize height
+            let maxVal = 1;
+            rawData.apple.forEach(d => {
+                if (typeof d[keyA] === 'number' && d[keyA] > maxVal) maxVal = d[keyA];
+                if (typeof d[keyB] === 'number' && d[keyB] > maxVal) maxVal = d[keyB];
+            });
+
+            const barW = 20;
+            const gap = 40 / rawData.apple.length; // approximate
+
+            let svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%">`;
+
+            rawData.apple.forEach((d, i) => {
+                const xBase = 30 + (i / rawData.apple.length) * (w - 60);
+
+                // Apple Bar
+                let yA = h - ((typeof d[keyA] === 'number' ? d[keyA] : 0) / maxVal) * (h - 40) - 20;
+                svg += `<rect x="${xBase}" y="${yA}" width="${barW}" height="${(h - 40) * (typeof d[keyA] === 'number' ? d[keyA] : 1) / maxVal}" fill="#4f6ef7" rx="3"/>`;
+
+                // MSFT Bar (offset)
+                let yM = h - ((typeof d[keyB] === 'number' ? d[keyB] : 0) / maxVal) * (h - 40) - 20;
+                svg += `<rect x="${xBase + barW + 5}" y="${yM}" width="${barW}" height="${(h - 40) * (typeof d[keyB] === 'number' ? d[keyB] : 1) / maxVal}" fill="#ffae00" rx="3"/>`;
+
+                // Labels
+                svg += `<text x="${xBase + (barW + 2)}" y="${yA - 5}" text-anchor="middle" fill="#4f6ef7" font-size="9">AAPL</text>`;
+                svg += `<text x="${xBase + barW + 10 + (barW + 2)}" y="${yM - 5}" text-anchor="middle" fill="#ffae00" font-size="9">MSFT</text>`;
+
+                svg += `<text x="${xBase + (gap / 2)}" y="${h + 15}" text-anchor="middle" fill="var(--text-secondary)" font-size="11">${d.year}</text>`;
+            });
+
+            svg += `</svg>`;
+            container.innerHTML = svg;
+        }
+
+
+        // --- STATEMENTS TABLE ---
+        function renderStatements() {
+            const tbody = document.getElementById('statementsBody');
+            let rows = [];
+
+            // Flatten data into report objects
+            rawData.apple.forEach((d, i) => {
+                rows.push({ ...d, company: 'Apple Inc.', id: `apple-${i}`, type: 'annual' });
+            });
+            rawData.msft.forEach((d, i) => {
+                rows.push({ ...d, company: 'Microsoft Corp.', id: `msft-${i}`, type: 'annual' });
+            });
+
+            // Sort
+            if (sortCol >= 0 && sortDir !== 'none') {
+                rows.sort((a, b) => {
+                    let valA = a[sortCol];
+                    let valB = b[sortCol];
+                    if (typeof valA === 'string') return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    return sortDir === 'asc' ? valA - valB : valB - valA;
+                });
+            }
+
+            tbody.innerHTML = rows.map(r => `
+        <tr id="row-${r.id}">
+            <td>${r.year}</td>
+            <td>${r.company}</td>
+            <td>$${formatB(r.revenue)}</td>
+            <td>$${formatB(r.netIncome)}</td>
+            <td>$${r.eps}</td>
+            <td>${r.peRatio}</td>
+            <td class="expand-btn" onclick="toggleRow('${r.id}')">+</td>
+        </tr>
+    `).join('');
+        }
+
+        function toggleRow(id) {
+            const row = document.getElementById(`row-${id}`);
+            const detailView = document.getElementById('detailView');
+
+            if (expandedRowId === id) {
+                expandedRowId = null;
+                detailView.classList.add('hidden');
+                row.querySelector('.expand-btn').textContent = '+';
+            } else {
+                expandedRowId = id;
+                renderDetail(id);
+                detailView.classList.remove('hidden');
+                row.querySelector('.expand-btn').textContent = '-';
+            }
+        }
+
+        function renderDetail(id) {
+            const [prefix, idx] = id.split('-');
+            const source = prefix === 'apple' ? rawData.apple : rawData.msft;
+            const r = source[parseInt(idx)];
+            const company = prefix === 'apple' ? 'Apple Inc.' : 'Microsoft Corp.';
+            document.getElementById('detailTitle').textContent = `${company} - ${r.year} Financial Highlights`;
+
+            const detailTable = document.getElementById('detailTable');
+
+            const lines = [
+                { label: 'Total Revenue', val: formatB(r.revenue) },
+                { label: 'Cost of Revenue', val: formatB(Math.round(r.revenue * 0.65)) },
+                { label: 'Gross Profit', val: formatB(Math.round(r.revenue * 0.35)) },
+                { label: 'R&D Expenses', val: formatB(Math.round(r.netIncome * 1.2)) },
+                { label: 'SG&A Expenses', val: formatB(Math.round(r.netIncome * 0.8)) },
+                { label: 'Operating Income (EBIT)', val: formatB(Math.round(r.netIncome * 1.4)) },
+                { label: 'Interest Expense', val: formatB(Math.round(r.revenue * 0.02)) },
+                { label: 'Net Income', val: formatB(r.netIncome) + ` <span style="color:${r.roe > 30 ? 'var(--success)' : 'var(--warning)'}">(${r.roe}%)</span>` },
+            ];
+
+            detailTable.innerHTML = `<thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>${lines.map(l => `<tr><td style="color:var(--text-secondary)">${l.label}</td><td>${l.val}</td></tr>`).join('')}</tbody>`;
+        }
+
+        function toggleQuarterly(annual) {
+            isQuarterly = annual;
+            // In a real app, this would switch datasets. Here we just refresh the table to show all data regardless of filter state for demo purposes.
+            renderStatements();
+        }
+
+        // --- SORTING & FILTERING ---
+        function sortTable(colIndex) {
+            if (sortCol === colIndex && sortDir !== 'none') {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = colIndex;
+                sortDir = 'asc';
+            }
+            renderStatements();
+        }
+
+        function filterStatements() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            // Simple client-side filter on the rendered table rows
+            const rows = document.querySelectorAll('#statementsBody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // --- HELPERS ---
+        function formatB(num) {
+            if (typeof num !== 'number' || isNaN(num)) return 'N/A';
+            return (num / 1000).toFixed(1) + 'k';
+        }
+        function formatT(num) {
+            if (typeof num !== 'number' || isNaN(num)) return 'N/A';
+            return num.toFixed(2);
+        }
+        function getGrowth(prev, curr) {
+            if (!prev || prev === 0) return 0;
+            return ((curr - prev) / prev * 100).toFixed(1);
+        }
+
+        // --- INITIAL RENDER CALLS ---
+        renderSummary();
+        renderStatements();
+    </script>
+</body>
+
+</html>

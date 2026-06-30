@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open | The Wait is Over</title>
+    <style>
+        :root {
+            --bg: #050508;
+            --surface: rgba(20, 20, 35, 0.6);
+            --border: rgba(100, 149, 237, 0.15);
+            --accent: #4f8ff7;
+            --accent-glow: rgba(79, 143, 247, 0.4);
+            --text: #e0e0e6;
+            --muted: #8892b0;
+            --success: #00c853;
+            --warning: #ffab00;
+            --danger: #ff1744;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- Background Animation --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        .floating-shard {
+            position: fixed;
+            background: linear-gradient(135deg, rgba(79, 143, 247, 0.1), rgba(0, 200, 83, 0.1));
+            border: 1px solid rgba(79, 143, 247, 0.2);
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            z-index: -1;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* --- Layout & Typography --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 40px;
+            background: linear-gradient(to right, #fff, var(--muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 1.05;
+            background: linear-gradient(180deg, #fff 0%, #a0b4d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            animation: fadeUp 1s 0.5s forwards;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            color: var(--muted);
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeUp 1s 0.8s forwards;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 50px;
+            background: var(--accent-glow);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0;
+            animation: fadeUp 1s 0.3s forwards;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- Model Card (Stats) --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 32px;
+            border-radius: 16px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            border-color: var(--accent);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+
+        /* --- Benchmark Chart --- */
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 20px;
+            position: relative;
+            height: 350px;
+        }
+
+        #benchmarkCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* --- Download Section --- */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .dl-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dl-card:hover {
+            background: rgba(79, 143, 247, 0.05);
+            border-color: var(--accent);
+            transform: scale(1.02);
+        }
+
+        .dl-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(79, 143, 247, 0.1) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .dl-card:hover::after {
+            opacity: 1;
+        }
+
+        .dl-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .dl-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .dl-desc {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        /* --- Timeline --- */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+            border-left: 2px solid var(--border);
+        }
+
+        .tl-item {
+            margin-bottom: 36px;
+            position: relative;
+        }
+
+        .tl-item::before {
+            content: '';
+            position: absolute;
+            left: -47px;
+            top: 5px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .tl-date {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tl-text {
+            font-size: 1.1rem;
+            margin-top: 4px;
+        }
+
+        /* --- Code Block --- */
+        .code-block {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+        }
+
+        code {
+            color: #c9d1d9;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .kw {
+            color: #ff7b72;
+        }
+
+        /* keyword */
+        .fn {
+            color: #79c0ff;
+        }
+
+        /* function */
+        .str {
+            color: #a5d6ff;
+        }
+
+        /* string */
+        .num {
+            color: #f0883e;
+        }
+
+        /* number */
+
+        /* --- Community Wall --- */
+        .wall-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .comment-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        .username {
+            font-weight: 700;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .handle {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        /* --- VRAM Section --- */
+        .vram-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+        }
+
+        .vram-table th,
+        .vram-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .vram-table th {
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .vram-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            section {
+                padding: 48px 0;
+            }
+
+            h2 {
+                font-size: 1.6rem;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* --- Scroll Reveal Utility --- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Floating Shards Container (populated by JS) -->
+    <div id="shard-container"></div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="container">
+            <span class="hero-badge">Open Weights v1.0</span>
+            <h1>Qwen3.7-30B-Open<br>is finally here.</h1>
+            <p>The community can now stop refreshing Hugging Face every 11 seconds.<br>We actually did it this time.</p>
+        </div>
+    </section>
+
+    <!-- MODEL CARD / STATS -->
+    <section id="model-card">
+        <div class="container reveal">
+            <h2>The Model Card</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-value" data-target="30.5">0</div><span style="font-size:1rem; color:var(--muted)">B
+                        Parameters</span>
+                    <div class="stat-label">Total Weights (MoE)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🧠</div>
+                    <div class="stat-value" data-target="128000">0</div><span
+                        style="font-size:1rem; color:var(--muted)">Context Window</span>
+                    <div class="stat-label">Tokens (Long Context)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔓</div>
+                    <div class="stat-value" style="color:var(--success)">100%</div><span
+                        style="font-size:1rem; color:var(--muted)">Open Weights</span>
+                    <div class="stat-label">Apache 2.0 License</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🛠️</div>
+                    <div class="stat-value" style="color:var(--warning)">48</div><span
+                        style="font-size:1rem; color:var(--muted)">Expert Modules</span>
+                    <div class="stat-label">Mixture of Experts (MoE)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BENCHMARKS -->
+    <section id="benchmarks" style="background: rgba(255,255,255,0.01);">
+        <div class="container reveal">
+            <h2>Benchmark Results</h2>
+            <p style="color:var(--muted); margin-bottom: 30px;">Head-to-head comparison against current state-of-the-art
+                and your daily coping mechanism.</p>
+            <div class="chart-container" id="chart-wrapper">
+                <canvas id="benchmarkCanvas"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- DOWNLOADS -->
+    <section id="downloads">
+        <div class="container reveal">
+            <h2>Get Started</h2>
+            <div class="download-grid">
+                <div class="dl-card"
+                    onclick="copyText('from transformers import AutoModelForCausalLM\nmodel = AutoModelForCausalLM.from_pretrained('Qwen/Qwen3.7-30B-Open')')">
+                    <span class="dl-icon">🤗</span>
+                    <div class="dl-title">Hugging Face</div>
+                    <div class="dl-desc">The official open-weight release. 100% legal this time.</div>
+                </div>
+                <div class="dl-card" onclick="copyText('Qwen3.7-30B-Open-Q4_K_M.gguf')">
+                    <span class="dl-icon">📦</span>
+                    <div class="dl-title">GGUF Quantized</div>
+                    <div class="dl-desc">Ready for llama.cpp and Ollama. Fits in your head.</div>
+                </div>
+                <div class="dl-card" onclick="copyText('https://api.qwen37.com/v1/chat/completions')">
+                    <span class="dl-icon">☁️</span>
+                    <div class="dl-title">API Access</div>
+                    <div class="dl-desc">Free tier available for the first 48 hours. Then $0.02/1k tokens.</div>
+                </div>
+                <div class="dl-card" style="border-color: var(--danger); background: rgba(255, 23, 68, 0.05);"
+                    onclick="alert('Torrent download requires a seed node that has not been found yet.')">
+                    <span class="dl-icon">🌊</span>
+                    <div class="dl-title">Magnet Link</div>
+                    <div class="dl-desc">The fastest way to get it. (If you have bandwidth)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TIMELINE -->
+    <section id="timeline" style="background: rgba(255,255,255,0.01);">
+        <div class="container reveal">
+            <h2>The Road to Release</h2>
+            <div class="timeline">
+                <div class="tl-item">
+                    <div class="tl-date">June 2024</div>
+                    <div class="tl-text">"We are working on the open-weight release. It will be soon™."</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">August 2024</div>
+                    <div class="tl-text">"The final safety pass is complete. We just need to run the evals on a GPU we
+                        don't have yet."</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">October 2024</div>
+                    <div class="tl-text">"Actually soon! Just one more alignment round. Also, the license is being
+                        reviewed by legal."</div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">January 2025</div>
+                    <div class="tl-text">"We found a critical bug in the tokenizer. It's fine, just one more eval."
+                    </div>
+                </div>
+                <div class="tl-item">
+                    <div class="tl-date">Today</div>
+                    <div class="tl-text" style="color: var(--success); font-weight: 700;">RELEASED! 🎉 (We actually did
+                        it)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CODE BLOCK -->
+    <section id="code">
+        <div class="container reveal" style="display:flex; flex-direction:column; gap: 24px;">
+            <h2>Run Locally</h2>
+            <p style="color:var(--muted)">Drop it into your pipeline. It works on consumer hardware (mostly).</p>
+            <div class="code-block">
+                <pre><code><span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForCausalLM, AutoTokenizer
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    tokenizer = AutoTokenizer.from_pretrained(<span class="str">'Qwen/Qwen3.7-30B-Open'</span>)
+    model = AutoModelForCausalLM.from_pretrained(
+        <span class="str">'Qwen/Qwen3.7-30B-Open'</span>,
+        torch_dtype=<span class="str">'auto'</span>
+    )
+
+    prompt = <span class="str">"Write a haiku about deep learning."</span>
+    inputs = tokenizer(prompt, return_tensors=<span class="str">'pt'</span>).to(model.device)
+    
+    outputs = model.generate(**inputs, max_new_tokens=64)
+    print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+
+<span class="fn">main</span>()</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMMUNITY WALL -->
+    <section id="community" style="background: rgba(255,255,255,0.01);">
+        <div class="container reveal">
+            <h2>Community Reaction</h2>
+            <div class="wall-grid">
+                <div class="comment-card">
+                    <div class="user-info">
+                        <div class="avatar">A</div>
+                        <div>
+                            <div class="username">@AI_Researcher99</div>
+                            <div class="handle">@huggingface</div>
+                        </div>
+                    </div>
+                    <p>"I've been refreshing this page for 3 years and finally I can sleep at night. The quality is
+                        actually insane for 30B."</p>
+                </div>
+                <div class="comment-card">
+                    <div class="user-info">
+                        <div class="avatar" style="background:var(--warning)">S</div>
+                        <div>
+                            <div class="username">@SiliconValleyDev</div>
+                            <div class="handle">@techcrunch</div>
+                        </div>
+                    </div>
+                    <p>"This is the most impressive open model release in history. The latency on my RTX 3060 is
+                        acceptable."</p>
+                </div>
+                <div class="comment-card">
+                    <div class="user-info">
+                        <div class="avatar" style="background:var(--danger)">M</div>
+                        <div>
+                            <div class="username">@MoE_Architect</div>
+                            <div class="handle">@reddit</div>
+                        </div>
+                    </div>
+                    <p>"48 experts? That's a lot of overhead. But the reasoning capabilities are top-tier. Just run it
+                        on dual 3090s."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VRAM / HARDWARE -->
+    <section id="hardware">
+        <div class="container reveal">
+            <h2>Suggested Hardware</h2>
+            <table class="vram-table">
+                <thead>
+                    <tr>
+                        <th>Setup</th>
+                        <th>VRAM Required</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>RTX 3090 (Single)</td>
+                        <td>~24GB (Q8_0)</td>
+                        <td style="color:var(--warning)">Marginal</td>
+                    </tr>
+                    <tr>
+                        <td>RTX 3090 x2 (Dual)</td>
+                        <td>~16GB per GPU (Q4_K_M)</td>
+                        <td style="color:var(--success)">Recommended</td>
+                    </tr>
+                    <tr>
+                        <td>A100 80GB</td>
+                        <td>~25GB FP16</td>
+                        <td style="color:var(--muted)">Overkill</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer
+        style="text-align:center; padding: 40px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem;">
+        <p>Qwen3.7-30B-Open © 2025 Alibaba Cloud. All rights reserved.</p>
+        <p style="margin-top:8px; opacity:0.5">This is a fan-made concept page for demonstration purposes only. Not
+            affiliated with Alibaba or Qwen team.</p>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script>
+        // --- Background Grid & Shards ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Draw Grid
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(79, 143, 247, 0.05)';
+            ctx.lineWidth = 1;
+            const gridSize = 60;
+
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // Subtle glow in center
+            const gradient = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 100, canvas.width / 2, canvas.height / 2, 800);
+            gradient.addColorStop(0, 'rgba(79, 143, 247, 0.05)');
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            requestAnimationFrame(drawGrid);
+        }
+        drawGrid();
+
+        // Floating Shards
+        const shardContainer = document.getElementById('shard-container');
+        for (let i = 0; i < 15; i++) {
+            const shard = document.createElement('div');
+            shard.className = 'floating-shard';
+            const w = Math.random() * 80 + 20;
+            const h = Math.random() * 40 + 10;
+            shard.style.width = w + 'px';
+            shard.style.height = h + 'px';
+            shard.style.left = Math.random() * 100 + '%';
+            shard.style.animationDuration = (Math.random() * 20 + 15) + 's';
+            shard.style.animationDelay = (Math.random() * -20) + 's';
+            shardContainer.appendChild(shard);
+        }
+
+        // --- Animated Counters ---
+        const counters = document.querySelectorAll('.stat-value');
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-target'));
+            let current = 0;
+            const step = target / 50;
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    counter.textContent = Math.floor(target).toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    counter.textContent = Math.floor(current).toLocaleString();
+                }
+            }, 30);
+        });
+
+        // --- Scroll Reveal ---
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        reveals.forEach(el => observer.observe(el));
+
+        // --- Benchmark Chart (Canvas) ---
+        const benchCanvas = document.getElementById('benchmarkCanvas');
+        const bCtx = benchCanvas.getContext('2d');
+
+        function resizeChart() {
+            const rect = benchCanvas.parentElement.getBoundingClientRect();
+            benchCanvas.width = rect.width;
+            benchCanvas.height = rect.height;
+        }
+        window.addEventListener('resize', resizeChart);
+        resizeChart();
+
+        function drawBenchmarks() {
+            const w = benchCanvas.width;
+            const h = benchCanvas.height;
+
+            // Clear
+            bCtx.clearRect(0, 0, w, h);
+
+            // Grid lines
+            bCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+            bCtx.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                const y = (h / 5) * i;
+                bCtx.beginPath(); bCtx.moveTo(0, y); bCtx.lineTo(w, y); bCtx.stroke();
+            }
+
+            // Data points
+            const labels = ['MMLU', 'HumanEval', 'Math', 'CodeGen', 'Reasoning'];
+            const scores = {
+                'Qwen3.7-Open': [82, 65, 70, 55, 78],
+                'GPT-4o': [81, 62, 69, 58, 76],
+                'Claude 3.5': [80, 64, 68, 56, 75],
+                'You (Googling)': [12, 5, 8, 2, 10]
+            };
+
+            const colors = {
+                'Qwen3.7-Open': '#4f8ff7',
+                'GPT-4o': '#a0b4d4',
+                'Claude 3.5': '#ffab00',
+                'You (Googling)': '#ff1744'
+            };
+
+            const padding = { top: 20, right: 60, bottom: 20, left: 80 };
+            const chartW = w - padding.left - padding.right;
+            const chartH = h - padding.top - padding.bottom;
+
+            // Draw Lines
+            Object.keys(scores).forEach((name, i) => {
+                const color = colors[name];
+
+                scores[name].forEach((val, j) => {
+                    const x = padding.left + (j / (labels.length - 1)) * chartW;
+                    const y = padding.top + chartH - ((val / 100) * chartH);
+
+                    // Dot
+                    bCtx.beginPath();
+                    bCtx.arc(x, y, 5, 0, Math.PI * 2);
+                    bCtx.fillStyle = color;
+                    bCtx.fill();
+
+                    // Line segment (except first point)
+                    if (j > 0 && i === 0) { // Only draw full lines for the main model to keep it clean or do all
+                        const prevX = padding.left + ((j - 1) / (labels.length - 1)) * chartW;
+                        const prevY = padding.top + chartH - ((scores[name][j - 1] / 100) * chartH);
+
+                        bCtx.beginPath();
+                        bCtx.moveTo(prevX, prevY);
+                        bCtx.lineTo(x, y);
+                        bCtx.strokeStyle = color;
+                        bCtx.lineWidth = i === 0 ? 3 : 2;
+                        bCtx.stroke();
+                    }
+                });
+
+                // Label at end
+                const lastX = padding.left + chartW;
+                bCtx.fillStyle = '#fff';
+                bCtx.font = '14px sans-serif';
+                bCtx.textAlign = 'center';
+                bCtx.fillText(name, lastX, h - 5);
+            });
+
+            // Axis Labels
+            labels.forEach((label, i) => {
+                const x = padding.left + (i / (labels.length - 1)) * chartW;
+                bCtx.fillStyle = '#8892b0';
+                bCtx.font = '13px sans-serif';
+                bCtx.textAlign = 'center';
+                bCtx.fillText(label, x, h - padding.bottom + 20);
+            });
+
+            // "You" line special treatment (dashed)
+            scores['You (Googling)'].forEach((val, j) => {
+                const x = padding.left + (j / (labels.length - 1)) * chartW;
+                const y = padding.top + chartH - ((val / 100) * chartH);
+
+                if (j > 0) {
+                    const prevX = padding.left + ((j - 1) / (labels.length - 1)) * chartW;
+                    const prevY = padding.top + chartH - ((scores['You (Googling)'][j - 1] / 100) * chartH);
+
+                    bCtx.beginPath();
+                    bCtx.setLineDash([5, 5]);
+                    bCtx.moveTo(prevX, prevY);
+                    bCtx.lineTo(x, y);
+                    bCtx.strokeStyle = colors['You (Googling)'];
+                    bCtx.lineWidth = 2;
+                    bCtx.stroke();
+                    bCtx.setLineDash([]);
+                }
+            });
+        }
+
+        // Initial draw after layout settles
+        setTimeout(drawBenchmarks, 100);
+
+    </script>
+</body>
+
+</html>
