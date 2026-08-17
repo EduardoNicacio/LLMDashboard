@@ -1,625 +1,1787 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project Management Command Center</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--bg-primary:#0a0e1a;--bg-secondary:#111827;--bg-card:rgba(17,24,39,0.85);--bg-glass:rgba(30,41,59,0.55);--border-glass:rgba(148,163,184,0.12);--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--neon-blue:#3b82f6;--neon-cyan:#06b6d4;--neon-green:#10b981;--neon-purple:#8b5cf6;--neon-pink:#ec4899;--neon-orange:#f97316;--neon-red:#ef4444;--neon-yellow:#eab308;--neon-teal:#14b8a6;--shadow-neon:0 0 20px rgba(59,130,246,0.15);--radius:12px;--radius-lg:16px;--transition:0.3s cubic-bezier(.4,0,.2,1)}
-[data-theme="light"]{--bg-primary:#f0f4f8;--bg-secondary:#ffffff;--bg-card:rgba(255,255,255,0.92);--bg-glass:rgba(241,245,249,0.8);--border-glass:rgba(0,0,0,0.08);--text-primary:#1e293b;--text-secondary:#475569;--text-muted:#94a3b8;--neon-blue:#2563eb;--neon-cyan:#0891b2;--neon-green:#059669;--neon-purple:#7c3aed;--neon-pink:#db2777;--neon-orange:#ea580c;--neon-red:#dc2626;--neon-yellow:#ca8a04;--neon-teal:#0d9488;--shadow-neon:0 0 20px rgba(59,130,246,0.08)}
-html{scroll-behavior:smooth}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.6;transition:background var(--transition),color var(--transition);overflow-x:hidden;min-height:100vh}
-body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 20% 20%,rgba(59,130,246,0.06),transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(139,92,246,0.05),transparent 50%);pointer-events:none;z-index:0}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Management Command Center</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
 
-.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:var(--bg-card);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-glass);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:1000;transition:background var(--transition)}
-.topbar-left{display:flex;align-items:center;gap:16px}
-.topbar-logo{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,var(--neon-blue),var(--neon-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.topbar-nav{display:flex;gap:4px}
-.topbar-nav button{background:none;border:1px solid transparent;color:var(--text-secondary);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:500;transition:all var(--transition)}
-.topbar-nav button:hover{color:var(--text-primary);background:var(--bg-glass)}
-.topbar-nav button.active{color:var(--neon-blue);border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.1)}
-.topbar-right{display:flex;align-items:center;gap:12px}
-.theme-toggle{width:42px;height:42px;border-radius:10px;border:1px solid var(--border-glass);background:var(--bg-glass);color:var(--text-primary);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all var(--transition)}
-.theme-toggle:hover{border-color:var(--neon-blue);box-shadow:var(--shadow-neon)}
-.topbar-search{background:var(--bg-glass);border:1px solid var(--border-glass);border-radius:10px;padding:8px 14px;color:var(--text-primary);font-size:.85rem;width:260px;outline:none;transition:all var(--transition)}
-.topbar-search:focus{border-color:var(--neon-blue);box-shadow:var(--shadow-neon)}
-.topbar-search::placeholder{color:var(--text-muted)}
-.model-badge{font-size:.65rem;color:var(--text-muted);background:var(--bg-glass);border:1px solid var(--border-glass);padding:3px 8px;border-radius:6px;font-family:monospace}
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.85);
+      --bg-glass: rgba(30, 41, 59, 0.55);
+      --border-glass: rgba(148, 163, 184, 0.12);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --neon-blue: #3b82f6;
+      --neon-cyan: #06b6d4;
+      --neon-green: #10b981;
+      --neon-purple: #8b5cf6;
+      --neon-pink: #ec4899;
+      --neon-orange: #f97316;
+      --neon-red: #ef4444;
+      --neon-yellow: #eab308;
+      --neon-teal: #14b8a6;
+      --shadow-neon: 0 0 20px rgba(59, 130, 246, 0.15);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --transition: 0.3s cubic-bezier(.4, 0, .2, 1)
+    }
 
-.main-content{padding:72px 24px 24px;max-width:1600px;margin:0 auto;position:relative;z-index:1}
+    [data-theme="light"] {
+      --bg-primary: #f0f4f8;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.92);
+      --bg-glass: rgba(241, 245, 249, 0.8);
+      --border-glass: rgba(0, 0, 0, 0.08);
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --neon-blue: #2563eb;
+      --neon-cyan: #0891b2;
+      --neon-green: #059669;
+      --neon-purple: #7c3aed;
+      --neon-pink: #db2777;
+      --neon-orange: #ea580c;
+      --neon-red: #dc2626;
+      --neon-yellow: #ca8a04;
+      --neon-teal: #0d9488;
+      --shadow-neon: 0 0 20px rgba(59, 130, 246, 0.08)
+    }
 
-.view-panel{display:none;animation:fadeIn .4s ease}
-.view-panel.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    html {
+      scroll-behavior: smooth
+    }
 
-.section-title{font-size:1.3rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);display:flex;align-items:center;gap:10px}
-.section-title::before{content:'';width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,var(--neon-blue),var(--neon-purple))}
-.section-subtitle{font-size:.85rem;color:var(--text-muted);margin-bottom:20px;margin-left:14px}
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+      min-height: 100vh
+    }
 
-.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
-.hero-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius);padding:20px;transition:all var(--transition);position:relative;overflow:hidden}
-.hero-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-neon);border-color:rgba(59,130,246,0.25)}
-.hero-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0}
-.hero-card:nth-child(1)::after{background:linear-gradient(90deg,var(--neon-blue),var(--neon-cyan))}
-.hero-card:nth-child(2)::after{background:linear-gradient(90deg,var(--neon-green),var(--neon-teal))}
-.hero-card:nth-child(3)::after{background:linear-gradient(90deg,var(--neon-purple),var(--neon-pink))}
-.hero-card:nth-child(4)::after{background:linear-gradient(90deg,var(--neon-orange),var(--neon-yellow))}
-.hero-card:nth-child(5)::after{background:linear-gradient(90deg,var(--neon-cyan),var(--neon-blue))}
-.hero-card:nth-child(6)::after{background:linear-gradient(90deg,var(--neon-teal),var(--neon-green))}
-.hero-card:nth-child(7)::after{background:linear-gradient(90deg,var(--neon-pink),var(--neon-purple))}
-.hero-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.hero-value{font-size:1.8rem;font-weight:800;line-height:1.1}
-.hero-sub{font-size:.78rem;color:var(--text-secondary);margin-top:4px}
-.hero-card[data-accent="blue"] .hero-value{color:var(--neon-blue)}
-.hero-card[data-accent="green"] .hero-value{color:var(--neon-green)}
-.hero-card[data-accent="purple"] .hero-value{color:var(--neon-purple)}
-.hero-card[data-accent="orange"] .hero-value{color:var(--neon-orange)}
-.hero-card[data-accent="cyan"] .hero-value{color:var(--neon-cyan)}
-.hero-card[data-accent="teal"] .hero-value{color:var(--neon-teal)}
-.hero-card[data-accent="pink"] .hero-value{color:var(--neon-pink)}
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.06), transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.05), transparent 50%);
+      pointer-events: none;
+      z-index: 0
+    }
 
-.h2h-section{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:24px;margin-bottom:24px}
-.h2h-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-.h2h-title{font-size:1.15rem;font-weight:700}
-.h2h-vs{font-size:1.5rem;font-weight:900;background:linear-gradient(135deg,var(--neon-orange),var(--neon-red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.h2h-project{text-align:center;font-size:.9rem;font-weight:600}
-.h2h-project.left{color:var(--neon-blue)}
-.h2h-project.right{color:var(--neon-purple)}
-.h2h-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:12px 20px;align-items:center}
-.h2h-metric-label{text-align:center;color:var(--text-muted);font-size:.78rem;font-weight:500;padding:8px 0;text-transform:uppercase;letter-spacing:.3px}
-.h2h-value{font-size:1.1rem;font-weight:700;padding:10px 16px;border-radius:8px;background:var(--bg-glass);border:1px solid var(--border-glass);text-align:center}
-.h2h-value.winner{border-color:rgba(16,185,129,0.4);color:var(--neon-green)}
-.h2h-value.loser{color:var(--text-secondary)}
-.h2h-bar-container{display:flex;align-items:center;gap:8px;margin:2px 0}
-.h2h-bar{height:6px;border-radius:3px;transition:width 1s ease}
-.h2h-bar.left{background:linear-gradient(90deg,var(--neon-blue),var(--neon-cyan))}
-.h2h-bar.right{background:linear-gradient(90deg,var(--neon-purple),var(--neon-pink))}
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-glass);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1000;
+      transition: background var(--transition)
+    }
 
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px}
-.project-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:20px;transition:all var(--transition);position:relative;overflow:hidden}
-.project-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-neon);border-color:rgba(59,130,246,0.25)}
-.project-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
-.project-card-name{font-size:1rem;font-weight:700;flex:1}
-.status-badge{font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
-.status-badge.on-track{background:rgba(16,185,129,0.15);color:var(--neon-green);border:1px solid rgba(16,185,129,0.3)}
-.status-badge.at-risk{background:rgba(249,115,22,0.15);color:var(--neon-orange);border:1px solid rgba(249,115,22,0.3)}
-.status-badge.delayed{background:rgba(239,68,68,0.15);color:var(--neon-red);border:1px solid rgba(239,68,68,0.3)}
-.status-badge.completed{background:rgba(59,130,246,0.15);color:var(--neon-blue);border:1px solid rgba(59,130,246,0.3)}
-.status-badge.planning{background:rgba(139,92,246,0.15);color:var(--neon-purple);border:1px solid rgba(139,92,246,0.3)}
-.project-card-body{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.metric-item{padding:8px 10px;background:var(--bg-glass);border-radius:8px;border:1px solid var(--border-glass)}
-.metric-label{font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px}
-.metric-value{font-size:.95rem;font-weight:700;margin-top:2px}
-.progress-bar-bg{height:5px;background:var(--bg-glass);border-radius:3px;margin-top:12px;overflow:hidden}
-.progress-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
-.project-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-glass);font-size:.75rem;color:var(--text-muted)}
-.health-score{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;border:2px solid}
-.health-score.excellent{color:var(--neon-green);border-color:var(--neon-green);background:rgba(16,185,129,0.1)}
-.health-score.good{color:var(--neon-blue);border-color:var(--neon-blue);background:rgba(59,130,246,0.1)}
-.health-score.fair{color:var(--neon-orange);border-color:var(--neon-orange);background:rgba(249,115,22,0.1)}
-.health-score.poor{color:var(--neon-red);border-color:var(--neon-red);background:rgba(239,68,68,0.1)}
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px
+    }
 
-.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;margin-bottom:24px}
-.chart-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:20px;transition:all var(--transition)}
-.chart-card:hover{box-shadow:var(--shadow-neon)}
-.chart-card h3{font-size:.9rem;font-weight:600;margin-bottom:14px;color:var(--text-primary)}
-.chart-container{position:relative;height:260px}
+    .topbar-logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
 
-.timeline-container{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:24px;margin-bottom:24px;overflow-x:auto}
-.timeline-track{display:flex;align-items:center;min-width:900px;padding:8px 0;position:relative}
-.timeline-track::before{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:var(--border-glass);transform:translateY(-50%)}
-.timeline-phase{position:relative;flex:1;text-align:center;padding:10px 8px}
-.timeline-dot{width:14px;height:14px;border-radius:50%;margin:0 auto 8px;position:relative;z-index:1;border:2px solid;background:var(--bg-card)}
-.timeline-dot.completed{background:var(--neon-green);border-color:var(--neon-green)}
-.timeline-dot.active{background:var(--neon-blue);border-color:var(--neon-blue);box-shadow:0 0 12px rgba(59,130,246,0.5)}
-.timeline-dot.upcoming{background:var(--bg-glass);border-color:var(--text-muted)}
-.timeline-phase-name{font-size:.75rem;font-weight:600;color:var(--text-primary);margin-bottom:3px}
-.timeline-phase-date{font-size:.65rem;color:var(--text-muted)}
+    .topbar-nav {
+      display: flex;
+      gap: 4px
+    }
 
-.table-container{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:20px;margin-bottom:24px;overflow-x:auto}
-.table-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
-.table-header h3{font-size:1rem;font-weight:700}
-.filter-group{display:flex;gap:8px;flex-wrap:wrap}
-.filter-select{background:var(--bg-glass);border:1px solid var(--border-glass);border-radius:8px;padding:6px 12px;color:var(--text-primary);font-size:.8rem;outline:none;cursor:pointer}
-.filter-select option{background:var(--bg-secondary);color:var(--text-primary)}
-.filter-input{background:var(--bg-glass);border:1px solid var(--border-glass);border-radius:8px;padding:6px 12px;color:var(--text-primary);font-size:.8rem;outline:none;width:180px}
-.filter-input:focus{border-color:var(--neon-blue)}
-.filter-input::placeholder{color:var(--text-muted)}
-table{width:100%;border-collapse:collapse;font-size:.82rem}
-thead th{text-align:left;padding:10px 12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;font-size:.72rem;border-bottom:1px solid var(--border-glass);cursor:pointer;white-space:nowrap;user-select:none}
-thead th:hover{color:var(--neon-blue)}
-thead th .sort-arrow{margin-left:4px;opacity:.4}
-thead th.sorted .sort-arrow{opacity:1;color:var(--neon-blue)}
-tbody td{padding:10px 12px;border-bottom:1px solid var(--border-glass);color:var(--text-secondary);white-space:nowrap}
-tbody tr{transition:background var(--transition)}
-tbody tr:hover{background:var(--bg-glass)}
-.expand-row{cursor:pointer}
-.expand-content{display:none;padding:12px 16px;background:var(--bg-glass);border-radius:8px;margin:4px 0 8px;font-size:.8rem;line-height:1.7}
-.expand-content.open{display:block;animation:fadeIn .3s ease}
+    .topbar-nav button {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .82rem;
+      font-weight: 500;
+      transition: all var(--transition)
+    }
 
-.workload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px}
-.workload-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius);padding:18px;transition:all var(--transition)}
-.workload-card:hover{box-shadow:var(--shadow-neon)}
-.workload-card h4{font-size:.85rem;font-weight:600;margin-bottom:10px}
-.utilization-bar{height:8px;background:var(--bg-glass);border-radius:4px;overflow:hidden;margin:6px 0}
-.utilization-fill{height:100%;border-radius:4px;transition:width 1s ease}
-.member-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-glass);font-size:.82rem}
-.member-row:last-child{border-bottom:none}
-.member-name{font-weight:500;color:var(--text-primary)}
-.member-role{font-size:.72rem;color:var(--text-muted)}
+    .topbar-nav button:hover {
+      color: var(--text-primary);
+      background: var(--bg-glass)
+    }
 
-.integrations-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:24px}
-.integration-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius);padding:18px;transition:all var(--transition);display:flex;align-items:center;gap:14px}
-.integration-card:hover{box-shadow:var(--shadow-neon)}
-.integration-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;color:#fff}
-.integration-info{flex:1}
-.integration-name{font-size:.85rem;font-weight:600}
-.integration-meta{font-size:.72rem;color:var(--text-muted);margin-top:2px}
-.integration-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.integration-status.online{background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)}
-.integration-status.degraded{background:var(--neon-orange);box-shadow:0 0 6px var(--neon-orange)}
-.integration-status.offline{background:var(--neon-red);box-shadow:0 0 6px var(--neon-red)}
+    .topbar-nav button.active {
+      color: var(--neon-blue);
+      border-color: rgba(59, 130, 246, 0.3);
+      background: rgba(59, 130, 246, 0.1)
+    }
 
-.api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
-.api-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius);padding:18px;transition:all var(--transition)}
-.api-card:hover{box-shadow:var(--shadow-neon)}
-.api-label{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px}
-.api-value{font-size:1.5rem;font-weight:800;margin:6px 0 2px}
-.api-detail{font-size:.75rem;color:var(--text-secondary)}
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
 
-.risks-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:24px}
-.risk-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:18px;transition:all var(--transition);border-left:4px solid}
-.risk-card:hover{box-shadow:var(--shadow-neon)}
-.risk-card.critical{border-left-color:var(--neon-red)}
-.risk-card.high{border-left-color:var(--neon-orange)}
-.risk-card.medium{border-left-color:var(--neon-yellow)}
-.risk-card.low{border-left-color:var(--neon-green)}
-.risk-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.risk-title{font-size:.9rem;font-weight:600;flex:1}
-.risk-severity{font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:12px;text-transform:uppercase}
-.risk-severity.critical{background:rgba(239,68,68,0.15);color:var(--neon-red)}
-.risk-severity.high{background:rgba(249,115,22,0.15);color:var(--neon-orange)}
-.risk-severity.medium{background:rgba(234,179,8,0.15);color:var(--neon-yellow)}
-.risk-severity.low{background:rgba(16,185,129,0.15);color:var(--neon-green)}
-.risk-detail{font-size:.78rem;color:var(--text-secondary);margin-bottom:6px}
-.risk-detail strong{color:var(--text-primary);font-weight:600}
-.risk-owner{font-size:.72rem;color:var(--text-muted);margin-top:8px;display:flex;align-items:center;gap:4px}
+    .theme-toggle {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      border: 1px solid var(--border-glass);
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition)
+    }
 
-.winner-card{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:24px;margin-bottom:24px;text-align:center}
-.winner-card h3{font-size:1.2rem;margin-bottom:16px}
-.winner-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
-.winner-metric{padding:16px;background:var(--bg-glass);border-radius:12px;border:1px solid var(--border-glass)}
-.winner-metric .winner-project{font-size:.75rem;color:var(--text-muted);margin-bottom:4px}
-.winner-metric .winner-val{font-size:1.3rem;font-weight:800;color:var(--neon-green)}
-.winner-metric .winner-val.runner-up{color:var(--text-secondary)}
+    .theme-toggle:hover {
+      border-color: var(--neon-blue);
+      box-shadow: var(--shadow-neon)
+    }
 
-.notes-section{background:var(--bg-card);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:24px;margin-bottom:24px}
-.notes-section h3{font-size:1rem;font-weight:700;margin-bottom:12px}
-.note-item{padding:12px;background:var(--bg-glass);border-radius:8px;border:1px solid var(--border-glass);margin-bottom:8px}
-.note-meta{font-size:.72rem;color:var(--text-muted);margin-bottom:4px}
-.note-text{font-size:.85rem;color:var(--text-secondary);line-height:1.6}
+    .topbar-search {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: var(--text-primary);
+      font-size: .85rem;
+      width: 260px;
+      outline: none;
+      transition: all var(--transition)
+    }
 
-.toggle-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.toggle-btn{background:var(--bg-glass);border:1px solid var(--border-glass);color:var(--text-secondary);padding:7px 16px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:500;transition:all var(--transition)}
-.toggle-btn:hover{color:var(--text-primary);border-color:rgba(59,130,246,0.2)}
-.toggle-btn.active{color:var(--neon-blue);border-color:var(--neon-blue);background:rgba(59,130,246,0.1)}
+    .topbar-search:focus {
+      border-color: var(--neon-blue);
+      box-shadow: var(--shadow-neon)
+    }
 
-.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
-.empty-state h3{font-size:1.1rem;margin-bottom:8px;color:var(--text-secondary)}
+    .topbar-search::placeholder {
+      color: var(--text-muted)
+    }
 
-@media(max-width:768px){
-.topbar{padding:0 12px}
-.topbar-nav{display:none}
-.topbar-search{width:160px}
-.main-content{padding:68px 12px 12px}
-.hero-grid{grid-template-columns:repeat(2,1fr)}
-.cards-grid{grid-template-columns:1fr}
-.charts-grid{grid-template-columns:1fr}
-.h2h-grid{grid-template-columns:1fr;gap:8px}
-.h2h-metric-label{display:none}
-}
-@media(max-width:480px){
-.hero-grid{grid-template-columns:1fr}
-.topbar-search{display:none}
-}
-</style>
+    .model-badge {
+      font-size: .65rem;
+      color: var(--text-muted);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: monospace
+    }
+
+    .main-content {
+      padding: 72px 24px 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1
+    }
+
+    .view-panel {
+      display: none;
+      animation: fadeIn .4s ease
+    }
+
+    .view-panel.active {
+      display: block
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, var(--neon-blue), var(--neon-purple))
+    }
+
+    .section-subtitle {
+      font-size: .85rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      margin-left: 14px
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .hero-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden
+    }
+
+    .hero-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-neon);
+      border-color: rgba(59, 130, 246, 0.25)
+    }
+
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0
+    }
+
+    .hero-card:nth-child(1)::after {
+      background: linear-gradient(90deg, var(--neon-blue), var(--neon-cyan))
+    }
+
+    .hero-card:nth-child(2)::after {
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-teal))
+    }
+
+    .hero-card:nth-child(3)::after {
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink))
+    }
+
+    .hero-card:nth-child(4)::after {
+      background: linear-gradient(90deg, var(--neon-orange), var(--neon-yellow))
+    }
+
+    .hero-card:nth-child(5)::after {
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue))
+    }
+
+    .hero-card:nth-child(6)::after {
+      background: linear-gradient(90deg, var(--neon-teal), var(--neon-green))
+    }
+
+    .hero-card:nth-child(7)::after {
+      background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple))
+    }
+
+    .hero-label {
+      font-size: .75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 6px
+    }
+
+    .hero-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1.1
+    }
+
+    .hero-sub {
+      font-size: .78rem;
+      color: var(--text-secondary);
+      margin-top: 4px
+    }
+
+    .hero-card[data-accent="blue"] .hero-value {
+      color: var(--neon-blue)
+    }
+
+    .hero-card[data-accent="green"] .hero-value {
+      color: var(--neon-green)
+    }
+
+    .hero-card[data-accent="purple"] .hero-value {
+      color: var(--neon-purple)
+    }
+
+    .hero-card[data-accent="orange"] .hero-value {
+      color: var(--neon-orange)
+    }
+
+    .hero-card[data-accent="cyan"] .hero-value {
+      color: var(--neon-cyan)
+    }
+
+    .hero-card[data-accent="teal"] .hero-value {
+      color: var(--neon-teal)
+    }
+
+    .hero-card[data-accent="pink"] .hero-value {
+      color: var(--neon-pink)
+    }
+
+    .h2h-section {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px
+    }
+
+    .h2h-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px
+    }
+
+    .h2h-title {
+      font-size: 1.15rem;
+      font-weight: 700
+    }
+
+    .h2h-vs {
+      font-size: 1.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--neon-orange), var(--neon-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .h2h-project {
+      text-align: center;
+      font-size: .9rem;
+      font-weight: 600
+    }
+
+    .h2h-project.left {
+      color: var(--neon-blue)
+    }
+
+    .h2h-project.right {
+      color: var(--neon-purple)
+    }
+
+    .h2h-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px 20px;
+      align-items: center
+    }
+
+    .h2h-metric-label {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: .78rem;
+      font-weight: 500;
+      padding: 8px 0;
+      text-transform: uppercase;
+      letter-spacing: .3px
+    }
+
+    .h2h-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      text-align: center
+    }
+
+    .h2h-value.winner {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--neon-green)
+    }
+
+    .h2h-value.loser {
+      color: var(--text-secondary)
+    }
+
+    .h2h-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 2px 0
+    }
+
+    .h2h-bar {
+      height: 6px;
+      border-radius: 3px;
+      transition: width 1s ease
+    }
+
+    .h2h-bar.left {
+      background: linear-gradient(90deg, var(--neon-blue), var(--neon-cyan))
+    }
+
+    .h2h-bar.right {
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink))
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .project-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden
+    }
+
+    .project-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-neon);
+      border-color: rgba(59, 130, 246, 0.25)
+    }
+
+    .project-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px
+    }
+
+    .project-card-name {
+      font-size: 1rem;
+      font-weight: 700;
+      flex: 1
+    }
+
+    .status-badge {
+      font-size: .7rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .3px
+    }
+
+    .status-badge.on-track {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--neon-green);
+      border: 1px solid rgba(16, 185, 129, 0.3)
+    }
+
+    .status-badge.at-risk {
+      background: rgba(249, 115, 22, 0.15);
+      color: var(--neon-orange);
+      border: 1px solid rgba(249, 115, 22, 0.3)
+    }
+
+    .status-badge.delayed {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--neon-red);
+      border: 1px solid rgba(239, 68, 68, 0.3)
+    }
+
+    .status-badge.completed {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--neon-blue);
+      border: 1px solid rgba(59, 130, 246, 0.3)
+    }
+
+    .status-badge.planning {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--neon-purple);
+      border: 1px solid rgba(139, 92, 246, 0.3)
+    }
+
+    .project-card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    .metric-item {
+      padding: 8px 10px;
+      background: var(--bg-glass);
+      border-radius: 8px;
+      border: 1px solid var(--border-glass)
+    }
+
+    .metric-label {
+      font-size: .68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .3px
+    }
+
+    .metric-value {
+      font-size: .95rem;
+      font-weight: 700;
+      margin-top: 2px
+    }
+
+    .progress-bar-bg {
+      height: 5px;
+      background: var(--bg-glass);
+      border-radius: 3px;
+      margin-top: 12px;
+      overflow: hidden
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s ease
+    }
+
+    .project-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-glass);
+      font-size: .75rem;
+      color: var(--text-muted)
+    }
+
+    .health-score {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+      font-weight: 700;
+      border: 2px solid
+    }
+
+    .health-score.excellent {
+      color: var(--neon-green);
+      border-color: var(--neon-green);
+      background: rgba(16, 185, 129, 0.1)
+    }
+
+    .health-score.good {
+      color: var(--neon-blue);
+      border-color: var(--neon-blue);
+      background: rgba(59, 130, 246, 0.1)
+    }
+
+    .health-score.fair {
+      color: var(--neon-orange);
+      border-color: var(--neon-orange);
+      background: rgba(249, 115, 22, 0.1)
+    }
+
+    .health-score.poor {
+      color: var(--neon-red);
+      border-color: var(--neon-red);
+      background: rgba(239, 68, 68, 0.1)
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: all var(--transition)
+    }
+
+    .chart-card:hover {
+      box-shadow: var(--shadow-neon)
+    }
+
+    .chart-card h3 {
+      font-size: .9rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text-primary)
+    }
+
+    .chart-container {
+      position: relative;
+      height: 260px
+    }
+
+    .timeline-container {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      overflow-x: auto
+    }
+
+    .timeline-track {
+      display: flex;
+      align-items: center;
+      min-width: 900px;
+      padding: 8px 0;
+      position: relative
+    }
+
+    .timeline-track::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--border-glass);
+      transform: translateY(-50%)
+    }
+
+    .timeline-phase {
+      position: relative;
+      flex: 1;
+      text-align: center;
+      padding: 10px 8px
+    }
+
+    .timeline-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin: 0 auto 8px;
+      position: relative;
+      z-index: 1;
+      border: 2px solid;
+      background: var(--bg-card)
+    }
+
+    .timeline-dot.completed {
+      background: var(--neon-green);
+      border-color: var(--neon-green)
+    }
+
+    .timeline-dot.active {
+      background: var(--neon-blue);
+      border-color: var(--neon-blue);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.5)
+    }
+
+    .timeline-dot.upcoming {
+      background: var(--bg-glass);
+      border-color: var(--text-muted)
+    }
+
+    .timeline-phase-name {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 3px
+    }
+
+    .timeline-phase-date {
+      font-size: .65rem;
+      color: var(--text-muted)
+    }
+
+    .table-container {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+      overflow-x: auto
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px
+    }
+
+    .table-header h3 {
+      font-size: 1rem;
+      font-weight: 700
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .filter-select {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: var(--text-primary);
+      font-size: .8rem;
+      outline: none;
+      cursor: pointer
+    }
+
+    .filter-select option {
+      background: var(--bg-secondary);
+      color: var(--text-primary)
+    }
+
+    .filter-input {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: var(--text-primary);
+      font-size: .8rem;
+      outline: none;
+      width: 180px
+    }
+
+    .filter-input:focus {
+      border-color: var(--neon-blue)
+    }
+
+    .filter-input::placeholder {
+      color: var(--text-muted)
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem
+    }
+
+    thead th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      font-size: .72rem;
+      border-bottom: 1px solid var(--border-glass);
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none
+    }
+
+    thead th:hover {
+      color: var(--neon-blue)
+    }
+
+    thead th .sort-arrow {
+      margin-left: 4px;
+      opacity: .4
+    }
+
+    thead th.sorted .sort-arrow {
+      opacity: 1;
+      color: var(--neon-blue)
+    }
+
+    tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-glass);
+      color: var(--text-secondary);
+      white-space: nowrap
+    }
+
+    tbody tr {
+      transition: background var(--transition)
+    }
+
+    tbody tr:hover {
+      background: var(--bg-glass)
+    }
+
+    .expand-row {
+      cursor: pointer
+    }
+
+    .expand-content {
+      display: none;
+      padding: 12px 16px;
+      background: var(--bg-glass);
+      border-radius: 8px;
+      margin: 4px 0 8px;
+      font-size: .8rem;
+      line-height: 1.7
+    }
+
+    .expand-content.open {
+      display: block;
+      animation: fadeIn .3s ease
+    }
+
+    .workload-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .workload-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius);
+      padding: 18px;
+      transition: all var(--transition)
+    }
+
+    .workload-card:hover {
+      box-shadow: var(--shadow-neon)
+    }
+
+    .workload-card h4 {
+      font-size: .85rem;
+      font-weight: 600;
+      margin-bottom: 10px
+    }
+
+    .utilization-bar {
+      height: 8px;
+      background: var(--bg-glass);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 6px 0
+    }
+
+    .utilization-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease
+    }
+
+    .member-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-glass);
+      font-size: .82rem
+    }
+
+    .member-row:last-child {
+      border-bottom: none
+    }
+
+    .member-name {
+      font-weight: 500;
+      color: var(--text-primary)
+    }
+
+    .member-role {
+      font-size: .72rem;
+      color: var(--text-muted)
+    }
+
+    .integrations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .integration-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius);
+      padding: 18px;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .integration-card:hover {
+      box-shadow: var(--shadow-neon)
+    }
+
+    .integration-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff
+    }
+
+    .integration-info {
+      flex: 1
+    }
+
+    .integration-name {
+      font-size: .85rem;
+      font-weight: 600
+    }
+
+    .integration-meta {
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: 2px
+    }
+
+    .integration-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    .integration-status.online {
+      background: var(--neon-green);
+      box-shadow: 0 0 6px var(--neon-green)
+    }
+
+    .integration-status.degraded {
+      background: var(--neon-orange);
+      box-shadow: 0 0 6px var(--neon-orange)
+    }
+
+    .integration-status.offline {
+      background: var(--neon-red);
+      box-shadow: 0 0 6px var(--neon-red)
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .api-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius);
+      padding: 18px;
+      transition: all var(--transition)
+    }
+
+    .api-card:hover {
+      box-shadow: var(--shadow-neon)
+    }
+
+    .api-label {
+      font-size: .72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .3px
+    }
+
+    .api-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 6px 0 2px
+    }
+
+    .api-detail {
+      font-size: .75rem;
+      color: var(--text-secondary)
+    }
+
+    .risks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .risk-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      transition: all var(--transition);
+      border-left: 4px solid
+    }
+
+    .risk-card:hover {
+      box-shadow: var(--shadow-neon)
+    }
+
+    .risk-card.critical {
+      border-left-color: var(--neon-red)
+    }
+
+    .risk-card.high {
+      border-left-color: var(--neon-orange)
+    }
+
+    .risk-card.medium {
+      border-left-color: var(--neon-yellow)
+    }
+
+    .risk-card.low {
+      border-left-color: var(--neon-green)
+    }
+
+    .risk-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px
+    }
+
+    .risk-title {
+      font-size: .9rem;
+      font-weight: 600;
+      flex: 1
+    }
+
+    .risk-severity {
+      font-size: .68rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase
+    }
+
+    .risk-severity.critical {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--neon-red)
+    }
+
+    .risk-severity.high {
+      background: rgba(249, 115, 22, 0.15);
+      color: var(--neon-orange)
+    }
+
+    .risk-severity.medium {
+      background: rgba(234, 179, 8, 0.15);
+      color: var(--neon-yellow)
+    }
+
+    .risk-severity.low {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--neon-green)
+    }
+
+    .risk-detail {
+      font-size: .78rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px
+    }
+
+    .risk-detail strong {
+      color: var(--text-primary);
+      font-weight: 600
+    }
+
+    .risk-owner {
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .winner-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center
+    }
+
+    .winner-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 16px
+    }
+
+    .winner-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px
+    }
+
+    .winner-metric {
+      padding: 16px;
+      background: var(--bg-glass);
+      border-radius: 12px;
+      border: 1px solid var(--border-glass)
+    }
+
+    .winner-metric .winner-project {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-bottom: 4px
+    }
+
+    .winner-metric .winner-val {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--neon-green)
+    }
+
+    .winner-metric .winner-val.runner-up {
+      color: var(--text-secondary)
+    }
+
+    .notes-section {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px
+    }
+
+    .notes-section h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 12px
+    }
+
+    .note-item {
+      padding: 12px;
+      background: var(--bg-glass);
+      border-radius: 8px;
+      border: 1px solid var(--border-glass);
+      margin-bottom: 8px
+    }
+
+    .note-meta {
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-bottom: 4px
+    }
+
+    .note-text {
+      font-size: .85rem;
+      color: var(--text-secondary);
+      line-height: 1.6
+    }
+
+    .toggle-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap
+    }
+
+    .toggle-btn {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      color: var(--text-secondary);
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .8rem;
+      font-weight: 500;
+      transition: all var(--transition)
+    }
+
+    .toggle-btn:hover {
+      color: var(--text-primary);
+      border-color: rgba(59, 130, 246, 0.2)
+    }
+
+    .toggle-btn.active {
+      color: var(--neon-blue);
+      border-color: var(--neon-blue);
+      background: rgba(59, 130, 246, 0.1)
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted)
+    }
+
+    .empty-state h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: var(--text-secondary)
+    }
+
+    @media(max-width:768px) {
+      .topbar {
+        padding: 0 12px
+      }
+
+      .topbar-nav {
+        display: none
+      }
+
+      .topbar-search {
+        width: 160px
+      }
+
+      .main-content {
+        padding: 68px 12px 12px
+      }
+
+      .hero-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr
+      }
+
+      .h2h-grid {
+        grid-template-columns: 1fr;
+        gap: 8px
+      }
+
+      .h2h-metric-label {
+        display: none
+      }
+    }
+
+    @media(max-width:480px) {
+      .hero-grid {
+        grid-template-columns: 1fr
+      }
+
+      .topbar-search {
+        display: none
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="topbar-logo">PMC</div>
-    <nav class="topbar-nav" id="topNav">
-      <button class="active" data-view="summary">Summary</button>
-      <button data-view="projects">Projects</button>
-      <button data-view="timeline">Timeline</button>
-      <button data-view="resources">Resources</button>
-      <button data-view="risks">Risks</button>
-      <button data-view="operations">Operations</button>
-    </nav>
-  </div>
-  <div class="topbar-right">
-    <input type="text" class="topbar-search" id="globalSearch" placeholder="Search projects, tasks, teams...">
-    <span class="model-badge">opencode/mimo-v2.5-free</span>
-    <button class="theme-toggle" id="themeToggle" title="Toggle theme">&#9789;</button>
-  </div>
-</div>
-
-<div class="main-content">
-
-<!-- SUMMARY VIEW -->
-<div class="view-panel active" id="view-summary">
-  <div class="section-title">Portfolio Overview</div>
-  <div class="section-subtitle">Real-time command center metrics across all active initiatives</div>
-
-  <div class="hero-grid">
-    <div class="hero-card" data-accent="blue"><div class="hero-label">Active Projects</div><div class="hero-value">12</div><div class="hero-sub">3 in execution, 4 in planning</div></div>
-    <div class="hero-card" data-accent="green"><div class="hero-label">Completed</div><div class="hero-value">8</div><div class="hero-sub">+2 this quarter</div></div>
-    <div class="hero-card" data-accent="purple"><div class="hero-label">Portfolio Health</div><div class="hero-value">82%</div><div class="hero-sub">Above target of 75%</div></div>
-    <div class="hero-card" data-accent="orange"><div class="hero-label">Budget Utilization</div><div class="hero-value">73%</div><div class="hero-sub">$4.2M of $5.8M</div></div>
-    <div class="hero-card" data-accent="cyan"><div class="hero-label">On-Time Delivery</div><div class="hero-value">88%</div><div class="hero-sub">11 of 12 milestones</div></div>
-    <div class="hero-card" data-accent="teal"><div class="hero-label">Team Members</div><div class="hero-value">64</div><div class="hero-sub">Across 5 departments</div></div>
-    <div class="hero-card" data-accent="pink"><div class="hero-label">Projected Spend</div><div class="hero-value">$7.1M</div><div class="hero-sub">FY2026 annual estimate</div></div>
-  </div>
-
-  <div class="h2h-section">
-    <div class="h2h-header">
-      <div class="h2h-project left">Mobile Platform Modernization</div>
-      <div class="h2h-vs">VS</div>
-      <div class="h2h-project right">Customer Analytics Initiative</div>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">PMC</div>
+      <nav class="topbar-nav" id="topNav">
+        <button class="active" data-view="summary">Summary</button>
+        <button data-view="projects">Projects</button>
+        <button data-view="timeline">Timeline</button>
+        <button data-view="resources">Resources</button>
+        <button data-view="risks">Risks</button>
+        <button data-view="operations">Operations</button>
+      </nav>
     </div>
-    <div class="h2h-grid" id="h2hGrid"></div>
+    <div class="topbar-right">
+      <input type="text" class="topbar-search" id="globalSearch" placeholder="Search projects, tasks, teams...">
+      <span class="model-badge">opencode/mimo-v2.5-free</span>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">&#9789;</button>
+    </div>
   </div>
 
-  <div class="charts-grid">
-    <div class="chart-card"><h3>Project Completion Trend</h3><div class="chart-container"><canvas id="chartCompletionTrend"></canvas></div></div>
-    <div class="chart-card"><h3>Budget vs Actual Spend</h3><div class="chart-container"><canvas id="chartBudgetActual"></canvas></div></div>
-    <div class="chart-card"><h3>Team Velocity</h3><div class="chart-container"><canvas id="chartVelocity"></canvas></div></div>
-    <div class="chart-card"><h3>Resource Allocation by Department</h3><div class="chart-container"><canvas id="chartResourceAlloc"></canvas></div></div>
+  <div class="main-content">
+
+    <!-- SUMMARY VIEW -->
+    <div class="view-panel active" id="view-summary">
+      <div class="section-title">Portfolio Overview</div>
+      <div class="section-subtitle">Real-time command center metrics across all active initiatives</div>
+
+      <div class="hero-grid">
+        <div class="hero-card" data-accent="blue">
+          <div class="hero-label">Active Projects</div>
+          <div class="hero-value">12</div>
+          <div class="hero-sub">3 in execution, 4 in planning</div>
+        </div>
+        <div class="hero-card" data-accent="green">
+          <div class="hero-label">Completed</div>
+          <div class="hero-value">8</div>
+          <div class="hero-sub">+2 this quarter</div>
+        </div>
+        <div class="hero-card" data-accent="purple">
+          <div class="hero-label">Portfolio Health</div>
+          <div class="hero-value">82%</div>
+          <div class="hero-sub">Above target of 75%</div>
+        </div>
+        <div class="hero-card" data-accent="orange">
+          <div class="hero-label">Budget Utilization</div>
+          <div class="hero-value">73%</div>
+          <div class="hero-sub">$4.2M of $5.8M</div>
+        </div>
+        <div class="hero-card" data-accent="cyan">
+          <div class="hero-label">On-Time Delivery</div>
+          <div class="hero-value">88%</div>
+          <div class="hero-sub">11 of 12 milestones</div>
+        </div>
+        <div class="hero-card" data-accent="teal">
+          <div class="hero-label">Team Members</div>
+          <div class="hero-value">64</div>
+          <div class="hero-sub">Across 5 departments</div>
+        </div>
+        <div class="hero-card" data-accent="pink">
+          <div class="hero-label">Projected Spend</div>
+          <div class="hero-value">$7.1M</div>
+          <div class="hero-sub">FY2026 annual estimate</div>
+        </div>
+      </div>
+
+      <div class="h2h-section">
+        <div class="h2h-header">
+          <div class="h2h-project left">Mobile Platform Modernization</div>
+          <div class="h2h-vs">VS</div>
+          <div class="h2h-project right">Customer Analytics Initiative</div>
+        </div>
+        <div class="h2h-grid" id="h2hGrid"></div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Project Completion Trend</h3>
+          <div class="chart-container"><canvas id="chartCompletionTrend"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Budget vs Actual Spend</h3>
+          <div class="chart-container"><canvas id="chartBudgetActual"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Team Velocity</h3>
+          <div class="chart-container"><canvas id="chartVelocity"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Resource Allocation by Department</h3>
+          <div class="chart-container"><canvas id="chartResourceAlloc"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS VIEW -->
+    <div class="view-panel" id="view-projects">
+      <div class="section-title">Project Portfolio</div>
+      <div class="section-subtitle">Detailed breakdown of all projects and their current status</div>
+
+      <div class="toggle-bar">
+        <button class="toggle-btn active" data-group="methodology" data-val="all">All</button>
+        <button class="toggle-btn" data-group="methodology" data-val="agile">Agile</button>
+        <button class="toggle-btn" data-group="methodology" data-val="waterfall">Waterfall</button>
+        <span style="width:1px;background:var(--border-glass);margin:0 4px"></span>
+        <button class="toggle-btn active" data-group="scope" data-val="portfolio">Portfolio</button>
+        <button class="toggle-btn" data-group="scope" data-val="program">Program</button>
+        <button class="toggle-btn" data-group="scope" data-val="individual">Individual</button>
+        <span style="width:1px;background:var(--border-glass);margin:0 4px"></span>
+        <button class="toggle-btn active" data-group="period" data-val="quarterly">Quarterly</button>
+        <button class="toggle-btn" data-group="period" data-val="monthly">Monthly</button>
+        <button class="toggle-btn" data-group="period" data-val="weekly">Weekly</button>
+      </div>
+
+      <div class="cards-grid" id="projectCards"></div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Risks by Severity</h3>
+          <div class="chart-container"><canvas id="chartRisksSeverity"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Milestone Progress</h3>
+          <div class="chart-container"><canvas id="chartMilestoneProgress"></canvas></div>
+        </div>
+      </div>
+
+      <div class="winner-card">
+        <h3>Head-to-Head Winner Breakdown</h3>
+        <div class="winner-grid" id="winnerGrid"></div>
+      </div>
+    </div>
+
+    <!-- TIMELINE VIEW -->
+    <div class="view-panel" id="view-timeline">
+      <div class="section-title">Project Timeline</div>
+      <div class="section-subtitle">Phases, milestones, and delivery dates across the portfolio</div>
+
+      <div class="timeline-container" id="timelineContainer"></div>
+
+      <div class="charts-grid">
+        <div class="chart-card" style="grid-column:1/-1">
+          <h3>Planned vs Actual Timeline</h3>
+          <div class="chart-container"><canvas id="chartPlannedActual"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Milestone History</h3>
+        </div>
+        <table id="milestoneTable">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Milestone</th>
+              <th>Planned</th>
+              <th>Actual</th>
+              <th>Status</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="milestoneBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RESOURCES VIEW -->
+    <div class="view-panel" id="view-resources">
+      <div class="section-title">Team Workload</div>
+      <div class="section-subtitle">Resource utilization, capacity, and availability across the organization</div>
+
+      <div class="workload-grid" id="workloadGrid"></div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Resource Allocation by Department</h3>
+          <div class="chart-container"><canvas id="chartResourceDept"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Capacity vs Demand</h3>
+          <div class="chart-container"><canvas id="chartCapacityDemand"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RISKS VIEW -->
+    <div class="view-panel" id="view-risks">
+      <div class="section-title">Risk Management</div>
+      <div class="section-subtitle">Active risks, severity, probability, impact, and mitigation strategies</div>
+
+      <div class="risks-grid" id="risksGrid"></div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Risks by Severity</h3>
+          <div class="chart-container"><canvas id="chartRisksPie"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Risk Heatmap</h3>
+          <div class="chart-container"><canvas id="chartRiskHeat"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERATIONS VIEW -->
+    <div class="view-panel" id="view-operations">
+      <div class="section-title">Integrations & Automation</div>
+      <div class="section-subtitle">Connected tools, API usage, workflow executions, and cost savings</div>
+
+      <div class="integrations-grid" id="integrationsGrid"></div>
+
+      <div class="api-grid" id="apiGrid"></div>
+
+      <div class="notes-section">
+        <h3>Executive Commentary</h3>
+        <div id="notesContainer"></div>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<!-- PROJECTS VIEW -->
-<div class="view-panel" id="view-projects">
-  <div class="section-title">Project Portfolio</div>
-  <div class="section-subtitle">Detailed breakdown of all projects and their current status</div>
+  <script>
+    (function () {
+      "use strict";
 
-  <div class="toggle-bar">
-    <button class="toggle-btn active" data-group="methodology" data-val="all">All</button>
-    <button class="toggle-btn" data-group="methodology" data-val="agile">Agile</button>
-    <button class="toggle-btn" data-group="methodology" data-val="waterfall">Waterfall</button>
-    <span style="width:1px;background:var(--border-glass);margin:0 4px"></span>
-    <button class="toggle-btn active" data-group="scope" data-val="portfolio">Portfolio</button>
-    <button class="toggle-btn" data-group="scope" data-val="program">Program</button>
-    <button class="toggle-btn" data-group="scope" data-val="individual">Individual</button>
-    <span style="width:1px;background:var(--border-glass);margin:0 4px"></span>
-    <button class="toggle-btn active" data-group="period" data-val="quarterly">Quarterly</button>
-    <button class="toggle-btn" data-group="period" data-val="monthly">Monthly</button>
-    <button class="toggle-btn" data-group="period" data-val="weekly">Weekly</button>
-  </div>
+      const LS = {
+        get(k, d) { try { const v = localStorage.getItem('pmc_' + k); return v ? JSON.parse(v) : d } catch (e) { return d } },
+        set(k, v) { try { localStorage.setItem('pmc_' + k, JSON.stringify(v)) } catch (e) { } }
+      };
 
-  <div class="cards-grid" id="projectCards"></div>
+      let currentView = LS.get('view', 'summary');
+      let currentTheme = LS.get('theme', 'dark');
+      let methodologyFilter = LS.get('methodology', 'all');
+      let scopeFilter = LS.get('scope', 'portfolio');
+      let periodFilter = LS.get('period', 'quarterly');
+      let sortCol = null, sortDir = 1;
 
-  <div class="charts-grid">
-    <div class="chart-card"><h3>Risks by Severity</h3><div class="chart-container"><canvas id="chartRisksSeverity"></canvas></div></div>
-    <div class="chart-card"><h3>Milestone Progress</h3><div class="chart-container"><canvas id="chartMilestoneProgress"></canvas></div></div>
-  </div>
+      const projects = [
+        { id: 1, name: "Mobile Platform Modernization", status: "on-track", methodology: "agile", scope: "portfolio", completion: 72, budget: 1800000, actual: 1280000, team: 18, milestones: { done: 8, total: 12 }, risks: 3, blocked: 1, projected: "Q4 2026", health: 85, owner: "Sarah Chen", dept: "Engineering", quarter: "Q3", year: 2026, desc: "Complete overhaul of iOS and Android apps with React Native" },
+        { id: 2, name: "Customer Analytics Initiative", status: "on-track", methodology: "agile", scope: "portfolio", completion: 68, budget: 1200000, actual: 780000, team: 14, milestones: { done: 7, total: 11 }, risks: 2, blocked: 0, projected: "Q3 2026", health: 88, owner: "Marcus Johnson", dept: "Data Science", quarter: "Q3", year: 2026, desc: "AI-powered analytics platform for customer insights" },
+        { id: 3, name: "Cloud Infrastructure Migration", status: "at-risk", methodology: "waterfall", scope: "program", completion: 45, budget: 2500000, actual: 1200000, team: 22, milestones: { done: 4, total: 9 }, risks: 5, blocked: 2, projected: "Q2 2027", health: 62, owner: "David Park", dept: "Infrastructure", quarter: "Q3", year: 2026, desc: "Migrate on-premise systems to Azure cloud" },
+        { id: 4, name: "E-Commerce Platform Redesign", status: "delayed", methodology: "agile", scope: "individual", completion: 35, budget: 800000, actual: 420000, team: 10, milestones: { done: 3, total: 8 }, risks: 4, blocked: 3, projected: "Q1 2027", health: 48, owner: "Lisa Wang", dept: "Engineering", quarter: "Q3", year: 2026, desc: "Next-gen e-commerce with microservices architecture" },
+        { id: 5, name: "Data Lake Consolidation", status: "on-track", methodology: "waterfall", scope: "program", completion: 58, budget: 950000, actual: 510000, team: 8, milestones: { done: 5, total: 8 }, risks: 2, blocked: 0, projected: "Q4 2026", health: 79, owner: "Raj Patel", dept: "Data Science", quarter: "Q3", year: 2026, desc: "Consolidate siloed data sources into unified lake" },
+        { id: 6, name: "Security Compliance Overhaul", status: "completed", methodology: "waterfall", scope: "portfolio", completion: 100, budget: 600000, actual: 580000, team: 6, milestones: { done: 6, total: 6 }, risks: 0, blocked: 0, projected: "Completed", health: 95, owner: "Alex Rivera", dept: "Security", quarter: "Q2", year: 2026, desc: "SOC2 and ISO 27001 compliance certification" },
+        { id: 7, name: "API Gateway Modernization", status: "on-track", methodology: "agile", scope: "individual", completion: 82, budget: 400000, actual: 310000, team: 5, milestones: { done: 5, total: 6 }, risks: 1, blocked: 0, projected: "Q3 2026", health: 90, owner: "Sarah Chen", dept: "Engineering", quarter: "Q3", year: 2026, desc: "Replace legacy API gateway with Kong" },
+        { id: 8, name: "Employee Experience Portal", status: "planning", methodology: "agile", scope: "individual", completion: 15, budget: 350000, actual: 45000, team: 7, milestones: { done: 1, total: 7 }, risks: 1, blocked: 0, projected: "Q2 2027", health: 75, owner: "Marcus Johnson", dept: "HR Tech", quarter: "Q4", year: 2026, desc: "Unified employee portal with SSO and self-service" },
+        { id: 9, name: "Supply Chain Optimization", status: "at-risk", methodology: "waterfall", scope: "program", completion: 40, budget: 1100000, actual: 520000, team: 12, milestones: { done: 3, total: 8 }, risks: 3, blocked: 1, projected: "Q1 2027", health: 55, owner: "David Park", dept: "Operations", quarter: "Q3", year: 2026, desc: "ML-driven supply chain forecasting and optimization" },
+        { id: 10, name: "Developer Productivity Suite", status: "on-track", methodology: "agile", scope: "portfolio", completion: 60, budget: 500000, actual: 280000, team: 6, milestones: { done: 4, total: 7 }, risks: 1, blocked: 0, projected: "Q4 2026", health: 82, owner: "Alex Rivera", dept: "Engineering", quarter: "Q3", year: 2026, desc: "Internal tools: CI/CD, code review, monitoring" },
+        { id: 11, name: "Customer Support AI", status: "planning", methodology: "agile", scope: "portfolio", completion: 20, budget: 750000, actual: 120000, team: 9, milestones: { done: 1, total: 9 }, risks: 2, blocked: 0, projected: "Q2 2027", health: 70, owner: "Lisa Wang", dept: "Data Science", quarter: "Q4", year: 2026, desc: "LLM-powered customer support automation" },
+        { id: 12, name: "Legacy System Deprecation", status: "on-track", methodology: "waterfall", scope: "individual", completion: 55, budget: 300000, actual: 155000, team: 4, milestones: { done: 4, total: 7 }, risks: 1, blocked: 0, projected: "Q4 2026", health: 78, owner: "Raj Patel", dept: "Infrastructure", quarter: "Q3", year: 2026, desc: "Retire 8 legacy systems post-migration" }
+      ];
 
-  <div class="winner-card">
-    <h3>Head-to-Head Winner Breakdown</h3>
-    <div class="winner-grid" id="winnerGrid"></div>
-  </div>
-</div>
+      const h2hMetrics = [
+        { label: "Schedule Progress", mobile: 72, analytics: 68, unit: "%" },
+        { label: "Budget Variance", mobile: -12, analytics: -8, unit: "%" },
+        { label: "Task Completion", mobile: 78, analytics: 74, unit: "%" },
+        { label: "Risk Score", mobile: 3.2, analytics: 2.1, unit: "/5", invert: true },
+        { label: "Resource Utilization", mobile: 85, analytics: 78, unit: "%" },
+        { label: "Stakeholder Satisfaction", mobile: 4.3, analytics: 4.6, unit: "/5" }
+      ];
 
-<!-- TIMELINE VIEW -->
-<div class="view-panel" id="view-timeline">
-  <div class="section-title">Project Timeline</div>
-  <div class="section-subtitle">Phases, milestones, and delivery dates across the portfolio</div>
+      const milestones = [
+        { project: "Mobile Platform", name: "Architecture Review", planned: "2026-01-15", actual: "2026-01-14", status: "completed" },
+        { project: "Mobile Platform", name: "MVP Release", planned: "2026-04-01", actual: "2026-04-08", status: "completed" },
+        { project: "Mobile Platform", name: "Beta Launch", planned: "2026-07-15", actual: null, status: "completed" },
+        { project: "Mobile Platform", name: "GA Release", planned: "2026-10-01", actual: null, status: "upcoming" },
+        { project: "Analytics Initiative", name: "Data Pipeline Setup", planned: "2026-02-01", actual: "2026-01-28", status: "completed" },
+        { project: "Analytics Initiative", name: "ML Model v1", planned: "2026-05-01", actual: "2026-05-12", status: "completed" },
+        { project: "Analytics Initiative", name: "Dashboard Release", planned: "2026-08-01", actual: null, status: "active" },
+        { project: "Cloud Migration", name: "Phase 1 Complete", planned: "2026-03-01", actual: "2026-04-15", status: "completed" },
+        { project: "Cloud Migration", name: "Phase 2 Complete", planned: "2026-07-01", actual: null, status: "active" },
+        { project: "E-Commerce", name: "Design System", planned: "2026-03-15", actual: "2026-05-01", status: "completed" },
+        { project: "E-Commerce", name: "API Layer", planned: "2026-06-01", actual: null, status: "active" },
+        { project: "E-Commerce", name: "Frontend Rewrite", planned: "2026-09-01", actual: null, status: "upcoming" }
+      ];
 
-  <div class="timeline-container" id="timelineContainer"></div>
+      const teamMembers = [
+        { name: "Sarah Chen", role: "Engineering Lead", utilization: 92, capacity: 40, allocated: 37, projects: 3, overtimeRisk: true },
+        { name: "Marcus Johnson", role: "Data Science Lead", utilization: 78, capacity: 40, allocated: 31, projects: 2, overtimeRisk: false },
+        { name: "David Park", role: "Infrastructure Lead", utilization: 88, capacity: 40, allocated: 35, projects: 3, overtimeRisk: true },
+        { name: "Lisa Wang", role: "Frontend Lead", utilization: 95, capacity: 40, allocated: 38, projects: 2, overtimeRisk: true },
+        { name: "Alex Rivera", role: "Security Engineer", utilization: 65, capacity: 40, allocated: 26, projects: 2, overtimeRisk: false },
+        { name: "Raj Patel", role: "Data Engineer", utilization: 82, capacity: 40, allocated: 33, projects: 2, overtimeRisk: false },
+        { name: "Priya Sharma", role: "Backend Developer", utilization: 88, capacity: 40, allocated: 35, projects: 2, overtimeRisk: true },
+        { name: "James Wilson", role: "DevOps Engineer", utilization: 72, capacity: 40, allocated: 29, projects: 3, overtimeRisk: false },
+        { name: "Emily Zhang", role: "QA Lead", utilization: 80, capacity: 40, allocated: 32, projects: 4, overtimeRisk: false },
+        { name: "Carlos Mendez", role: "Product Manager", utilization: 70, capacity: 40, allocated: 28, projects: 2, overtimeRisk: false },
+        { name: "Anna Kowalski", role: "UX Designer", utilization: 85, capacity: 40, allocated: 34, projects: 3, overtimeRisk: true },
+        { name: "Tom Nguyen", role: "Mobile Developer", utilization: 90, capacity: 40, allocated: 36, projects: 2, overtimeRisk: true }
+      ];
 
-  <div class="charts-grid">
-    <div class="chart-card" style="grid-column:1/-1"><h3>Planned vs Actual Timeline</h3><div class="chart-container"><canvas id="chartPlannedActual"></canvas></div></div>
-  </div>
+      const risks = [
+        { id: 1, project: "Cloud Migration", title: "Vendor lock-in with proprietary Azure services", severity: "high", probability: 70, impact: 80, mitigation: "Design abstraction layers; maintain multi-cloud fallback plan", owner: "David Park", status: "open" },
+        { id: 2, project: "Cloud Migration", title: "Data loss during migration window", severity: "critical", probability: 40, impact: 95, mitigation: "Implement incremental migration with rollback checkpoints", owner: "Raj Patel", status: "mitigating" },
+        { id: 3, project: "Cloud Migration", title: "Compliance gaps in new cloud environment", severity: "high", probability: 55, impact: 70, mitigation: "Pre-migration security audit; engage compliance team early", owner: "Alex Rivera", status: "open" },
+        { id: 4, project: "E-Commerce", title: "Scope creep from stakeholder requests", severity: "medium", probability: 80, impact: 60, mitigation: "Strict change control process; backlog prioritization reviews", owner: "Lisa Wang", status: "open" },
+        { id: 5, project: "E-Commerce", title: "Performance regression on checkout flow", severity: "high", probability: 50, impact: 85, mitigation: "Load testing at each sprint; performance budgets in CI", owner: "Lisa Wang", status: "mitigating" },
+        { id: 6, project: "Mobile Platform", title: "Third-party SDK deprecation risk", severity: "medium", probability: 35, impact: 50, mitigation: "Monitor SDK roadmaps; maintain feature flag for alternatives", owner: "Sarah Chen", status: "monitoring" },
+        { id: 7, project: "Analytics Initiative", title: "Model accuracy below acceptable threshold", severity: "medium", probability: 45, impact: 65, mitigation: "Iterative model training with A/B testing; fallback to rule-based", owner: "Marcus Johnson", status: "monitoring" },
+        { id: 8, project: "Supply Chain", title: "Key stakeholder departure risk", severity: "medium", probability: 30, impact: 75, mitigation: "Cross-training; documented knowledge base; retention planning", owner: "David Park", status: "open" },
+        { id: 9, project: "Supply Chain", title: "Data quality issues from legacy sources", severity: "high", probability: 60, impact: 70, mitigation: "Data validation pipeline; source-system quality audits", owner: "Raj Patel", status: "mitigating" },
+        { id: 10, project: "Customer Support AI", title: "LLM hallucination in customer-facing responses", severity: "high", probability: 55, impact: 80, mitigation: "Guardrails, confidence thresholds, human-in-the-loop review", owner: "Lisa Wang", status: "open" }
+      ];
 
-  <div class="table-container">
-    <div class="table-header"><h3>Milestone History</h3></div>
-    <table id="milestoneTable">
-      <thead><tr><th>Project</th><th>Milestone</th><th>Planned</th><th>Actual</th><th>Status</th><th>Details</th></tr></thead>
-      <tbody id="milestoneBody"></tbody>
-    </table>
-  </div>
-</div>
+      const integrations = [
+        { name: "Jira", status: "online", latency: "45ms", lastSync: "2 min ago", icon: "J", color: "#0052CC" },
+        { name: "Azure DevOps", status: "online", latency: "62ms", lastSync: "5 min ago", icon: "A", color: "#0078D7" },
+        { name: "GitHub", status: "online", latency: "38ms", lastSync: "1 min ago", icon: "G", color: "#333" },
+        { name: "Slack", status: "online", latency: "28ms", lastSync: "Real-time", icon: "S", color: "#4A154B" },
+        { name: "Microsoft Teams", status: "degraded", latency: "180ms", lastSync: "15 min ago", icon: "T", color: "#6264A7" }
+      ];
 
-<!-- RESOURCES VIEW -->
-<div class="view-panel" id="view-resources">
-  <div class="section-title">Team Workload</div>
-  <div class="section-subtitle">Resource utilization, capacity, and availability across the organization</div>
+      const apiUsage = [
+        { label: "Workflow Executions", value: "24,832", detail: "This month (+12% MoM)", color: "var(--neon-blue)" },
+        { label: "Webhook Events", value: "156K", detail: "Processed this quarter", color: "var(--neon-purple)" },
+        { label: "Success Rate", value: "99.7%", detail: "Above 99.5% SLA target", color: "var(--neon-green)" },
+        { label: "Automation Savings", value: "$142K", detail: "Estimated annual labor savings", color: "var(--neon-teal)" },
+        { label: "API Calls Today", value: "8,241", detail: "Peak: 12K at 9:30 AM", color: "var(--neon-cyan)" },
+        { label: "Avg Response Time", value: "124ms", detail: "P99: 340ms", color: "var(--neon-orange)" }
+      ];
 
-  <div class="workload-grid" id="workloadGrid"></div>
+      const notes = [
+        { author: "Sarah Chen", date: "Aug 15, 2026", text: "Mobile Platform Modernization MVP exceeded adoption targets by 23%. User engagement metrics show strong retention. Recommend accelerating GA timeline by 2 weeks." },
+        { author: "David Park", date: "Aug 12, 2026", text: "Cloud Migration Phase 2 encountered unexpected latency with cross-region data sync. Engaging Azure support for optimization. May impact Phase 2 completion by 1-2 weeks." },
+        { author: "Marcus Johnson", date: "Aug 10, 2026", text: "Analytics Initiative ML models achieving 94% accuracy on test sets, exceeding 90% target. Dashboard prototype received positive feedback from 85% of pilot users." },
+        { author: "Lisa Wang", date: "Aug 8, 2026", text: "E-Commerce redesign scope discussion with stakeholders. Need to enforce change control to prevent further scope creep. Current backlog has 340+ items." },
+        { author: "Alex Rivera", date: "Aug 5, 2026", text: "Security Compliance Overhaul completed ahead of schedule and under budget. SOC2 Type II audit passed with zero critical findings." }
+      ];
 
-  <div class="charts-grid">
-    <div class="chart-card"><h3>Resource Allocation by Department</h3><div class="chart-container"><canvas id="chartResourceDept"></canvas></div></div>
-    <div class="chart-card"><h3>Capacity vs Demand</h3><div class="chart-container"><canvas id="chartCapacityDemand"></canvas></div></div>
-  </div>
-</div>
+      const timelinePhases = [
+        { name: "Planning", status: "completed", date: "Q1 2026" },
+        { name: "Foundation", status: "completed", date: "Q2 2026" },
+        { name: "Core Build", status: "active", date: "Q3 2026" },
+        { name: "Integration", status: "upcoming", date: "Q4 2026" },
+        { name: "Testing", status: "upcoming", date: "Q1 2027" },
+        { name: "Launch", status: "upcoming", date: "Q2 2027" },
+        { name: "Optimization", status: "upcoming", date: "Q3 2027" }
+      ];
 
-<!-- RISKS VIEW -->
-<div class="view-panel" id="view-risks">
-  <div class="section-title">Risk Management</div>
-  <div class="section-subtitle">Active risks, severity, probability, impact, and mitigation strategies</div>
+      const departments = [
+        { name: "Engineering", members: 18, utilization: 84, budget: 2800000, actual: 1900000 },
+        { name: "Data Science", members: 12, utilization: 80, budget: 1600000, actual: 1050000 },
+        { name: "Infrastructure", members: 8, utilization: 78, budget: 1200000, actual: 680000 },
+        { name: "Security", members: 4, utilization: 72, budget: 600000, actual: 580000 },
+        { name: "HR Tech", members: 3, utilization: 65, budget: 350000, actual: 45000 }
+      ];
 
-  <div class="risks-grid" id="risksGrid"></div>
+      function initTheme() {
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        document.getElementById('themeToggle').textContent = currentTheme === 'dark' ? '&#9789;' : '&#9728;';
+      }
 
-  <div class="charts-grid">
-    <div class="chart-card"><h3>Risks by Severity</h3><div class="chart-container"><canvas id="chartRisksPie"></canvas></div></div>
-    <div class="chart-card"><h3>Risk Heatmap</h3><div class="chart-container"><canvas id="chartRiskHeat"></canvas></div></div>
-  </div>
-</div>
+      document.getElementById('themeToggle').addEventListener('click', function () {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        LS.set('theme', currentTheme);
+        initTheme();
+        updateCharts();
+      });
 
-<!-- OPERATIONS VIEW -->
-<div class="view-panel" id="view-operations">
-  <div class="section-title">Integrations & Automation</div>
-  <div class="section-subtitle">Connected tools, API usage, workflow executions, and cost savings</div>
+      function switchView(view) {
+        currentView = view;
+        LS.set('view', view);
+        document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('view-' + view).classList.add('active');
+        document.querySelectorAll('.topbar-nav button').forEach(b => {
+          b.classList.toggle('active', b.dataset.view === view);
+        });
+      }
 
-  <div class="integrations-grid" id="integrationsGrid"></div>
+      document.querySelectorAll('.topbar-nav button').forEach(b => {
+        b.addEventListener('click', () => switchView(b.dataset.view));
+      });
 
-  <div class="api-grid" id="apiGrid"></div>
+      document.querySelectorAll('.toggle-btn').forEach(b => {
+        b.addEventListener('click', function () {
+          const group = this.dataset.group;
+          const val = this.dataset.val;
+          this.closest('.toggle-bar').querySelectorAll(`[data-group="${group}"]`).forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+          if (group === 'methodology') methodologyFilter = val;
+          if (group === 'scope') scopeFilter = val;
+          if (group === 'period') periodFilter = val;
+          LS.set(group, val);
+          renderProjectCards();
+        });
+      });
 
-  <div class="notes-section">
-    <h3>Executive Commentary</h3>
-    <div id="notesContainer"></div>
-  </div>
-</div>
+      function getChartColors() {
+        const s = getComputedStyle(document.documentElement);
+        return {
+          blue: s.getPropertyValue('--neon-blue').trim(),
+          cyan: s.getPropertyValue('--neon-cyan').trim(),
+          green: s.getPropertyValue('--neon-green').trim(),
+          purple: s.getPropertyValue('--neon-purple').trim(),
+          pink: s.getPropertyValue('--neon-pink').trim(),
+          orange: s.getPropertyValue('--neon-orange').trim(),
+          red: s.getPropertyValue('--neon-red').trim(),
+          yellow: s.getPropertyValue('--neon-yellow').trim(),
+          teal: s.getPropertyValue('--neon-teal').trim(),
+          text: s.getPropertyValue('--text-secondary').trim(),
+          muted: s.getPropertyValue('--text-muted').trim(),
+          grid: s.getPropertyValue('--border-glass').trim()
+        };
+      }
 
-</div>
+      function chartDefaults(c) {
+        c.font.family = "'Segoe UI',system-ui,sans-serif";
+        c.font.size = 11;
+        c.color = getChartColors().muted;
+      }
 
-<script>
-(function(){
-"use strict";
+      let charts = {};
 
-const LS={
-  get(k,d){try{const v=localStorage.getItem('pmc_'+k);return v?JSON.parse(v):d}catch(e){return d}},
-  set(k,v){try{localStorage.setItem('pmc_'+k,JSON.stringify(v))}catch(e){}}
-};
+      function destroyCharts() {
+        Object.values(charts).forEach(ch => { if (ch && ch.destroy) ch.destroy() });
+        charts = {};
+      }
 
-let currentView=LS.get('view','summary');
-let currentTheme=LS.get('theme','dark');
-let methodologyFilter=LS.get('methodology','all');
-let scopeFilter=LS.get('scope','portfolio');
-let periodFilter=LS.get('period','quarterly');
-let sortCol=null,sortDir=1;
+      function createChart(id, cfg) {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        if (charts[id]) { charts[id].destroy() }
+        chartDefaults(Chart.defaults);
+        charts[id] = new Chart(el, cfg);
+        return charts[id];
+      }
 
-const projects=[
-  {id:1,name:"Mobile Platform Modernization",status:"on-track",methodology:"agile",scope:"portfolio",completion:72,budget:1800000,actual:1280000,team:18,milestones:{done:8,total:12},risks:3,blocked:1,projected:"Q4 2026",health:85,owner:"Sarah Chen",dept:"Engineering",quarter:"Q3",year:2026,desc:"Complete overhaul of iOS and Android apps with React Native"},
-  {id:2,name:"Customer Analytics Initiative",status:"on-track",methodology:"agile",scope:"portfolio",completion:68,budget:1200000,actual:780000,team:14,milestones:{done:7,total:11},risks:2,blocked:0,projected:"Q3 2026",health:88,owner:"Marcus Johnson",dept:"Data Science",quarter:"Q3",year:2026,desc:"AI-powered analytics platform for customer insights"},
-  {id:3,name:"Cloud Infrastructure Migration",status:"at-risk",methodology:"waterfall",scope:"program",completion:45,budget:2500000,actual:1200000,team:22,milestones:{done:4,total:9},risks:5,blocked:2,projected:"Q2 2027",health:62,owner:"David Park",dept:"Infrastructure",quarter:"Q3",year:2026,desc:"Migrate on-premise systems to Azure cloud"},
-  {id:4,name:"E-Commerce Platform Redesign",status:"delayed",methodology:"agile",scope:"individual",completion:35,budget:800000,actual:420000,team:10,milestones:{done:3,total:8},risks:4,blocked:3,projected:"Q1 2027",health:48,owner:"Lisa Wang",dept:"Engineering",quarter:"Q3",year:2026,desc:"Next-gen e-commerce with microservices architecture"},
-  {id:5,name:"Data Lake Consolidation",status:"on-track",methodology:"waterfall",scope:"program",completion:58,budget:950000,actual:510000,team:8,milestones:{done:5,total:8},risks:2,blocked:0,projected:"Q4 2026",health:79,owner:"Raj Patel",dept:"Data Science",quarter:"Q3",year:2026,desc:"Consolidate siloed data sources into unified lake"},
-  {id:6,name:"Security Compliance Overhaul",status:"completed",methodology:"waterfall",scope:"portfolio",completion:100,budget:600000,actual:580000,team:6,milestones:{done:6,total:6},risks:0,blocked:0,projected:"Completed",health:95,owner:"Alex Rivera",dept:"Security",quarter:"Q2",year:2026,desc:"SOC2 and ISO 27001 compliance certification"},
-  {id:7,name:"API Gateway Modernization",status:"on-track",methodology:"agile",scope:"individual",completion:82,budget:400000,actual:310000,team:5,milestones:{done:5,total:6},risks:1,blocked:0,projected:"Q3 2026",health:90,owner:"Sarah Chen",dept:"Engineering",quarter:"Q3",year:2026,desc:"Replace legacy API gateway with Kong"},
-  {id:8,name:"Employee Experience Portal",status:"planning",methodology:"agile",scope:"individual",completion:15,budget:350000,actual:45000,team:7,milestones:{done:1,total:7},risks:1,blocked:0,projected:"Q2 2027",health:75,owner:"Marcus Johnson",dept:"HR Tech",quarter:"Q4",year:2026,desc:"Unified employee portal with SSO and self-service"},
-  {id:9,name:"Supply Chain Optimization",status:"at-risk",methodology:"waterfall",scope:"program",completion:40,budget:1100000,actual:520000,team:12,milestones:{done:3,total:8},risks:3,blocked:1,projected:"Q1 2027",health:55,owner:"David Park",dept:"Operations",quarter:"Q3",year:2026,desc:"ML-driven supply chain forecasting and optimization"},
-  {id:10,name:"Developer Productivity Suite",status:"on-track",methodology:"agile",scope:"portfolio",completion:60,budget:500000,actual:280000,team:6,milestones:{done:4,total:7},risks:1,blocked:0,projected:"Q4 2026",health:82,owner:"Alex Rivera",dept:"Engineering",quarter:"Q3",year:2026,desc:"Internal tools: CI/CD, code review, monitoring"},
-  {id:11,name:"Customer Support AI",status:"planning",methodology:"agile",scope:"portfolio",completion:20,budget:750000,actual:120000,team:9,milestones:{done:1,total:9},risks:2,blocked:0,projected:"Q2 2027",health:70,owner:"Lisa Wang",dept:"Data Science",quarter:"Q4",year:2026,desc:"LLM-powered customer support automation"},
-  {id:12,name:"Legacy System Deprecation",status:"on-track",methodology:"waterfall",scope:"individual",completion:55,budget:300000,actual:155000,team:4,milestones:{done:4,total:7},risks:1,blocked:0,projected:"Q4 2026",health:78,owner:"Raj Patel",dept:"Infrastructure",quarter:"Q3",year:2026,desc:"Retire 8 legacy systems post-migration"}
-];
-
-const h2hMetrics=[
-  {label:"Schedule Progress",mobile:72,analytics:68,unit:"%"},
-  {label:"Budget Variance",mobile:-12,analytics:-8,unit:"%"},
-  {label:"Task Completion",mobile:78,analytics:74,unit:"%"},
-  {label:"Risk Score",mobile:3.2,analytics:2.1,unit:"/5",invert:true},
-  {label:"Resource Utilization",mobile:85,analytics:78,unit:"%"},
-  {label:"Stakeholder Satisfaction",mobile:4.3,analytics:4.6,unit:"/5"}
-];
-
-const milestones=[
-  {project:"Mobile Platform",name:"Architecture Review",planned:"2026-01-15",actual:"2026-01-14",status:"completed"},
-  {project:"Mobile Platform",name:"MVP Release",planned:"2026-04-01",actual:"2026-04-08",status:"completed"},
-  {project:"Mobile Platform",name:"Beta Launch",planned:"2026-07-15",actual:null,status:"completed"},
-  {project:"Mobile Platform",name:"GA Release",planned:"2026-10-01",actual:null,status:"upcoming"},
-  {project:"Analytics Initiative",name:"Data Pipeline Setup",planned:"2026-02-01",actual:"2026-01-28",status:"completed"},
-  {project:"Analytics Initiative",name:"ML Model v1",planned:"2026-05-01",actual:"2026-05-12",status:"completed"},
-  {project:"Analytics Initiative",name:"Dashboard Release",planned:"2026-08-01",actual:null,status:"active"},
-  {project:"Cloud Migration",name:"Phase 1 Complete",planned:"2026-03-01",actual:"2026-04-15",status:"completed"},
-  {project:"Cloud Migration",name:"Phase 2 Complete",planned:"2026-07-01",actual:null,status:"active"},
-  {project:"E-Commerce",name:"Design System",planned:"2026-03-15",actual:"2026-05-01",status:"completed"},
-  {project:"E-Commerce",name:"API Layer",planned:"2026-06-01",actual:null,status:"active"},
-  {project:"E-Commerce",name:"Frontend Rewrite",planned:"2026-09-01",actual:null,status:"upcoming"}
-];
-
-const teamMembers=[
-  {name:"Sarah Chen",role:"Engineering Lead",utilization:92,capacity:40,allocated:37,projects:3,overtimeRisk:true},
-  {name:"Marcus Johnson",role:"Data Science Lead",utilization:78,capacity:40,allocated:31,projects:2,overtimeRisk:false},
-  {name:"David Park",role:"Infrastructure Lead",utilization:88,capacity:40,allocated:35,projects:3,overtimeRisk:true},
-  {name:"Lisa Wang",role:"Frontend Lead",utilization:95,capacity:40,allocated:38,projects:2,overtimeRisk:true},
-  {name:"Alex Rivera",role:"Security Engineer",utilization:65,capacity:40,allocated:26,projects:2,overtimeRisk:false},
-  {name:"Raj Patel",role:"Data Engineer",utilization:82,capacity:40,allocated:33,projects:2,overtimeRisk:false},
-  {name:"Priya Sharma",role:"Backend Developer",utilization:88,capacity:40,allocated:35,projects:2,overtimeRisk:true},
-  {name:"James Wilson",role:"DevOps Engineer",utilization:72,capacity:40,allocated:29,projects:3,overtimeRisk:false},
-  {name:"Emily Zhang",role:"QA Lead",utilization:80,capacity:40,allocated:32,projects:4,overtimeRisk:false},
-  {name:"Carlos Mendez",role:"Product Manager",utilization:70,capacity:40,allocated:28,projects:2,overtimeRisk:false},
-  {name:"Anna Kowalski",role:"UX Designer",utilization:85,capacity:40,allocated:34,projects:3,overtimeRisk:true},
-  {name:"Tom Nguyen",role:"Mobile Developer",utilization:90,capacity:40,allocated:36,projects:2,overtimeRisk:true}
-];
-
-const risks=[
-  {id:1,project:"Cloud Migration",title:"Vendor lock-in with proprietary Azure services",severity:"high",probability:70,impact:80,mitigation:"Design abstraction layers; maintain multi-cloud fallback plan",owner:"David Park",status:"open"},
-  {id:2,project:"Cloud Migration",title:"Data loss during migration window",severity:"critical",probability:40,impact:95,mitigation:"Implement incremental migration with rollback checkpoints",owner:"Raj Patel",status:"mitigating"},
-  {id:3,project:"Cloud Migration",title:"Compliance gaps in new cloud environment",severity:"high",probability:55,impact:70,mitigation:"Pre-migration security audit; engage compliance team early",owner:"Alex Rivera",status:"open"},
-  {id:4,project:"E-Commerce",title:"Scope creep from stakeholder requests",severity:"medium",probability:80,impact:60,mitigation:"Strict change control process; backlog prioritization reviews",owner:"Lisa Wang",status:"open"},
-  {id:5,project:"E-Commerce",title:"Performance regression on checkout flow",severity:"high",probability:50,impact:85,mitigation:"Load testing at each sprint; performance budgets in CI",owner:"Lisa Wang",status:"mitigating"},
-  {id:6,project:"Mobile Platform",title:"Third-party SDK deprecation risk",severity:"medium",probability:35,impact:50,mitigation:"Monitor SDK roadmaps; maintain feature flag for alternatives",owner:"Sarah Chen",status:"monitoring"},
-  {id:7,project:"Analytics Initiative",title:"Model accuracy below acceptable threshold",severity:"medium",probability:45,impact:65,mitigation:"Iterative model training with A/B testing; fallback to rule-based",owner:"Marcus Johnson",status:"monitoring"},
-  {id:8,project:"Supply Chain",title:"Key stakeholder departure risk",severity:"medium",probability:30,impact:75,mitigation:"Cross-training; documented knowledge base; retention planning",owner:"David Park",status:"open"},
-  {id:9,project:"Supply Chain",title:"Data quality issues from legacy sources",severity:"high",probability:60,impact:70,mitigation:"Data validation pipeline; source-system quality audits",owner:"Raj Patel",status:"mitigating"},
-  {id:10,project:"Customer Support AI",title:"LLM hallucination in customer-facing responses",severity:"high",probability:55,impact:80,mitigation:"Guardrails, confidence thresholds, human-in-the-loop review",owner:"Lisa Wang",status:"open"}
-];
-
-const integrations=[
-  {name:"Jira",status:"online",latency:"45ms",lastSync:"2 min ago",icon:"J",color:"#0052CC"},
-  {name:"Azure DevOps",status:"online",latency:"62ms",lastSync:"5 min ago",icon:"A",color:"#0078D7"},
-  {name:"GitHub",status:"online",latency:"38ms",lastSync:"1 min ago",icon:"G",color:"#333"},
-  {name:"Slack",status:"online",latency:"28ms",lastSync:"Real-time",icon:"S",color:"#4A154B"},
-  {name:"Microsoft Teams",status:"degraded",latency:"180ms",lastSync:"15 min ago",icon:"T",color:"#6264A7"}
-];
-
-const apiUsage=[
-  {label:"Workflow Executions",value:"24,832",detail:"This month (+12% MoM)",color:"var(--neon-blue)"},
-  {label:"Webhook Events",value:"156K",detail:"Processed this quarter",color:"var(--neon-purple)"},
-  {label:"Success Rate",value:"99.7%",detail:"Above 99.5% SLA target",color:"var(--neon-green)"},
-  {label:"Automation Savings",value:"$142K",detail:"Estimated annual labor savings",color:"var(--neon-teal)"},
-  {label:"API Calls Today",value:"8,241",detail:"Peak: 12K at 9:30 AM",color:"var(--neon-cyan)"},
-  {label:"Avg Response Time",value:"124ms",detail:"P99: 340ms",color:"var(--neon-orange)"}
-];
-
-const notes=[
-  {author:"Sarah Chen",date:"Aug 15, 2026",text:"Mobile Platform Modernization MVP exceeded adoption targets by 23%. User engagement metrics show strong retention. Recommend accelerating GA timeline by 2 weeks."},
-  {author:"David Park",date:"Aug 12, 2026",text:"Cloud Migration Phase 2 encountered unexpected latency with cross-region data sync. Engaging Azure support for optimization. May impact Phase 2 completion by 1-2 weeks."},
-  {author:"Marcus Johnson",date:"Aug 10, 2026",text:"Analytics Initiative ML models achieving 94% accuracy on test sets, exceeding 90% target. Dashboard prototype received positive feedback from 85% of pilot users."},
-  {author:"Lisa Wang",date:"Aug 8, 2026",text:"E-Commerce redesign scope discussion with stakeholders. Need to enforce change control to prevent further scope creep. Current backlog has 340+ items."},
-  {author:"Alex Rivera",date:"Aug 5, 2026",text:"Security Compliance Overhaul completed ahead of schedule and under budget. SOC2 Type II audit passed with zero critical findings."}
-];
-
-const timelinePhases=[
-  {name:"Planning",status:"completed",date:"Q1 2026"},
-  {name:"Foundation",status:"completed",date:"Q2 2026"},
-  {name:"Core Build",status:"active",date:"Q3 2026"},
-  {name:"Integration",status:"upcoming",date:"Q4 2026"},
-  {name:"Testing",status:"upcoming",date:"Q1 2027"},
-  {name:"Launch",status:"upcoming",date:"Q2 2027"},
-  {name:"Optimization",status:"upcoming",date:"Q3 2027"}
-];
-
-const departments=[
-  {name:"Engineering",members:18,utilization:84,budget:2800000,actual:1900000},
-  {name:"Data Science",members:12,utilization:80,budget:1600000,actual:1050000},
-  {name:"Infrastructure",members:8,utilization:78,budget:1200000,actual:680000},
-  {name:"Security",members:4,utilization:72,budget:600000,actual:580000},
-  {name:"HR Tech",members:3,utilization:65,budget:350000,actual:45000}
-];
-
-function initTheme(){
-  document.documentElement.setAttribute('data-theme',currentTheme);
-  document.getElementById('themeToggle').textContent=currentTheme==='dark'?'&#9789;':'&#9728;';
-}
-
-document.getElementById('themeToggle').addEventListener('click',function(){
-  currentTheme=currentTheme==='dark'?'light':'dark';
-  LS.set('theme',currentTheme);
-  initTheme();
-  updateCharts();
-});
-
-function switchView(view){
-  currentView=view;
-  LS.set('view',view);
-  document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('view-'+view).classList.add('active');
-  document.querySelectorAll('.topbar-nav button').forEach(b=>{
-    b.classList.toggle('active',b.dataset.view===view);
-  });
-}
-
-document.querySelectorAll('.topbar-nav button').forEach(b=>{
-  b.addEventListener('click',()=>switchView(b.dataset.view));
-});
-
-document.querySelectorAll('.toggle-btn').forEach(b=>{
-  b.addEventListener('click',function(){
-    const group=this.dataset.group;
-    const val=this.dataset.val;
-    this.closest('.toggle-bar').querySelectorAll(`[data-group="${group}"]`).forEach(btn=>btn.classList.remove('active'));
-    this.classList.add('active');
-    if(group==='methodology')methodologyFilter=val;
-    if(group==='scope')scopeFilter=val;
-    if(group==='period')periodFilter=val;
-    LS.set(group,val);
-    renderProjectCards();
-  });
-});
-
-function getChartColors(){
-  const s=getComputedStyle(document.documentElement);
-  return{
-    blue:s.getPropertyValue('--neon-blue').trim(),
-    cyan:s.getPropertyValue('--neon-cyan').trim(),
-    green:s.getPropertyValue('--neon-green').trim(),
-    purple:s.getPropertyValue('--neon-purple').trim(),
-    pink:s.getPropertyValue('--neon-pink').trim(),
-    orange:s.getPropertyValue('--neon-orange').trim(),
-    red:s.getPropertyValue('--neon-red').trim(),
-    yellow:s.getPropertyValue('--neon-yellow').trim(),
-    teal:s.getPropertyValue('--neon-teal').trim(),
-    text:s.getPropertyValue('--text-secondary').trim(),
-    muted:s.getPropertyValue('--text-muted').trim(),
-    grid:s.getPropertyValue('--border-glass').trim()
-  };
-}
-
-function chartDefaults(c){
-  c.font.family="'Segoe UI',system-ui,sans-serif";
-  c.font.size=11;
-  c.color=getChartColors().muted;
-}
-
-let charts={};
-
-function destroyCharts(){
-  Object.values(charts).forEach(ch=>{if(ch&&ch.destroy)ch.destroy()});
-  charts={};
-}
-
-function createChart(id,cfg){
-  const el=document.getElementById(id);
-  if(!el)return null;
-  if(charts[id]){charts[id].destroy()}
-  chartDefaults(Chart.defaults);
-  charts[id]=new Chart(el,cfg);
-  return charts[id];
-}
-
-function renderH2H(){
-  const grid=document.getElementById('h2hGrid');
-  grid.innerHTML='';
-  h2hMetrics.forEach(m=>{
-    const mobileWins=m.invert?(m.mobile<m.analytics):(m.mobile>m.analytics);
-    const analyticsWins=!mobileWins;
-    grid.innerHTML+=`
-      <div class="h2h-value ${mobileWins?'winner':'loser'}" style="text-align:right">${m.mobile}${m.unit}</div>
+      function renderH2H() {
+        const grid = document.getElementById('h2hGrid');
+        grid.innerHTML = '';
+        h2hMetrics.forEach(m => {
+          const mobileWins = m.invert ? (m.mobile < m.analytics) : (m.mobile > m.analytics);
+          const analyticsWins = !mobileWins;
+          grid.innerHTML += `
+      <div class="h2h-value ${mobileWins ? 'winner' : 'loser'}" style="text-align:right">${m.mobile}${m.unit}</div>
       <div class="h2h-metric-label">${m.label}</div>
-      <div class="h2h-value ${analyticsWins?'winner':'loser'}" style="text-align:left">${m.analytics}${m.unit}</div>
+      <div class="h2h-value ${analyticsWins ? 'winner' : 'loser'}" style="text-align:left">${m.analytics}${m.unit}</div>
     `;
-  });
-}
+        });
+      }
 
-function renderProjectCards(){
-  const container=document.getElementById('projectCards');
-  container.innerHTML='';
-  const filtered=projects.filter(p=>{
-    if(methodologyFilter!=='all'&&p.methodology!==methodologyFilter)return false;
-    if(scopeFilter!=='portfolio'&&p.scope!==scopeFilter)return false;
-    return true;
-  });
-  filtered.forEach(p=>{
-    const remaining=p.budget-p.actual;
-    const budgetPct=Math.round(p.actual/p.budget*100);
-    const healthClass=p.health>=80?'excellent':p.health>=65?'good':p.health>=50?'fair':'poor';
-    const progressColor=p.status==='completed'?'var(--neon-blue)':p.status==='on-track'?'var(--neon-green)':p.status==='at-risk'?'var(--neon-orange)':'var(--neon-red)';
-    container.innerHTML+=`
+      function renderProjectCards() {
+        const container = document.getElementById('projectCards');
+        container.innerHTML = '';
+        const filtered = projects.filter(p => {
+          if (methodologyFilter !== 'all' && p.methodology !== methodologyFilter) return false;
+          if (scopeFilter !== 'portfolio' && p.scope !== scopeFilter) return false;
+          return true;
+        });
+        filtered.forEach(p => {
+          const remaining = p.budget - p.actual;
+          const budgetPct = Math.round(p.actual / p.budget * 100);
+          const healthClass = p.health >= 80 ? 'excellent' : p.health >= 65 ? 'good' : p.health >= 50 ? 'fair' : 'poor';
+          const progressColor = p.status === 'completed' ? 'var(--neon-blue)' : p.status === 'on-track' ? 'var(--neon-green)' : p.status === 'at-risk' ? 'var(--neon-orange)' : 'var(--neon-red)';
+          container.innerHTML += `
       <div class="project-card" data-project="${p.id}">
         <div class="project-card-header">
           <div class="project-card-name">${p.name}</div>
-          <span class="status-badge ${p.status}">${p.status.replace('-',' ')}</span>
+          <span class="status-badge ${p.status}">${p.status.replace('-', ' ')}</span>
         </div>
         <div class="project-card-body">
           <div class="metric-item"><div class="metric-label">Completion</div><div class="metric-value">${p.completion}%</div></div>
-          <div class="metric-item"><div class="metric-label">Budget</div><div class="metric-value">$${(p.budget/1000000).toFixed(1)}M</div></div>
-          <div class="metric-item"><div class="metric-label">Actual Spend</div><div class="metric-value">$${(p.actual/1000000).toFixed(2)}M</div></div>
-          <div class="metric-item"><div class="metric-label">Remaining</div><div class="metric-value">$${(remaining/1000000).toFixed(2)}M</div></div>
+          <div class="metric-item"><div class="metric-label">Budget</div><div class="metric-value">$${(p.budget / 1000000).toFixed(1)}M</div></div>
+          <div class="metric-item"><div class="metric-label">Actual Spend</div><div class="metric-value">$${(p.actual / 1000000).toFixed(2)}M</div></div>
+          <div class="metric-item"><div class="metric-label">Remaining</div><div class="metric-value">$${(remaining / 1000000).toFixed(2)}M</div></div>
           <div class="metric-item"><div class="metric-label">Team Size</div><div class="metric-value">${p.team}</div></div>
           <div class="metric-item"><div class="metric-label">Milestones</div><div class="metric-value">${p.milestones.done}/${p.milestones.total}</div></div>
           <div class="metric-item"><div class="metric-label">Open Risks</div><div class="metric-value">${p.risks}</div></div>
@@ -633,12 +1795,12 @@ function renderProjectCards(){
         </div>
       </div>
     `;
-  });
-}
+        });
+      }
 
-function renderTimeline(){
-  const container=document.getElementById('timelineContainer');
-  container.innerHTML=`<div class="timeline-track">${timelinePhases.map(p=>`
+      function renderTimeline() {
+        const container = document.getElementById('timelineContainer');
+        container.innerHTML = `<div class="timeline-track">${timelinePhases.map(p => `
     <div class="timeline-phase">
       <div class="timeline-dot ${p.status}"></div>
       <div class="timeline-phase-name">${p.name}</div>
@@ -646,31 +1808,31 @@ function renderTimeline(){
     </div>
   `).join('')}</div>`;
 
-  const tbody=document.getElementById('milestoneBody');
-  tbody.innerHTML='';
-  milestones.forEach(m=>{
-    const row=document.createElement('tr');
-    row.innerHTML=`
+        const tbody = document.getElementById('milestoneBody');
+        tbody.innerHTML = '';
+        milestones.forEach(m => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
       <td>${m.project}</td>
       <td>${m.name}</td>
       <td>${m.planned}</td>
-      <td>${m.actual||'Pending'}</td>
+      <td>${m.actual || 'Pending'}</td>
       <td><span class="status-badge ${m.status}">${m.status}</span></td>
       <td class="expand-row" onclick="this.nextElementSibling.classList.toggle('open')">+</td>
     `;
-    tbody.appendChild(row);
-    const detail=document.createElement('tr');
-    detail.innerHTML=`<td colspan="6"><div class="expand-content">${m.actual?'Completed on '+m.actual+' — Delivered '+(new Date(m.planned)>new Date(m.actual)?'early':'on schedule'):'Scheduled for '+m.planned+' — '+m.status}</div></td>`;
-    tbody.appendChild(detail);
-  });
-}
+          tbody.appendChild(row);
+          const detail = document.createElement('tr');
+          detail.innerHTML = `<td colspan="6"><div class="expand-content">${m.actual ? 'Completed on ' + m.actual + ' — Delivered ' + (new Date(m.planned) > new Date(m.actual) ? 'early' : 'on schedule') : 'Scheduled for ' + m.planned + ' — ' + m.status}</div></td>`;
+          tbody.appendChild(detail);
+        });
+      }
 
-function renderWorkload(){
-  const container=document.getElementById('workloadGrid');
-  container.innerHTML='';
-  teamMembers.forEach(m=>{
-    const utilColor=m.utilization>=90?'var(--neon-red)':m.utilization>=75?'var(--neon-orange)':m.utilization>=50?'var(--neon-green)':'var(--neon-cyan)';
-    container.innerHTML+=`
+      function renderWorkload() {
+        const container = document.getElementById('workloadGrid');
+        container.innerHTML = '';
+        teamMembers.forEach(m => {
+          const utilColor = m.utilization >= 90 ? 'var(--neon-red)' : m.utilization >= 75 ? 'var(--neon-orange)' : m.utilization >= 50 ? 'var(--neon-green)' : 'var(--neon-cyan)';
+          container.innerHTML += `
       <div class="workload-card">
         <h4>${m.name} <span class="member-role">${m.role}</span></h4>
         <div class="utilization-bar"><div class="utilization-fill" style="width:${m.utilization}%;background:${utilColor}"></div></div>
@@ -680,18 +1842,18 @@ function renderWorkload(){
         </div>
         <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--text-muted);margin-top:2px">
           <span>Projects: ${m.projects}</span>
-          ${m.overtimeRisk?'<span style="color:var(--neon-orange);font-weight:600">Overtime Risk</span>':'<span style="color:var(--neon-green)">OK</span>'}
+          ${m.overtimeRisk ? '<span style="color:var(--neon-orange);font-weight:600">Overtime Risk</span>' : '<span style="color:var(--neon-green)">OK</span>'}
         </div>
       </div>
     `;
-  });
-}
+        });
+      }
 
-function renderRisks(){
-  const container=document.getElementById('risksGrid');
-  container.innerHTML='';
-  risks.forEach(r=>{
-    container.innerHTML+=`
+      function renderRisks() {
+        const container = document.getElementById('risksGrid');
+        container.innerHTML = '';
+        risks.forEach(r => {
+          container.innerHTML += `
       <div class="risk-card ${r.severity}">
         <div class="risk-header">
           <div class="risk-title">${r.title}</div>
@@ -703,14 +1865,14 @@ function renderRisks(){
         <div class="risk-owner">Owner: ${r.owner} | Status: ${r.status}</div>
       </div>
     `;
-  });
-}
+        });
+      }
 
-function renderIntegrations(){
-  const container=document.getElementById('integrationsGrid');
-  container.innerHTML='';
-  integrations.forEach(i=>{
-    container.innerHTML+=`
+      function renderIntegrations() {
+        const container = document.getElementById('integrationsGrid');
+        container.innerHTML = '';
+        integrations.forEach(i => {
+          container.innerHTML += `
       <div class="integration-card">
         <div class="integration-icon" style="background:${i.color}">${i.icon}</div>
         <div class="integration-info">
@@ -720,223 +1882,224 @@ function renderIntegrations(){
         <div class="integration-status ${i.status}"></div>
       </div>
     `;
-  });
-}
+        });
+      }
 
-function renderAPIUsage(){
-  const container=document.getElementById('apiGrid');
-  container.innerHTML='';
-  apiUsage.forEach(a=>{
-    container.innerHTML+=`
+      function renderAPIUsage() {
+        const container = document.getElementById('apiGrid');
+        container.innerHTML = '';
+        apiUsage.forEach(a => {
+          container.innerHTML += `
       <div class="api-card">
         <div class="api-label">${a.label}</div>
         <div class="api-value" style="color:${a.color}">${a.value}</div>
         <div class="api-detail">${a.detail}</div>
       </div>
     `;
-  });
-}
+        });
+      }
 
-function renderNotes(){
-  const container=document.getElementById('notesContainer');
-  container.innerHTML='';
-  notes.forEach(n=>{
-    container.innerHTML+=`
+      function renderNotes() {
+        const container = document.getElementById('notesContainer');
+        container.innerHTML = '';
+        notes.forEach(n => {
+          container.innerHTML += `
       <div class="note-item">
         <div class="note-meta">${n.author} — ${n.date}</div>
         <div class="note-text">${n.text}</div>
       </div>
     `;
-  });
-}
+        });
+      }
 
-function renderWinnerGrid(){
-  const container=document.getElementById('winnerGrid');
-  const winners=[
-    {label:"Schedule Progress",mobile:"72%",analytics:"68%",winner:"mobile"},
-    {label:"Budget Efficiency",mobile:"29% under",analytics:"35% under",winner:"analytics"},
-    {label:"Task Completion",mobile:"78%",analytics:"74%",winner:"mobile"},
-    {label:"Risk Profile",mobile:"3.2/5",analytics:"2.1/5",winner:"analytics"},
-    {label:"Resource Efficiency",mobile:"85%",analytics:"78%",winner:"mobile"},
-    {label:"Stakeholder Score",mobile:"4.3/5",analytics:"4.6/5",winner:"analytics"}
-  ];
-  container.innerHTML='';
-  winners.forEach(w=>{
-    container.innerHTML+=`
+      function renderWinnerGrid() {
+        const container = document.getElementById('winnerGrid');
+        const winners = [
+          { label: "Schedule Progress", mobile: "72%", analytics: "68%", winner: "mobile" },
+          { label: "Budget Efficiency", mobile: "29% under", analytics: "35% under", winner: "analytics" },
+          { label: "Task Completion", mobile: "78%", analytics: "74%", winner: "mobile" },
+          { label: "Risk Profile", mobile: "3.2/5", analytics: "2.1/5", winner: "analytics" },
+          { label: "Resource Efficiency", mobile: "85%", analytics: "78%", winner: "mobile" },
+          { label: "Stakeholder Score", mobile: "4.3/5", analytics: "4.6/5", winner: "analytics" }
+        ];
+        container.innerHTML = '';
+        winners.forEach(w => {
+          container.innerHTML += `
       <div class="winner-metric">
         <div class="winner-project">${w.label}</div>
         <div style="display:flex;justify-content:center;gap:16px;margin-top:8px">
           <div style="text-align:center">
             <div style="font-size:.68rem;color:var(--text-muted)">Mobile</div>
-            <div class="winner-val ${w.winner==='analytics'?'runner-up':''}">${w.mobile}</div>
+            <div class="winner-val ${w.winner === 'analytics' ? 'runner-up' : ''}">${w.mobile}</div>
           </div>
           <div style="text-align:center">
             <div style="font-size:.68rem;color:var(--text-muted)">Analytics</div>
-            <div class="winner-val ${w.winner==='mobile'?'runner-up':''}">${w.analytics}</div>
+            <div class="winner-val ${w.winner === 'mobile' ? 'runner-up' : ''}">${w.analytics}</div>
           </div>
         </div>
       </div>
     `;
-  });
-}
+        });
+      }
 
-function updateCharts(){
-  const c=getChartColors();
-  const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:c.text,font:{size:11}}}},scales:{}};
-  const scaleOpts={grid:{color:c.grid},ticks:{color:c.muted,font:{size:10}}};
+      function updateCharts() {
+        const c = getChartColors();
+        const opts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: c.text, font: { size: 11 } } } }, scales: {} };
+        const scaleOpts = { grid: { color: c.grid }, ticks: { color: c.muted, font: { size: 10 } } };
 
-  createChart('chartCompletionTrend',{
-    type:'line',
-    data:{
-      labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'],
-      datasets:[
-        {label:'Mobile Platform',data:[10,18,28,38,48,58,65,72],borderColor:c.blue,backgroundColor:c.blue+'20',fill:true,tension:.4,pointRadius:3},
-        {label:'Analytics',data:[5,12,20,30,42,52,62,68],borderColor:c.purple,backgroundColor:c.purple+'20',fill:true,tension:.4,pointRadius:3},
-        {label:'Cloud Migration',data:[0,5,12,18,25,32,40,45],borderColor:c.orange,backgroundColor:c.orange+'15',fill:true,tension:.4,pointRadius:3}
-      ]
-    },
-    options:{...opts,scales:{x:scaleOpts,y:{...scaleOpts,min:0,max:100,ticks:{...scaleOpts.ticks,callback:v=>v+'%'}}}}
-  });
+        createChart('chartCompletionTrend', {
+          type: 'line',
+          data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+            datasets: [
+              { label: 'Mobile Platform', data: [10, 18, 28, 38, 48, 58, 65, 72], borderColor: c.blue, backgroundColor: c.blue + '20', fill: true, tension: .4, pointRadius: 3 },
+              { label: 'Analytics', data: [5, 12, 20, 30, 42, 52, 62, 68], borderColor: c.purple, backgroundColor: c.purple + '20', fill: true, tension: .4, pointRadius: 3 },
+              { label: 'Cloud Migration', data: [0, 5, 12, 18, 25, 32, 40, 45], borderColor: c.orange, backgroundColor: c.orange + '15', fill: true, tension: .4, pointRadius: 3 }
+            ]
+          },
+          options: { ...opts, scales: { x: scaleOpts, y: { ...scaleOpts, min: 0, max: 100, ticks: { ...scaleOpts.ticks, callback: v => v + '%' } } } }
+        });
 
-  createChart('chartBudgetActual',{
-    type:'bar',
-    data:{
-      labels:['Mobile','Analytics','Cloud','E-Commerce','Data Lake','Security','API Gateway'],
-      datasets:[
-        {label:'Budget',data:[1.8,1.2,2.5,0.8,0.95,0.6,0.4],backgroundColor:c.blue+'90'},
-        {label:'Actual',data:[1.28,0.78,1.2,0.42,0.51,0.58,0.31],backgroundColor:c.green+'90'}
-      ]
-    },
-    options:{...opts,scales:{x:scaleOpts,y:{...scaleOpts,ticks:{...scaleOpts.ticks,callback:v=>'$'+v+'M'}}}}
-  });
+        createChart('chartBudgetActual', {
+          type: 'bar',
+          data: {
+            labels: ['Mobile', 'Analytics', 'Cloud', 'E-Commerce', 'Data Lake', 'Security', 'API Gateway'],
+            datasets: [
+              { label: 'Budget', data: [1.8, 1.2, 2.5, 0.8, 0.95, 0.6, 0.4], backgroundColor: c.blue + '90' },
+              { label: 'Actual', data: [1.28, 0.78, 1.2, 0.42, 0.51, 0.58, 0.31], backgroundColor: c.green + '90' }
+            ]
+          },
+          options: { ...opts, scales: { x: scaleOpts, y: { ...scaleOpts, ticks: { ...scaleOpts.ticks, callback: v => '$' + v + 'M' } } } }
+        });
 
-  createChart('chartVelocity',{
-    type:'line',
-    data:{
-      labels:['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12'],
-      datasets:[
-        {label:'Sprint Velocity',data:[42,38,45,50,48,52,55,51,58,54,60,62],borderColor:c.cyan,backgroundColor:c.cyan+'15',fill:true,tension:.3,pointRadius:3},
-        {label:'Rolling Avg',data:[42,40,42,44,45,46,48,49,50,51,53,55],borderColor:c.muted,borderDash:[5,5],tension:.3,pointRadius:0}
-      ]
-    },
-    options:{...opts,scales:{x:scaleOpts,y:{...scaleOpts,min:30,max:70}}}
-  });
+        createChart('chartVelocity', {
+          type: 'line',
+          data: {
+            labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12'],
+            datasets: [
+              { label: 'Sprint Velocity', data: [42, 38, 45, 50, 48, 52, 55, 51, 58, 54, 60, 62], borderColor: c.cyan, backgroundColor: c.cyan + '15', fill: true, tension: .3, pointRadius: 3 },
+              { label: 'Rolling Avg', data: [42, 40, 42, 44, 45, 46, 48, 49, 50, 51, 53, 55], borderColor: c.muted, borderDash: [5, 5], tension: .3, pointRadius: 0 }
+            ]
+          },
+          options: { ...opts, scales: { x: scaleOpts, y: { ...scaleOpts, min: 30, max: 70 } } }
+        });
 
-  createChart('chartResourceAlloc',{
-    type:'doughnut',
-    data:{
-      labels:departments.map(d=>d.name),
-      datasets:[{data:departments.map(d=>d.members),backgroundColor:[c.blue,c.purple,c.orange,c.red,c.pink],borderWidth:0}]
-    },
-    options:{...opts,plugins:{...opts.plugins,legend:{position:'right',labels:{color:c.text,font:{size:11},padding:12}}}}
-  });
+        createChart('chartResourceAlloc', {
+          type: 'doughnut',
+          data: {
+            labels: departments.map(d => d.name),
+            datasets: [{ data: departments.map(d => d.members), backgroundColor: [c.blue, c.purple, c.orange, c.red, c.pink], borderWidth: 0 }]
+          },
+          options: { ...opts, plugins: { ...opts.plugins, legend: { position: 'right', labels: { color: c.text, font: { size: 11 }, padding: 12 } } } }
+        });
 
-  createChart('chartRisksSeverity',{
-    type:'bar',
-    data:{
-      labels:['Critical','High','Medium','Low'],
-      datasets:[{data:[1,5,3,1],backgroundColor:[c.red,c.orange,c.yellow,c.green],borderRadius:6,barThickness:40}]
-    },
-    options:{...opts,indexAxis:'y',plugins:{...opts.plugins,legend:{display:false}},scales:{x:scaleOpts,y:scaleOpts}}
-  });
+        createChart('chartRisksSeverity', {
+          type: 'bar',
+          data: {
+            labels: ['Critical', 'High', 'Medium', 'Low'],
+            datasets: [{ data: [1, 5, 3, 1], backgroundColor: [c.red, c.orange, c.yellow, c.green], borderRadius: 6, barThickness: 40 }]
+          },
+          options: { ...opts, indexAxis: 'y', plugins: { ...opts.plugins, legend: { display: false } }, scales: { x: scaleOpts, y: scaleOpts } }
+        });
 
-  createChart('chartMilestoneProgress',{
-    type:'bar',
-    data:{
-      labels:projects.slice(0,8).map(p=>p.name.split(' ').slice(0,2).join(' ')),
-      datasets:[{label:'Completed',data:projects.slice(0,8).map(p=>p.milestones.done),backgroundColor:c.green+'90',borderRadius:4},{label:'Remaining',data:projects.slice(0,8).map(p=>p.milestones.total-p.milestones.done),backgroundColor:c.grid,borderRadius:4}]
-    },
-    options:{...opts,plugins:{...opts.plugins},scales:{x:scaleOpts,y:{...scaleOpts,stacked:true}},datasets:{bar:{stacked:true}}}
-  });
+        createChart('chartMilestoneProgress', {
+          type: 'bar',
+          data: {
+            labels: projects.slice(0, 8).map(p => p.name.split(' ').slice(0, 2).join(' ')),
+            datasets: [{ label: 'Completed', data: projects.slice(0, 8).map(p => p.milestones.done), backgroundColor: c.green + '90', borderRadius: 4 }, { label: 'Remaining', data: projects.slice(0, 8).map(p => p.milestones.total - p.milestones.done), backgroundColor: c.grid, borderRadius: 4 }]
+          },
+          options: { ...opts, plugins: { ...opts.plugins }, scales: { x: scaleOpts, y: { ...scaleOpts, stacked: true } }, datasets: { bar: { stacked: true } } }
+        });
 
-  createChart('chartPlannedActual',{
-    type:'line',
-    data:{
-      labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-      datasets:[
-        {label:'Planned Completion',data:[0,8,16,24,33,42,50,58,67,75,83,100],borderColor:c.muted,borderDash:[5,5],tension:.3,pointRadius:2},
-        {label:'Actual Completion',data:[0,6,14,22,31,40,49,57,null,null,null,null],borderColor:c.green,backgroundColor:c.green+'15',fill:true,tension:.3,pointRadius:4},
-        {label:'Projected',data:[null,null,null,null,null,null,null,57,66,74,82,95],borderColor:c.blue,borderDash:[3,3],tension:.3,pointRadius:2}
-      ]
-    },
-    options:{...opts,scales:{x:scaleOpts,y:{...scaleOpts,min:0,max:100,ticks:{...scaleOpts.ticks,callback:v=>v+'%'}}}}
-  });
+        createChart('chartPlannedActual', {
+          type: 'line',
+          data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [
+              { label: 'Planned Completion', data: [0, 8, 16, 24, 33, 42, 50, 58, 67, 75, 83, 100], borderColor: c.muted, borderDash: [5, 5], tension: .3, pointRadius: 2 },
+              { label: 'Actual Completion', data: [0, 6, 14, 22, 31, 40, 49, 57, null, null, null, null], borderColor: c.green, backgroundColor: c.green + '15', fill: true, tension: .3, pointRadius: 4 },
+              { label: 'Projected', data: [null, null, null, null, null, null, null, 57, 66, 74, 82, 95], borderColor: c.blue, borderDash: [3, 3], tension: .3, pointRadius: 2 }
+            ]
+          },
+          options: { ...opts, scales: { x: scaleOpts, y: { ...scaleOpts, min: 0, max: 100, ticks: { ...scaleOpts.ticks, callback: v => v + '%' } } } }
+        });
 
-  if(charts.chartResourceDept)charts.chartResourceDept.destroy();
-  charts.chartResourceDept=new Chart(document.getElementById('chartResourceDept'),{
-    type:'bar',
-    data:{
-      labels:departments.map(d=>d.name),
-      datasets:[
-        {label:'Budget ($M)',data:departments.map(d=>d.budget/1000000),backgroundColor:c.blue+'80'},
-        {label:'Actual ($M)',data:departments.map(d=>d.actual/1000000),backgroundColor:c.green+'80'}
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:c.text,font:{size:11}}}},scales:{x:{grid:{color:c.grid},ticks:{color:c.muted}},y:{grid:{color:c.grid},ticks:{color:c.muted,callback:v=>'$'+v+'M'}}}}
-  });
+        if (charts.chartResourceDept) charts.chartResourceDept.destroy();
+        charts.chartResourceDept = new Chart(document.getElementById('chartResourceDept'), {
+          type: 'bar',
+          data: {
+            labels: departments.map(d => d.name),
+            datasets: [
+              { label: 'Budget ($M)', data: departments.map(d => d.budget / 1000000), backgroundColor: c.blue + '80' },
+              { label: 'Actual ($M)', data: departments.map(d => d.actual / 1000000), backgroundColor: c.green + '80' }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: c.text, font: { size: 11 } } } }, scales: { x: { grid: { color: c.grid }, ticks: { color: c.muted } }, y: { grid: { color: c.grid }, ticks: { color: c.muted, callback: v => '$' + v + 'M' } } } }
+        });
 
-  if(charts.chartCapacityDemand)charts.chartCapacityDemand.destroy();
-  charts.chartCapacityDemand=new Chart(document.getElementById('chartCapacityDemand'),{
-    type:'bar',
-    data:{
-      labels:teamMembers.slice(0,8).map(m=>m.name.split(' ')[0]),
-      datasets:[
-        {label:'Capacity (h/wk)',data:teamMembers.slice(0,8).map(m=>m.capacity),backgroundColor:c.blue+'60'},
-        {label:'Allocated (h/wk)',data:teamMembers.slice(0,8).map(m=>m.allocated),backgroundColor:c.green+'80'}
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:c.text,font:{size:11}}}},scales:{x:{grid:{color:c.grid},ticks:{color:c.muted}},y:{grid:{color:c.grid},ticks:{color:c.muted}}}}
-  });
+        if (charts.chartCapacityDemand) charts.chartCapacityDemand.destroy();
+        charts.chartCapacityDemand = new Chart(document.getElementById('chartCapacityDemand'), {
+          type: 'bar',
+          data: {
+            labels: teamMembers.slice(0, 8).map(m => m.name.split(' ')[0]),
+            datasets: [
+              { label: 'Capacity (h/wk)', data: teamMembers.slice(0, 8).map(m => m.capacity), backgroundColor: c.blue + '60' },
+              { label: 'Allocated (h/wk)', data: teamMembers.slice(0, 8).map(m => m.allocated), backgroundColor: c.green + '80' }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: c.text, font: { size: 11 } } } }, scales: { x: { grid: { color: c.grid }, ticks: { color: c.muted } }, y: { grid: { color: c.grid }, ticks: { color: c.muted } } } }
+        });
 
-  if(charts.chartRisksPie)charts.chartRisksPie.destroy();
-  charts.chartRisksPie=new Chart(document.getElementById('chartRisksPie'),{
-    type:'pie',
-    data:{
-      labels:['Critical','High','Medium','Low'],
-      datasets:[{data:[1,5,3,1],backgroundColor:[c.red,c.orange,c.yellow,c.green],borderWidth:2,borderColor:c.grid}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:c.text,font:{size:11},padding:10}}}}
-  });
+        if (charts.chartRisksPie) charts.chartRisksPie.destroy();
+        charts.chartRisksPie = new Chart(document.getElementById('chartRisksPie'), {
+          type: 'pie',
+          data: {
+            labels: ['Critical', 'High', 'Medium', 'Low'],
+            datasets: [{ data: [1, 5, 3, 1], backgroundColor: [c.red, c.orange, c.yellow, c.green], borderWidth: 2, borderColor: c.grid }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: c.text, font: { size: 11 }, padding: 10 } } } }
+        });
 
-  if(charts.chartRiskHeat)charts.chartRiskHeat.destroy();
-  charts.chartRiskHeat=new Chart(document.getElementById('chartRiskHeat'),{
-    type:'scatter',
-    data:{
-      datasets:[{
-        label:'Risks',
-        data:risks.map(r=>({x:r.probability,y:r.impact,r:r.severity==='critical'?12:r.severity==='high'?9:r.severity==='medium'?7:5})),
-        backgroundColor:risks.map(r=>r.severity==='critical'?c.red+'90':r.severity==='high'?c.orange+'90':r.severity==='medium'?c.yellow+'90':c.green+'90'),
-        pointRadius:risks.map(r=>r.severity==='critical'?12:r.severity==='high'?9:r.severity==='medium'?7:5)
-      }]
-    },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Probability %',color:c.muted},grid:{color:c.grid},ticks:{color:c.muted},min:0,max:100},y:{title:{display:true,text:'Impact %',color:c.muted},grid:{color:c.grid},ticks:{color:c.muted},min:0,max:100}}}
-  });
-}
+        if (charts.chartRiskHeat) charts.chartRiskHeat.destroy();
+        charts.chartRiskHeat = new Chart(document.getElementById('chartRiskHeat'), {
+          type: 'scatter',
+          data: {
+            datasets: [{
+              label: 'Risks',
+              data: risks.map(r => ({ x: r.probability, y: r.impact, r: r.severity === 'critical' ? 12 : r.severity === 'high' ? 9 : r.severity === 'medium' ? 7 : 5 })),
+              backgroundColor: risks.map(r => r.severity === 'critical' ? c.red + '90' : r.severity === 'high' ? c.orange + '90' : r.severity === 'medium' ? c.yellow + '90' : c.green + '90'),
+              pointRadius: risks.map(r => r.severity === 'critical' ? 12 : r.severity === 'high' ? 9 : r.severity === 'medium' ? 7 : 5)
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Probability %', color: c.muted }, grid: { color: c.grid }, ticks: { color: c.muted }, min: 0, max: 100 }, y: { title: { display: true, text: 'Impact %', color: c.muted }, grid: { color: c.grid }, ticks: { color: c.muted }, min: 0, max: 100 } } }
+        });
+      }
 
-function renderAll(){
-  renderH2H();
-  renderProjectCards();
-  renderTimeline();
-  renderWorkload();
-  renderRisks();
-  renderIntegrations();
-  renderAPIUsage();
-  renderNotes();
-  renderWinnerGrid();
-  setTimeout(updateCharts,100);
-}
+      function renderAll() {
+        renderH2H();
+        renderProjectCards();
+        renderTimeline();
+        renderWorkload();
+        renderRisks();
+        renderIntegrations();
+        renderAPIUsage();
+        renderNotes();
+        renderWinnerGrid();
+        setTimeout(updateCharts, 100);
+      }
 
-document.querySelectorAll('.toggle-btn').forEach(b=>{
-  if(b.dataset.group==='methodology'&&b.dataset.val===methodologyFilter)b.classList.add('active');
-  if(b.dataset.group==='scope'&&b.dataset.val===scopeFilter)b.classList.add('active');
-  if(b.dataset.group==='period'&&b.dataset.val===periodFilter)b.classList.add('active');
-});
+      document.querySelectorAll('.toggle-btn').forEach(b => {
+        if (b.dataset.group === 'methodology' && b.dataset.val === methodologyFilter) b.classList.add('active');
+        if (b.dataset.group === 'scope' && b.dataset.val === scopeFilter) b.classList.add('active');
+        if (b.dataset.group === 'period' && b.dataset.val === periodFilter) b.classList.add('active');
+      });
 
-switchView(currentView);
-initTheme();
-renderAll();
-window.addEventListener('resize',()=>setTimeout(updateCharts,200));
-})();
-</script>
+      switchView(currentView);
+      initTheme();
+      renderAll();
+      window.addEventListener('resize', () => setTimeout(updateCharts, 200));
+    })();
+  </script>
 </body>
+
 </html>

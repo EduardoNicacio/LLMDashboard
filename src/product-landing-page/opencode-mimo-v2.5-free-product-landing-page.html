@@ -1,282 +1,1578 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qwen3.7-30B-Open — The Model the Community Deserves</title>
-<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#2a2a3a;--text:#e8e8f0;--text-dim:#8888a0;--accent:#6c5ce7;--accent2:#00cec9;--glow:rgba(108,92,231,0.3);--glow2:rgba(0,206,201,0.25);--danger:#ff6b6b;--warning:#feca57;--success:#48dbfb}
-html{scroll-behavior:smooth}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
-#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
-.grid-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(108,92,231,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(108,92,231,0.03) 1px,transparent 1px);background-size:60px 60px;animation:gridPulse 8s ease-in-out infinite}
-@keyframes gridPulse{0%,100%{opacity:.4}50%{opacity:.8}}
-.shard{position:fixed;border-radius:2px;pointer-events:none;z-index:0;background:linear-gradient(135deg,var(--accent),transparent);opacity:.08;animation:floatShard linear infinite}
-@keyframes floatShard{0%{transform:translateY(110vh) rotate(0deg);opacity:0}10%{opacity:.08}90%{opacity:.08}100%{transform:translateY(-10vh) rotate(720deg);opacity:0}}
-.glow-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(80px);animation:orbFloat 12s ease-in-out infinite alternate}
-@keyframes orbFloat{0%{transform:translate(0,0)}100%{transform:translate(40px,-30px)}}
-.token-floater{position:fixed;font-size:10px;font-family:"Courier New",monospace;color:var(--accent);opacity:.06;pointer-events:none;z-index:0;animation:tokenRise linear infinite;white-space:nowrap}
-@keyframes tokenRise{0%{transform:translateY(110vh);opacity:0}5%{opacity:.06}95%{opacity:.06}100%{transform:translateY(-5vh);opacity:0}}
-.container{max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
-section{padding:80px 0}
-section+section{border-top:1px solid var(--border)}
-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 0}
-nav .container{display:flex;align-items:center;justify-content:space-between}
-.nav-brand{font-weight:700;font-size:18px;letter-spacing:-.5px}
-.nav-brand span{color:var(--accent)}
-.nav-links{display:flex;gap:24px;align-items:center}
-.nav-links a{color:var(--text-dim);font-size:14px;font-weight:500;transition:color .2s}
-.nav-links a:hover{color:var(--text);text-decoration:none}
-.badge-new{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px}
-.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;padding-top:80px}
-.hero-content{max-width:800px}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:6px 16px 6px 8px;font-size:13px;color:var(--text-dim);margin-bottom:32px;animation:fadeUp .8s ease-out}
-.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-.hero h1{font-size:clamp(42px,8vw,80px);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:24px;animation:fadeUp .8s ease-out .1s both}
-.hero h1 .gradient{background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent));background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradShift 4s ease infinite}
-@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.hero p{font-size:clamp(16px,2.5vw,22px);color:var(--text-dim);max-width:600px;margin:0 auto 40px;line-height:1.5;animation:fadeUp .8s ease-out .2s both}
-.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;animation:fadeUp .8s ease-out .3s both}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;border:none;text-decoration:none}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#8b5cf6);color:#fff;box-shadow:0 4px 20px var(--glow)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--glow);text-decoration:none}
-.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
-.btn-outline:hover{border-color:var(--accent);background:var(--surface);text-decoration:none}
-.btn-icon{font-size:18px}
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.model-card-section{padding:60px 0}
-.model-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
-.model-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));background-size:200% 100%;animation:gradShift 3s linear infinite}
-.model-card-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px}
-.model-name{font-size:28px;font-weight:700;letter-spacing:-.5px}
-.model-name span{color:var(--accent)}
-.model-version{font-size:13px;color:var(--text-dim);font-family:monospace;margin-top:4px}
-.model-tag{background:linear-gradient(135deg,rgba(108,92,231,0.15),rgba(0,206,201,0.1));border:1px solid rgba(108,92,231,0.3);color:var(--accent);padding:6px 14px;border-radius:99px;font-size:13px;font-weight:600}
-.model-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:32px}
-.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;transition:all .3s}
-.stat-card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.stat-value{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:4px}
-.stat-value.purple{color:var(--accent)}
-.stat-value.teal{color:var(--accent2)}
-.stat-value.pink{color:#fd79a8}
-.stat-value.yellow{color:var(--warning)}
-.stat-label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;font-weight:600}
-.feature-pills{display:flex;flex-wrap:wrap;gap:10px}
-.pill{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:8px 16px;font-size:13px;color:var(--text-dim);transition:all .3s}
-.pill:hover{border-color:var(--accent);color:var(--text)}
-.pill .icon{font-size:16px}
-.benchmark-section h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-1px;text-align:center;margin-bottom:12px}
-.benchmark-sub{text-align:center;color:var(--text-dim);font-size:16px;margin-bottom:48px;max-width:600px;margin-left:auto;margin-right:auto}
-.benchmark-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
-.bench-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;position:relative;overflow:hidden}
-.bench-card::before{content:"";position:absolute;top:0;right:0;width:60px;height:60px;background:radial-gradient(circle,var(--glow),transparent);opacity:.5}
-.bench-title{font-size:18px;font-weight:700;margin-bottom:4px}
-.bench-dataset{font-size:12px;color:var(--text-dim);font-family:monospace;margin-bottom:20px}
-.bench-bars{display:flex;flex-direction:column;gap:14px}
-.bar-row{display:flex;align-items:center;gap:12px}
-.bar-label{width:130px;font-size:13px;color:var(--text-dim);text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;height:28px;background:var(--surface2);border-radius:8px;overflow:hidden;position:relative}
-.bar-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:700;color:#fff;min-width:30px;transition:width 1.5s cubic-bezier(.22,1,.36,1)}
-.bar-fill.qwen{background:linear-gradient(90deg,var(--accent),#8b5cf6)}
-.bar-fill.rival1{background:linear-gradient(90deg,#555,#666)}
-.bar-fill.rival2{background:linear-gradient(90deg,#555,#666)}
-.bar-fill.cope{background:linear-gradient(90deg,var(--danger),#cc4444);opacity:.7}
-.bar-value{width:48px;font-size:13px;font-weight:700;text-align:right;flex-shrink:0}
-.bar-value.qwen{color:var(--accent)}
-.download-section h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-1px;text-align:center;margin-bottom:12px}
-.download-sub{text-align:center;color:var(--text-dim);font-size:16px;margin-bottom:48px}
-.download-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
-.download-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;transition:all .3s;cursor:pointer;position:relative;overflow:hidden}
-.download-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.3)}
-.download-card::after{content:"";position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s}
-.download-card:hover::after{opacity:1}
-.download-icon{font-size:40px;margin-bottom:16px;display:block}
-.download-title{font-size:16px;font-weight:700;margin-bottom:6px}
-.download-desc{font-size:13px;color:var(--text-dim);margin-bottom:16px}
-.download-size{font-size:11px;color:var(--text-dim);font-family:monospace}
-.timeline-section h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-1px;text-align:center;margin-bottom:48px}
-.timeline{position:relative;max-width:700px;margin:0 auto}
-.timeline::before{content:"";position:absolute;left:24px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent),var(--accent2),var(--border))}
-.tl-item{position:relative;padding-left:64px;padding-bottom:40px}
-.tl-dot{position:absolute;left:16px;top:4px;width:18px;height:18px;border-radius:50%;border:3px solid var(--accent);background:var(--bg)}
-.tl-item:nth-child(2) .tl-dot{border-color:var(--accent2)}
-.tl-item:nth-child(3) .tl-dot{border-color:var(--warning)}
-.tl-item:nth-child(4) .tl-dot{border-color:var(--success)}
-.tl-item:nth-child(5) .tl-dot{border-color:var(--danger)}
-.tl-date{font-size:13px;font-family:monospace;color:var(--text-dim);margin-bottom:4px}
-.tl-title{font-size:18px;font-weight:700;margin-bottom:6px}
-.tl-desc{font-size:14px;color:var(--text-dim)}
-.tl-tag{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.tl-tag.done{background:rgba(72,219,251,0.15);color:var(--success)}
-.code-section h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-1px;text-align:center;margin-bottom:12px}
-.code-sub{text-align:center;color:var(--text-dim);font-size:16px;margin-bottom:40px}
-.code-block{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;max-width:800px;margin:0 auto}
-.code-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
-.code-dots{display:flex;gap:8px}
-.code-dots span{width:12px;height:12px;border-radius:50%;background:var(--border)}
-.code-dots span:nth-child(1){background:#ff5f57}
-.code-dots span:nth-child(2){background:#febc2e}
-.code-dots span:nth-child(3){background:#28c840}
-.code-filename{font-size:13px;color:var(--text-dim);font-family:monospace}
-.code-copy{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .2s}
-.code-copy:hover{border-color:var(--accent);color:var(--text)}
-pre{padding:24px;overflow-x:auto;font-size:14px;line-height:1.7;font-family:"SF Mono","Fira Code","Cascadia Code",monospace}
-pre .kw{color:#c792ea}pre .fn{color:#82aaff}pre .str{color:#c3e88d}pre .cm{color:#546e7a;font-style:italic}pre .num{color:#f78c6c}pre .op{color:#89ddff}pre .var{color:#eeffff}
-.community-section h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-1px;text-align:center;margin-bottom:12px}
-.community-sub{text-align:center;color:var(--text-dim);font-size:16px;margin-bottom:40px}
-.community-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
-.tweet-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;transition:all .3s}
-.tweet-card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.tweet-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.tweet-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
-.tweet-user{font-size:14px;font-weight:600}
-.tweet-handle{font-size:12px;color:var(--text-dim)}
-.tweet-text{font-size:14px;line-height:1.6;color:var(--text-dim)}
-.tweet-text .highlight{color:var(--accent)}
-.tweet-footer{display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--text-dim)}
-.tweet-footer span{cursor:pointer;transition:color .2s}
-.tweet-footer span:hover{color:var(--accent)}
-.vram-section h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-1px;text-align:center;margin-bottom:12px}
-.vram-sub{text-align:center;color:var(--text-dim);font-size:16px;margin-bottom:40px}
-.vram-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
-.vram-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:center;transition:all .3s;position:relative;overflow:hidden}
-.vram-card:hover{border-color:var(--accent);transform:translateY(-3px)}
-.vram-card.recommended{border-color:var(--accent2)}
-.vram-card.recommended::before{content:"RECOMMENDED";position:absolute;top:12px;right:-30px;background:var(--accent2);color:#000;font-size:9px;font-weight:800;padding:2px 36px;transform:rotate(45deg);letter-spacing:1px}
-.vram-icon{font-size:36px;margin-bottom:12px;display:block}
-.vram-gpu{font-size:16px;font-weight:700;margin-bottom:4px}
-.vram-amount{font-size:24px;font-weight:800;color:var(--accent);margin-bottom:4px}
-.vram-note{font-size:12px;color:var(--text-dim)}
-.vram-quant{font-size:13px;color:var(--text-dim);margin-top:12px;font-family:monospace}
-footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;color:var(--text-dim);font-size:13px}
-footer .container{display:flex;flex-direction:column;align-items:center;gap:12px}
-footer .model-id{font-family:monospace;font-size:11px;color:var(--accent);opacity:.6;background:var(--surface);padding:4px 12px;border-radius:6px;border:1px solid var(--border)}
-.disclaimer{font-style:italic;opacity:.5;max-width:500px}
-.hero-counter{display:flex;gap:32px;justify-content:center;margin-bottom:40px;animation:fadeUp .8s ease-out .15s both}
-.counter-item{text-align:center}
-.counter-num{font-size:28px;font-weight:800;font-family:monospace;color:var(--accent)}
-.counter-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px}
-.reveal{opacity:0;transform:translateY(30px);transition:all .8s cubic-bezier(.22,1,.36,1)}
-.reveal.visible{opacity:1;transform:translateY(0)}
-@media(max-width:768px){.nav-links a:not(.badge-new){display:none}.hero h1{letter-spacing:-1px}.model-card{padding:24px}.model-stats{grid-template-columns:repeat(2,1fr)}.benchmark-grid{grid-template-columns:1fr}.bar-label{width:80px;font-size:11px}pre{font-size:12px;padding:16px}.hero-counter{gap:20px}.counter-num{font-size:22px}section{padding:60px 0}}
-::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}::-webkit-scrollbar-thumb:hover{background:var(--accent)}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open — The Model the Community Deserves</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a26;
+            --border: #2a2a3a;
+            --text: #e8e8f0;
+            --text-dim: #8888a0;
+            --accent: #6c5ce7;
+            --accent2: #00cec9;
+            --glow: rgba(108, 92, 231, 0.3);
+            --glow2: rgba(0, 206, 201, 0.25);
+            --danger: #ff6b6b;
+            --warning: #feca57;
+            --success: #48dbfb
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none
+        }
+
+        a:hover {
+            text-decoration: underline
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(108, 92, 231, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(108, 92, 231, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridPulse 8s ease-in-out infinite
+        }
+
+        @keyframes gridPulse {
+
+            0%,
+            100% {
+                opacity: .4
+            }
+
+            50% {
+                opacity: .8
+            }
+        }
+
+        .shard {
+            position: fixed;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 0;
+            background: linear-gradient(135deg, var(--accent), transparent);
+            opacity: .08;
+            animation: floatShard linear infinite
+        }
+
+        @keyframes floatShard {
+            0% {
+                transform: translateY(110vh) rotate(0deg);
+                opacity: 0
+            }
+
+            10% {
+                opacity: .08
+            }
+
+            90% {
+                opacity: .08
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(720deg);
+                opacity: 0
+            }
+        }
+
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(80px);
+            animation: orbFloat 12s ease-in-out infinite alternate
+        }
+
+        @keyframes orbFloat {
+            0% {
+                transform: translate(0, 0)
+            }
+
+            100% {
+                transform: translate(40px, -30px)
+            }
+        }
+
+        .token-floater {
+            position: fixed;
+            font-size: 10px;
+            font-family: "Courier New", monospace;
+            color: var(--accent);
+            opacity: .06;
+            pointer-events: none;
+            z-index: 0;
+            animation: tokenRise linear infinite;
+            white-space: nowrap
+        }
+
+        @keyframes tokenRise {
+            0% {
+                transform: translateY(110vh);
+                opacity: 0
+            }
+
+            5% {
+                opacity: .06
+            }
+
+            95% {
+                opacity: .06
+            }
+
+            100% {
+                transform: translateY(-5vh);
+                opacity: 0
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1
+        }
+
+        section {
+            padding: 80px 0
+        }
+
+        section+section {
+            border-top: 1px solid var(--border)
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 0
+        }
+
+        nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .nav-brand {
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: -.5px
+        }
+
+        .nav-brand span {
+            color: var(--accent)
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            font-size: 14px;
+            font-weight: 500;
+            transition: color .2s
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+            text-decoration: none
+        }
+
+        .badge-new {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 99px;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            padding-top: 80px
+        }
+
+        .hero-content {
+            max-width: 800px
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            padding: 6px 16px 6px 8px;
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 32px;
+            animation: fadeUp .8s ease-out
+        }
+
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .5;
+                transform: scale(.8)
+            }
+        }
+
+        .hero h1 {
+            font-size: clamp(42px, 8vw, 80px);
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.05;
+            margin-bottom: 24px;
+            animation: fadeUp .8s ease-out .1s both
+        }
+
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradShift 4s ease infinite
+        }
+
+        @keyframes gradShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%
+            }
+
+            50% {
+                background-position: 100% 50%
+            }
+        }
+
+        .hero p {
+            font-size: clamp(16px, 2.5vw, 22px);
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.5;
+            animation: fadeUp .8s ease-out .2s both
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeUp .8s ease-out .3s both
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .25s;
+            border: none;
+            text-decoration: none
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            color: #fff;
+            box-shadow: 0 4px 20px var(--glow)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--glow);
+            text-decoration: none
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border)
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            background: var(--surface);
+            text-decoration: none
+        }
+
+        .btn-icon {
+            font-size: 18px
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .model-card-section {
+            padding: 60px 0
+        }
+
+        .model-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4)
+        }
+
+        .model-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+            background-size: 200% 100%;
+            animation: gradShift 3s linear infinite
+        }
+
+        .model-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 32px
+        }
+
+        .model-name {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -.5px
+        }
+
+        .model-name span {
+            color: var(--accent)
+        }
+
+        .model-version {
+            font-size: 13px;
+            color: var(--text-dim);
+            font-family: monospace;
+            margin-top: 4px
+        }
+
+        .model-tag {
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.15), rgba(0, 206, 201, 0.1));
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            color: var(--accent);
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        .model-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px
+        }
+
+        .stat-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            transition: all .3s
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px)
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 4px
+        }
+
+        .stat-value.purple {
+            color: var(--accent)
+        }
+
+        .stat-value.teal {
+            color: var(--accent2)
+        }
+
+        .stat-value.pink {
+            color: #fd79a8
+        }
+
+        .stat-value.yellow {
+            color: var(--warning)
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600
+        }
+
+        .feature-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            padding: 8px 16px;
+            font-size: 13px;
+            color: var(--text-dim);
+            transition: all .3s
+        }
+
+        .pill:hover {
+            border-color: var(--accent);
+            color: var(--text)
+        }
+
+        .pill .icon {
+            font-size: 16px
+        }
+
+        .benchmark-section h2 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-align: center;
+            margin-bottom: 12px
+        }
+
+        .benchmark-sub {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 16px;
+            margin-bottom: 48px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto
+        }
+
+        .benchmark-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px
+        }
+
+        .bench-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .bench-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, var(--glow), transparent);
+            opacity: .5
+        }
+
+        .bench-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .bench-dataset {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-family: monospace;
+            margin-bottom: 20px
+        }
+
+        .bench-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 14px
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .bar-label {
+            width: 130px;
+            font-size: 13px;
+            color: var(--text-dim);
+            text-align: right;
+            flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 28px;
+            background: var(--surface2);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            min-width: 30px;
+            transition: width 1.5s cubic-bezier(.22, 1, .36, 1)
+        }
+
+        .bar-fill.qwen {
+            background: linear-gradient(90deg, var(--accent), #8b5cf6)
+        }
+
+        .bar-fill.rival1 {
+            background: linear-gradient(90deg, #555, #666)
+        }
+
+        .bar-fill.rival2 {
+            background: linear-gradient(90deg, #555, #666)
+        }
+
+        .bar-fill.cope {
+            background: linear-gradient(90deg, var(--danger), #cc4444);
+            opacity: .7
+        }
+
+        .bar-value {
+            width: 48px;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: right;
+            flex-shrink: 0
+        }
+
+        .bar-value.qwen {
+            color: var(--accent)
+        }
+
+        .download-section h2 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-align: center;
+            margin-bottom: 12px
+        }
+
+        .download-sub {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 16px;
+            margin-bottom: 48px
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px
+        }
+
+        .download-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+            transition: all .3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden
+        }
+
+        .download-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3)
+        }
+
+        .download-card::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity .3s
+        }
+
+        .download-card:hover::after {
+            opacity: 1
+        }
+
+        .download-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+            display: block
+        }
+
+        .download-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px
+        }
+
+        .download-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 16px
+        }
+
+        .download-size {
+            font-size: 11px;
+            color: var(--text-dim);
+            font-family: monospace
+        }
+
+        .timeline-section h2 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-align: center;
+            margin-bottom: 48px
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 700px;
+            margin: 0 auto
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent), var(--accent2), var(--border))
+        }
+
+        .tl-item {
+            position: relative;
+            padding-left: 64px;
+            padding-bottom: 40px
+        }
+
+        .tl-dot {
+            position: absolute;
+            left: 16px;
+            top: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            background: var(--bg)
+        }
+
+        .tl-item:nth-child(2) .tl-dot {
+            border-color: var(--accent2)
+        }
+
+        .tl-item:nth-child(3) .tl-dot {
+            border-color: var(--warning)
+        }
+
+        .tl-item:nth-child(4) .tl-dot {
+            border-color: var(--success)
+        }
+
+        .tl-item:nth-child(5) .tl-dot {
+            border-color: var(--danger)
+        }
+
+        .tl-date {
+            font-size: 13px;
+            font-family: monospace;
+            color: var(--text-dim);
+            margin-bottom: 4px
+        }
+
+        .tl-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px
+        }
+
+        .tl-desc {
+            font-size: 14px;
+            color: var(--text-dim)
+        }
+
+        .tl-tag {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .tl-tag.done {
+            background: rgba(72, 219, 251, 0.15);
+            color: var(--success)
+        }
+
+        .code-section h2 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-align: center;
+            margin-bottom: 12px
+        }
+
+        .code-sub {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 16px;
+            margin-bottom: 40px
+        }
+
+        .code-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            max-width: 800px;
+            margin: 0 auto
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2)
+        }
+
+        .code-dots {
+            display: flex;
+            gap: 8px
+        }
+
+        .code-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border)
+        }
+
+        .code-dots span:nth-child(1) {
+            background: #ff5f57
+        }
+
+        .code-dots span:nth-child(2) {
+            background: #febc2e
+        }
+
+        .code-dots span:nth-child(3) {
+            background: #28c840
+        }
+
+        .code-filename {
+            font-size: 13px;
+            color: var(--text-dim);
+            font-family: monospace
+        }
+
+        .code-copy {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .code-copy:hover {
+            border-color: var(--accent);
+            color: var(--text)
+        }
+
+        pre {
+            padding: 24px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.7;
+            font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace
+        }
+
+        pre .kw {
+            color: #c792ea
+        }
+
+        pre .fn {
+            color: #82aaff
+        }
+
+        pre .str {
+            color: #c3e88d
+        }
+
+        pre .cm {
+            color: #546e7a;
+            font-style: italic
+        }
+
+        pre .num {
+            color: #f78c6c
+        }
+
+        pre .op {
+            color: #89ddff
+        }
+
+        pre .var {
+            color: #eeffff
+        }
+
+        .community-section h2 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-align: center;
+            margin-bottom: 12px
+        }
+
+        .community-sub {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 16px;
+            margin-bottom: 40px
+        }
+
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px
+        }
+
+        .tweet-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all .3s
+        }
+
+        .tweet-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px)
+        }
+
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px
+        }
+
+        .tweet-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0
+        }
+
+        .tweet-user {
+            font-size: 14px;
+            font-weight: 600
+        }
+
+        .tweet-handle {
+            font-size: 12px;
+            color: var(--text-dim)
+        }
+
+        .tweet-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-dim)
+        }
+
+        .tweet-text .highlight {
+            color: var(--accent)
+        }
+
+        .tweet-footer {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-dim)
+        }
+
+        .tweet-footer span {
+            cursor: pointer;
+            transition: color .2s
+        }
+
+        .tweet-footer span:hover {
+            color: var(--accent)
+        }
+
+        .vram-section h2 {
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-align: center;
+            margin-bottom: 12px
+        }
+
+        .vram-sub {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 16px;
+            margin-bottom: 40px
+        }
+
+        .vram-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px
+        }
+
+        .vram-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all .3s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .vram-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px)
+        }
+
+        .vram-card.recommended {
+            border-color: var(--accent2)
+        }
+
+        .vram-card.recommended::before {
+            content: "RECOMMENDED";
+            position: absolute;
+            top: 12px;
+            right: -30px;
+            background: var(--accent2);
+            color: #000;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 36px;
+            transform: rotate(45deg);
+            letter-spacing: 1px
+        }
+
+        .vram-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+            display: block
+        }
+
+        .vram-gpu {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .vram-amount {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 4px
+        }
+
+        .vram-note {
+            font-size: 12px;
+            color: var(--text-dim)
+        }
+
+        .vram-quant {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 12px;
+            font-family: monospace
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 13px
+        }
+
+        footer .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px
+        }
+
+        footer .model-id {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--accent);
+            opacity: .6;
+            background: var(--surface);
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border)
+        }
+
+        .disclaimer {
+            font-style: italic;
+            opacity: .5;
+            max-width: 500px
+        }
+
+        .hero-counter {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            margin-bottom: 40px;
+            animation: fadeUp .8s ease-out .15s both
+        }
+
+        .counter-item {
+            text-align: center
+        }
+
+        .counter-num {
+            font-size: 28px;
+            font-weight: 800;
+            font-family: monospace;
+            color: var(--accent)
+        }
+
+        .counter-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all .8s cubic-bezier(.22, 1, .36, 1)
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0)
+        }
+
+        @media(max-width:768px) {
+            .nav-links a:not(.badge-new) {
+                display: none
+            }
+
+            .hero h1 {
+                letter-spacing: -1px
+            }
+
+            .model-card {
+                padding: 24px
+            }
+
+            .model-stats {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .benchmark-grid {
+                grid-template-columns: 1fr
+            }
+
+            .bar-label {
+                width: 80px;
+                font-size: 11px
+            }
+
+            pre {
+                font-size: 12px;
+                padding: 16px
+            }
+
+            .hero-counter {
+                gap: 20px
+            }
+
+            .counter-num {
+                font-size: 22px
+            }
+
+            section {
+                padding: 60px 0
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent)
+        }
+    </style>
 </head>
+
 <body>
-<canvas id="bg-canvas"></canvas>
-<div class="grid-overlay"></div>
-<nav><div class="container"><div class="nav-brand">Qwen<span>3.7</span>-Open</div><div class="nav-links"><a href="#model">Model</a><a href="#benchmarks">Benchmarks</a><a href="#download">Download</a><a href="#local">Run Locally</a><a href="#community">Community</a><span class="badge-new">NEW</span></div></div></nav>
+    <canvas id="bg-canvas"></canvas>
+    <div class="grid-overlay"></div>
+    <nav>
+        <div class="container">
+            <div class="nav-brand">Qwen<span>3.7</span>-Open</div>
+            <div class="nav-links"><a href="#model">Model</a><a href="#benchmarks">Benchmarks</a><a
+                    href="#download">Download</a><a href="#local">Run Locally</a><a href="#community">Community</a><span
+                    class="badge-new">NEW</span></div>
+        </div>
+    </nav>
 
-<section class="hero"><div class="hero-content">
-<div class="hero-badge"><span class="dot"></span> Live on Hugging Face now</div>
-<h1><span class="gradient">Qwen3.7-30B-Open</span><br>is finally here</h1>
-<p>The community can now stop refreshing Hugging Face every 11 seconds. Your F5 key can rest.</p>
-<div class="hero-counter">
-<div class="counter-item"><div class="counter-num" id="downloads">0</div><div class="counter-label">Downloads</div></div>
-<div class="counter-item"><div class="counter-num" id="likes">0</div><div class="counter-label">Likes</div></div>
-<div class="counter-item"><div class="counter-num" id="forks">0</div><div class="counter-label">Forks</div></div>
-</div>
-<div class="hero-actions">
-<a href="#download" class="btn btn-primary"><span class="btn-icon">&#11015;</span> Download Now</a>
-<a href="#model" class="btn btn-outline"><span class="btn-icon">&#8594;</span> Explore Model</a>
-</div>
-</div></section>
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge"><span class="dot"></span> Live on Hugging Face now</div>
+            <h1><span class="gradient">Qwen3.7-30B-Open</span><br>is finally here</h1>
+            <p>The community can now stop refreshing Hugging Face every 11 seconds. Your F5 key can rest.</p>
+            <div class="hero-counter">
+                <div class="counter-item">
+                    <div class="counter-num" id="downloads">0</div>
+                    <div class="counter-label">Downloads</div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-num" id="likes">0</div>
+                    <div class="counter-label">Likes</div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-num" id="forks">0</div>
+                    <div class="counter-label">Forks</div>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <a href="#download" class="btn btn-primary"><span class="btn-icon">&#11015;</span> Download Now</a>
+                <a href="#model" class="btn btn-outline"><span class="btn-icon">&#8594;</span> Explore Model</a>
+            </div>
+        </div>
+    </section>
 
-<section class="model-card-section" id="model"><div class="container">
-<div class="model-card reveal">
-<div class="model-card-header">
-<div><div class="model-name">Qwen3.7<span>-30B-Open</span></div><div class="model-version">Qwen/Qwen3.7-30B-Open &middot; safetensors &middot; main</div></div>
-<div class="model-tag">Apache 2.0 &middot; Open Weights</div>
-</div>
-<div class="model-stats">
-<div class="stat-card"><div class="stat-value purple">30B</div><div class="stat-label">Parameters</div></div>
-<div class="stat-card"><div class="stat-value teal">131K</div><div class="stat-label">Context Length</div></div>
-<div class="stat-card"><div class="stat-value pink">6</div><div class="stat-label">Languages</div></div>
-<div class="stat-card"><div class="stat-value yellow">97.3</div><div class="stat-label">Pass@1 HumanEval</div></div>
-</div>
-<div class="feature-pills">
-<div class="pill"><span class="icon">&#128295;</span> Tool Use</div>
-<div class="pill"><span class="icon">&#128187;</span> Code Generation</div>
-<div class="pill"><span class="icon">&#129504;</span> Chain-of-Thought</div>
-<div class="pill"><span class="icon">&#127760;</span> Multilingual</div>
-<div class="pill"><span class="icon">&#9889;</span> Local Inference</div>
-<div class="pill"><span class="icon">&#128207;</span> Long Context</div>
-<div class="pill"><span class="icon">&#128737;</span> RLHF Tuned</div>
-<div class="pill"><span class="icon">&#128230;</span> GGUF Available</div>
-</div>
-</div></div></section>
+    <section class="model-card-section" id="model">
+        <div class="container">
+            <div class="model-card reveal">
+                <div class="model-card-header">
+                    <div>
+                        <div class="model-name">Qwen3.7<span>-30B-Open</span></div>
+                        <div class="model-version">Qwen/Qwen3.7-30B-Open &middot; safetensors &middot; main</div>
+                    </div>
+                    <div class="model-tag">Apache 2.0 &middot; Open Weights</div>
+                </div>
+                <div class="model-stats">
+                    <div class="stat-card">
+                        <div class="stat-value purple">30B</div>
+                        <div class="stat-label">Parameters</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value teal">131K</div>
+                        <div class="stat-label">Context Length</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value pink">6</div>
+                        <div class="stat-label">Languages</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value yellow">97.3</div>
+                        <div class="stat-label">Pass@1 HumanEval</div>
+                    </div>
+                </div>
+                <div class="feature-pills">
+                    <div class="pill"><span class="icon">&#128295;</span> Tool Use</div>
+                    <div class="pill"><span class="icon">&#128187;</span> Code Generation</div>
+                    <div class="pill"><span class="icon">&#129504;</span> Chain-of-Thought</div>
+                    <div class="pill"><span class="icon">&#127760;</span> Multilingual</div>
+                    <div class="pill"><span class="icon">&#9889;</span> Local Inference</div>
+                    <div class="pill"><span class="icon">&#128207;</span> Long Context</div>
+                    <div class="pill"><span class="icon">&#128737;</span> RLHF Tuned</div>
+                    <div class="pill"><span class="icon">&#128230;</span> GGUF Available</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<section class="benchmark-section" id="benchmarks"><div class="container">
-<h2 class="reveal">Outperforming Everything*</h2>
-<p class="benchmark-sub reveal">*Results may vary. "Your current coping mechanism" refers to GPT-4 with 47 system prompt layers.</p>
-<div class="benchmark-grid">
+    <section class="benchmark-section" id="benchmarks">
+        <div class="container">
+            <h2 class="reveal">Outperforming Everything*</h2>
+            <p class="benchmark-sub reveal">*Results may vary. "Your current coping mechanism" refers to GPT-4 with 47
+                system prompt layers.</p>
+            <div class="benchmark-grid">
 
-<div class="bench-card reveal">
-<div class="bench-title">MMLU</div><div class="bench-dataset">5-shot, standardized evaluation</div>
-<div class="bench-bars">
-<div class="bar-row"><div class="bar-label">Qwen3.7-30B-Open</div><div class="bar-track"><div class="bar-fill qwen" data-width="89.2"></div></div><div class="bar-value qwen">89.2</div></div>
-<div class="bar-row"><div class="bar-label">Rival-40B-Pro</div><div class="bar-track"><div class="bar-fill rival1" data-width="87.1"></div></div><div class="bar-value">87.1</div></div>
-<div class="bar-row"><div class="bar-label">Mistral-Next</div><div class="bar-track"><div class="bar-fill rival2" data-width="85.6"></div></div><div class="bar-value">85.6</div></div>
-<div class="bar-row"><div class="bar-label">Your Coping Mechanism</div><div class="bar-track"><div class="bar-fill cope" data-width="82.4"></div></div><div class="bar-value" style="color:var(--danger)">82.4</div></div>
-</div></div>
+                <div class="bench-card reveal">
+                    <div class="bench-title">MMLU</div>
+                    <div class="bench-dataset">5-shot, standardized evaluation</div>
+                    <div class="bench-bars">
+                        <div class="bar-row">
+                            <div class="bar-label">Qwen3.7-30B-Open</div>
+                            <div class="bar-track">
+                                <div class="bar-fill qwen" data-width="89.2"></div>
+                            </div>
+                            <div class="bar-value qwen">89.2</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Rival-40B-Pro</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rival1" data-width="87.1"></div>
+                            </div>
+                            <div class="bar-value">87.1</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Mistral-Next</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rival2" data-width="85.6"></div>
+                            </div>
+                            <div class="bar-value">85.6</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Your Coping Mechanism</div>
+                            <div class="bar-track">
+                                <div class="bar-fill cope" data-width="82.4"></div>
+                            </div>
+                            <div class="bar-value" style="color:var(--danger)">82.4</div>
+                        </div>
+                    </div>
+                </div>
 
-<div class="bench-card reveal">
-<div class="bench-title">HumanEval</div><div class="bench-dataset">pass@1, code generation</div>
-<div class="bench-bars">
-<div class="bar-row"><div class="bar-label">Qwen3.7-30B-Open</div><div class="bar-track"><div class="bar-fill qwen" data-width="97.3"></div></div><div class="bar-value qwen">97.3</div></div>
-<div class="bar-row"><div class="bar-label">Rival-40B-Pro</div><div class="bar-track"><div class="bar-fill rival1" data-width="92.1"></div></div><div class="bar-value">92.1</div></div>
-<div class="bar-row"><div class="bar-label">Mistral-Next</div><div class="bar-track"><div class="bar-fill rival2" data-width="88.7"></div></div><div class="bar-value">88.7</div></div>
-<div class="bar-row"><div class="bar-label">Your Coping Mechanism</div><div class="bar-track"><div class="bar-fill cope" data-width="71.3"></div></div><div class="bar-value" style="color:var(--danger)">71.3</div></div>
-</div></div>
+                <div class="bench-card reveal">
+                    <div class="bench-title">HumanEval</div>
+                    <div class="bench-dataset">pass@1, code generation</div>
+                    <div class="bench-bars">
+                        <div class="bar-row">
+                            <div class="bar-label">Qwen3.7-30B-Open</div>
+                            <div class="bar-track">
+                                <div class="bar-fill qwen" data-width="97.3"></div>
+                            </div>
+                            <div class="bar-value qwen">97.3</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Rival-40B-Pro</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rival1" data-width="92.1"></div>
+                            </div>
+                            <div class="bar-value">92.1</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Mistral-Next</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rival2" data-width="88.7"></div>
+                            </div>
+                            <div class="bar-value">88.7</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Your Coping Mechanism</div>
+                            <div class="bar-track">
+                                <div class="bar-fill cope" data-width="71.3"></div>
+                            </div>
+                            <div class="bar-value" style="color:var(--danger)">71.3</div>
+                        </div>
+                    </div>
+                </div>
 
-<div class="bench-card reveal">
-<div class="bench-title">MT-Bench</div><div class="bench-dataset">multi-turn conversation, GPT-4 judge</div>
-<div class="bench-bars">
-<div class="bar-row"><div class="bar-label">Qwen3.7-30B-Open</div><div class="bar-track"><div class="bar-fill qwen" data-width="94"></div></div><div class="bar-value qwen">9.4</div></div>
-<div class="bar-row"><div class="bar-label">Rival-40B-Pro</div><div class="bar-track"><div class="bar-fill rival1" data-width="88"></div></div><div class="bar-value">8.8</div></div>
-<div class="bar-row"><div class="bar-label">Mistral-Next</div><div class="bar-track"><div class="bar-fill rival2" data-width="85"></div></div><div class="bar-value">8.5</div></div>
-<div class="bar-row"><div class="bar-label">Your Coping Mechanism</div><div class="bar-track"><div class="bar-fill cope" data-width="62"></div></div><div class="bar-value" style="color:var(--danger)">6.2</div></div>
-</div></div>
+                <div class="bench-card reveal">
+                    <div class="bench-title">MT-Bench</div>
+                    <div class="bench-dataset">multi-turn conversation, GPT-4 judge</div>
+                    <div class="bench-bars">
+                        <div class="bar-row">
+                            <div class="bar-label">Qwen3.7-30B-Open</div>
+                            <div class="bar-track">
+                                <div class="bar-fill qwen" data-width="94"></div>
+                            </div>
+                            <div class="bar-value qwen">9.4</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Rival-40B-Pro</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rival1" data-width="88"></div>
+                            </div>
+                            <div class="bar-value">8.8</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Mistral-Next</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rival2" data-width="85"></div>
+                            </div>
+                            <div class="bar-value">8.5</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Your Coping Mechanism</div>
+                            <div class="bar-track">
+                                <div class="bar-fill cope" data-width="62"></div>
+                            </div>
+                            <div class="bar-value" style="color:var(--danger)">6.2</div>
+                        </div>
+                    </div>
+                </div>
 
-<div class="bench-card reveal">
-<div class="bench-title">GPQA Diamond</div><div class="bench-dataset">graduate-level science questions</div>
-<div class="bench-bars">
-<div class="bar-row"><div class="bar-label">Qwen3.7-30B-Open</div><div class="bar-track"><div class="bar-fill qwen" data-width="62.7"></div></div><div class="bar-value qwen">62.7</div></div>
-<div class="bar-row"><div class="bar-label">Rival-40B-Pro</div><div class="bar-track"><div class="bar-fill rival1" data-width="58.3"></div></div><div class="bar-value">58.3</div></div>
-<div class="bar-row"><div class="bar-label">Mistral-Next</div><div class="bar-track"><div class="bar-fill rival2" data-width="55.1"></div></div><div class="bar-value">55.1</div></div>
-<div class="bar-row"><div class="bar-label">Your Coping Mechanism</div><div class="bar-track"><div class="bar-fill cope" data-width="41.8"></div></div><div class="bar-value" style="color:var(--danger)">41.8</div></div>
-</div></div>
+                <div class="bench-card reveal">
+                    <div class="bench-title">GPQA Diamond</div>
+                    <div class="bench-dataset">graduate-level science questions</div>
+                    <div class="bench-bars">
+                        <div class="bar-row">
+                            <div class="bar-label">Qwen3.7-30B-Open</div>
+                            <div class="bar-track">
+                                <div class="bar-fill qwen" data-width="62.7"></div>
+                            </div>
+                            <div class="bar-value qwen">62.7</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Rival-40B-Pro</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rival1" data-width="58.3"></div>
+                            </div>
+                            <div class="bar-value">58.3</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Mistral-Next</div>
+                            <div class="bar-track">
+                                <div class="bar-fill rival2" data-width="55.1"></div>
+                            </div>
+                            <div class="bar-value">55.1</div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">Your Coping Mechanism</div>
+                            <div class="bar-track">
+                                <div class="bar-fill cope" data-width="41.8"></div>
+                            </div>
+                            <div class="bar-value" style="color:var(--danger)">41.8</div>
+                        </div>
+                    </div>
+                </div>
 
-</div></div></section>
+            </div>
+        </div>
+    </section>
 
-<section class="download-section" id="download"><div class="container">
-<h2 class="reveal">Get Qwen3.7-30B-Open</h2>
-<p class="download-sub reveal">Every format your heart desires. Yes, even that one.</p>
-<div class="download-grid">
-<div class="download-card reveal"><span class="download-icon">&#129303;</span><div class="download-title">Hugging Face</div><div class="download-desc">Official safetensors weights. The classic way.</div><div class="download-size">62.4 GB &middot; FP16</div></div>
-<div class="download-card reveal"><span class="download-icon">&#128230;</span><div class="download-title">GGUF (llama.cpp)</div><div class="download-desc">Q4_K_M, Q5_K_M, Q8_0, and F16. Pick your poison.</div><div class="download-size">18.2 GB &middot; Q4_K_M</div></div>
-<div class="download-card reveal"><span class="download-icon">&#9889;</span><div class="download-title">API Access</div><div class="download-desc">OpenAI-compatible endpoint. Drop-in replacement.</div><div class="download-size">$0.0004/1K tokens</div></div>
-<div class="download-card reveal"><span class="download-icon">&#127988;</span><div class="download-title">Torrent</div><div class="download-desc">For when HuggingFace rate-limits you at 3 AM.</div><div class="download-size">Magnet link available</div></div>
-</div></div></section>
+    <section class="download-section" id="download">
+        <div class="container">
+            <h2 class="reveal">Get Qwen3.7-30B-Open</h2>
+            <p class="download-sub reveal">Every format your heart desires. Yes, even that one.</p>
+            <div class="download-grid">
+                <div class="download-card reveal"><span class="download-icon">&#129303;</span>
+                    <div class="download-title">Hugging Face</div>
+                    <div class="download-desc">Official safetensors weights. The classic way.</div>
+                    <div class="download-size">62.4 GB &middot; FP16</div>
+                </div>
+                <div class="download-card reveal"><span class="download-icon">&#128230;</span>
+                    <div class="download-title">GGUF (llama.cpp)</div>
+                    <div class="download-desc">Q4_K_M, Q5_K_M, Q8_0, and F16. Pick your poison.</div>
+                    <div class="download-size">18.2 GB &middot; Q4_K_M</div>
+                </div>
+                <div class="download-card reveal"><span class="download-icon">&#9889;</span>
+                    <div class="download-title">API Access</div>
+                    <div class="download-desc">OpenAI-compatible endpoint. Drop-in replacement.</div>
+                    <div class="download-size">$0.0004/1K tokens</div>
+                </div>
+                <div class="download-card reveal"><span class="download-icon">&#127988;</span>
+                    <div class="download-title">Torrent</div>
+                    <div class="download-desc">For when HuggingFace rate-limits you at 3 AM.</div>
+                    <div class="download-size">Magnet link available</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<section class="timeline-section"><div class="container">
-<h2 class="reveal">The Road to Launch</h2>
-<div class="timeline">
-<div class="tl-item reveal"><div class="tl-dot"></div><div class="tl-date">January 2025</div><div class="tl-title">Soon&trade;</div><div class="tl-desc">Training complete. "We'll release it next week." &mdash; Famous last words.</div><span class="tl-tag done">COMPLETED</span></div>
-<div class="tl-item reveal"><div class="tl-dot"></div><div class="tl-date">March 2025</div><div class="tl-title">Final Safety Pass</div><div class="tl-desc">Red-teaming revealed the model was too good at writing haikus. Fixed.</div><span class="tl-tag done">COMPLETED</span></div>
-<div class="tl-item reveal"><div class="tl-dot"></div><div class="tl-date">May 2025</div><div class="tl-title">Actually Soon</div><div class="tl-desc">We found one more eval to run. And one more. And one more...</div><span class="tl-tag done">COMPLETED</span></div>
-<div class="tl-item reveal"><div class="tl-dot"></div><div class="tl-date">July 2025</div><div class="tl-title">We Found One More Eval</div><div class="tl-desc">It passed. We're still not releasing it though. We need to benchmark it on "vibes" first.</div><span class="tl-tag done">COMPLETED</span></div>
-<div class="tl-item reveal"><div class="tl-dot"></div><div class="tl-date">August 2025</div><div class="tl-title">It's Actually Happening</div><div class="tl-desc">Someone pushed to main. Nobody knows who. The weights are out. Godspeed.</div><span class="tl-tag done">COMPLETED</span></div>
-</div></div></section>
+    <section class="timeline-section">
+        <div class="container">
+            <h2 class="reveal">The Road to Launch</h2>
+            <div class="timeline">
+                <div class="tl-item reveal">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">January 2025</div>
+                    <div class="tl-title">Soon&trade;</div>
+                    <div class="tl-desc">Training complete. "We'll release it next week." &mdash; Famous last words.
+                    </div><span class="tl-tag done">COMPLETED</span>
+                </div>
+                <div class="tl-item reveal">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">March 2025</div>
+                    <div class="tl-title">Final Safety Pass</div>
+                    <div class="tl-desc">Red-teaming revealed the model was too good at writing haikus. Fixed.</div>
+                    <span class="tl-tag done">COMPLETED</span>
+                </div>
+                <div class="tl-item reveal">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">May 2025</div>
+                    <div class="tl-title">Actually Soon</div>
+                    <div class="tl-desc">We found one more eval to run. And one more. And one more...</div><span
+                        class="tl-tag done">COMPLETED</span>
+                </div>
+                <div class="tl-item reveal">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">July 2025</div>
+                    <div class="tl-title">We Found One More Eval</div>
+                    <div class="tl-desc">It passed. We're still not releasing it though. We need to benchmark it on
+                        "vibes" first.</div><span class="tl-tag done">COMPLETED</span>
+                </div>
+                <div class="tl-item reveal">
+                    <div class="tl-dot"></div>
+                    <div class="tl-date">August 2025</div>
+                    <div class="tl-title">It's Actually Happening</div>
+                    <div class="tl-desc">Someone pushed to main. Nobody knows who. The weights are out. Godspeed.</div>
+                    <span class="tl-tag done">COMPLETED</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<section class="code-section"><div class="container">
-<h2 class="reveal">Get Started in 4 Lines</h2>
-<p class="code-sub reveal">Assuming your GPU drivers work. No guarantees.</p>
-<div class="code-block reveal">
-<div class="code-header"><div class="code-dots"><span></span><span></span><span></span></div><div class="code-filename">run_qwen.py</div><button class="code-copy" onclick="copyCode()">Copy</button></div>
-<pre><span class="kw">from</span> <span class="var">transformers</span> <span class="kw">import</span> <span class="var">AutoModelForCausalLM</span>, <span class="var">AutoTokenizer</span>
+    <section class="code-section">
+        <div class="container">
+            <h2 class="reveal">Get Started in 4 Lines</h2>
+            <p class="code-sub reveal">Assuming your GPU drivers work. No guarantees.</p>
+            <div class="code-block reveal">
+                <div class="code-header">
+                    <div class="code-dots"><span></span><span></span><span></span></div>
+                    <div class="code-filename">run_qwen.py</div><button class="code-copy"
+                        onclick="copyCode()">Copy</button>
+                </div>
+                <pre><span class="kw">from</span> <span class="var">transformers</span> <span class="kw">import</span> <span class="var">AutoModelForCausalLM</span>, <span class="var">AutoTokenizer</span>
 
 <span class="cm"># Yes, it's really this easy. No, we're not hiding anything.</span>
 <span class="var">model_id</span> <span class="op">=</span> <span class="str">"Qwen/Qwen3.7-30B-Open"</span>
@@ -299,65 +1595,188 @@ footer .model-id{font-family:monospace;font-size:11px;color:var(--accent);opacit
 <span class="var">outputs</span> <span class="op">=</span> <span class="var">model</span>.<span class="fn">generate</span>(<span class="var">inputs</span>, <span class="var">max_new_tokens</span><span class="op">=</span><span class="num">512</span>, <span class="var">temperature</span><span class="op">=</span><span class="num">0.7</span>)
 <span class="fn">print</span>(<span class="var">tokenizer</span>.<span class="fn">decode</span>(<span class="var">outputs</span>[<span class="num">0</span>], <span class="var">skip_special_tokens</span><span class="op">=</span><span class="num">True</span>))
 <span class="cm"># Output: "Okay hooman, imagine qubits as tennis balls..."</span></pre>
-</div></div></section>
+            </div>
+        </div>
+    </section>
 
-<section class="community-section" id="community"><div class="container">
-<h2 class="reveal">What People Are Saying</h2>
-<p class="community-sub reveal">Real reactions from real people who definitely exist.</p>
-<div class="community-grid">
-<div class="tweet-card reveal"><div class="tweet-header"><div class="tweet-avatar" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe)">M</div><div><div class="tweet-user">ML_Stan_42</div><div class="tweet-handle">@ml_stan_42</div></div></div><div class="tweet-text">Just ran <span class="highlight">Qwen3.7-30B</span> locally on my 3090. It wrote me a complete React app in 30 seconds. My startup idea is dead. I'm going to go outside now.</div><div class="tweet-footer"><span>&hearts; 2.4K</span><span>&#8635; 892</span><span>&#128172; 234</span></div></div>
-<div class="tweet-card reveal"><div class="tweet-header"><div class="tweet-avatar" style="background:linear-gradient(135deg,#00cec9,#81ecec)">P</div><div><div class="tweet-user">PromptEngPete</div><div class="tweet-handle">@prompt_pete</div></div></div><div class="tweet-text">My entire career was "prompt engineering" and this model just made my prompts unnecessary. It figured out what I meant before I typed it. I feel seen and attacked.</div><div class="tweet-footer"><span>&hearts; 5.1K</span><span>&#8635; 1.8K</span><span>&#128172; 567</span></div></div>
-<div class="tweet-card reveal"><div class="tweet-header"><div class="tweet-avatar" style="background:linear-gradient(135deg,#fd79a8,#e84393)">L</div><div><div class="tweet-user">LocalLlamaLord</div><div class="tweet-handle">@llama_lord</div></div></div><div class="tweet-text">The fact that this is Apache 2.0 and not "contact us for enterprise pricing" just healed something inside me. <span class="highlight">Thank you Qwen team</span>. I will name my firstborn after you.</div><div class="tweet-footer"><span>&hearts; 8.7K</span><span>&#8635; 3.2K</span><span>&#128172; 1.1K</span></div></div>
-<div class="tweet-card reveal"><div class="tweet-header"><div class="tweet-avatar" style="background:linear-gradient(135deg,#feca57,#ff9ff3)">S</div><div><div class="tweet-user">SkepticalSam</div><div class="tweet-handle">@skeptic_sam</div></div></div><div class="tweet-text">Sure it "outperforms" GPT-4 on benchmarks. Let me know when it can explain why my code doesn't work without also rewriting the entire codebase. <span class="highlight">Oh wait, it can.</span> Never mind.</div><div class="tweet-footer"><span>&hearts; 3.9K</span><span>&#8635; 1.2K</span><span>&#128172; 445</span></div></div>
-<div class="tweet-card reveal"><div class="tweet-header"><div class="tweet-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24)">V</div><div><div class="tweet-user">VentureCapitalVic</div><div class="tweet-handle">@vc_vic</div></div></div><div class="tweet-text">We're looking to invest in whatever team built this. Our fund focuses on series A, $50M minimum check. DMs open. <span class="highlight">Wait, it's open source? How do you monetize that?</span> Hello?</div><div class="tweet-footer"><span>&hearts; 12.3K</span><span>&#8635; 5.6K</span><span>&#128172; 2.3K</span></div></div>
-<div class="tweet-card reveal"><div class="tweet-header"><div class="tweet-avatar" style="background:linear-gradient(135deg,#48dbfb,#0abde3)">D</div><div><div class="tweet-user">DevOpsDiana</div><div class="tweet-handle">@devops_diana</div></div></div><div class="tweet-text">I just asked it to write a Kubernetes manifest and it also fixed my 3 other broken ones I didn't even mention. <span class="highlight">This model has PTSD from my yaml files.</span></div><div class="tweet-footer"><span>&hearts; 6.8K</span><span>&#8635; 2.9K</span><span>&#128172; 789</span></div></div>
-</div></div></section>
+    <section class="community-section" id="community">
+        <div class="container">
+            <h2 class="reveal">What People Are Saying</h2>
+            <p class="community-sub reveal">Real reactions from real people who definitely exist.</p>
+            <div class="community-grid">
+                <div class="tweet-card reveal">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe)">M</div>
+                        <div>
+                            <div class="tweet-user">ML_Stan_42</div>
+                            <div class="tweet-handle">@ml_stan_42</div>
+                        </div>
+                    </div>
+                    <div class="tweet-text">Just ran <span class="highlight">Qwen3.7-30B</span> locally on my 3090. It
+                        wrote me a complete React app in 30 seconds. My startup idea is dead. I'm going to go outside
+                        now.</div>
+                    <div class="tweet-footer"><span>&hearts; 2.4K</span><span>&#8635; 892</span><span>&#128172;
+                            234</span></div>
+                </div>
+                <div class="tweet-card reveal">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar" style="background:linear-gradient(135deg,#00cec9,#81ecec)">P</div>
+                        <div>
+                            <div class="tweet-user">PromptEngPete</div>
+                            <div class="tweet-handle">@prompt_pete</div>
+                        </div>
+                    </div>
+                    <div class="tweet-text">My entire career was "prompt engineering" and this model just made my
+                        prompts unnecessary. It figured out what I meant before I typed it. I feel seen and attacked.
+                    </div>
+                    <div class="tweet-footer"><span>&hearts; 5.1K</span><span>&#8635; 1.8K</span><span>&#128172;
+                            567</span></div>
+                </div>
+                <div class="tweet-card reveal">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar" style="background:linear-gradient(135deg,#fd79a8,#e84393)">L</div>
+                        <div>
+                            <div class="tweet-user">LocalLlamaLord</div>
+                            <div class="tweet-handle">@llama_lord</div>
+                        </div>
+                    </div>
+                    <div class="tweet-text">The fact that this is Apache 2.0 and not "contact us for enterprise pricing"
+                        just healed something inside me. <span class="highlight">Thank you Qwen team</span>. I will name
+                        my firstborn after you.</div>
+                    <div class="tweet-footer"><span>&hearts; 8.7K</span><span>&#8635; 3.2K</span><span>&#128172;
+                            1.1K</span></div>
+                </div>
+                <div class="tweet-card reveal">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar" style="background:linear-gradient(135deg,#feca57,#ff9ff3)">S</div>
+                        <div>
+                            <div class="tweet-user">SkepticalSam</div>
+                            <div class="tweet-handle">@skeptic_sam</div>
+                        </div>
+                    </div>
+                    <div class="tweet-text">Sure it "outperforms" GPT-4 on benchmarks. Let me know when it can explain
+                        why my code doesn't work without also rewriting the entire codebase. <span class="highlight">Oh
+                            wait, it can.</span> Never mind.</div>
+                    <div class="tweet-footer"><span>&hearts; 3.9K</span><span>&#8635; 1.2K</span><span>&#128172;
+                            445</span></div>
+                </div>
+                <div class="tweet-card reveal">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24)">V</div>
+                        <div>
+                            <div class="tweet-user">VentureCapitalVic</div>
+                            <div class="tweet-handle">@vc_vic</div>
+                        </div>
+                    </div>
+                    <div class="tweet-text">We're looking to invest in whatever team built this. Our fund focuses on
+                        series A, $50M minimum check. DMs open. <span class="highlight">Wait, it's open source? How do
+                            you monetize that?</span> Hello?</div>
+                    <div class="tweet-footer"><span>&hearts; 12.3K</span><span>&#8635; 5.6K</span><span>&#128172;
+                            2.3K</span></div>
+                </div>
+                <div class="tweet-card reveal">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar" style="background:linear-gradient(135deg,#48dbfb,#0abde3)">D</div>
+                        <div>
+                            <div class="tweet-user">DevOpsDiana</div>
+                            <div class="tweet-handle">@devops_diana</div>
+                        </div>
+                    </div>
+                    <div class="tweet-text">I just asked it to write a Kubernetes manifest and it also fixed my 3 other
+                        broken ones I didn't even mention. <span class="highlight">This model has PTSD from my yaml
+                            files.</span></div>
+                    <div class="tweet-footer"><span>&hearts; 6.8K</span><span>&#8635; 2.9K</span><span>&#128172;
+                            789</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<section class="vram-section" id="local"><div class="container">
-<h2 class="reveal">Run It Locally</h2>
-<p class="vram-sub reveal">Yes, actually locally. On your hardware. No cloud needed. Probably.</p>
-<div class="vram-grid">
-<div class="vram-card reveal"><span class="vram-icon">&#128128;</span><div class="vram-gpu">RTX 3060 12GB</div><div class="vram-amount">Q3_K_S</div><div class="vram-note">Pain. Suffering. 2 tokens/sec.</div><div class="vram-quant">~12.8 GB VRAM</div></div>
-<div class="vram-card reveal"><span class="vram-icon">&#128536;</span><div class="vram-gpu">RTX 3080 10GB</div><div class="vram-amount">Q2_K</div><div class="vram-note">Technically works. Barely.</div><div class="vram-quant">~14.2 GB VRAM</div></div>
-<div class="vram-card reveal"><span class="vram-icon">&#128077;</span><div class="vram-gpu">RTX 3090 24GB</div><div class="vram-amount">Q4_K_M</div><div class="vram-note">The sweet spot. Smooth sailing.</div><div class="vram-quant">~18.2 GB VRAM</div></div>
-<div class="vram-card recommended reveal"><span class="vram-icon">&#128293;</span><div class="vram-gpu">Dual 3090s</div><div class="vram-amount">Q8_0</div><div class="vram-note">Peak performance. Your electricity bill will cry.</div><div class="vram-quant">~32 GB VRAM (tensor parallel)</div></div>
-<div class="vram-card reveal"><span class="vram-icon">&#128081;</span><div class="vram-gpu">H100 80GB</div><div class="vram-amount">FP16</div><div class="vram-note">Full precision. You rich or what?</div><div class="vram-quant">~62.4 GB VRAM</div></div>
-<div class="vram-card reveal"><span class="vram-icon">&#129504;</span><div class="vram-gpu">CPU Only</div><div class="vram-amount">Q4_0</div><div class="vram-note">30 min/token. Perfect for meditation.</div><div class="vram-quant">~16 GB RAM</div></div>
-</div></div></section>
+    <section class="vram-section" id="local">
+        <div class="container">
+            <h2 class="reveal">Run It Locally</h2>
+            <p class="vram-sub reveal">Yes, actually locally. On your hardware. No cloud needed. Probably.</p>
+            <div class="vram-grid">
+                <div class="vram-card reveal"><span class="vram-icon">&#128128;</span>
+                    <div class="vram-gpu">RTX 3060 12GB</div>
+                    <div class="vram-amount">Q3_K_S</div>
+                    <div class="vram-note">Pain. Suffering. 2 tokens/sec.</div>
+                    <div class="vram-quant">~12.8 GB VRAM</div>
+                </div>
+                <div class="vram-card reveal"><span class="vram-icon">&#128536;</span>
+                    <div class="vram-gpu">RTX 3080 10GB</div>
+                    <div class="vram-amount">Q2_K</div>
+                    <div class="vram-note">Technically works. Barely.</div>
+                    <div class="vram-quant">~14.2 GB VRAM</div>
+                </div>
+                <div class="vram-card reveal"><span class="vram-icon">&#128077;</span>
+                    <div class="vram-gpu">RTX 3090 24GB</div>
+                    <div class="vram-amount">Q4_K_M</div>
+                    <div class="vram-note">The sweet spot. Smooth sailing.</div>
+                    <div class="vram-quant">~18.2 GB VRAM</div>
+                </div>
+                <div class="vram-card recommended reveal"><span class="vram-icon">&#128293;</span>
+                    <div class="vram-gpu">Dual 3090s</div>
+                    <div class="vram-amount">Q8_0</div>
+                    <div class="vram-note">Peak performance. Your electricity bill will cry.</div>
+                    <div class="vram-quant">~32 GB VRAM (tensor parallel)</div>
+                </div>
+                <div class="vram-card reveal"><span class="vram-icon">&#128081;</span>
+                    <div class="vram-gpu">H100 80GB</div>
+                    <div class="vram-amount">FP16</div>
+                    <div class="vram-note">Full precision. You rich or what?</div>
+                    <div class="vram-quant">~62.4 GB VRAM</div>
+                </div>
+                <div class="vram-card reveal"><span class="vram-icon">&#129504;</span>
+                    <div class="vram-gpu">CPU Only</div>
+                    <div class="vram-amount">Q4_0</div>
+                    <div class="vram-note">30 min/token. Perfect for meditation.</div>
+                    <div class="vram-quant">~16 GB RAM</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<footer><div class="container">
-<div class="model-id">opencode/mimo-v2.5-free</div>
-<div class="disclaimer">Qwen3.7-30B-Open is a parody. No model was harmed in the making of this page. All benchmarks are fictional. "Your Current Coping Mechanism" is real though.</div>
-<div>&copy; 2025 Qwen Team (not really) &middot; Apache 2.0 (we wish) &middot; Made with &#9749; and existential dread</div>
-</div></footer>
-<script>
-var canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d'),w,h,particles=[];
-function resize(){w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight}
-resize();window.addEventListener('resize',resize);
-function Particle(){this.x=Math.random()*w;this.y=Math.random()*h;this.vx=(Math.random()-0.5)*0.3;this.vy=(Math.random()-0.5)*0.3;this.r=Math.random()*1.5+0.5;this.alpha=Math.random()*0.3+0.05;this.color=Math.random()>0.5?'108,92,231':'0,206,201'}
-Particle.prototype.update=function(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>w||this.y<0||this.y>h){this.x=Math.random()*w;this.y=Math.random()*h}};
-Particle.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle='rgba('+this.color+','+this.alpha+')';ctx.fill()};
-for(var i=0;i<80;i++)particles.push(new Particle());
-function animateCanvas(){ctx.clearRect(0,0,w,h);for(var i=0;i<particles.length;i++){particles[i].update();particles[i].draw();for(var j=i+1;j<particles.length;j++){var dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle='rgba(108,92,231,'+(0.05*(1-dist/150))+')';ctx.lineWidth=0.5;ctx.stroke()}}}requestAnimationFrame(animateCanvas)}
-animateCanvas();
-function createShards(){for(var i=0;i<12;i++){var s=document.createElement('div');s.className='shard';var sz=Math.random()*40+10;s.style.width=sz+'px';s.style.height=sz+'px';s.style.left=Math.random()*100+'%';s.style.animationDuration=(Math.random()*20+20)+'s';s.style.animationDelay=(Math.random()*20)+'s';document.body.appendChild(s)}}
-createShards();
-var orbColors=['rgba(108,92,231,0.3)','rgba(0,206,201,0.25)'];
-function createOrbs(){for(var i=0;i<4;i++){var o=document.createElement('div');o.className='glow-orb';o.style.width=o.style.height=(Math.random()*300+200)+'px';o.style.left=Math.random()*100+'%';o.style.top=Math.random()*100+'%';o.style.background=orbColors[i%2];o.style.animationDelay=(i*3)+'s';document.body.appendChild(o)}}
-createOrbs();
-var tokenTexts=['<bos>','<|im_start|>system','<|im_start|>user','<|im_start|>assistant','0x1A3F','token_id:42','[PAD]','<eos>','logits','attention_mask','</s>','layer_norm','FFN','softmax(q,k,v)'];
-function createTokens(){for(var i=0;i<20;i++){var t=document.createElement('div');t.className='token-floater';t.textContent=tokenTexts[Math.floor(Math.random()*tokenTexts.length)];t.style.left=Math.random()*100+'%';t.style.animationDuration=(Math.random()*25+15)+'s';t.style.animationDelay=(Math.random()*30)+'s';t.style.fontSize=(Math.random()*4+8)+'px';document.body.appendChild(t)}}
-createTokens();
-var observer=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})},{threshold:0.1});
-document.querySelectorAll('.reveal').forEach(function(el){observer.observe(el)});
-function animateCounters(){var targets={downloads:247832,likes:18943,forks:3891};var duration=2500;var start=performance.now();function step(now){var elapsed=now-start;var progress=Math.min(elapsed/duration,1);var ease=1-Math.pow(1-progress,3);document.getElementById('downloads').textContent=Math.floor(targets.downloads*ease).toLocaleString();document.getElementById('likes').textContent=Math.floor(targets.likes*ease).toLocaleString();document.getElementById('forks').textContent=Math.floor(targets.forks*ease).toLocaleString();if(progress<1)requestAnimationFrame(step)}
-requestAnimationFrame(step)}
-animateCounters();
-var barObserver=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.querySelectorAll('.bar-fill').forEach(function(bar){bar.style.width=bar.dataset.width+'%'});barObserver.unobserve(e.target)}})},{threshold:0.2});
-document.querySelectorAll('.bench-card').forEach(function(card){barObserver.observe(card)});
-document.querySelectorAll('.bar-fill').forEach(function(bar){bar.style.width='0%'});
-function copyCode(){var code=document.querySelector('pre').textContent;navigator.clipboard.writeText(code).then(function(){var btn=document.querySelector('.code-copy');btn.textContent='Copied!';btn.style.color='var(--success)';setTimeout(function(){btn.textContent='Copy';btn.style.color=''},2000)})}
-document.querySelectorAll('.download-card').forEach(function(card){card.addEventListener('click',function(){card.style.transform='scale(0.95)';setTimeout(function(){card.style.transform=''},150)})});
-</script>
+    <footer>
+        <div class="container">
+            <div class="model-id">opencode/mimo-v2.5-free</div>
+            <div class="disclaimer">Qwen3.7-30B-Open is a parody. No model was harmed in the making of this page. All
+                benchmarks are fictional. "Your Current Coping Mechanism" is real though.</div>
+            <div>&copy; 2025 Qwen Team (not really) &middot; Apache 2.0 (we wish) &middot; Made with &#9749; and
+                existential dread</div>
+        </div>
+    </footer>
+    <script>
+        var canvas = document.getElementById('bg-canvas'), ctx = canvas.getContext('2d'), w, h, particles = [];
+        function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight }
+        resize(); window.addEventListener('resize', resize);
+        function Particle() { this.x = Math.random() * w; this.y = Math.random() * h; this.vx = (Math.random() - 0.5) * 0.3; this.vy = (Math.random() - 0.5) * 0.3; this.r = Math.random() * 1.5 + 0.5; this.alpha = Math.random() * 0.3 + 0.05; this.color = Math.random() > 0.5 ? '108,92,231' : '0,206,201' }
+        Particle.prototype.update = function () { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) { this.x = Math.random() * w; this.y = Math.random() * h } };
+        Particle.prototype.draw = function () { ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(' + this.color + ',' + this.alpha + ')'; ctx.fill() };
+        for (var i = 0; i < 80; i++)particles.push(new Particle());
+        function animateCanvas() { ctx.clearRect(0, 0, w, h); for (var i = 0; i < particles.length; i++) { particles[i].update(); particles[i].draw(); for (var j = i + 1; j < particles.length; j++) { var dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y, dist = Math.sqrt(dx * dx + dy * dy); if (dist < 150) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = 'rgba(108,92,231,' + (0.05 * (1 - dist / 150)) + ')'; ctx.lineWidth = 0.5; ctx.stroke() } } } requestAnimationFrame(animateCanvas) }
+        animateCanvas();
+        function createShards() { for (var i = 0; i < 12; i++) { var s = document.createElement('div'); s.className = 'shard'; var sz = Math.random() * 40 + 10; s.style.width = sz + 'px'; s.style.height = sz + 'px'; s.style.left = Math.random() * 100 + '%'; s.style.animationDuration = (Math.random() * 20 + 20) + 's'; s.style.animationDelay = (Math.random() * 20) + 's'; document.body.appendChild(s) } }
+        createShards();
+        var orbColors = ['rgba(108,92,231,0.3)', 'rgba(0,206,201,0.25)'];
+        function createOrbs() { for (var i = 0; i < 4; i++) { var o = document.createElement('div'); o.className = 'glow-orb'; o.style.width = o.style.height = (Math.random() * 300 + 200) + 'px'; o.style.left = Math.random() * 100 + '%'; o.style.top = Math.random() * 100 + '%'; o.style.background = orbColors[i % 2]; o.style.animationDelay = (i * 3) + 's'; document.body.appendChild(o) } }
+        createOrbs();
+        var tokenTexts = ['<bos>', '<|im_start|>system', '<|im_start|>user', '<|im_start|>assistant', '0x1A3F', 'token_id:42', '[PAD]', '<eos>', 'logits', 'attention_mask', '</s>', 'layer_norm', 'FFN', 'softmax(q,k,v)'];
+        function createTokens() { for (var i = 0; i < 20; i++) { var t = document.createElement('div'); t.className = 'token-floater'; t.textContent = tokenTexts[Math.floor(Math.random() * tokenTexts.length)]; t.style.left = Math.random() * 100 + '%'; t.style.animationDuration = (Math.random() * 25 + 15) + 's'; t.style.animationDelay = (Math.random() * 30) + 's'; t.style.fontSize = (Math.random() * 4 + 8) + 'px'; document.body.appendChild(t) } }
+        createTokens();
+        var observer = new IntersectionObserver(function (entries) { entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target) } }) }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el) });
+        function animateCounters() {
+            var targets = { downloads: 247832, likes: 18943, forks: 3891 }; var duration = 2500; var start = performance.now(); function step(now) { var elapsed = now - start; var progress = Math.min(elapsed / duration, 1); var ease = 1 - Math.pow(1 - progress, 3); document.getElementById('downloads').textContent = Math.floor(targets.downloads * ease).toLocaleString(); document.getElementById('likes').textContent = Math.floor(targets.likes * ease).toLocaleString(); document.getElementById('forks').textContent = Math.floor(targets.forks * ease).toLocaleString(); if (progress < 1) requestAnimationFrame(step) }
+            requestAnimationFrame(step)
+        }
+        animateCounters();
+        var barObserver = new IntersectionObserver(function (entries) { entries.forEach(function (e) { if (e.isIntersecting) { e.target.querySelectorAll('.bar-fill').forEach(function (bar) { bar.style.width = bar.dataset.width + '%' }); barObserver.unobserve(e.target) } }) }, { threshold: 0.2 });
+        document.querySelectorAll('.bench-card').forEach(function (card) { barObserver.observe(card) });
+        document.querySelectorAll('.bar-fill').forEach(function (bar) { bar.style.width = '0%' });
+        function copyCode() { var code = document.querySelector('pre').textContent; navigator.clipboard.writeText(code).then(function () { var btn = document.querySelector('.code-copy'); btn.textContent = 'Copied!'; btn.style.color = 'var(--success)'; setTimeout(function () { btn.textContent = 'Copy'; btn.style.color = '' }, 2000) }) }
+        document.querySelectorAll('.download-card').forEach(function (card) { card.addEventListener('click', function () { card.style.transform = 'scale(0.95)'; setTimeout(function () { card.style.transform = '' }, 150) }) });
+    </script>
 </body>
+
 </html>

@@ -1,1082 +1,255 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexusCommand | Premium Project Management Command Center</title>
-
-    <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+    <title>Alibaba Qwen3.5-9B - Project Management Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
-        :root {
-            /* Light Theme Variables */
-            --bg-body: #f4f6f9;
-            --bg-card: rgba(255, 255, 255, 0.7);
-            --bg-glass: rgba(255, 255, 255, 0.4);
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #3b82f6;
-            /* Blue */
-            --secondary: #8b5cf6;
-            /* Purple */
-            --accent: #06b6d4;
-            /* Cyan */
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: rgba(0, 0, 0, 0.05);
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08);
-            --neon-glow-blue: 0 0 10px rgba(59, 130, 246, 0.5);
-            --glass-border-light: rgba(255, 255, 255, 0.8);
-
-            /* Chart Defaults */
-            --chart-grid-color: rgba(0, 0, 0, 0.1);
-            --chart-text-color: #334155;
-        }
-
-        [data-theme="dark"] {
-            --bg-body: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.6);
-            --bg-glass: rgba(15, 23, 42, 0.6);
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --primary: #60a5fa;
-            --secondary: #a78bfa;
-            --accent: #22d3ee;
-            --success: #34d399;
-            --warning: #fbbf24;
-            --danger: #f87171;
-            --border: rgba(255, 255, 255, 0.1);
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
-            --neon-glow-blue: 0 0 15px rgba(96, 165, 250, 0.4);
-            --glass-border-light: rgba(255, 255, 255, 0.1);
-
-            /* Chart Overrides */
-            --chart-grid-color: rgba(255, 255, 255, 0.1);
-            --chart-text-color: #cbd5e1;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: background-color 0.5s ease;
-        }
-
-        /* Layout */
-        .app-container {
-            display: grid;
-            grid-template-columns: 260px 1fr;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background: var(--bg-card);
-            -webkit-backdrop-filter: blur(12px);
-            backdrop-filter: blur(12px);
-            border-right: 1px solid var(--border);
-            padding: 2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            z-index: 10;
-        }
-
-        .brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-group {
-            margin-bottom: 1rem;
-        }
-
-        .nav-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-weight: 500;
-            margin-bottom: 0.25rem;
-            transition: all 0.2s;
-        }
-
-        .nav-item:hover,
-        .nav-item.active {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--primary);
-        }
-
-        .nav-item i {
-            margin-right: 10px;
-            width: 20px;
-            text-align: center;
-        }
-
-        /* Main Content */
-        .main-content {
-            padding: 2rem;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        /* Header Controls */
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            background: var(--bg-card);
-            padding: 1rem 1.5rem;
-            border-radius: 16px;
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-        }
-
-        .toggle-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--text-muted);
-        }
-
-        /* Dashboard Grid */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 1.5rem;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            -webkit-backdrop-filter: blur(8px);
-            backdrop-filter: blur(8px);
-            box-shadow: var(--shadow-sm);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .card-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        /* KPI Cards */
-        .kpi-card {
-            grid-column: span 3;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-        }
-
-        .kpi-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-top: auto;
-        }
-
-        .kpi-label {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .kpi-trend {
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 0.5rem;
-        }
-
-        .trend-up {
-            color: var(--success);
-        }
-
-        .trend-down {
-            color: var(--danger);
-        }
-
-        /* Comparison Panel */
-        .comparison-panel {
-            grid-column: span 12;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .comp-card {
-            padding: 1.5rem;
-            border-radius: 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-        }
-
-        .comp-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 1rem;
-            font-weight: 700;
-            font-size: 1.2rem;
-        }
-
-        .comp-metric-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
-
-        .comp-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-align: right;
-        }
-
-        .comp-val {
-            font-weight: 600;
-        }
-
-        /* Charts */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-
-        .chart-card {
-            grid-column: span 6;
-            min-height: 400px;
-        }
-
-        /* Table */
-        .table-container {
-            grid-column: span 12;
-            overflow-x: auto;
-            border-radius: 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }
-
-        th,
-        td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
-        }
-
-        th {
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        th:hover {
-            color: var(--primary);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .status-active {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .status-completed {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--primary);
-        }
-
-        .status-risk {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-
-        /* Timeline */
-        .timeline-container {
-            grid-column: span 12;
-            position: relative;
-            padding-left: 3rem;
-            border-left: 2px solid var(--border);
-            margin-left: 0;
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 2rem;
-        }
-
-        .timeline-dot {
-            position: absolute;
-            left: -2.6rem;
-            top: 0;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: var(--bg-body);
-            border: 3px solid var(--primary);
-            z-index: 2;
-        }
-
-        .timeline-content {
-            padding-left: 1.5rem;
-        }
-
-        /* Risk Matrix */
-        .risk-grid {
-            grid-column: span 6;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-        }
-
-        .risk-item {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.9rem;
-            border: 1px solid var(--border);
-        }
-
-        .risk-count {
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        /* Integrations */
-        .integration-grid {
-            grid-column: span 6;
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .int-card {
-            flex: 1;
-            min-width: 120px;
-            background: var(--bg-body);
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.85rem;
-            border: 1px solid var(--border);
-        }
-
-        .int-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        /* Winner Breakdown */
-        .winner-panel {
-            grid-column: span 12;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            border-radius: 16px;
-            margin-bottom: 1rem;
-        }
-
-        .winner-title {
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* Notes */
-        .notes-panel {
-            grid-column: span 12;
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            min-height: 200px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            resize: none;
-            outline: none;
-            font-family: inherit;
-            line-height: 1.6;
-        }
-
-        /* Utility */
-        .hidden {
-            display: none !important;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
+        :root{
+            --bg:#050508;--deep:#020203;--panel:rgba(20,24,35,.6);--glass:rgba(255,255,255,.03);
+            --border:rgba(255,255,255,.1);--primary:#8b5cf6;--cyan:#06b6d4;--green:#10b981;
+            --red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--sec:#cbd5e1;
+            --font-mono:'JetBrains Mono',monospace;--font-sans:'Inter',sans-serif;--t:all .35s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="light"]{
+            --bg:#f0f2f5;--deep:#e6e9ef;--panel:rgba(248,250,252,.7);--glass:rgba(255,255,255,.3);
+            --border:rgba(0,0,0,.08);--primary:#7c3aed;--cyan:#0284c7;--green:#15803d;
+            --red:#b91c1c;--yellow:#b45309;--text:#1e293b;--muted:#64748a;--sec:#475569;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}*::before,*::after{box-sizing:border-box}
+        body{background:linear-gradient(160deg,var(--bg) 0%,var(--deep) 100%);color:var(--text);font-family:var(--font-sans);overflow-x:hidden;min-height:100vh;transition:var(--t)}
+        body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 20% 50%,rgba(139,92,246,.06) 0%,transparent 50%),radial-gradient(circle at 80% 30%,rgba(6,182,212,.06) 0%,transparent 50%);pointer-events:none;z-index:-1}
+        ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--deep)}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:4px}
+        header{background:rgba(5,5,8,.7);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:16px 32px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
+        [data-theme="light"] header{background:rgba(248,250,252,.8)}
+        .logo{display:flex;align-items:center;gap:12px}
+        .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--cyan));border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(139,92,246,.3);font-size:20px}
+        .logo-text{font-family:var(--font-mono);font-size:18px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,var(--primary),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+        .header-actions{display:flex;align-items:center;gap:16px}
+        .view-switcher{display:flex;gap:4px;background:var(--glass);border-radius:8px;padding:4px;border:1px solid var(--border)}
+        .view-btn{padding:8px 16px;border-radius:6px;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:var(--t);border:none;outline:none}
+        .view-btn.active{background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;box-shadow:0 0 15px rgba(139,92,246,.3)}
+        .toggle-group{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px}
+        .toggle-group input{display:none}
+        .toggle-group label{padding:6px 12px;border-radius:6px;cursor:pointer;transition:var(--t);color:var(--muted)}
+        .toggle-group input:checked+label{background:var(--primary);color:#fff;box-shadow:0 0 10px rgba(139,92,246,.3)}
+        .theme-toggle{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:8px 16px;cursor:pointer;transition:var(--t)}
+        .theme-toggle:hover{border-color:var(--primary)}
+        .theme-toggle input{width:42px;height:22px;appearance:none;background:var(--deep);border-radius:11px;position:relative;cursor:pointer;border:1px solid var(--border);outline:none}
+        .theme-toggle input::before{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:var(--text-secondary);border-radius:50%;transition:var(--t)}
+        .theme-toggle input:checked::before{left:23px;background:#fff}
+        .theme-toggle input:checked{background:var(--primary)}
+        .theme-toggle span{font-size:13px;color:var(--sec)}
+        .container{max-width:1400px;margin:0 auto;padding:24px}
+        .hero-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+        .summary-card{background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:12px;padding:20px;transition:var(--t);position:relative;overflow:hidden}
+        .summary-card:hover{border-color:var(--primary);box-shadow:0 0 30px rgba(139,92,246,.15);transform:translateY(-2px)}
+        .summary-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--primary)}
+        .summary-card.active::before{background:var(--green)}
+        .summary-card.at-risk::before{background:var(--red)}
+        .summary-card .label{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+        .summary-card .value{font-size:28px;font-weight:800;font-family:var(--font-mono)}
+        .summary-card .sub{font-size:12px;color:var(--muted);margin-top:4px;opacity:.7}
+        .summary-card .change{font-size:12px;display:flex;align-items:center;gap:4px;margin-top:4px}
+        .summary-card .change.positive{color:var(--green)}
+        .summary-card .change.negative{color:var(--red)}
+        .main-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px}
+        @media(max-width:992px){.main-grid{grid-template-columns:1fr}}
+        .panel{background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:12px;padding:24px;transition:var(--t)}
+        .panel:hover{border-color:rgba(139,92,246,.3);box-shadow:0 0 30px rgba(139,92,246,.08)}
+        .panel.full{grid-column:1/-1}
+        .panel-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+        .panel-title::before{content:'';width:3px;height:20px;background:var(--primary);border-radius:2px}
+        .panel-title .badge{background:var(--primary);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:auto}
+        .panel-title .badge.green{background:var(--green)}
+        .panel-title .badge.yellow{background:var(--yellow);color:#1a1a2e}
+        .matchup-section{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px}
+        @media(max-width:768px){.matchup-section{grid-template-columns:1fr}}
+        .matchup-project{text-align:center}
+        .matchup-project .proj-name{font-size:18px;font-weight:700;margin-bottom:4px}
+        .matchup-project.mp .proj-name{color:var(--cyan)}
+        .matchup-project.ca .proj-name{color:var(--green)}
+        .matchup-project .proj-meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+        .matchup-vs{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+        .vs-badge{width:56px;height:56px;border-radius:50%;background:var(--glass);border:2px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--yellow);animation:pulse 2s ease-in-out infinite}
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.4)}50%{box-shadow:0 0 0 8px rgba(245,158,11,0)}}
+        .matchup-result{font-size:20px;font-weight:700}
+        .winner-mp{color:var(--cyan)}
+        .winner-ca{color:var(--green)}
+        .winner-draw{color:var(--yellow)}
+        .score-bars{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+        .score-row{display:grid;grid-template-columns:110px 1fr auto;align-items:center;gap:8px}
+        .score-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+        .score-bar{flex:1;height:8px;background:var(--deep);border-radius:4px;overflow:hidden}
+        .score-bar-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px;transition:width 1s ease-out}
+        .score-bar-fill.mp{background:var(--cyan)}
+        .score-bar-fill.ca{background:var(--green)}
+        .score-val{font-family:var(--font-mono);font-size:13px;width:55px;text-align:right}
+        .model-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+        .model-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px;transition:var(--t)}
+        .model-card:hover{border-color:rgba(139,92,246,.3);transform:translateY(-3px)}
+        .model-card .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+        .model-card .proj-name{font-size:14px;font-weight:700}
+        .model-card .health-badge{font-size:18px;font-weight:800;font-family:var(--font-mono)}
+        .model-card .health-badge.healthy{color:var(--green);text-shadow:0 0 10px var(--green)}
+        .model-card .health-badge.at-risk{color:var(--red);text-shadow:0 0 10px var(--red)}
+        .metric-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+        .metric-row:last-child{margin-bottom:0}
+        .metric-name{font-size:12px;color:var(--muted)}
+        .metric-value{font-weight:600;font-family:var(--font-mono);font-size:13px}
+        .metric-bar-container{width:100%;height:6px;background:var(--deep);border-radius:3px;margin-top:6px;overflow:hidden}
+        .metric-bar-2{height:100%;border-radius:3px;transition:width .8s ease}
+        .table-container{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        .table-controls{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+        .table-controls input,.table-controls select{background:var(--deep);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;transition:var(--t)}
+        .table-controls input:focus{border-color:var(--primary)}
+        table{width:100%;border-collapse:collapse}
+        th{text-align:left;padding:10px 16px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600;cursor:pointer;transition:var(--t);user-select:none}
+        th:hover{color:var(--primary)}
+        th .si{opacity:.4}
+        th.sorted-asc .si.asc,th.sorted-desc .si.desc{opacity:1;color:var(--primary)}
+        td{padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px}
+        tr:last-child td{border-bottom:none}
+        tr:hover td{background:rgba(139,92,246,.05)}
+        .tag{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600}
+        .tag.mp{background:rgba(6,182,212,.15);color:var(--cyan)}
+        .tag.ca{background:rgba(16,185,129,.15);color:var(--green)}
+        .tag.completed{background:rgba(16,185,129,.15);color:var(--green)}
+        .tag.active{background:rgba(245,158,11,.15);color:var(--yellow)}
+        .tag.delayed{background:rgba(236,72,114,.15);color:var(--red)}
+        .expand-icon{margin-left:auto;opacity:.5;transition:transform .3s ease}
+        .row-expanded .expand-icon{transform:rotate(180deg)}
+        .detail-row{display:none;background:var(--deep)}
+        .row-expanded+.detail-row{display:table-row}
+        .detail-content{padding:16px}
+        .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+        .detail-item .d-label{font-size:11px;color:var(--muted);text-transform:uppercase}
+        .detail-item .d-value{font-size:13px;font-weight:600;font-family:var(--font-mono);margin-top:2px}
+        .winner-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+        .winner-item:last-child{border-bottom:none}
+        .winner-cat{font-size:13px;color:var(--muted);min-width:160px}
+        .winner-name{font-weight:600}
+        .winner-name.mp{color:var(--cyan)}
+        .winner-name.ca{color:var(--green)}
+        .winner-score{font-family:var(--font-mono);font-size:13px;color:var(--sec);margin-left:auto}
+        .risk-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+        .risk-severity{width:10px;height:10px;border-radius:50%}
+        .risk-severity.high{background:var(--red);box-shadow:0 0 8px var(--red)}
+        .risk-severity.medium{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+        .risk-severity.low{background:var(--green);box-shadow:0 0 8px var(--green)}
+        .risk-name{font-size:13px;font-weight:600}
+        .risk-detail{font-size:12px;color:var(--muted);margin-top:2px}
+        .notes-section textarea{width:100%;background:var(--deep);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--font-sans);font-size:14px;color:var(--text);resize:vertical;min-height:120px;transition:var(--t);outline:none}
+        .notes-section textarea:focus{border-color:var(--primary);box-shadow:0 0 20px rgba(139,92,246,.2)}
+        .view-section{display:none}
+        .view-section.active{display:block}
+        @media(max-width:768px){.hero-summary{grid-template-columns:1fr 1fr}.container{padding:16px}.view-switcher{display:none}}
+        @media(max-width:576px){.hero-summary{grid-template-columns:1fr}}
+        .hw-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+        .hw-item:last-child{border-bottom:none}
+        .hw-label{font-size:13px;color:var(--muted)}
+        .hw-value{font-family:var(--font-mono);font-size:13px;font-weight:600}
+        .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+        .status-dot.ok{background:var(--green);animation:blink 1.5s ease-in-out infinite}
+        .status-dot.warn{background:var(--yellow);animation:blink 1s ease-in-out infinite}
+        .status-dot.err{background:var(--red);animation:blink .8s ease-in-out infinite}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+        .vu-meter{display:flex;align-items:flex-end;gap:2px;height:40px;margin-top:8px}
+        .vu-bar{flex:1;min-width:4px;background:linear-gradient(to top,var(--cyan),var(--green));border-radius:2px;transition:height .15s ease;box-shadow:0 0 4px var(--cyan)}
+        .team-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+        .team-item:last-child{border-bottom:none}
+        .team-name{font-size:14px;font-weight:600}
+        .team-role{font-size:12px;color:var(--muted)}
+        .team-metrics{font-size:12px;color:var(--sec);font-family:var(--font-mono)}
     </style>
 </head>
-
-<body data-theme="dark">
-
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="brand">
-                <i class="fa-solid fa-cube" style="color: var(--primary)"></i> NexusCommand
+<body>
+    <header>
+        <div class="logo"><div class="logo-icon"><i class="fas fa-project-diagram"></i></div><span class="logo-text">QWEN3.5-9B</span></div>
+        <div class="header-actions">
+            <div class="view-switcher" id="viewSwitcher">
+                <button class="view-btn active" data-view="summary">Summary</button>
+                <button class="view-btn" data-view="projects">Projects</button>
+                <button class="view-btn" data-view="timeline">Timeline</button>
+                <button class="view-btn" data-view="resources">Resources</button>
+                <button class="view-btn" data-view="risks">Risks</button>
+                <button class="view-btn" data-view="operations">Operations</button>
             </div>
-
-            <div class="nav-group">
-                <div class="nav-title">Overview</div>
-                <div class="nav-item active" onclick="switchView('summary')"><i class="fa-solid fa-chart-pie"></i>
-                    Dashboard</div>
-                <div class="nav-item" onclick="switchView('projects')"><i class="fa-solid fa-layer-group"></i> Projects
-                </div>
-                <div class="nav-item" onclick="switchView('risks')"><i class="fa-solid fa-triangle-exclamation"></i>
-                    Risks</div>
+            <div class="toggle-group" id="methodologyToggle">
+                <input type="radio" name="methodology" id="agileRadio" value="agile" checked>
+                <label for="agileRadio">Agile</label>
+                <input type="radio" name="methodology" id="waterfallRadio" value="waterfall">
+                <label for="waterfallRadio">Waterfall</label>
             </div>
-
-            <div class="nav-group">
-                <div class="nav-title">Operations</div>
-                <div class="nav-item" onclick="switchView('timeline')"><i class="fa-solid fa-calendar-days"></i>
-                    Timeline</div>
-                <div class="nav-item" onclick="switchView('resources')"><i class="fa-solid fa-users-gear"></i> Resources
-                </div>
-                <div class="nav-item" onclick="switchView('integrations')"><i class="fa-solid fa-network-wired"></i>
-                    Integrations</div>
+            <div class="toggle-group" id="scopeToggle">
+                <input type="radio" name="scope" id="portfolioRadio" value="portfolio" checked>
+                <label for="portfolioRadio">Portfolio</label>
+                <input type="radio" name="scope" id="programRadio" value="program">
+                <label for="programRadio">Program</label>
+                <input type="radio" name="scope" id="projectRadio" value="project">
+                <label for="projectRadio">Project</label>
             </div>
-
-            <div class="nav-group">
-                <div class="nav-title">Settings</div>
-                <div class="nav-item"><i class="fa-solid fa-gear"></i> Config</div>
+            <div class="toggle-group" id="periodToggle">
+                <input type="radio" name="period" id="quarterRadio" value="quarter" checked>
+                <label for="quarterRadio">Q</label>
+                <input type="radio" name="period" id="monthRadio" value="month">
+                <label for="monthRadio">M</label>
+                <input type="radio" name="period" id="weekRadio" value="week">
+                <label for="weekRadio">W</label>
             </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-
-            <!-- Top Bar Controls -->
-            <div class="top-bar animate-in">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <h2 id="page-title" style="font-weight: 600;">Executive Command Center</h2>
-                    <span style="color: var(--text-muted); font-size: 0.9rem;" id="current-date"></span>
-                </div>
-
-                <div style="display: flex; gap: 1rem;">
-                    <button class="toggle-btn" onclick="toggleTheme()">
-                        <i class="fa-solid fa-moon"></i> <span id="theme-label">Dark Mode</span>
-                    </button>
-                    <button class="toggle-btn" onclick="toggleViewMode()">
-                        <i class="fa-solid fa-view-list"></i> <span id="view-mode-label">Portfolio View</span>
-                    </button>
-                </div>
+            <div class="theme-toggle">
+                <input type="checkbox" id="themeToggle">
+                <span>Light</span>
             </div>
+        </div>
+    </header>
 
-            <!-- DASHBOARD VIEW -->
-            <div id="view-summary" class="dashboard-grid animate-in">
-
-                <!-- Hero KPIs -->
-                <div class="card kpi-card">
-                    <div class="kpi-label">Active Projects</div>
-                    <div class="kpi-value">12</div>
-                    <div class="kpi-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +2 this quarter</div>
-                </div>
-                <div class="card kpi-card">
-                    <div class="kpi-label">Portfolio Health Score</div>
-                    <div class="kpi-value" style="color: var(--success)">87%</div>
-                    <div class="kpi-trend trend-up"><i class="fa-solid fa-check"></i> On track for Q4</div>
-                </div>
-                <div class="card kpi-card">
-                    <div class="kpi-label">Budget Utilization</div>
-                    <div class="kpi-value" style="color: var(--warning)">78%</div>
-                    <div class="kpi-trend trend-down"><i class="fa-solid fa-arrow-trend-down"></i> Slight overspend risk
-                    </div>
-                </div>
-                <div class="card kpi-card">
-                    <div class="kpi-label">Team Velocity</div>
-                    <div class="kpi-value">42 pts</div>
-                    <div class="kpi-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +5% vs last sprint</div>
-                </div>
-
-                <!-- Head to Head -->
-                <div class="card comparison-panel">
-                    <div class="comp-card" style="border-left: 4px solid var(--primary);">
-                        <div class="comp-header">Mobile Platform Modernization</div>
-                        <div class="comp-metric-row"><span class="comp-label">Schedule Progress</span><span
-                                class="comp-val" style="color:var(--success)">92%</span></div>
-                        <div class="comp-metric-row"><span class="comp-label">Budget Variance</span><span
-                                class="comp-val" style="color:var(--danger)">$12k Over</span></div>
-                        <div class="comp-metric-row"><span class="comp-label">Risk Score</span><span
-                                class="comp-val">Low (3.2)</span></div>
-                    </div>
-                    <div class="comp-card" style="border-left: 4px solid var(--secondary);">
-                        <div class="comp-header">Customer Analytics Init.</div>
-                        <div class="comp-metric-row"><span class="comp-label">Schedule Progress</span><span
-                                class="comp-val" style="color:var(--warning)">78%</span></div>
-                        <div class="comp-metric-row"><span class="comp-label">Budget Variance</span><span
-                                class="comp-val" style="color:var(--success)">$5k Under</span></div>
-                        <div class="comp-metric-row"><span class="comp-label">Risk Score</span><span
-                                class="comp-val">Med (6.8)</span></div>
-                    </div>
-                </div>
-
-                <!-- Charts Row 1 -->
-                <div class="card chart-card">
-                    <div class="card-header">
-                        <span class="card-title">Project Completion Trend</span>
-                        <select title="filter" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
-                            <option>Last 6 Months</option>
-                            <option>This Year</option>
-                        </select>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="completionChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="card chart-card">
-                    <div class="card-header">
-                        <span class="card-title">Budget vs Actual Spend</span>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="budgetChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Charts Row 2 -->
-                <div class="card chart-card">
-                    <div class="card-header">
-                        <span class="card-title">Resource Allocation</span>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="resourceChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="card chart-card">
-                    <div class="card-header">
-                        <span class="card-title">Open Risks by Severity</span>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="riskChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Project Table -->
-                <div class="table-container card" style="grid-column: span 12;">
-                    <div class="card-header">
-                        <span class="card-title">Project Portfolio Overview</span>
-                        <div style="display:flex; gap:0.5rem;">
-                            <input type="text" placeholder="Search projects..." id="searchInput" onkeyup="filterTable()"
-                                style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main);">
-                        </div>
-                    </div>
-                    <table id="projectTable">
-                        <thead>
-                            <tr>
-                                <th onclick="sortTable(0)">Project Name</th>
-                                <th onclick="sortTable(1)">Status</th>
-                                <th onclick="sortTable(2)">Health Score</th>
-                                <th onclick="sortTable(3)">Budget Util.</th>
-                                <th onclick="sortTable(4)">Completion %</th>
-                                <th onclick="sortTable(5)">Risks</th>
-                            </tr>
-                        </thead>
-                        <tbody id="projectTableBody">
-                            <!-- JS Populated -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Timeline -->
-                <div class="timeline-container card" style="grid-column: span 12;">
-                    <div class="card-header"><span class="card-title">Delivery Timeline</span></div>
-                    <div id="timelineContent">
-                        <!-- JS Populated -->
-                    </div>
-                </div>
-
-                <!-- Winner Breakdown -->
-                <div class="winner-panel card" style="grid-column: span 12;">
-                    <div class="card-header"><span class="card-title">Winner Breakdown</span></div>
-                    <div style="display: flex; gap: 4rem;">
-                        <div style="flex:1">
-                            <h4 style="margin-bottom:0.5rem; color:var(--text-muted)">Schedule Adherence</h4>
-                            <p style="font-size:0.9rem;">Mobile Platform Modernization outperformed Analytics by 14% in
-                                schedule adherence, finishing ahead of critical milestones.</p>
-                        </div>
-                        <div style="flex:1">
-                            <h4 style="margin-bottom:0.5rem; color:var(--text-muted)">Budget Control</h4>
-                            <p style="font-size:0.9rem;">Analytics Initiative demonstrated superior budget control,
-                                utilizing 5% less than allocated resources.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notes -->
-                <div class="notes-panel card" style="grid-column: span 12;">
-                    <div class="card-header"><span class="card-title">Executive Commentary</span></div>
-                    <textarea placeholder="Add observations, delivery updates, or future outlook..."></textarea>
-                </div>
-
+    <div class="container">
+        <!-- HERO SUMMARY -->
+        <section class="hero-summary" id="heroSummary">
+            <div class="summary-card active">
+                <div class="label">Active Projects</div>
+                <div class="value" id="activeProjects">18</div>
+                <div class="sub">Across 5 departments</div>
+                <div class="change positive"><i class="fas fa-arrow-up"></i> +3 QoQ</div>
             </div>
-
-            <!-- PROJECTS VIEW (Placeholder for view switching) -->
-            <div id="view-projects" class="dashboard-grid hidden">
-                <div class="card" style="grid-column: span 12; text-align:center; padding: 4rem;">
-                    <h3>Projects View</h3>
-                    <p>Switching to detailed project view...</p>
-                </div>
+            <div class="summary-card">
+                <div class="label">Completed</div>
+                <div class="value" id="completedProjects">47</div>
+                <div class="sub">This reporting period</div>
+                <div class="change positive"><i class="fas fa-arrow-up"></i> +12% MoM</div>
             </div>
-
-        </main>
-    </div>
-
-    <script>
-        // --- DATA MOCKING ---
-        const projects = [
-            { id: 1, name: "Mobile Platform Modernization", status: "Active", health: 87, budget: 450000, spent: 396000, completion: 92, risks: 2, owner: "Sarah J.", team: 12 },
-            { id: 2, name: "Customer Analytics Init.", status: "Active", health: 82, budget: 320000, spent: 294400, completion: 78, risks: 5, owner: "Mike T.", team: 8 },
-            { id: 3, name: "Legacy ERP Migration", status: "Risk", health: 65, budget: 1200000, spent: 960000, completion: 45, risks: 8, owner: "David L.", team: 25 },
-            { id: 4, name: "Cloud Infrastructure Upgrade", status: "Active", health: 91, budget: 200000, spent: 160000, completion: 80, risks: 1, owner: "Elena R.", team: 5 },
-            { id: 5, name: "AI Integration Pilot", status: "Completed", health: 95, budget: 150000, spent: 145000, completion: 100, risks: 0, owner: "Tom H.", team: 6 },
-        ];
-
-        const milestones = [
-            { project: "Mobile Platform Modernization", phase: "Design", date: "2023-10-15", status: "Done" },
-            { project: "Mobile Platform Modernization", phase: "Dev Sprint 1", date: "2023-11-01", status: "Done" },
-            { project: "Mobile Platform Modernization", phase: "UAT Phase", date: "2023-12-15", status: "In Progress" },
-            { project: "Customer Analytics Init.", phase: "Data Pipeline Setup", date: "2023-11-20", status: "Done" },
-            { project: "Legacy ERP Migration", phase: "Database Audit", date: "2023-10-01", status: "Done" },
-            { project: "Legacy ERP Migration", phase: "Migration Scripting", date: "2024-01-15", status: "Blocked" },
-        ];
-
-        const integrations = [
-            { name: "Jira", status: "Connected", latency: "12ms", lastSync: "2m ago" },
-            { name: "Azure DevOps", status: "Connected", latency: "45ms", lastSync: "5m ago" },
-            { name: "Slack", status: "Connected", latency: "8ms", lastSync: "1m ago" },
-            { name: "GitHub", status: "Warning", latency: "200ms", lastSync: "1h ago" }
-        ];
-
-        // --- THEME LOGIC ---
-        function toggleTheme() {
-            const body = document.body;
-            const label = document.getElementById('theme-label');
-
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.setAttribute('data-theme', 'light');
-                label.innerText = "Light Mode";
-                localStorage.setItem('nexus_theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                label.innerText = "Dark Mode";
-                localStorage.setItem('nexus_theme', 'dark');
-            }
-        }
-
-        // Load saved theme on startup
-        const savedTheme = localStorage.getItem('nexus_theme') || 'dark';
-        document.body.setAttribute('data-theme', savedTheme);
-
-        // --- CHARTS CONFIGURATION ---
-        Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-muted').trim();
-        Chart.defaults.borderColor = getComputedStyle(document.body).getPropertyValue('--border').trim();
-
-        const chartInstances = {};
-
-        function prepareCanvas(id) {
-            const canvas = document.getElementById(id);
-            if (!canvas) return;
-            const parent = canvas.parentElement;
-            const w = parent.clientWidth || 300;
-            const h = parent.clientHeight || 300;
-            const dpr = window.devicePixelRatio || 1;
-            canvas.style.width = w + 'px';
-            canvas.style.height = h + 'px';
-            canvas.width = Math.round(w * dpr);
-            canvas.height = Math.round(h * dpr);
-        }
-
-        function initCharts() {
-            Object.values(chartInstances).forEach(c => { if (c) c.destroy(); });
-            // Completion Trend (Line)
-            prepareCanvas('completionChart');
-            const ctxComp = document.getElementById('completionChart').getContext('2d');
-            chartInstances.completion = new Chart(ctxComp, {
-                type: 'line',
-                data: {
-                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-                    datasets: [{
-                        label: 'Completion %',
-                        data: [45, 60, 75, 88],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: { responsive: false, maintainAspectRatio: false }
-            });
-
-            // Budget (Bar)
-            prepareCanvas('budgetChart');
-            const ctxBud = document.getElementById('budgetChart').getContext('2d');
-            chartInstances.budget = new Chart(ctxBud, {
-                type: 'bar',
-                data: {
-                    labels: ['Mobile Platform', 'Analytics', 'ERP Migration'],
-                    datasets: [
-                        { label: 'Planned', data: [450, 320, 1200], backgroundColor: '#94a3b8' },
-                        { label: 'Actual', data: [396, 294, 960], backgroundColor: '#3b82f6' }
-                    ]
-                },
-                options: { responsive: false, maintainAspectRatio: false }
-            });
-
-            // Resource (Doughnut)
-            prepareCanvas('resourceChart');
-            const ctxRes = document.getElementById('resourceChart').getContext('2d');
-            chartInstances.resource = new Chart(ctxRes, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Engineering', 'Design', 'QA', 'Product'],
-                    datasets: [{
-                        data: [45, 20, 15, 20],
-                        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b']
-                    }]
-                },
-                options: { responsive: false, maintainAspectRatio: false }
-            });
-
-            // Risk (Polar Area)
-            prepareCanvas('riskChart');
-            const ctxRisk = document.getElementById('riskChart').getContext('2d');
-            chartInstances.risk = new Chart(ctxRisk, {
-                type: 'polarArea',
-                data: {
-                    labels: ['High', 'Medium', 'Low'],
-                    datasets: [{
-                        data: [1, 3, 5],
-                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981']
-                    }]
-                },
-                options: { responsive: false, maintainAspectRatio: false }
-            });
-        }
-
-        // --- RENDER FUNCTIONS ---
-
-        function renderTable() {
-            const tbody = document.getElementById('projectTableBody');
-            let html = '';
-
-            projects.forEach(p => {
-                const statusClass = p.status === 'Active' ? 'status-active' : (p.status === 'Completed' ? 'status-completed' : 'status-risk');
-                const healthColor = p.health > 80 ? 'var(--success)' : (p.health < 70 ? 'var(--danger)' : 'var(--warning)');
-
-                html += `
-                <tr>
-                    <td style="font-weight:500;">${p.name}</td>
-                    <td><span class="status-badge ${statusClass}">${p.status}</span></td>
-                    <td style="color:${healthColor}; font-weight:bold;">${p.health}%</td>
-                    <td>${Math.round((p.spent / p.budget) * 100)}%</td>
-                    <td>${p.completion}%</td>
-                    <td><span class="status-badge status-risk">${p.risks} Open</span></td>
-                </tr>
-            `;
-            });
-            tbody.innerHTML = html;
-        }
-
-        function renderTimeline() {
-            const container = document.getElementById('timelineContent');
-            let html = '';
-
-            milestones.forEach(m => {
-                const color = m.status === 'Done' ? 'var(--success)' : (m.status === 'Blocked' ? 'var(--danger)' : 'var(--primary)');
-                html += `
-                <div class="timeline-item">
-                    <div class="timeline-dot" style="border-color: ${color}"></div>
-                    <div class="timeline-content">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                            <span style="font-weight:600;">${m.phase}</span>
-                            <span style="font-size:0.8rem; color:var(--text-muted);">${m.date}</span>
-                        </div>
-                        <div style="font-size:0.9rem; color:var(--text-muted);">Project: ${m.project} | Status: ${m.status}</div>
-                    </div>
-                </div>
-            `;
-            });
-            container.innerHTML = html;
-        }
-
-        function renderIntegrations() {
-            const grid = document.getElementById('integrations-grid'); // Note: ID needs to exist in HTML or be created. 
-            // For this demo, we'll just log it or create a placeholder if the element isn't strictly needed for the "Hero" view but requested.
-            // Let's add the container to the summary view grid dynamically or assume it exists.
-            // Actually, let's append it to the main content area if not present in static HTML, 
-            // but better to put it in the static HTML structure to ensure layout stability.
-
-            // Adding a dedicated section for integrations in the grid (let's add it before notes)
-            const intContainer = document.createElement('div');
-            intContainer.className = 'card';
-            intContainer.style.gridColumn = 'span 12';
-            intContainer.innerHTML = `
-            <div class="card-header"><span class="card-title">Integrations Status</span></div>
-            <div id="integrations-grid" style="display:flex; gap:1rem; flex-wrap:wrap;"></div>
-        `;
-
-            // Insert before notes
-            const notes = document.querySelector('.notes-panel');
-            if (notes) {
-                const parent = notes.parentElement;
-                parent.insertBefore(intContainer, notes);
-
-                const g = document.getElementById('integrations-grid');
-                integrations.forEach(i => {
-                    g.innerHTML += `
-                    <div class="int-card">
-                        <i class="${i.name === 'Jira' ? 'fa-brands fa-jira' : (i.name === 'Slack' ? 'fa-brands fa-slack' : 'fa-solid fa-server')} ${i.status === 'Warning' ? 'text-danger' : ''}"></i>
-                        <div style="font-weight:600;">${i.name}</div>
-                        <div style="color:var(--success); font-size:0.75rem;">● Connected</div>
-                        <div style="font-size:0.7rem; color:var(--text-muted);">Latency: ${i.latency}</div>
-                    </div>
-                `;
-                });
-            }
-        }
-
-        // --- INTERACTIVITY ---
-
-        function switchView(viewName) {
-            // Update Sidebar Active State
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const activeBtn = Array.from(document.querySelectorAll('.nav-item')).find(el => el.getAttribute('onclick').includes(viewName));
-            if (activeBtn) activeBtn.classList.add('active');
-
-            // Hide all views
-            document.getElementById('view-summary').classList.add('hidden');
-            document.getElementById('view-projects').classList.add('hidden');
-
-            // Show selected view
-            const target = document.getElementById(`view-${viewName}`);
-            if (target) {
-                target.classList.remove('hidden');
-                window.scrollTo(0, 0);
-            }
-
-            // Update Title
-            const titles = {
-                'summary': 'Executive Command Center',
-                'projects': 'Project Portfolio Management',
-                'risks': 'Risk & Issue Register',
-                'timeline': 'Delivery Roadmap',
-                'resources': 'Resource Allocation',
-                'integrations': 'System Integrations'
-            };
-            document.getElementById('page-title').innerText = titles[viewName] || 'Dashboard';
-        }
-
-        function filterTable() {
-            const input = document.getElementById("searchInput");
-            const filter = input.value.toUpperCase();
-            const table = document.getElementById("projectTableBody");
-            const tr = table.getElementsByTagName("tr");
-
-            for (let i = 0; i < tr.length; i++) {
-                const tdName = tr[i].getElementsByTagName("td")[0];
-                if (tdName) {
-                    const txtValue = tdName.textContent || tdName.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }
-            }
-        }
-
-        function sortTable(column) {
-            // Simple implementation for demo purposes
-            const table = document.getElementById("projectTableBody");
-            const rows = Array.from(table.rows);
-
-            rows.sort((a, b) => {
-                let valA = a.cells[column].innerText;
-                let valB = b.cells[column].innerText;
-
-                // Handle numbers
-                if (!isNaN(valA) && !isNaN(valB)) return parseFloat(valB) - parseFloat(valA);
-                return valA.localeCompare(valB);
-            });
-
-            rows.forEach(row => table.appendChild(row));
-        }
-
-        function toggleViewMode() {
-            const btn = document.getElementById('view-mode-label');
-            if (btn.innerText === 'Portfolio View') {
-                btn.innerText = 'Program View';
-                // Logic to change grid layout could go here (e.g., 2 columns instead of 12)
-            } else {
-                btn.innerText = 'Portfolio View';
-            }
-        }
-
-        // --- INITIALIZATION ---
-        window.addEventListener('load', () => {
-            renderTable();
-            renderTimeline();
-            renderIntegrations();
-            initCharts();
-
-            // Set Date
-            const date = new Date();
-            document.getElementById('current-date').innerText = `Last updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-        });
-
-        // Resize handler with debounce
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                Object.values(chartInstances).forEach(ch => {
-                    if (ch) {
-                        const canvas = ch.canvas;
-                        if (canvas) {
-                            const parent = canvas.parentElement;
-                            const w = parent.clientWidth || 300;
-                            const h = parent.clientHeight || 300;
-                            const dpr = window.devicePixelRatio || 1;
-                            canvas.style.width = w + 'px';
-                            canvas.style.height = h + 'px';
-                            canvas.width = Math.round(w * dpr);
-                            canvas.height = Math.round(h * dpr);
-                            ch.resize();
-                        }
-                    }
-                });
-            }, 250);
-        });
-    </script>
-</body>
-
-</html>
+            <div class="summary-card active">
+                <div class="label">Health Score</div>
+                <div class="value" id="healthScore">78.4</div>
+                <div class="sub">Portfolio average</div>
+                <div class="change positive"><i class="fas fa-arrow-up"></i> +2.1 pts</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Budget Utilization</div>
+                <div class="value" id="budgetUtil">67.2%</div>
+                <div class="sub">$42.8M of $63.6M spent</div>
+                <div class="change positive"><i class="fas fa-arrow-down"></i> -5.3% vs target</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">On-Time Delivery</div>
+                <div class="value" id="onTimeDelivery">84.7%</div>
+                <div class="sub">On schedule</div>
+                <div class="change positive"><i class="fas fa-arrow-up"></i> +3.2% QoQ</div>
+            </div>
+            <div class="summary-card active">
+                <div class="label">Team Members</div>
+                <div class="value" id="teamMembers">342</div>
+                <div class="sub">Across engineering & QA</div>
+                <div class="change positive"><i class="fas fa-arrow-up"></i> +8 hires</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Projected Spend</div>
+                <div class="value" id="projectedSpend">$89.2M</div>
+                <div class="sub">Annual run rate</div>
+                <div class="change negative"><i class="fas fa-arrow-up"></i> +5.1% QoQ</div>
+            </div>
+        </section>
