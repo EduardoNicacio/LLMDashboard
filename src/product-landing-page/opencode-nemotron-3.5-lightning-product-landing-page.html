@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qwen3.7-30B-Open Release</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --fg: #e8e8f0;
+      --muted: #6b6b80;
+      --card: #1a1a24;
+      --card-hover: #232330;
+      --accent: #00d4aa;
+      --accent-secondary: #ff6b6b;
+      --purple: #a78bfa;
+      --orange: #ffa502;
+      --border: #2a2a3a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .font-display {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Background */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 100% 80% at 50% -10%, rgba(167, 139, 250, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 212, 170, 0.1) 0%, transparent 50%),
+        var(--bg);
+      z-index: -2;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter name='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* Grid pattern */
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(167, 139, 250, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(167, 139, 250, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Scanlines effect */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.02;
+      background: repeating-linear-gradient(0deg,
+          rgba(0, 0, 0, 0),
+          rgba(0, 0, 0, 0.1),
+          rgba(0, 0, 0, 0),
+          2px);
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem 2rem;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-content {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent) 0%, #0088aa 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--bg);
+    }
+
+    .logo-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: none;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 8rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 0.5rem 1.25rem;
+      margin: 1.5rem auto 2rem;
+    }
+
+    .hero-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 .main {
+      color: var(--fg);
+    }
+
+    .hero h1 .accent {
+      color: var(--accent);
+    }
+
+    .hero .subtitle {
+      font-size: 1.25rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero .cta-section {
+      margin-top: 3rem;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--bg);
+      padding: 1rem 2rem;
+      border-radius: 100px;
+      text-decoration: none;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 212, 170, 0.4);
+    }
+
+    .cta-button.secondary {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+    }
+
+    /* Model Card */
+    .model-card {
+      background: var(--card);
+      border: 1px var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      margin: 2rem auto;
+      max-width: 600px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+
+    .model-card:hover {
+      border-color: var(--accent);
+    }
+
+    .model-card .param-count {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 1rem 0;
+    }
+
+    .model-card .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+    }
+
+    .feature-tag {
+      background: var(--bg-secondary);
+      padding: 0.5rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Benchmark Section */
+    .benchmark-section {
+      padding: 2rem;
+    }
+
+    .benchmark-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .benchmark-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .benchmark-card .name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .benchmark-card .score {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .benchmark-card .vs {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Download Section */
+    .download-section {
+      padding: 2rem;
+    }
+
+    .download-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .download-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .download-btn:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .download-btn .platform {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .download-btn .name {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--fg);
+    }
+
+    /* Timeline Section */
+    .timeline-section {
+      padding: 2rem;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 3rem;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2rem;
+      top: 1rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .timeline-item.latest::before {
+      background: var(--accent);
+    }
+
+    .timeline-item .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .timeline-item .period {
+      font-size: 0.875rem;
+      color: var(--fg);
+    }
+
+    /* Code Section */
+    .code-section {
+      padding: 2rem;
+    }
+
+    .code-block {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+
+    .code-block .language {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      display: inline-block;
+    }
+
+    .code-block pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--fg);
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      color: var(--accent);
+    }
+
+    /* Community Reaction */
+    .community-section {
+      padding: 2rem;
+    }
+
+    .reaction-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+      margin: 0.5rem 0;
+    }
+
+    .reaction-card .user {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .reaction-card .text {
+      color: var(--muted);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    /* Run Locally Section */
+    .local-section {
+      padding: 2rem;
+    }
+
+    .vram-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .vram-item {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .vram-item .gpu {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .vram-item .vram {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* Animated background elements */
+    .floating-token {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+      }
+
+      50% {
+        transform: translateY(-20px) translateX(20px);
+      }
+    }
+
+    .token-1 {
+      left: 10%;
+      top: 20%;
+      animation-duration: 6s;
+    }
+
+    .token-2 {
+      left: 30%;
+      top: 60%;
+      animation-duration: 7s;
+    }
+
+    .token-3 {
+      left: 70%;
+      top: 30%;
+      animation-duration: 5s;
+    }
+
+    .token-4 {
+      left: 90%;
+      top: 70%;
+      animation-duration: 8s;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .floating-token {
+        animation: none;
+      }
+
+      .pulse {
+        animation: none;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero .subtitle {
+        font-size: 1rem;
+      }
+
+      .cta-button {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
+      }
+
+      .model-card .param-count {
+        font-size: 2rem;
+      }
+
+      .download-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-layer"></div>
+  <div class="noise"></div>
+  <div class="grid-pattern"></div>
+  <div class="scanlines"></div>
+
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 22 19.07 12 17.77 8 19.07 5 14.14 0 9.27 5.09 8.26 12 2">
+            </polygon>
+          </svg>
+        </div>
+        <span class="logo-text">Qwen Release</span>
+      </div>
+      <nav>
+        <div class="nav-links">
+          <a href="#hero">Home</a>
+          <a href="#model">Model</a>
+          <a href="#benchmarks">Benchmarks</a>
+          <a href="#download">Download</a>
+          <a href="#timeline">Timeline</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <h1>
+        <span class="main">Qwen3.7-30B-Open</span>
+        <span class="accent">is finally here</span>
+      </h1>
+      <p class="subtitle">
+        The community can now stop refreshing Hugging Face every 11 seconds.
+        The wait is over: open weights are here, and the revolution begins.
+      </p>
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Open Weights
+      </div>
+      <div class="hero-cta">
+        <a href="#download" class="cta-button">Download Now</a>
+        <a href="#model" class="cta-button secondary">Learn More</a>
+      </div>
+    </section>
+
+    <section class="model-card" id="model">
+      <div class="param-count">30B</div>
+      <div class="features">
+        <div class="feature-tag">Open Weights</div>
+        <div class="feature-tag">Long Context</div>
+        <div class="feature-tag">Tool Use</div>
+        <div class="feature-tag">Coding</div>
+        <div class="feature-tag">Reasoning</div>
+      </div>
+      <p>Quantized for local inference. Requires ~60GB VRAM for full precision, or 12-16GB with 4-bit quantization.</p>
+    </section>
+
+    <section class="benchmark-section" id="benchmarks">
+      <h2 class="section-title">Benchmarks</h2>
+      <div class="benchmark-grid">
+        <div class="benchmark-card">
+          <div class="name">Qwen3.7-30B-Open</div>
+          <div class="score">8.7</div>
+          <div class="vs">Quality</div>
+        </div>
+        <div class="benchmark-card">
+          <div class="name">GPT-4o</div>
+          <div class="score">8.5</div>
+          <div class="vs">Quality</div>
+        </div>
+        <div class="benchmark-card">
+          <div class="name">Claude 3.5 Sonnet</div>
+          <div class="score">8.3</div>
+          <div class="vs">Quality</div>
+        </div>
+        <div class="benchmark-card">
+          <div class="name">Llama 3.1 8B</div>
+          <div class="score">7.1</div>
+          <div class="vs">Quality</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section" id="download">
+      <h2 class="section-title">Download</h2>
+      <div class="download-buttons">
+        <div class="download-btn">
+          <span class="platform">Hugging Face</span>
+          <span class="name">qwen3.7-30b-open.gguf</span>
+        </div>
+        <div class="download-btn">
+          <span class="platform">API</span>
+          <span class="name">Infer via OpenRouter</span>
+        </div>
+        <div class="download-btn">
+          <span class="platform">Torrent</span>
+          <span class="name">P2P Network</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline-section" id="timeline">
+      <h2 class="section-title">Timeline</h2>
+      <div class="timeline">
+        <div class="timeline-item latest">
+          <div class="label">Official Release</div>
+          <div class="period">Today</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">"Soon™"</div>
+          <div class="period">2023</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">Final Safety Pass</div>
+          <div class="period">2024</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">"Actually Soon"</div>
+          <div class="period">2024 Q4</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">One More Eval</div>
+          <div class="period">2025 Q1</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="code-section" id="code">
+      <h2 class="section-title">Run It Locally</h2>
+      <div class="code-block">
+        <div class="language">Python - Transformers</div>
+        <pre><code>from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
+model_name = "qwen3.7-30b-open"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype="auto",
+    device_map="auto"
+)
+
+prompt = "Write a Python function to sort a list."
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+output = model.generate(**inputs, max_new_tokens=128)
+print(tokenizer.decode(output[0], skip_special_tokens=True))</code></pre>
+      </div>
+    </section>
+
+    <section class="local-section" id="local">
+      <h2 class="section-title">Run It Locally</h2>
+      <div class="vram-grid">
+        <div class="vram-item">
+          <div class="gpu">RTX 3090 (24GB)</div>
+          <div class="vram">1× 3090</div>
+        </div>
+        <div class="vram-item">
+          <div class="gpu">RTX 3090 (24GB)</div>
+          <div class="vram">2× 3090 (Dual)</div>
+        </div>
+        <div class="vram-item">
+          <div class="gpu">RTX 4090 (24GB)</div>
+          <div class="vram">1× 4090</div>
+        </div>
+        <div class="vram-item">
+          <div class="gpu">RTX 3080 (10GB)</div>
+          <div class="vram">4-bit quant only</div>
+        </div>
+      </div>
+      <p>Recommended: Dual RTX 3090s for full 30B parameter model at reasonable speed.</p>
+    </section>
+
+    <section class="community-section" style="padding: 2rem;">
+      <h2
+        style="font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 1.5rem;">
+        Community Reaction</h2>
+      <div class="reaction-card">
+        <div class="user">@AI_Enthusiast</div>
+        <div class="text">Finally! Been waiting years for an open model this capable. Just downloaded and running on my
+          dual 3090 setup. Impressive!</div>
+      </div>
+      <div class="reaction-card">
+        <div class="user">@CodeMonkey</div>
+        <div class="text">The coding performance is unreal. Got it writing functions I never thought an open model could
+          handle. GGUF format works perfectly.</div>
+      </div>
+      <div class="reaction-card">
+        <div class="user">@HuggingFacePowerUser</div>
+        <div class="text">OK but why is the file 180GB? 💀 Joking. Really excited for open weights, this is a huge day
+          for the community.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Mobile nav toggle
+    const navLinks = document.querySelector('.nav-links');
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Intersection Observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('section').forEach(section => {
+      section.style.opacity = '0';
+      section.style.transform = 'translateY(20px)';
+      section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(section);
+    });
+  </script>
+</body>
+
+</html>

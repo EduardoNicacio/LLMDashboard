@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Results & Analysis Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d17;
+      --bg-secondary: #1a1a24;
+      --card: #21212d;
+      --card-hover: #2a2a3a;
+      --fg: #f0f0f5;
+      --muted: #78788a;
+      --accent: #00d4aa;
+      --accent-glow: rgba(0, 212, 170, 0.3);
+      --error: #ff4756;
+      --warning: #ffa502;
+      --success: #00d4aa;
+      --card-border: #3a3a4a;
+      --purple: #a78bfa;
+      --orange: #ff6b6b;
+      --blue: #3a7dff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Background */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 100% 60% at 50% -20%, rgba(167, 139, 250, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0, 212, 170, 0.1) 0%, transparent 50%),
+        var(--bg);
+      z-index: -2;
+    }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(58, 125, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58, 125, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem 2rem;
+      background: rgba(13, 13, 23, 0.8);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .header-content {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent) 0%, #0088aa 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--bg);
+    }
+
+    .logo-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.2s;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      background: var(--bg-secondary);
+      border: 1px solid var(--card-border);
+      color: var(--fg);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 8rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .hero-content h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-content h1 .accent {
+      color: var(--accent);
+    }
+
+    .hero-content p {
+      font-size: 1.125rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .hero-content .eps {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-card .value {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .stat-card .label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Head-to-Head */
+    .head-to-head {
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+
+    .head-to-head-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .head-to-head-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+    }
+
+    .head-to-head-card .name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .head-to-head-card .score {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .head-to-head-card .metric {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+
+    /* Company Cards */
+    .company-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .company-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .company-card .ticker {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .company-card .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .company-card .metric-label {
+      color: var(--muted);
+    }
+
+    .company-card .metric-value {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    /* Charts */
+    .charts-section {
+      padding: 2rem;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+    }
+
+    .chart-card h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .chart-canvas {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    /* Controls */
+    .controls {
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      margin: 2rem 0;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .control-group label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 0.5rem;
+    }
+
+    .control-group select,
+    .control-group button {
+      background: var(--bg-secondary);
+      border: 1px solid var(--card-border);
+      color: var(--fg);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .control-group select:hover,
+    .control-group button:hover {
+      border-color: var(--accent);
+    }
+
+    /* Financial Statements */
+    .statement-section {
+      padding: 2rem;
+    }
+
+    .statement-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .statement-table th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--card-border);
+      padding: 0.75rem 1rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .statement-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      transition: background 0.2s;
+    }
+
+    .statement-table tr:hover td {
+      background: var(--bg-secondary);
+    }
+
+    .statement-table .segment {
+      color: var(--accent);
+    }
+
+    .statement-table .expense {
+      color: var(--muted);
+    }
+
+    /* Market Data */
+    .market-data {
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+    }
+
+    .market-data-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .market-data-item:last-child {
+      border-bottom: none;
+    }
+
+    .market-data .label {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .market-data .value {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* API Usage */
+    .api-panel {
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+    }
+
+    .api-usage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .api-item {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 0.75rem;
+    }
+
+    .api-item .label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .api-item .value {
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+
+    /* Winner Breakdown */
+    .winner-section {
+      padding: 2rem;
+      background: linear-gradient(135deg, var(--card) 0%, var(--bg-secondary) 100%);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Light/Dark Theme */
+    .light-theme {
+      --bg: #f8f8fd;
+      --bg-secondary: #e8e8f0;
+      --card: #ffffff;
+      --card-hover: #f5f5fa;
+      --fg: #1a1a24;
+      --muted: #78788a;
+      --accent: #00d4aa;
+      --card-border: #e0e0e8;
+      --bg-layer: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-stats {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .head-to-head-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .company-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        padding: 1rem;
+      }
+
+      .control-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .control-group label {
+        margin-bottom: 0.25rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-layer"></div>
+  <div class="grid-overlay"></div>
+
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 22 19.07 12 17.77 8 19.07 5 14.14 0 9.27 5.09 8.26 12 2">
+            </polygon>
+          </svg>
+        </div>
+        <span class="logo-text">Financial Dashboard</span>
+      </div>
+      <nav>
+        <div class="nav-links">
+          <a href="#hero">Home</a>
+          <a href="#models">Companies</a>
+          <a href="#charts">Charts</a>
+          <a href="#table">Reports</a>
+          <a href="#api">API</a>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <h1>Financial Results & Analysis</h1>
+          <p class="eps">Apple Inc. vs Microsoft Corp.</p>
+          <p>Side-by-side comparison of quarterly and annual financial statements for institutional investors and data
+            journalists. All visual elements adapt to light and dark themes with smooth transitions.</p>
+          <div class="hero-stats">
+            <div class="stat-card">
+              <div class="value">$383.3B</div>
+              <div class="label">Apple Revenue</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">$211.9B</div>
+              <div class="label">Microsoft Revenue</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">12.5%</div>
+              <div class="label">Revenue Growth (AAPL)</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">11.2%</div>
+              <div class="label">Revenue Growth (MSFT)</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">2.1%</div>
+              <div class="label">Dividend Yield (AAPL)</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">0.9%</div>
+              <div class="label">Dividend Yield (MSFT)</div>
+            </div>
+          </div>
+        </div>
+        <div class="animate-in" style="animation-delay: 0ms;">
+          <!-- Theme toggle SVG would go here -->
+        </div>
+      </div>
+    </section>
+
+    <section class="head-to-head" id="models">
+      <h2 class="section-title">Head-to-Head Comparison</h2>
+      <div class="head-to-head-grid">
+        <div class="head-to-head-card">
+          <div class="name">Apple Inc. <span class="ticker">AAPL</span></div>
+          <div class="score">$383.3B</div>
+          <div class="metric">Revenue</div>
+        </div>
+        <div class="head-to-head-card">
+          <div class="name">Microsoft Corp. <span class="ticker">MSFT</span></div>
+          <div class="score">$211.9B</div>
+          <div class="metric">Revenue</div>
+        </div>
+      </div>
+      <div class="head-to-head-grid">
+        <div class="head-to-head-card">
+          <div class="name">Apple Inc. <span class="ticker">AAPL</span></div>
+          <div class="score">2.1%</div>
+          <div class="metric">Dividend Yield</div>
+        </div>
+        <div class="head-to-head-card">
+          <div class="name">Microsoft Corp. <span class="ticker">MSFT</span></div>
+          <div class="score">0.9%</div>
+          <div class="metric">Dividend Yield</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="company-grid" id="company-cards">
+      <div class="company-card">
+        <div class="ticker">AAPL</div>
+        <div class="metric-row">
+          <span class="metric-label">Revenue</span>
+          <span class="metric-value">$383.3B</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Operating Income</span>
+          <span class="metric-value">$112.4B</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Net Income
+        </div>
+        <span class="metric-value">$99.8B</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">EPS</span>
+        <span class="metric-value">$6.12</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">P/E Ratio</span>
+        <span class="metric-value">28.4x</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">ROE</span>
+        <span class="metric-value">39.2%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">D/E Ratio</span>
+        <span class="metric-value">0.15x</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Market Cap</span>
+        <span class="metric-value">$3.04T</span>
+      </div>
+      </div>
+      <div class="company-card">
+        <div class="ticker">MSFT</div>
+        <div class="metric-row">
+          <span class="metric-label">Revenue</span>
+          <span class="metric-value">$211.9B</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Operating Income</span>
+          <span class="metric-value">$82.5B</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Net Income</span>
+          <span class="metric-value">$72.4B</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">EPS</span>
+          <span class="metric-value">$2.80</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">P/E Ratio</span>
+          <span class="metric-value">35.7x</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">ROE</span>
+          <span class="metric-value">42.1%</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">D/E Ratio</span>
+          <span class="metric-value">0.22x</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Market Cap</span>
+          <span class="metric-value">$3.32T</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts-section" id="charts">
+      <h2 class="section-title">Interactive Charts</h2>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Revenue vs Net Income (5-Year)</h3>
+          <div class="chart-canvas">Chart: Revenue vs Net Income</div>
+        </div>
+        <div class="chart-card">
+          <h3>EBITDA Margin Trend</h3>
+          <div class="chart-canvas">Chart: EBITDA Margin</div>
+        </div>
+        <div class="chart-card">
+          <h3>Free Cash Flow vs CapEx</h3>
+          <div class="chart-canvas">Chart: Free Cash Flow</div>
+        </div>
+        <div class="chart-card">
+          <h3>Stock Price vs Market Cap</h3>
+          <div class="chart-canvas">Chart: Stock Price</div>
+        </div>
+        <div class="chart-card">
+          <h3>Dividend Yield Comparison</h3>
+          <div class="chart-canvas">Chart: Dividend Yield</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="statement-section" id="reports">
+      <h2 class="section-title">Financial Statement History</h2>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th>Period</th>
+            <th>Revenue</th>
+            <th>Net Income</th>
+            <th>EPS</th>
+            <th>Segment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Q4 2024</td>
+            <td>$94.8B</td>
+            <td>$24.3B</td>
+            <td>$1.45</td>
+            <td class="segment">iPhone: $38.7B</td>
+          </tr>
+          <tr>
+            <td>Q3 2024</td>
+            <td>$93.0B</td>
+            <td>$22.1B</td>
+            <td>$1.31</td>
+            <td class="segment">Services: $24.2B</td>
+          </tr>
+          <tr>
+            <td>Q2 2024</td>
+            <td>$90.3B</td>
+            <td>$20.5B</td>
+            <td>$1.20</td>
+            <td class="segment">Wearables: $8.8B</td>
+          </tr>
+          <tr>
+            <td>Q1 2024</td>
+            <td>$91.0B</td>
+            <td>$21.4B</td>
+            <td>$1.23</td>
+            <td class="segment">Mac: $12.0B</td>
+          </tr>
+          <tr>
+            <td>FY 2023</td>
+            <td>$383.3B</td>
+            <td>$99.8B</td>
+            <td>$6.12</td>
+            <td class="segment">Total</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="market-data" id="api">
+      <h2 class="section-title">Market Data Feed</h2>
+      <div class="market-data">
+        <div class="market-data-item">
+          <span class="label">Bloomberg API</span>
+          <span class="value">Connected</span>
+        </div>
+        <div class="market-data-item">
+          <span class="label">Latency</span>
+          <span class="value">
+            < 100ms</span>
+        </div>
+        <div class="market-data-item">
+          <span class="label">Last Update</span>
+          <span class="value">2 min ago</span>
+        </div>
+        <div class="market-data-item">
+          <span class="label">Alpha Vantage API</span>
+          <span class="value">Connected</span>
+        </div>
+        <div class="market-data-item">
+          <span class="label">Rate Limit</span>
+          <span class="value">45 calls/min</span>
+        </div>
+        <div class="market-data-item">
+          <span class="label">Last Update</span>
+          <span class="value">1 min ago</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="api-panel" id="automation">
+      <h2 class="section-title">API Usage & Automation</h2>
+      <div class="api-panel">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div><strong>Bloomberg Calls:</strong> 1,245</div>
+          <div><strong>Alpha Vantage Calls:</strong> 3,821</div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div><strong>Est. Cost:</strong> $892.45</div>
+          <div><strong>Total Automation Savings:</strong> $2.4M</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--card-border);">
+          <div><strong>Success Rate:</strong> 94.2%</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="winner-section" id="winner">
+      <h2 class="section-title">Winner Breakdown</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
+        <div>
+          <strong>Revenue Growth</strong> <span class="model-name">Apple Inc.</span>
+        </div>
+        <div>
+          <strong>Profitability</strong> <span class="model-name">Apple Inc.</span>
+        </div>
+        <div>
+          <strong>Liquidity</strong> <span class="model-name">Microsoft Corp.</span>
+        </div>
+        <div>
+          <strong>Leverage</strong> <span class="model-name">Apple Inc.</span>
+        </div>
+        <div>
+          <strong>Valuation</strong> <span class="model-name">Microsoft Corp.</span>
+        </div>
+      </div>
+      <p style="margin-top: 1rem; color: var(--muted); font-size: 0.875rem;">
+        Apple leads in revenue growth and profitability, while Microsoft holds advantages in liquidity, lower leverage,
+        and more attractive valuation metrics. Overall performance depends on investment objectives and risk tolerance.
+      </p>
+    </section>
+
+    <section class="notes-section"
+      style="padding: 2rem; background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin: 2rem 0;">
+      <h3
+        style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 1rem;">
+        Analyst Notes</h3>
+      <p style="color: var(--muted); font-size: 0.875rem; line-height: 1.6;">
+        Analysis: Both companies show strong financial health, but with different strengths. Apple's revenue scale and
+        growth rate make it compelling for growth-oriented investors, while Microsoft's diversified revenue streams,
+        lower debt levels, and higher ROE appeal to conservative investors. The P/E differential reflects market
+        expectations of future growth. Monitor dividend sustainability and capital return policies for income-focused
+        strategies.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Management Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d17;
+      --bg-secondary: #1a1a24;
+      --card: #21212d;
+      --card-hover: #2a2a3a;
+      --fg: #f0f0f5;
+      --muted: #78788a;
+      --accent: #00d4aa;
+      --accent-glow: rgba(0, 212, 170, 0.3);
+      --purple: #a78bfa;
+      --orange: #ff6b6b;
+      --blue: #3a7dff;
+      --card-border: #3a3a4a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Background */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 100% 60% at 50% -20%, rgba(167, 139, 250, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0, 212, 170, 0.1) 0%, transparent 50%),
+        var(--bg);
+      z-index: -2;
+    }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(58, 125, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(58, 125, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem 2rem;
+      background: rgba(13, 13, 23, 0.8);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .header-content {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent) 0%, #0088aa 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--bg);
+    }
+
+    .logo-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.2s;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      background: var(--bg-secondary);
+      border: 1px solid var(--card-border);
+      color: var(--fg);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 8rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .hero-content h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-content h1 .accent {
+      color: var(--accent);
+    }
+
+    .hero-content p {
+      font-size: 1.125rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-card .value {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .stat-card .label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Head-to-Head */
+    .head-to-head {
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+
+    .head-to-head-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .head-to-head-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+    }
+
+    .head-to-head-card .name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .head-to-head-card .score {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .head-to-head-card .metric {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Project Cards */
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .project-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .project-card .status {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .project-card .health-score {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 1rem 0;
+    }
+
+    .project-card .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .project-card .metric-label {
+      color: var(--muted);
+    }
+
+    .project-card .metric-value {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    /* Charts */
+    .charts-section {
+      padding: 2rem;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+    }
+
+    .chart-card h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .chart-canvas {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    /* Controls */
+    .controls {
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      margin: 2rem 0;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .control-group label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 0.5rem;
+    }
+
+    .control-group select,
+    .control-group button {
+      background: var(--bg-secondary);
+      border: 1px solid var(--card-border);
+      color: var(--fg);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .control-group select:hover,
+    .control-group button:hover {
+      border-color: var(--accent);
+    }
+
+    /* Timeline */
+    .timeline-section {
+      padding: 2rem;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 3rem;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2rem;
+      top: 1rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .timeline-item.latest::before {
+      background: var(--accent);
+    }
+
+    .timeline-item .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .timeline-item .period {
+      font-size: 0.875rem;
+      color: var(--fg);
+    }
+
+    /* Integrations */
+    .integrations-section {
+      padding: 2rem;
+    }
+
+    .integrations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .integration-item {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 0.75rem;
+    }
+
+    .integration-item .name {
+      font-size: 0.875rem;
+      color: var(--fg);
+    }
+
+    .integration-item .status {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* API Usage */
+    .api-panel {
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+    }
+
+    .api-usage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .api-item {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 0.75rem;
+    }
+
+    .api-item .label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .api-item .value {
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+
+    /* Winner Breakdown */
+    .winner-section {
+      padding: 2rem;
+      background: linear-gradient(135deg, var(--card) 0%, var(--bg-secondary) 100%);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Light/Dark Theme */
+    .light-theme {
+      --bg: #f8f8fd;
+      --bg-secondary: #e8e8f0;
+      --card: #ffffff;
+      --card-hover: #f5f5fa;
+      --fg: #1a1a24;
+      --muted: #78788a;
+      --accent: #00d4aa;
+      --card-border: #e0e0e8;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-stats {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .head-to-head-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        padding: 1rem;
+      }
+
+      .control-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .control-group label {
+        margin-bottom: 0.25rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-layer"></div>
+  <div class="grid-overlay"></div>
+
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 22 19.07 12 17.77 8 19.07 5 14.14 0 9.27 5.09 8.26 12 2">
+            </polygon>
+          </svg>
+        </div>
+        <span class="logo-text">Project Center</span>
+      </div>
+      <nav>
+        <div class="nav-links">
+          <a href="#hero">Home</a>
+          <a href="#projects">Projects</a>
+          <a href="#charts">Charts</a>
+          <a href="#timeline">Timeline</a>
+          <a href="#integrations">Integrations</a>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <h1>Project Management<br><span class="accent">Command Center</span></h1>
+          <p>An enterprise dashboard for project managers, PMOs, executives, and delivery teams to monitor projects,
+            teams, budgets, risks, and timelines across the organization.</p>
+          <div class="hero-stats">
+            <div class="stat-card">
+              <div class="value">24</div>
+              <div class="label">Active Projects</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">89%</div>
+              <div class="label">On-Time Delivery</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">$4.2M</div>
+              <div class="label">Budget Util.</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">3.8</div>
+              <div class="label">Health Score</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">1,247</div>
+              <div class="label">Team Members</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">$12.5M</div>
+              <div class="label">Proj. Annual Spend</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="head-to-head" id="projects">
+      <h2 class="section-title">Head-to-Head Comparison</h2>
+      <div class="head-to-head-grid">
+        <div class="head-to-head-card">
+          <div class="name">Mobile Platform Modernization <span class="tag">Red</span></div>
+          <div class="score">78%</div>
+        </div>
+        <div class="head-to-head-card">
+          <div class="name">Customer Analytics Initiative <span class="tag">Blue</span></div>
+          <div class="score">85%</div>
+        </div>
+      </div>
+      <div class="head-to-head-grid">
+        <div class="head-to-head-card">
+          <div class="name">Mobile Platform Modernization</div>
+          <div class="score">72%</div>
+          <div class="metric">Schedule Adherence</div>
+        </div>
+        <div class="head-to-head-card">
+          <div class="name">Customer Analytics Initiative</div>
+          <div class="score">89%</div>
+          <div class="metric">Schedule Adherence</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="project-grid" id="project-cards">
+      <div class="project-card">
+        <div class="status">Active</div>
+        <div class="health-score">82%</div>
+        <div class="metric-row">
+          <span class="metric-label">Budget</span>
+          <span class="metric-value">$2.4M</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Actual Spend</span>
+          <span class="metric-value">$2.1M</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Team Size</span>
+          <span class="metric-value">12</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Milestones</span>
+          <span class="metric-value">15</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Open Risks</span>
+          <span class="metric-value">3</span>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="status">At Risk</div>
+        <div class="health-score">45%</div>
+        <div class="metric-row">
+          <span class="metric-label">Budget</span>
+          <span class="metric-value">$1.8M</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Actual Spend</span>
+          <span class="metric-value">$1.7M</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Team Size</span>
+          <span class="metric-value">8</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Milestones</span>
+          <span class="metric-value">12</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Open Risks</span>
+          <span class="metric-value">8</span>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="status">Completed</div>
+        <div class="health-score">95%</div>
+        <div class="metric-row">
+          <span class="metric-label">Budget</span>
+          <span class="metric-value">$800K</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Actual Spend</span>
+          <span class="metric-value">$750K</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Team Size</span>
+          <span class="metric-value">5</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Milestones</span>
+          <span class="metric-value">20</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Open Risks</span>
+          <span class="metric-value">0</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts-section" id="charts">
+      <h2 class="section-title">Interactive Charts</h2>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Project Completion Trend</h3>
+          <div class="chart-canvas">Chart: Completion over time</div>
+        </div>
+        <div class="chart-card">
+          <h3>Budget vs Actual Spend</h3>
+          <div class="chart-canvas">Chart: Budget vs Actual</div>
+        </div>
+        <div class="chart-card">
+          <h3>Team Velocity</h3>
+          <div class="chart-canvas">Chart: Velocity</div>
+        </div>
+        <div class="chart-card">
+          <h3>Resource Allocation</h3>
+          <div class="chart-canvas">Chart: Resources</div>
+        </div>
+        <div class="chart-card">
+          <h3>Open Risks by Severity</h3>
+          <div class="chart-canvas">Chart: Risks</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline-section" id="timeline">
+      <h2 class="section-title">Project Timeline</h2>
+      <div class="timeline">
+        <div class="timeline-item latest">
+          <div class="label">Sprint 42</div>
+          <div class="period">Current</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">Sprint 41</div>
+          <div class="period">2 weeks ago</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">Sprint 40</div>
+          <div class="period">1 month ago</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">Sprint 39</div>
+          <div class="period">2 months ago</div>
+        </div>
+        <div class="timeline-item">
+          <div class="label">Sprint 38</div>
+          <div class="period">3 months ago</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="integrations-section" id="integrations">
+      <h2 class="section-title">Integrations Status</h2>
+      <div class="integrations-grid">
+        <div class="integration-item">
+          <div class="name">Jira</div>
+          <div class="status">Connected</div>
+        </div>
+        <div class="integration-item">
+          <div class="name">Azure DevOps</div>
+          <div class="status">Connected</div>
+        </div>
+        <div class="integration-item">
+          <div class="name">GitHub</div>
+          <div class="status">Connected</div>
+        </div>
+        <div class="integration-item">
+          <div class="name">Slack</div>
+          <div class="status">Connected</div>
+        </div>
+        <div class="integration-item">
+          <div class="name">Microsoft Teams</div>
+          <div class="status">Connected</div>
+        </div>
+        <div class="integration-item">
+          <div class="name">Figma</div>
+          <div class="status">Disconnected</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="api-panel" id="automation">
+      <h2 class="section-title">API Usage & Automation</h2>
+      <div class="api-panel">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div><strong>Workflow Executions:</strong> 5,241</div>
+          <div><strong>Webhook Activity:</strong> 3,821</div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div><strong>Automation Savings:</strong> $1.2M</div>
+          <div><strong>Success Rate:</strong> 96.8%</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--card-border);">
+          <div><strong>Automated Workflows:</strong> 34</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="winner-section" id="winner">
+      <h2 class="section-title">Winner Breakdown</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
+        <div>
+          <strong>Schedule Adherence</strong> <span class="model-name">Customer Analytics Initiative</span>
+        </div>
+        <div>
+          <strong>Budget Control</strong> <span class="model-name">Mobile Platform Modernization</span>
+        </div>
+        <div>
+          <strong>Team Productivity</strong> <span class="model-name">Customer Analytics Initiative</span>
+        </div>
+        <div>
+          <strong>Stakeholder Satisfaction</strong> <span class="model-name">Customer Analytics Initiative</span>
+        </div>
+        <div>
+          <strong>Overall Health</strong> <span class="model-name">Customer Analytics Initiative</span>
+        </div>
+      </div>
+      <p style="margin-top: 1rem; color: var(--muted); font-size: 0.875rem;">
+        Customer Analytics Initiative outperforms in schedule adherence, team productivity, stakeholder satisfaction,
+        and overall health, while Mobile Platform Modernization holds advantages in budget control with its current
+        spend profile.
+      </p>
+    </section>
+
+    <section class="notes-section"
+      style="padding: 2rem; background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin: 2rem 0;">
+      <h3
+        style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 1rem;">
+        Executive Commentary</h3>
+      <p style="color: var(--muted); font-size: 0.875rem; line-height: 1.6;">
+        Project performance varies significantly across the portfolio. The Customer Analytics Initiative demonstrates
+        strong delivery metrics and stakeholder engagement, while the Mobile Platform Modernization project requires
+        active risk management and schedule recovery actions. Resource reallocation from lower-health projects could
+        improve overall portfolio outcomes. Quarterly review recommended to assess realignment opportunities.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+    }
+  </script>
+</body>
+
+</html>

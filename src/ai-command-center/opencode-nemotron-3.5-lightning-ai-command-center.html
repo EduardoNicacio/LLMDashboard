@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Model Testing Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg-secondary: #12121a;
+      --card: #1a1a24;
+      --card-hover: #232330;
+      --fg: #e8e8f0;
+      --muted: #6b6b80;
+      --accent: #00d4aa;
+      --accent-glow: rgba(0, 212, 170, 0.4);
+      --error: #ff4756;
+      --warning: #ffa502;
+      --success: #00d4aa;
+      --card-border: #2a2a3a;
+      --chart-blue: #3a7dff;
+      --chart-purple: #a78bfa;
+      --chart-green: #00d4aa;
+      --chart-orange: #ff6b6b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Background */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0, 212, 170, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
+        var(--bg);
+      z-index: -2;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter name='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+      z-index: -1;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem 2rem;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .header-content {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent) 0%, #0088aa 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--bg);
+    }
+
+    .logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.2s;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 8rem 2rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .hero-content h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, var(--fg) 0%, var(--muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-content p {
+      font-size: 1.25rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Model Cards */
+    .model-section {
+      padding: 2rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .model-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .model-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .model-card .name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .model-card .provider {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    .model-card .scores {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .score-item {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      text-align: center;
+    }
+
+    .score-item .value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .score-item .label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Charts */
+    .charts-section {
+      padding: 2rem;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.25rem;
+    }
+
+    .chart-card h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .chart-canvas {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    /* Interactive Controls */
+    .controls {
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      margin: 2rem 0;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .control-group label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 0.5rem;
+    }
+
+    .control-group select,
+    .control-group button {
+      background: var(--bg-secondary);
+      border: 1px solid var(--card-border);
+      color: var(--fg);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .control-group select:hover,
+    .control-group button:hover {
+      border-color: var(--accent);
+    }
+
+    /* Table */
+    .table-section {
+      padding: 2rem;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    td {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      transition: background 0.2s;
+    }
+
+    tr:hover td {
+      background: var(--bg-secondary);
+    }
+
+    .model-name {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      font-size: 0.65rem;
+    }
+
+    .badge-accent {
+      background: var(--accent);
+      color: var(--bg);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    /* Hardware Panel */
+    .hardware-panel {
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+    }
+
+    .hardware-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .hardware-item {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .hardware-item .label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .hardware-item .value {
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+
+    /* API Panel */
+    .api-panel {
+      padding: 2rem;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+    }
+
+    /* Winner Section */
+    .winner-section {
+      padding: 2rem;
+      background: linear-gradient(135deg, var(--card) 0%, var(--bg-secondary) 100%);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes chartGrow {
+      from {
+        width: 0;
+      }
+
+      to {
+        width: 100%;
+      }
+    }
+
+    .chart-grow {
+      animation: chartGrow 1s ease-out forwards;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0s !important;
+        transition-duration: 0s !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-stats {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .hero-content h1 {
+        font-size: 2.5rem;
+      }
+
+      .controls {
+        padding: 1rem;
+      }
+
+      .control-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .control-group label {
+        margin-bottom: 0.25rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-layer"></div>
+  <div class="noise"></div>
+
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 22 19.07 12 17.77 8 19.07 5 14.14 0 9.27 5.09 8.26 12 2">
+            </polygon>
+          </svg>
+        </div>
+        <span class="logo-text">AI Command Center</span>
+      </div>
+      <nav>
+        <div class="nav-links">
+          <a href="#hero">Home</a>
+          <a href="#models">Models</a>
+          <a href="#charts">Charts</a>
+          <a href="#table">Table</a>
+          <a href="#hardware">Hardware</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <h1>AI Model Testing Command Center</h1>
+          <p>A premium dashboard for comparing local AI models against frontier models. Track test results, speed,
+            quality scores, coding accuracy, prompt history, hardware usage, API cost, and matchup winners.</p>
+          <div class="hero-stats">
+            <div class="stat-card">
+              <div class="value">1,247</div>
+              <div class="label">Total Tests</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">45.2</div>
+              <div class="label">Avg Tokens/sec</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">Claude Opus</div>
+              <div class="label">Best Model</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">$2,847</div>
+              <div class="label">API Cost</div>
+            </div>
+            <div class="stat-card">
+              <div class="value">4h 22m</div>
+              <div class="label">Local Runtime</div>
+            </div>
+          </div>
+        </div>
+        <div class="animate-in" style="animation-delay: 0ms;">
+          <div class="bg-layer"
+            style="position: absolute; inset: 0; background: radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0, 212, 170, 0.12) 0%, transparent 50%); z-index: -1;">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="model-section" id="models">
+      <h2 class="section-title">Model Cards</h2>
+      <div class="model-grid">
+        <!-- Qwen3.6 27B -->
+        <div class="model-card animate-in" style="animation-delay: 0ms;">
+          <div class="name">Qwen3.6 27B</div>
+          <div class="provider">Alibaba Cloud</div>
+          <div class="scores">
+            <div class="score-item">
+              <div class="value">8.2</div>
+              <div class="label">Speed</div>
+            </div>
+            <div class="score-item">
+              <div class="value">7.8</div>
+              <div class="label">Quality</div>
+            </div>
+            <div class="score-item">
+              <div class="value">7.5</div>
+              <div class="label">Coding</div>
+            </div>
+            <div class="score-item">
+              <div class="value">8.1</div>
+              <div class="label">Creativity</div>
+            </div>
+            <div class="score-item">
+              <div class="value">7.9</div>
+              <div class="label">Instruct</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Claude Opus 4.8 -->
+        <div class="model-card animate-in" style="animation-delay: 100ms;">
+          <div class="name">Claude Opus 4.8</div>
+          <div class="provider">Anthropic</div>
+          <div class="scores">
+            <div class="score-item">
+              <div class="value">9.1</div>
+              <div class="label">Speed</div>
+            </div>
+            <div class="score-item">
+              <div class="value">9.4</div>
+              <div class="label">Quality</div>
+            </div>
+            <div class="score-item">
+              <div class="value">9.0</div>
+              <div class="label">Coding</div>
+            </div>
+            <div class="score-item">
+              <div class="value">8.7</div>
+              <div class="label">Creativity</div>
+            </div>
+            <div class="score-item">
+              <div class="value">9.2</div>
+              <div class="label">Instruct</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gemma 4 31B -->
+        <div class="model-card animate-in" style="animation-delay: 200ms;">
+          <div class="name">Gemma 4 31B QAT</div>
+          <div class="provider">Google</div>
+          <div class="scores">
+            <div class="score-item">
+              <div class="value">7.3</div>
+              <div class="label">Speed</div>
+            </div>
+            <div class="score-item">
+              <div class="value">7.6</div>
+              <div class="label">Quality</div>
+            </div>
+            <div class="score-item">
+              <div class="value">7.1</div>
+              <div class="label">Coding</div>
+            </div>
+            <div class="score-item">
+              <div class="value">7.8</div>
+              <div class="label">Creativity</div>
+            </div>
+            <div class="score-item">
+              <div class="value">7.4</div>
+              <div class="label">Instruct</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deepseek V4 -->
+        <div class="model-card animate-in" style="animation-delay: 300ms;">
+          <div class="name">DeepSeek V4 Flash</div>
+          <div class="provider">DeepSeek</div>
+          <div class="scores">
+            <div class="score-item">
+              <div class="value">8.5</div>
+              <div class="label">Speed</div>
+            </div>
+            <div class="score-item">
+              <div class="value">8.1</div>
+              <div class="label">Quality</div>
+            </div>
+            <div class="score-item">
+              <div class="value">8.3</div>
+              <div class="label">Coding</div>
+            </div>
+            <div class="score-item">
+              <div class="value">7.9</div>
+              <div class="label">Creativity</div>
+            </div>
+            <div class="score-item">
+              <div class="value">8.0</div>
+              <div class="label">Instruct</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts-section" id="charts">
+      <h2 class="section-title">Interactive Charts</h2>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Tokens Per Second</h3>
+          <div class="chart-canvas chart-grow">Chart: Tokens/sec comparison</div>
+        </div>
+        <div class="chart-card">
+          <h3>Completion Time</h3>
+          <div class="chart-canvas chart-grow">Chart: Completion time</div>
+        </div>
+        <div class="chart-card">
+          <h3>Quality Score</h3>
+          <div class="chart-canvas chart-grow">Chart: Quality scores</div>
+        </div>
+        <div class="chart-card">
+          <h3>Cost Comparison</h3>
+          <div class="chart-canvas chart-grow">Chart: Cost comparison</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls" id="controls">
+      <div class="control-group">
+        <label>View Mode</label>
+        <select>
+          <option>Summary</option>
+          <option>Speed</option>
+          <option>Quality</option>
+          <option>Cost</option>
+          <option>Hardware</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Sort By</label>
+        <select>
+          <option>Score</option>
+          <option>Speed</option>
+          <option>Cost</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Filter</label>
+        <select>
+          <option>All Models</option>
+          <option>Local</option>
+          <option>Frontier</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <button>Expand All</button>
+        <button>Collapse All</button>
+      </div>
+    </section>
+
+    <section class="table-section" id="table">
+      <h2 class="section-title">Previous AI Model Tests</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Tokens/sec</th>
+              <th>Quality</th>
+              <th>Coding</th>
+              <th>Cost</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="model-name">Qwen3.6 27B</td>
+              <td>42.3</td>
+              <td>7.8</td>
+              <td>7.5</td>
+              <td>$0.002/1K</td>
+              <td>✓ Complete</td>
+            </tr>
+            <tr>
+              <td class="model-name">Claude Opus 4.8</td>
+              <td>38.7</td>
+              <td>9.4</td>
+              <td>9.0</td>
+              <td>$0.003/1K</td>
+              <td>✓ Complete</td>
+            </tr>
+            <tr>
+              <td class="model-name">Gemma 4 31B QAT</td>
+              <td>35.1</td>
+              <td>7.6</td>
+              <td>7.1</td>
+              <td>$0.001/1K</td>
+              <td>✓ Complete</td>
+            </tr>
+            <tr>
+              <td class="model-name">DeepSeek V4 Flash</td>
+              <td>45.8</td>
+              <td>8.1</td>
+              <td>8.3</td>
+              <td>$0.002/1K</td>
+              <td>✓ Complete</td>
+            </tr>
+            <tr>
+              <td class="model-name">Qwen3.5 9B</td>
+              <td>28.4</td>
+              <td>6.9</td>
+              <td>6.2</td>
+              <td>$0.001/1K</td>
+              <td>✓ Complete</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="hardware-panel" id="hardware">
+      <h2 class="section-title">Hardware Monitor</h2>
+      <div class="hardware-grid">
+        <div class="hardware-item">
+          <div class="label">RTX 3090 Status</div>
+          <div class="value">Online</div>
+        </div>
+        <div class="hardware-item">
+          <div class="label">VRAM Usage</div>
+          <div class="value">24 GB / 24 GB</div>
+        </div>
+        <div class="hardware-item">
+          <div class="label">Temperature</div>
+          <div class="value">65°C</div>
+        </div>
+        <div class="hardware-item">
+          <div class="label">Power Draw</div>
+          <div class="value">350W</div>
+        </div>
+        <div class="hardware-item">
+          <div class="label">Fan Speed</div>
+          <div class="value">1,800 RPM</div>
+        </div>
+        <div class="hardware-item">
+          <div class="label">Local Server</div>
+          <div class="value">Running</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="api-panel" id="api">
+      <h2 class="section-title">API Usage</h2>
+      <div class="api-panel">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div><strong>Claude Opus Cost:</strong> $2,847.32</div>
+          <div><strong>Input Tokens:</strong> 1,245,321</div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div><strong>Output Tokens:</strong> 892,154</div>
+          <div><strong>Total Spend:</strong> $4,215.67</div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--card-border);">
+          <div><strong>API Calls Made:</strong> 4,523</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="winner-section" id="winner">
+      <h2 class="section-title">Winner Breakdown</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
+        <div>
+          <strong>Speed</strong> <span class="model-name">Claude Opus 4.8</span>
+        </div>
+        <div>
+          <strong>Quality</strong> <span class="model-name">Claude Opus 4.8</span>
+        </div>
+        <div>
+          <strong>Coding</strong> <span class="model-name">Claude Opus 4.8</span>
+        </div>
+        <div>
+          <strong>Overall</strong> <span class="model-name">Claude Opus 4.8</span>
+        </div>
+      </div>
+      <p style="margin-top: 1rem; color: var(--muted); font-size: 0.875rem;">
+        Claude Opus 4.8 wins overall with stronger quality and coding scores, though Qwen3.6 27B remains competitive on
+        speed and cost efficiency.
+      </p>
+    </section>
+
+    <section class="notes-section"
+      style="padding: 2rem; background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin: 2rem 0;">
+      <h3
+        style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 1rem;">
+        Notes</h3>
+      <p style="color: var(--muted); font-size: 0.875rem; line-height: 1.6;">
+        Final testing observations: Claude Opus 4.8 shows significant improvements in coding accuracy and instruction
+        following over previous versions. Qwen3.6 27B remains the best choice for cost-sensitive deployments. Hardware
+        monitoring indicates RTX 3090 is being utilized at near-full capacity during frontier model inference. API cost
+        management will be critical for sustained testing operations.
+      </p>
+    </section>
+  </main>
+</body>
+
+</html>
