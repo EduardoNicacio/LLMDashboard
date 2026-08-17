@@ -1,0 +1,1169 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen3.7-30B-Open - Finally Here</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #050508;
+            --deep: #020203;
+            --primary: #8b5cf6;
+            --cyan: #06b6d4;
+            --green: #10b981;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --sec: #cbd5e1;
+            --border: rgba(255, 255, 255, 0.1);
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-sans: 'Inter', sans-serif;
+            --t: all .4s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            background: radial-gradient(ellipse at top, #050508 0%, #020203 70%, #000 100%);
+            color: var(--text);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            min-height: 100vh
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(139, 92, 246, .04) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, .04) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: .3;
+            pointer-events: none;
+            z-index: -1
+        }
+
+        .floating-token {
+            position: fixed;
+            background: var(--primary);
+            border-radius: 2px;
+            box-shadow: 0 0 8px var(--primary);
+            opacity: .3;
+            animation: floatTok 18s infinite linear;
+            pointer-events: none;
+            z-index: -1
+        }
+
+        @keyframes floatTok {
+            0% {
+                transform: translateY(0) rotate(0);
+                opacity: 0
+            }
+
+            10% {
+                opacity: .3
+            }
+
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--deep)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            z-index: 10;
+            position: relative
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 2px
+        }
+
+        .logo .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--cyan)
+        }
+
+        nav {
+            display: flex;
+            gap: 8px
+        }
+
+        nav a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: var(--t)
+        }
+
+        nav a:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, .03)
+        }
+
+        nav a.cta {
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            color: #fff;
+            box-shadow: 0 0 15px rgba(139, 92, 246, .4)
+        }
+
+        nav a.cta:hover {
+            box-shadow: 0 0 25px rgba(139, 92, 246, .6);
+            transform: translateY(-1px)
+        }
+
+        .hero {
+            text-align: center;
+            padding: 20px 20px 40px
+        }
+
+        .hero .ribbon {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--yellow), #fb923c);
+            color: #1a1a2e;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 20px;
+            border-radius: 24px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(245, 158, 11, .4);
+            animation: rGlow 2s ease-in-out infinite alternate
+        }
+
+        @keyframes rGlow {
+            0% {
+                box-shadow: 0 0 15px rgba(245, 158, 11, .3)
+            }
+
+            100% {
+                box-shadow: 0 0 25px rgba(245, 158, 11, .6)
+            }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.2rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--cyan), var(--green));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -1px
+        }
+
+        .hero .sub {
+            font-size: 1.25rem;
+            color: var(--muted);
+            max-width: 720px;
+            margin: 0 auto 32px;
+            line-height: 1.6
+        }
+
+        .hero .sub .hl {
+            color: var(--cyan);
+            font-weight: 600
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--t);
+            border: none;
+            cursor: pointer
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: #fff;
+            box-shadow: 0 0 25px rgba(139, 92, 246, .4)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 35px rgba(139, 92, 246, .6)
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text)
+        }
+
+        .btn-outline:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            box-shadow: 0 0 20px rgba(6, 182, 212, .3)
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap
+        }
+
+        .stat-item {
+            text-align: center
+        }
+
+        .stat-value {
+            font-family: var(--font-mono);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--cyan)
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 4px
+        }
+
+        .panel {
+            background: rgba(20, 24, 35, .4);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin: 32px 0;
+            transition: var(--t)
+        }
+
+        .panel:hover {
+            border-color: rgba(139, 92, 246, .3);
+            box-shadow: 0 0 40px rgba(139, 92, 246, .1);
+            transform: translateY(-3px)
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 8px
+        }
+
+        .section-title .hl {
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--muted);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px
+        }
+
+        .feature {
+            background: rgba(26, 31, 46, .5);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            transition: var(--t)
+        }
+
+        .feature:hover {
+            background: rgba(30, 36, 52, .6);
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(139, 92, 246, .1)
+        }
+
+        .feature i {
+            font-size: 32px;
+            color: var(--cyan);
+            margin-bottom: 14px;
+            display: block
+        }
+
+        .feature.highlighted i {
+            color: var(--primary);
+            text-shadow: 0 0 15px var(--primary)
+        }
+
+        .feature .ft {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text)
+        }
+
+        .feature .fd {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .benchmark-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px
+        }
+
+        .benchmark-card {
+            background: rgba(20, 24, 35, .4);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: var(--t)
+        }
+
+        .benchmark-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(139, 92, 246, .1)
+        }
+
+        .benchmark-card .bt {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            margin-bottom: 12px
+        }
+
+        .benchmark-card .bv {
+            font-size: 32px;
+            font-weight: 800;
+            font-family: var(--font-mono)
+        }
+
+        .benchmark-card .bd {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px
+        }
+
+        .chart-wrap {
+            margin-top: 16px;
+            height: 200px
+        }
+
+        .timeline {
+            position: relative;
+            margin: 40px 0
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+            left: 30px;
+            margin-left: -1px
+        }
+
+        @media(max-width:768px) {
+            .timeline::before {
+                left: 20px
+            }
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 28px;
+            padding-left: 64px
+        }
+
+        @media(max-width:768px) {
+            .timeline-item {
+                padding-left: 44px
+            }
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 22px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid var(--deep);
+            box-shadow: 0 0 10px var(--primary);
+            z-index: 2
+        }
+
+        .timeline-item .td {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: var(--font-mono)
+        }
+
+        .timeline-item .tt {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 4px 0
+        }
+
+        .timeline-item .tdesc {
+            font-size: 13px;
+            color: var(--sec);
+            line-height: 1.5
+        }
+
+        .timeline-item .tb {
+            display: inline-block;
+            background: rgba(245, 158, 11, .15);
+            color: var(--yellow);
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 4px
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px
+        }
+
+        .download-btn {
+            background: rgba(26, 31, 46, .5);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 22px;
+            text-align: center;
+            transition: var(--t);
+            cursor: pointer
+        }
+
+        .download-btn:hover {
+            border-color: var(--primary);
+            background: rgba(30, 36, 52, .6);
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(139, 92, 246, .1)
+        }
+
+        .download-btn i {
+            font-size: 30px;
+            margin-bottom: 10px;
+            display: block
+        }
+
+        .download-btn .bl {
+            font-size: 14px;
+            font-weight: 600
+        }
+
+        .download-btn .bs {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px
+        }
+
+        .download-btn.hf i {
+            color: var(--cyan)
+        }
+
+        .download-btn.ggml i {
+            color: var(--green)
+        }
+
+        .download-btn.api i {
+            color: var(--primary)
+        }
+
+        .download-btn.torrent i {
+            color: var(--red)
+        }
+
+        .code-block {
+            background: rgba(10, 10, 15, .8);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 24px 0;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.6
+        }
+
+        .code-line {
+            display: flex
+        }
+
+        .ln {
+            color: var(--muted);
+            user-select: none;
+            padding-right: 16px;
+            text-align: right;
+            opacity: .5
+        }
+
+        .kw {
+            color: var(--cyan)
+        }
+
+        .str {
+            color: var(--green)
+        }
+
+        .cmt {
+            color: var(--muted)
+        }
+
+        .vr {
+            color: #f8fafc
+        }
+
+        .fn {
+            color: var(--yellow)
+        }
+
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px
+        }
+
+        .comment-card {
+            background: rgba(20, 24, 35, .4);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            transition: var(--t)
+        }
+
+        .comment-card:hover {
+            border-color: var(--primary)
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .ca {
+            font-weight: 600;
+            font-size: 13px
+        }
+
+        .ch {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .cb {
+            font-size: 13px;
+            color: var(--sec);
+            line-height: 1.5
+        }
+
+        .cb .emoji {
+            font-size: 16px
+        }
+
+        .cs {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .vram-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px
+        }
+
+        .vram-card {
+            background: rgba(20, 24, 35, .4);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: var(--t)
+        }
+
+        .vram-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(139, 92, 246, .1)
+        }
+
+        .vram-card .vt {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text)
+        }
+
+        .vram-card .vd {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.6
+        }
+
+        .vram-card .vb {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-top: 8px
+        }
+
+        .vram-card.recommended {
+            border-color: var(--green);
+            box-shadow: 0 0 20px rgba(16, 185, 129, .15)
+        }
+
+        .vram-card.recommended .vb {
+            background: var(--green)
+        }
+
+        footer {
+            text-align: center;
+            padding: 32px;
+            color: var(--muted);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px
+        }
+
+        .mc {
+            font-family: var(--font-mono);
+            color: var(--cyan);
+            opacity: .7
+        }
+
+        @media(max-width:768px) {
+            .hero h1 {
+                font-size: 2.2rem
+            }
+
+            .hero .sub {
+                font-size: 1rem
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid-overlay"></div>
+    <header>
+        <div class="logo"><span class="dot"></span>Qwen3.7-30B-Open</div>
+        <nav>
+            <a href="#features">Features</a>
+            <a href="#benchmarks">Benchmarks</a>
+            <a href="#download">Download</a>
+            <a href="#community">Community</a>
+            <a href="#download" class="cta">Get It Now</a>
+        </nav>
+    </header>
+    <section class="hero">
+        <div class="ribbon">Open-Weight Release - Apache 2.0</div>
+        <h1>Qwen3.7-30B-Open<br>is finally here</h1>
+        <p class="sub">After 1,847 days of waiting, the community can now stop refreshing Hugging Face every <span
+                class="hl">11 seconds</span>. Your current coping mechanism is officially outdated.</p>
+        <div class="hero-cta">
+            <a href="#download" class="btn btn-primary"><i class="fas fa-download"></i> Download Now</a>
+            <a href="#features" class="btn btn-outline"><i class="fas fa-info-circle"></i> Learn More</a>
+        </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value">30B</div>
+                <div class="stat-label">Parameters</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">128K</div>
+                <div class="stat-label">Context</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">23</div>
+                <div class="stat-label">Languages</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">4.2</div>
+                <div class="stat-label">MMLU</div>
+            </div>
+        </div>
+    </section>
+    <div class="container">
+        <!-- Model Specs -->
+        <section>
+            <div class="panel">
+                <div class="section-title">Model Specifications</div>
+                <div class="features-grid">
+                    <div class="feature highlighted"><i class="fas fa-brain"></i>
+                        <div class="ft">30B Parameters</div>
+                        <div class="fd">Fully open weights - GQA optimized</div>
+                    </div>
+                    <div class="feature"><i class="fas fa-key"></i>
+                        <div class="ft">Open Weights</div>
+                        <div class="fd">Apache 2.0 license - Full commercial use</div>
+                    </div>
+                    <div class="feature"><i class="fas fa-expand-arrows-alt"></i>
+                        <div class="ft">128K Context</div>
+                        <div class="fd">Sliding window attention - RoPE scaling</div>
+                    </div>
+                    <div class="feature"><i class="fas fa-cube"></i>
+                        <div class="ft">Tool Use</div>
+                        <div class="fd">Function calling - JSON mode - Agents</div>
+                    </div>
+                    <div class="feature"><i class="fas fa-code"></i>
+                        <div class="ft">Coding</div>
+                        <div class="fd">Competitive MBPP - HumanEval scores</div>
+                    </div>
+                    <div class="feature"><i class="fas fa-lightbulb"></i>
+                        <div class="ft">Reasoning</div>
+                        <div class="fd">Chain-of-thought - Self-critique</div>
+                    </div>
+                    <div class="feature"><i class="fas fa-microchip"></i>
+                        <div class="ft">Local Inference</div>
+                        <div class="fd">GGUF - ONNX - llama.cpp ready</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benchmarks -->
+        <section id="benchmarks">
+            <div class="section-title">Benchmark <span class="hl">Results</span></div>
+            <div class="section-subtitle">Qwen3.7-30B-Open vs the competition. Yes, it even beats your coping mechanism.
+            </div>
+            <div class="benchmark-grid">
+                <div class="benchmark-card">
+                    <div class="bt">MMLU (0-shot)</div>
+                    <div class="bv" style="color:var(--cyan)">87.3%</div>
+                    <div class="bd">Claude 3.5: 86.1% | GPT-4: 86.7% | Your coping: 0%</div>
+                </div>
+                <div class="benchmark-card">
+                    <div class="bt">HumanEval</div>
+                    <div class="bv" style="color:var(--green)">82.1%</div>
+                    <div class="bd">Claude 3.5: 80.8% | GPT-4: 78.2% | Your coping: NaN</div>
+                </div>
+                <div class="benchmark-card">
+                    <div class="bt">GSM-8K</div>
+                    <div class="bv" style="color:var(--yellow)">91.4%</div>
+                    <div class="bd">Claude 3.5: 89.9% | GPT-4: 90.1% | Your coping: 0/880</div>
+                </div>
+                <div class="benchmark-card">
+                    <div class="bt">BBH (Avg)</div>
+                    <div class="bv" style="color:var(--red)">79.6%</div>
+                    <div class="bd">Claude 3.5: 78.9% | GPT-4: 80.2% | Your coping: -INF</div>
+                </div>
+                <div class="benchmark-card">
+                    <div class="bt">Arena Elo</div>
+                    <div class="bv" style="color:var(--primary)">1385</div>
+                    <div class="bd">Claude 3.5: 1372 | GPT-4: 1398 | Your coping: 320</div>
+                </div>
+                <div class="benchmark-card">
+                    <div class="bt">Speed (t/s)</div>
+                    <div class="bv" style="color:#fb7185">142 t/s</div>
+                    <div class="bd">RTX 4090 - 4-bit | vs Coping: undefined</div>
+                </div>
+            </div>
+            <div class="chart-wrap"><canvas id="benchChart"></canvas></div>
+        </section>
+        <!-- Timeline -->
+        <section>
+            <div class="section-title">Release <span class="hl">Timeline</span></div>
+            <div class="section-subtitle">The journey from Soon to shipped. Buckle up.</div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="td">Mar 2024</div>
+                    <div class="tt">Initial announcement</div>
+                    <div class="tdesc">Qwen3.7 roadmap teased. No ETA given.</div>
+                    <div class="tb">Soon</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="td">Jun 2024</div>
+                    <div class="tt">Training complete</div>
+                    <div class="tdesc">30B params trained on 7T tokens. Weights sealed.</div>
+                    <div class="tb">Final safety pass</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="td">Sep 2024</div>
+                    <div class="tt">Evaluation blocked</div>
+                    <div class="tdesc">Model scored too well on safety. Internal review requested.</div>
+                    <div class="tb">Delay - Actually soon</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="td">Dec 2024</div>
+                    <div class="tt">Community revolt</div>
+                    <div class="tdesc">r/LocalLLaMA trending. Petition: 50K sigs. We're fine, really.</div>
+                    <div class="tb">We found one more eval</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="td">Feb 2025</div>
+                    <div class="tt">Safety re-calibration</div>
+                    <div class="tdesc">RLHF on 1.2M examples. Quality up 2.3%.</div>
+                    <div class="tb">One more eval</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="td">May 2025</div>
+                    <div class="tt">Final QA</div>
+                    <div class="tdesc">Last checkpoint. Legal sign-off pending. Cross fingers.</div>
+                    <div class="tb">Final check</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="td">Aug 2025</div>
+                    <div class="tt">Released!</div>
+                    <div class="tdesc">Qwen3.7-30B-Open is finally here. Go download it.</div>
+                    <div class="tb" style="background:rgba(16,185,129,.2);color:var(--green)">SHIPPED</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Download -->
+        <section id="download">
+            <div class="section-title">Download <span class="hl">Now</span></div>
+            <div class="section-subtitle">Choose your poison. All options are equally real (unlike the last ETA).</div>
+            <div class="download-grid">
+                <div class="download-btn hf" onclick="downloadFake('hf')"><i class="fab fa-hugging-face"></i>
+                    <div class="bl">Hugging Face</div>
+                    <div class="bs">safetensors - original weights</div>
+                </div>
+                <div class="download-btn ggml" onclick="downloadFake('gguf')"><i class="fas fa-microchip"></i>
+                    <div class="bl">GGUF Formats</div>
+                    <div class="bs">Q2_K to Q8_0 - llama.cpp</div>
+                </div>
+                <div class="download-btn api" onclick="downloadFake('api')"><i class="fas fa-bolt"></i>
+                    <div class="bl">API Endpoint</div>
+                    <div class="bs">Serverless - Pay-per-token</div>
+                </div>
+                <div class="download-btn torrent" onclick="downloadFake('torrent')"><i class="fas fa-magnet"></i>
+                    <div class="bl">BitTorrent</div>
+                    <div class="bs">Magnet link - P2P</div>
+                </div>
+            </div>
+        </section>
+        <!-- Code Example -->
+        <section>
+            <div class="section-title">Quick <span class="hl">Start</span></div>
+            <div class="code-block">
+                <span class="code-line"><span class="ln">1</span><span class="kw">from</span> <span
+                        class="vr">transformers</span> <span class="kw">import</span> AutoModelForCausalLM,
+                    AutoTokenizer</span></span>
+                <span class="code-line"><span class="ln">2</span><span class="kw">import</span> <span
+                        class="vr">torch</span></span></span>
+                <span class="code-line"><span class="ln">3</span></span></span>
+                <span class="code-line"><span class="ln">4</span><span class="cmt"># The wait is over.
+                        Finally.</span></span>
+                <span class="code-line"><span class="ln">5</span>model_name <span class="vr">=</span> <span
+                        class="str">"Qwen/Qwen3.7-30B-Open"</span></span></span>
+                <span class="code-line"><span class="ln">6</span></span></span>
+                <span class="code-line"><span class="ln">7</span>tokenizer <span class="vr">=</span>
+                    AutoTokenizer.from_pretrained(model_name)</span></span>
+                <span class="code-line"><span class="ln">8</span>model <span class="vr">=</span>
+                    AutoModelForCausalLM.from_pretrained(</span></span>
+                <span class="code-line"><span class="ln">9</span> model_name,</span></span>
+                <span class="code-line"><span class="ln">10</span> device_map<span class="vr">=</span><span
+                        class="str">"auto"</span>,</span></span>
+                <span class="code-line"><span class="ln">11</span> torch_dtype<span class="vr">=</span><span
+                        class="vr">torch</span>.bfloat16,</span></span>
+                <span class="code-line"><span class="ln">12</span> trust_remote_code<span class="vr">=</span><span
+                        class="vr">True</span>,</span></span>
+                <span class="code-line"><span class="ln">13</span>)</span></span>
+                <span class="code-line"><span class="ln">14</span></span></span>
+                <span class="code-line"><span class="ln">15</span>prompt <span class="vr">=</span> <span
+                        class="str">"Explain quantum entanglement in 3 paragraphs."</span></span></span>
+                <span class="code-line"><span class="ln">16</span>inputs <span class="vr">=</span> tokenizer(prompt,
+                    return_tensors<span class="vr">=</span><span class="str">"pt"</span>).to(model.device)</span></span>
+                <span class="code-line"><span class="ln">17</span>outputs <span class="vr">=</span>
+                    model.generate(**inputs, max_new_tokens<span class="vr">=</span><span class="vr">512</span>,
+                    do_sample<span class="vr">=</span><span class="vr">True</span>)</span></span>
+                <span class="code-line"><span class="ln">18</span><span
+                        class="fn">print</span>(tokenizer.decode(outputs[<span class="vr">0</span>],
+                    skip_special_tokens<span class="vr">=</span><span class="vr">True</span>))</span></span>
+            </div>
+        </section>
+        <!-- Run Locally -->
+        <section>
+            <div class="section-title">Run <span class="hl">Locally</span></div>
+            <div class="section-subtitle">VRAM requirements. Dual 3090s? We see you.</div>
+            <div class="vram-grid">
+                <div class="vram-card">
+                    <div class="vt">FP16 (Full)</div>
+                    <div class="vd">60 GB VRAM. Needs A100, H100, or a supercomputer.</div>
+                </div>
+                <div class="vram-card">
+                    <div class="vt">Q8_0 (GGUF)</div>
+                    <div class="vd">40 GB VRAM. Dual 3090s or 6000 Ada.</div>
+                </div>
+                <div class="vram-card recommended">
+                    <div class="vt">Q4_K_M (Recommended)</div>
+                    <div class="vd">28 GB VRAM. Single 3090 or 4090 works. Balanced quality.</div>
+                    <div class="vb">Recommended</div>
+                </div>
+                <div class="vram-card">
+                    <div class="vt">Q3_K_M</div>
+                    <div class="vd">22 GB VRAM. Single 3090 barely makes it.</div>
+                </div>
+                <div class="vram-card">
+                    <div class="vt">Q2_K</div>
+                    <div class="vd">18 GB VRAM. Dual 3090s in NVLink or single 4090.</div>
+                </div>
+                <div class="vram-card">
+                    <div class="vt">Q2_K Dual 3090</div>
+                    <div class="vd">Split across two cards. Slower but works. Popular with community.</div>
+                    <div class="vb">Popular</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community -->
+        <section id="community">
+            <div class="section-title">Community <span class="hl">Reaction</span></div>
+            <div class="section-subtitle">Real (fake) reactions. The waiting was real, the relief is realer.</div>
+            <div class="community-grid">
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="avatar">AC</div>
+                        <div>
+                            <div class="ca">Alex Chen</div>
+                            <div class="ch">@localLLMbro - Verified</div>
+                        </div>
+                    </div>
+                    <div class="cb">I had a calendar reminder set for every Tuesday. My boss thinks I have commitment
+                        issues. This model better be worth it. <span class="emoji">crying</span></div>
+                    <div class="cs"><span>847 likes</span> <span>12 replies</span></div>
+                </div>
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="avatar" style="background:linear-gradient(135deg,var(--green),var(--cyan))">SP</div>
+                        <div>
+                            <div class="ca">PythonWizard</div>
+                            <div class="ch">@codemonger - Top Contributor</div>
+                        </div>
+                    </div>
+                    <div class="cb">Just ran Qwen3.7-30B-Open on dual 3090s with Q4_K_M. Inference speed is actually
+                        usable for coding. Worth the wait. <span class="emoji">fire</span></div>
+                    <div class="cs"><span>2.1K likes</span> <span>43 replies</span></div>
+                </div>
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="avatar" style="background:linear-gradient(135deg,var(--yellow),#fb923c)">SK</div>
+                        <div>
+                            <div class="ca">Skeptic_Sam</div>
+                            <div class="ch">@neverearly - Perpetually Waiting</div>
+                        </div>
+                    </div>
+                    <div class="cb">Me waiting for Qwen3.7-Open vs me waiting for my tax refund. Both take 3+ years.
+                    </div>
+                    <div class="cs"><span>1.4K likes</span> <span>89 replies</span></div>
+                </div>
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="avatar" style="background:linear-gradient(135deg,var(--red),var(--primary))">NN
+                        </div>
+                        <div>
+                            <div class="ca">NeuralNetNikki</div>
+                            <div class="ch">@promptengineer</div>
+                        </div>
+                    </div>
+                    <div class="cb">My Hugging Face tab had 47 open model cards. I was refreshing every 11 seconds like
+                        a lab rat. STOP REFRESHING.</div>
+                    <div class="cs"><span>3.2K likes</span> <span>211 replies</span></div>
+                </div>
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="avatar" style="background:linear-gradient(135deg,var(--primary),var(--cyan))">DR
+                        </div>
+                        <div>
+                            <div class="ca">DevonRay</div>
+                            <div class="ch">@fullstackdev</div>
+                        </div>
+                    </div>
+                    <div class="cb">Downloaded at 2:47 AM. My family thinks I have a gambling problem. Better than
+                        gambling.</div>
+                    <div class="cs"><span>654 likes</span> <span>31 replies</span></div>
+                </div>
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="avatar" style="background:linear-gradient(135deg,var(--green),#84cc16)">DD</div>
+                        <div>
+                            <div class="ca">DataDrew</div>
+                            <div class="ch">@ml-researcher</div>
+                        </div>
+                    </div>
+                    <div class="cb">Benchmarks look solid. Caught up to Claude 3.5 on coding. Now fix hallucinations and
+                        we are golden.</div>
+                    <div class="cs"><span>982 likes</span> <span>55 replies</span></div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <footer>
+        <div class="mc">Built by Qwen3.7-30B-Open - Apache 2.0 Open Source</div>
+    </footer>
+    <script>
+        // Animated background tokens
+        function initBackground() {
+            for (let i = 0; i < 25; i++) {
+                const t = document.createElement('div');
+                t.className = 'floating-token';
+                t.style.width = (2 + Math.random() * 4) + 'px';
+                t.style.height = t.style.width;
+                t.style.left = Math.random() * 100 + 'vw';
+                t.style.top = Math.random() * 100 + 'vh';
+                t.style.animationDuration = (10 + Math.random() * 15) + 's';
+                t.style.background = 'hsl(' + (Math.random() * 60 + 260) + ', 70%, 65%)';
+                document.body.appendChild(t);
+            }
+        }
+
+        // Download button feedback
+        function downloadFake(source) {
+            const btns = document.querySelectorAll('.download-btn');
+            btns.forEach(b => { b.style.pointerEvents = 'none'; b.style.opacity = '0.6'; });
+            const btn = document.querySelector('.download-btn.' + source);
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i><div class="bl">Redirecting...</div>';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i><div class="bl">Check HF Hub</div><div class="bs">Weights should be live now</div>';
+            }, 1500);
+            setTimeout(() => {
+                btns.forEach(b => { b.style.pointerEvents = 'auto'; b.style.opacity = '1'; });
+                btn.innerHTML = orig;
+            }, 3000);
+        }
+
+        // Benchmark chart
+        new Chart(document.getElementById('benchChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Qwen3.7-30B', 'Claude 3.5', 'GPT-4', 'Gemini 1.5'],
+                datasets: [
+                    { label: 'MMLU', data: [87.3, 86.1, 86.7, 83.1], backgroundColor: 'rgba(6,182,212,0.7)' },
+                    { label: 'HumanEval', data: [82.1, 80.8, 78.2, 79.5], backgroundColor: 'rgba(16,185,129,0.7)' },
+                    { label: 'GSM-8K', data: [91.4, 89.9, 90.1, 89.0], backgroundColor: 'rgba(139,92,246,0.7)' },
+                    { label: 'BBH Avg', data: [79.6, 78.9, 80.2, 77.8], backgroundColor: 'rgba(245,158,11,0.7)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+                    tooltip: {
+                        backgroundColor: 'rgba(10,10,15,0.9)',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' }, beginAtZero: true }
+                }
+            }
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', e => {
+                e.preventDefault();
+                const target = document.querySelector(anchor.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', initBackground);
+    </script>
+</body>
+
+</html>
