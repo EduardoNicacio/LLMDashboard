@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus PM Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        glass: "rgba(255, 255, 255, 0.05)",
+                        glassBorder: "rgba(255, 255, 255, 0.1)",
+                        neonBlue: "#3b82f6",
+                        neonPurple: "#a855f7",
+                        neonGreen: "#10b981",
+                        neonRed: "#ef4444",
+                        darkBg: "#0f172a",
+                        cardBg: "rgba(30, 41, 59, 0.7)"
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        /* Detail Row Expansion */
+        details>summary {
+            list-style: none;
+        }
+
+        details>summary::-webkit-details-marker {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-darkBg text-gray-100 antialiased min-h-screen flex overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-20 lg:w-64 glass-panel z-50 flex-shrink-0 flex flex-col justify-between transition-all duration-300"
+        id="sidebar">
+        <div>
+            <div class="h-16 flex items-center justify-center lg:justify-start px-6 border-b border-glassBorder">
+                <i class="fa-solid fa-layer-group text-neonBlue text-xl mr-3"></i>
+                <span
+                    class="font-bold text-lg tracking-wide hidden lg:block bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">NEXUS
+                    PM</span>
+            </div>
+
+            <nav class="mt-6 px-2 space-y-1">
+                <!-- Nav Items -->
+                <a href="#" onclick="switchView('dashboard')" id="nav-dashboard"
+                    class="nav-item group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors bg-gradient-to-r from-neonBlue/20 to-transparent text-white border-l-4 border-neonBlue">
+                    <i class="fa-solid fa-chart-line w-6 text-center mr-2 opacity-70 group-hover:opacity-100"></i>
+                    <span class="hidden lg:block">Dashboard</span>
+                </a>
+
+                <a href="#" onclick="switchView('projects')" id="nav-projects"
+                    class="nav-item group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors hover:bg-white/5 text-gray-400 hover:text-white border-l-4 border-transparent">
+                    <i class="fa-solid fa-list-check w-6 text-center mr-2 opacity-70 group-hover:opacity-100"></i>
+                    <span class="hidden lg:block">Projects</span>
+                </a>
+
+                <a href="#" onclick="switchView('timeline')" id="nav-timeline"
+                    class="nav-item group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors hover:bg-white/5 text-gray-400 hover:text-white border-l-4 border-transparent">
+                    <i class="fa-solid fa-calendar-days w-6 text-center mr-2 opacity-70 group-hover:opacity-100"></i>
+                    <span class="hidden lg:block">Timeline</span>
+                </a>
+
+                <a href="#" onclick="switchView('resources')" id="nav-resources"
+                    class="nav-item group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors hover:bg-white/5 text-gray-400 hover:text-white border-l-4 border-transparent">
+                    <i class="fa-solid fa-users w-6 text-center mr-2 opacity-70 group-hover:opacity-100"></i>
+                    <span class="hidden lg:block">Resources</span>
+                </a>
+
+                <a href="#" onclick="switchView('risks')" id="nav-risks"
+                    class="nav-item group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors hover:bg-white/5 text-gray-400 hover:text-white border-l-4 border-transparent">
+                    <i
+                        class="fa-solid fa-triangle-exclamation w-6 text-center mr-2 opacity-70 group-hover:opacity-100"></i>
+                    <span class="hidden lg:block">Risks</span>
+                </a>
+
+                <div class="pt-4 mt-4 border-t border-glassBorder hidden lg:block">
+                    <p class="px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Integrations</p>
+                    <div class="px-6 space-y-3">
+                        <div
+                            class="flex items-center justify-between px-4 py-2 rounded bg-white/5 border border-glassBorder">
+                            <span class="text-xs text-gray-400"><i class="fa-brands fa-jira mr-2"></i>Jira</span>
+                            <span class="w-2 h-2 rounded-full bg-neonGreen animate-pulse"></span>
+                        </div>
+                        <div
+                            class="flex items-center justify-between px-4 py-2 rounded bg-white/5 border border-glassBorder">
+                            <span class="text-xs text-gray-400"><i class="fa-brands fa-gitlab mr-2"></i>Github</span>
+                            <span class="w-2 h-2 rounded-full bg-neonGreen animate-pulse"></span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-glassBorder">
+            <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=random" alt="User"
+                    class="w-9 h-9 rounded-full border border-glassBorder">
+                <div class="hidden lg:block overflow-hidden">
+                    <p class="text-sm font-medium text-white truncate">Alex Morgan</p>
+                    <p class="text-xs text-gray-500 truncate">PMO Lead</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+
+        <!-- Top Header -->
+        <header
+            class="h-16 glass-panel border-b border-glassBorder flex items-center justify-between px-8 z-40 shrink-0">
+            <div class="flex items-center gap-4 w-full max-w-xl">
+                <div class="relative w-full group">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" placeholder="Search projects, tasks, or risks..."
+                        class="w-full bg-darkBg/50 border border-glassBorder rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-neonBlue transition-colors placeholder-gray-600 text-white">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 lg:gap-6">
+                <!-- View Toggles -->
+                <div class="hidden md:flex bg-darkBg/50 rounded-lg p-1 border border-glassBorder mr-2">
+                    <button onclick="toggleMode('agile')" id="btn-agile"
+                        class="px-3 py-1 text-xs font-medium rounded transition-all bg-neonBlue text-white shadow-sm">Agile</button>
+                    <button onclick="toggleMode('waterfall')" id="btn-waterfall"
+                        class="px-3 py-1 text-xs font-medium rounded transition-all hover:bg-white/5 text-gray-400">Waterfall</button>
+                </div>
+
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()"
+                    class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+                    title="Toggle Theme">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Date Range -->
+                <div class="hidden lg:flex items-center gap-2 mr-2">
+                    <span class="text-xs text-gray-500 uppercase font-medium">Period:</span>
+                    <select title="data-range" id="date-range" onchange="updateDateRange(this.value)"
+                        class="bg-darkBg/30 border border-glassBorder rounded px-2 py-1 text-xs focus:outline-none cursor-pointer hover:bg-white/5 transition-colors">
+                        <option value="Q4 2023">Q4 2023</option>
+                        <option value="YTD">Year to Date</option>
+                        <option value="WEEKLY">Weekly</option>
+                    </select>
+                </div>
+
+                <!-- View Switcher (Mobile/Tablet) -->
+                <div class="lg:hidden flex gap-1 bg-darkBg/50 p-1 rounded-lg border border-glassBorder mr-2">
+                    <button type="button" title="Switch" onclick="switchView('dashboard')" id="m-nav-dashboard"
+                        class="p-1.5 rounded hover:bg-white/5 text-gray-400"><i class="fa-solid fa-grid-2"></i></button>
+                    <button type="button" title="Switch" onclick="switchView('projects')" id="m-nav-projects"
+                        class="p-1.5 rounded hover:bg-white/5 text-gray-400"><i class="fa-solid fa-list"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div id="content-area" class="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth">
+
+            <!-- VIEW: DASHBOARD (Default) -->
+            <div id="view-dashboard" class="fade-in space-y-6">
+
+                <!-- Hero KPIs -->
+                <section class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+                    <!-- Card 1 -->
+                    <div
+                        class="glass-panel rounded-xl p-5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-neonBlue/10 rounded-full blur-2xl -mr-8 -mt-8">
+                        </div>
+                        <p class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">Active Projects</p>
+                        <h3 class="text-3xl font-bold text-white mb-2" id="kpi-active">42</h3>
+                        <div class="flex items-center gap-2 text-xs text-neonGreen">
+                            <i class="fa-solid fa-arrow-up"></i>
+                            <span>+3 this quarter</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div
+                        class="glass-panel rounded-xl p-5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                        <div
+                            class="absolute right-0 top-0 w-24 h-24 bg-neonPurple/10 rounded-full blur-2xl -mr-8 -mt-8">
+                        </div>
+                        <p class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">Portfolio Health</p>
+                        <h3 class="text-3xl font-bold text-white mb-2" id="kpi-health">94%</h3>
+                        <div class="flex items-center gap-2 text-xs text-neonGreen">
+                            <i class="fa-solid fa-check"></i>
+                            <span>On track</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div
+                        class="glass-panel rounded-xl p-5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                        <p class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">Budget Utilization
+                        </p>
+                        <h3 class="text-3xl font-bold text-white mb-2" id="kpi-budget">$84.2M</h3>
+                        <div class="w-full bg-gray-700 h-1 rounded-full mt-3 overflow-hidden">
+                            <div class="bg-neonBlue h-1 rounded-full w-[85%]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div
+                        class="glass-panel rounded-xl p-5 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                        <p class="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">Team Velocity</p>
+                        <h3 class="text-3xl font-bold text-white mb-2" id="kpi-velocity">87%</h3>
+                        <div class="flex items-center gap-2 text-xs text-neonGreen">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>High efficiency</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Main Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <!-- Left Column (Charts & H2H) -->
+                    <div class="lg:col-span-2 space-y-6">
+
+                        <!-- Head-to-Head Comparison -->
+                        <section
+                            class="glass-panel rounded-xl p-6 border-t border-white/10 shadow-lg relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-lg font-semibold text-gray-200 flex items-center gap-2">
+                                    <i class="fa-solid fa-scale-balanced text-neonPurple"></i>
+                                    Flagship Comparison
+                                </h3>
+                                <span
+                                    class="px-2 py-1 bg-white/5 rounded text-xs text-gray-400 border border-glassBorder">Live
+                                    Data</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Project A -->
+                                <div
+                                    class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg p-4 border border-glassBorder relative group hover:border-neonBlue/50 transition-colors">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="font-medium text-white truncate pr-4"
+                                            title="Mobile Platform Modernization">Mobile Platform Mod.</h4>
+                                        <span
+                                            class="px-2 py-0.5 rounded-full bg-neonBlue/20 text-neonBlue text-[10px] font-bold border border-neonBlue/30">WINNER</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mb-4">Sprint 24 • On Track</p>
+
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-gray-500">Schedule Adherence</span>
+                                            <span class="font-mono font-medium text-white">98%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                            <div
+                                                class="bg-neonBlue h-1.5 rounded-full w-[98%] shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                                            </div>
+                                        </div>
+
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-gray-500">Budget Variance</span>
+                                            <span class="font-mono font-medium text-white">+2%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-neonGreen h-1.5 rounded-full w-[98%]"></div>
+                                        </div>
+
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-gray-500">Risk Score</span>
+                                            <span class="font-mono font-medium text-white">Low (12)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Project B -->
+                                <div
+                                    class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg p-4 border border-glassBorder relative group hover:border-neonRed/50 transition-colors">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="font-medium text-white truncate pr-4"
+                                            title="Customer Analytics Initiative">Analytics Init.</h4>
+                                        <span
+                                            class="px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-300 text-[10px] font-bold border border-gray-600">CHALLENGE</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mb-4">Sprint 24 • At Risk</p>
+
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-gray-500">Schedule Adherence</span>
+                                            <span class="font-mono font-medium text-white">84%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                            <div
+                                                class="bg-neonRed h-1.5 rounded-full w-[84%] shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                                            </div>
+                                        </div>
+
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-gray-500">Budget Variance</span>
+                                            <span class="font-mono font-medium text-white">-12%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-neonRed h-1.5 rounded-full w-[84%]"></div>
+                                        </div>
+
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-gray-500">Risk Score</span>
+                                            <span class="font-mono font-medium text-white">High (68)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Winner Breakdown -->
+                            <div class="mt-4 p-3 bg-black/20 rounded-lg border border-glassBorder flex gap-4 text-xs">
+                                <i class="fa-solid fa-trophy text-yellow-500 mt-1"></i>
+                                <p class="text-gray-300 leading-relaxed">
+                                    The <span class="font-bold text-white">Mobile Platform</span> project outperformed
+                                    in schedule adherence (+14%) and team productivity. However, the Analytics
+                                    initiative shows higher risk exposure requiring immediate mitigation.
+                                </p>
+                            </div>
+                        </section>
+
+                        <!-- Main Charts Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            <!-- Budget vs Actual Chart -->
+                            <div class="glass-panel rounded-xl p-5 flex flex-col">
+                                <h4 class="text-sm font-medium text-gray-300 mb-4 flex justify-between items-center">
+                                    <span>Budget vs. Actual Spend</span>
+                                    <i class="fa-solid fa-chart-pie text-neonBlue/50"></i>
+                                </h4>
+                                <div class="flex-1 w-full min-h-[200px] relative">
+                                    <canvas id="chart-budget"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Team Velocity -->
+                            <div class="glass-panel rounded-xl p-5 flex flex-col">
+                                <h4 class="text-sm font-medium text-gray-300 mb-4 flex justify-between items-center">
+                                    <span>Sprint Throughput</span>
+                                    <i class="fa-solid fa-bolt text-neonPurple/50"></i>
+                            </div>
+                            <div class="flex-1 w-full min-h-[200px] relative">
+                                <canvas id="chart-velocity"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Project Table -->
+                    <section class="glass-panel rounded-xl overflow-hidden flex flex-col">
+                        <div class="p-5 border-b border-glassBorder flex justify-between items-center bg-white/5">
+                            <h3 class="font-medium text-gray-200">Active Projects</h3>
+                            <button onclick="toggleDetails()"
+                                class="text-xs text-neonBlue hover:text-white transition-colors flex items-center gap-1">
+                                <i class="fa-solid fa-expand"></i> Expand Details
+                            </button>
+                        </div>
+
+                        <!-- Table Header -->
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs font-medium text-gray-500 uppercase tracking-wider bg-white/5">
+                                    <th class="p-4 cursor-pointer hover:text-neonBlue transition-colors"
+                                        onclick="sortTable('project')">Project Name</th>
+                                    <th class="p-4 cursor-pointer hover:text-neonBlue transition-colors text-right"
+                                        onclick="sortTable('status')">Status</th>
+                                    <th class="p-4 cursor-pointer hover:text-neonBlue transition-colors text-right">
+                                        Health Score</th>
+                                    <th class="p-4 cursor-pointer hover:text-neonBlue transition-colors text-right"
+                                        onclick="sortTable('budget')">Budget</th>
+                                    <th class="p-4 cursor-pointer hover:text-neonBlue transition-colors text-right"
+                                        onclick="sortTable('completion')">Completion %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="project-table-body" class="divide-y divide-white/5">
+                                <!-- JS will populate this -->
+                            </tbody>
+                        </table>
+                    </section>
+
+                </div>
+
+                <!-- Right Column (Resources & Risks) -->
+                <div class="space-y-6">
+
+                    <!-- Resource Allocation Chart -->
+                    <div class="glass-panel rounded-xl p-5 flex flex-col h-[300px]">
+                        <h4 class="text-sm font-medium text-gray-300 mb-2">Resource Allocation</h4>
+                        <canvas id="chart-resources" height="250"></canvas>
+                    </div>
+
+                    <!-- Risk Management -->
+                    <section class="glass-panel rounded-xl p-5 flex flex-col h-[300px]">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-sm font-medium text-gray-300">Active Risks</h4>
+                            <span
+                                class="bg-neonRed/20 text-neonRed px-2 py-0.5 rounded-full text-[10px] border border-neonRed/30"
+                                id="risk-count">8 High</span>
+                        </div>
+
+                        <!-- Risk List -->
+                        <div class="space-y-3 overflow-y-auto pr-1 custom-scrollbar flex-1">
+                            <!-- Risk Item -->
+                            <div class="group p-3 rounded-lg bg-white/5 border border-glassBorder hover:border-neonRed transition-all cursor-pointer"
+                                onclick="toggleRiskDetail(this)">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-xs font-medium text-gray-400 truncate w-24">Vendor Delay</span>
+                                    <i
+                                        class="fa-solid fa-chevron-down text-[10px] text-gray-600 group-hover:text-white transition-transform"></i>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <div class="flex gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-neonRed"></span>
+                                        <span class="text-[10px] text-gray-500 uppercase">Critical</span>
+                                    </div>
+                                    <span class="text-xs font-mono text-white">$15k Impact</span>
+                                </div>
+                            </div>
+
+                            <!-- Risk Item -->
+                            <div class="group p-3 rounded-lg bg-white/5 border border-glassBorder hover:border-neonRed transition-all cursor-pointer"
+                                onclick="toggleRiskDetail(this)">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-xs font-medium text-gray-400 truncate w-24">Scope Creep</span>
+                                    <i
+                                        class="fa-solid fa-chevron-down text-[10px] text-gray-600 group-hover:text-white transition-transform"></i>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <div class="flex gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-neonPurple"></span>
+                                        <span class="text-[10px] text-gray-500 uppercase">Medium</span>
+                                    </div>
+                                    <span class="text-xs font-mono text-white">$4k Impact</span>
+                                </div>
+                            </div>
+
+                            <!-- Risk Item -->
+                            <div class="group p-3 rounded-lg bg-white/5 border border-glassBorder hover:border-neonRed transition-all cursor-pointer"
+                                onclick="toggleRiskDetail(this)">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-xs font-medium text-gray-400 truncate w-24">Tech Stack</span>
+                                    <i
+                                        class="fa-solid fa-chevron-down text-[10px] text-gray-600 group-hover:text-white transition-transform"></i>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <div class="flex gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-neonBlue"></span>
+                                        <span class="text-[10px] text-gray-500 uppercase">Low</span>
+                                    </div>
+                                    <span class="text-xs font-mono text-white">$0 Impact</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: PROJECTS (Hidden by default) -->
+        <div id="view-projects" class="hidden fade-in space-y-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Project Inventory</h2>
+                <button
+                    class="px-4 py-2 bg-neonBlue/10 border border-neonBlue/50 rounded-lg text-sm hover:bg-neonBlue/20 transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> New Project
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="glass-panel p-4 rounded-xl mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Search</label>
+                    <input type="text" placeholder="Filter projects..."
+                        class="w-full bg-darkBg/30 border border-glassBorder rounded px-3 py-2 text-sm focus:outline-none focus:border-neonBlue">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Status</label>
+                    <select title="Status"
+                        class="w-full bg-darkBg/30 border border-glassBorder rounded px-3 py-2 text-sm focus:outline-none focus:border-neonBlue">
+                        <option>All Statuses</option>
+                        <option>In Progress</option>
+                        <option>Completed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Team</label>
+                    <select title="Team"
+                        class="w-full bg-darkBg/30 border border-glassBorder rounded px-3 py-2 text-sm focus:outline-none focus:border-neonBlue">
+                        <option>All Teams</option>
+                        <option>Engineering</option>
+                        <option>Design</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Project Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="project-grid">
+                <!-- JS Populated Cards -->
+            </div>
+        </div>
+
+        <!-- VIEW: TIMELINE (Placeholder for brevity) -->
+        <div id="view-timeline" class="hidden fade-in space-y-6">
+            <h2 class="text-2xl font-bold text-white mb-4">Project Timeline</h2>
+            <div
+                class="glass-panel rounded-xl p-8 flex items-center justify-center h-[50vh] border-dashed border-glassBorder bg-black/20">
+                <div class="text-center text-gray-500">
+                    <i class="fa-solid fa-calendar-days text-4xl mb-4 opacity-50"></i>
+                    <p>Interactive Gantt Chart View</p>
+                    <button onclick="switchView('dashboard')"
+                        class="mt-4 px-6 py-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">Return to
+                        Dashboard</button>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </main>
+
+    <!-- Modal for Risk Details -->
+    <div id="risk-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"></div>
+        <div class="glass-panel w-full max-w-lg rounded-xl relative overflow-hidden shadow-2xl animate-fade-in-up">
+            <button type="button" title="Close" onclick="closeRiskModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white z-10"><i
+                    class="fa-solid fa-xmark"></i></button>
+
+            <div id="modal-content" class="p-6 h-[80vh] flex flex-col">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data & State ---
+        const projects = [
+            { id: 1, name: "Mobile Platform Modernization", status: "In Progress", health: 98, budget: "$2.4M", completion: 65, team: "Engineering", risks: 2 },
+            { id: 2, name: "Customer Analytics Initiative", status: "At Risk", health: 72, budget: "$1.8M", completion: 40, team: "Data Science", risks: 5 },
+            { id: 3, name: "Legacy ERP Migration", status: "Completed", health: 100, budget: "$3.1M", completion: 100, team: "Infrastructure", risks: 0 },
+            { id: 4, name: "Cloud Security Overhaul", status: "In Progress", health: 85, budget: "$950k", completion: 25, team: "Security", risks: 3 },
+            { id: 5, name: "UX Research Expansion", status: "Planning", health: 100, budget: "$400k", completion: 10, team: "Design Ops", risks: 1 },
+        ];
+
+        const chartInstances = {}; // Store Chart.js instances to destroy/recreate if needed
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            renderDashboard();
+            setupEventListeners();
+        });
+
+        function initTheme() {
+            // Check local storage or system preference
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
+
+            document.getElementById('theme-icon').addEventListener('click', () => {
+                toggleTheme();
+            });
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.classList.remove(current);
+            if (newTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark'); // Tailwind handles light mode via class removal usually, but here we rely on default or explicit bg colors. 
+                // Actually for this setup, let's assume dark is the base and we toggle a 'light' class that overrides bg colors if needed, OR just swap classes.
+                // Let's implement simple class swapping.
+            }
+
+            localStorage.setItem('theme', newTheme);
+
+            // Update icons
+            const icon = document.getElementById('theme-icon');
+            if (newTheme === 'dark') {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                updateCharts(); // Charts need dark mode colors
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                updateCharts();
+            }
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                // Tailwind default dark mode usually handles colors, but we need to ensure bg is set correctly.
+                // Since we use arbitrary values in HTML, let's just rely on the class presence for Chart.js.
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function setupEventListeners() {
+            // View Switching Logic
+            const views = ['dashboard', 'projects'];
+
+            views.forEach(view => {
+                const el = document.getElementById(`view-${view}`);
+                if (el) {
+                    el.addEventListener('click', () => switchView(view));
+                }
+            });
+
+            // Nav Items
+            document.querySelectorAll('.nav-item').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = link.getAttribute('href'); // '#'
+                    if (target === '#') return;
+
+                    switchView(target.replace('#', ''));
+                });
+            });
+
+            // Mobile Nav
+            document.getElementById('m-nav-dashboard').addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('dashboard');
+            });
+            document.getElementById('m-nav-projects').addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('projects');
+            });
+
+            // Date Range
+            document.getElementById('date-range').addEventListener('change', updateDateRange);
+        }
+
+        function switchView(viewName) {
+            // Hide all views
+            ['dashboard', 'projects', 'timeline'].forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                if (el) el.classList.add('hidden');
+
+                // Reset nav active states
+                const nav = document.getElementById(`nav-${v}`);
+                if (nav) nav.classList.remove('bg-gradient-to-r', 'from-neonBlue/20', 'border-l-4', 'border-neonBlue', 'text-white');
+                nav.classList.add('hover:bg-white/5', 'text-gray-400', 'border-transparent');
+            });
+
+            // Show selected view
+            const target = document.getElementById(`view-${viewName}`);
+            if (target) {
+                target.classList.remove('hidden');
+
+                // Update Nav Active State
+                const activeNav = document.getElementById(`nav-${viewName}`);
+                if (activeNav) {
+                    activeNav.classList.add('bg-gradient-to-r', 'from-neonBlue/20', 'border-l-4', 'border-neonBlue', 'text-white');
+                    activeNav.classList.remove('hover:bg-white/5', 'text-gray-400', 'border-transparent');
+                }
+
+                // Render specific content if needed (e.g. project grid)
+                if (viewName === 'projects') {
+                    renderProjectGrid();
+                }
+            }
+        }
+
+        function toggleDetails() {
+            const rows = document.querySelectorAll('#project-table-body tr');
+            rows.forEach(row => {
+                row.classList.toggle('hidden');
+            });
+        }
+
+        function sortTable(column) {
+            // Simple visual feedback for now, logic omitted to keep code concise
+            console.log(`Sorting by ${column}`);
+        }
+
+        function toggleMode(mode) {
+            const btnAgile = document.getElementById('btn-agile');
+            const btnWaterfall = document.getElementById('btn-waterfall');
+
+            if (mode === 'agile') {
+                btnAgile.classList.add('bg-neonBlue', 'text-white');
+                btnWaterfall.classList.remove('bg-neonBlue/20', 'hover:bg-white/5');
+            } else {
+                btnWaterfall.classList.add('bg-neonPurple', 'text-white'); // Assuming purple for waterfall
+                btnAgile.classList.remove('bg-neonBlue', 'text-white');
+            }
+        }
+
+        function updateDateRange(val) {
+            console.log("Filtering by:", val);
+            // In a real app, this would re-fetch data or filter the DOM elements.
+        }
+
+        // --- Rendering Logic ---
+
+        function renderDashboard() {
+            renderTable();
+            renderCharts();
+        }
+
+        function renderProjectGrid() {
+            const container = document.getElementById('project-grid');
+            if (container.children.length > 0) return; // Already rendered
+
+            projects.forEach(p => {
+                const card = `
+                    <div class="glass-panel rounded-xl p-5 hover:border-neonBlue/50 transition-all cursor-pointer group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-transparent via-${getStatusColor(p.status)} to-transparent opacity-50"></div>
+                        
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-bold text-white truncate pr-2 group-hover:text-neonBlue transition-colors">${p.name}</h4>
+                            <span class="text-[10px] font-mono bg-black/30 px-2 py-1 rounded border border-glassBorder text-gray-400">${p.team}</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-y-2 text-xs mb-4">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Health</span>
+                                <span class="${getHealthColor(p.health)} font-medium">${p.health}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Budget</span>
+                                <span class="font-mono text-white">${p.budget}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Completion</span>
+                                <span class="font-mono text-white">${p.completion}%</span>
+                            </div>
+                             <div class="flex justify-between">
+                                <span class="text-gray-500">Risks</span>
+                                <span class="${getRiskColor(p.risks)} font-medium">${p.risks}</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-auto">
+                             <div class="h-full rounded-full ${getStatusBarColor(p.status)}" style="width: ${p.completion}%"></div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('project-table-body');
+            if (!tbody) return;
+
+            projects.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-white/5 transition-colors cursor-pointer group";
+                tr.innerHTML = `
+                     <td class="p-4 font-medium text-white group-hover:text-neonBlue">${p.name}</td>
+                     <td class="p-4 text-right">
+                         <span class="px-2 py-1 rounded-full text-[10px] border ${getStatusBadge(p.status)}">${p.status}</span>
+                     </td>
+                     <td class="p-4 text-right font-mono text-white">${getHealthScore(p.health)}</td>
+                     <td class="p-4 text-right font-mono text-gray-400">${p.budget}</td>
+                     <td class="p-4 text-right font-mono text-neonBlue">${p.completion}%</td>
+                 `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Chart Logic ---
+
+        function renderCharts() {
+            const ctxBudget = document.getElementById('chart-budget');
+            if (ctxBudget) initChart(ctxBudget, 'budget', [45, 60, 75, 80]); // Mock data
+
+            const ctxVelocity = document.getElementById('chart-velocity');
+            if (ctxVelocity) initChart(ctxVelocity, 'velocity', [12, 19, 3, 5, 20, 30, 45]);
+
+            const ctxResources = document.getElementById('chart-resources');
+            if (ctxResources) initChart(ctxResources, 'resources', [30, 45, 20, 5]);
+        }
+
+        function initChart(canvasId, type, dataPoints) {
+            // Destroy existing instance if exists to avoid duplicates on re-render (simplified here)
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+            const config = {
+                type: 'line', // Default to line for simplicity in this demo
+                data: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    datasets: [{
+                        label: 'Metric',
+                        data: dataPoints,
+                        borderColor: '#3b82f6', // Neon Blue
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#3b82f6',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: function (value) { return '$' + value + 'M'; } } }
+                    }
+                }
+            };
+
+            new Chart(ctx, config);
+        }
+
+        // --- Helpers ---
+
+        function getStatusColor(status) {
+            switch (status.toLowerCase()) {
+                case 'in progress': return 'neonBlue';
+                case 'completed': return 'neonGreen';
+                case 'at risk': return 'neonRed';
+                default: return 'gray';
+            }
+        }
+
+        function getStatusBadge(status) {
+            const color = getStatusColor(status);
+            // Tailwind classes for badges are tricky with dynamic colors, using inline styles or specific utility classes
+            let bgClass = '';
+            if (color === 'neonBlue') bgClass = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            else if (color === 'neonGreen') bgClass = 'bg-green-500/10 text-green-400 border-green-500/20';
+            else if (color === 'neonRed') bgClass = 'bg-red-500/10 text-red-400 border-red-500/20';
+
+            return `${bgClass} ${status.replace(' ', '')}`; // Adding class name for Tailwind to pick up color if needed, but inline style is safer here.
+        }
+
+        function getHealthColor(score) {
+            if (score > 90) return 'text-neonGreen';
+            if (score > 75) return 'text-yellow-400';
+            return 'text-neonRed';
+        }
+
+        function getRiskColor(count) {
+            if (count === 0) return 'text-gray-500';
+            if (count < 3) return 'text-neonBlue';
+            return 'text-neonPurple';
+        }
+
+        function getStatusBarColor(status) {
+            switch (status.toLowerCase()) {
+                case 'in progress': return 'bg-blue-500';
+                case 'completed': return 'bg-green-500';
+                case 'at risk': return 'bg-red-500';
+                default: return 'bg-gray-600';
+            }
+        }
+
+        function getHealthScore(score) {
+            if (score > 90) return '<span class="text-neonGreen">High</span>';
+            if (score < 70) return '<span class="text-neonRed">Low</span>';
+            return score + '%';
+        }
+
+        // --- Modal Logic ---
+        function toggleRiskDetail(element) {
+            const modal = document.getElementById('risk-modal');
+            const content = document.getElementById('modal-content');
+
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+
+                // Populate dummy detail view
+                content.innerHTML = `
+                     <div class="flex justify-between items-center mb-6 border-b border-glassBorder pb-4">
+                         <h3 class="text-xl font-bold text-white">Vendor Delay Risk</h3>
+                         <span class="px-2 py-1 bg-neonRed/20 text-neonRed rounded-full text-xs border border-neonRed/30">Critical</span>
+                     </div>
+                     
+                     <div class="space-y-4 flex-1 overflow-y-auto pr-2">
+                         <div class="bg-black/20 p-4 rounded-lg border border-glassBorder">
+                             <p class="text-sm text-gray-300 mb-2"><strong>Description:</strong> Critical API vendor has indicated potential downtime during Q4 migration window.</p>
+                             <p class="text-xs text-gray-500 italic">"We are seeing increased latency on their side."</p>
+                         </div>
+
+                         <div class="grid grid-cols-2 gap-4">
+                             <div class="bg-white/5 p-3 rounded border border-glassBorder">
+                                 <span class="text-[10px] text-gray-500 uppercase">Probability</span>
+                                 <p class="font-mono font-bold text-white">85%</p>
+                             </div>
+                             <div class="bg-white/5 p-3 rounded border border-glassBorder">
+                                 <span class="text-[10px] text-gray-500 uppercase">Impact</span>
+                                 <p class="font-mono font-bold text-white">$15,000</p>
+                             </div>
+                         </div>
+
+                         <div class="space-y-2">
+                             <label class="text-xs text-gray-500 uppercase">Mitigation Plan</label>
+                             <textarea class="w-full bg-darkBg/30 border border-glassBorder rounded p-2 text-sm focus:outline-none focus:border-neonBlue" rows="3" placeholder="Enter mitigation steps..."></textarea>
+                         </div>
+
+                         <div class="space-y-2">
+                             <label class="text-xs text-gray-500 uppercase">Owner</label>
+                             <input type="text" value="Sarah Jenkins (Vendor Mgmt)" class="w-full bg-darkBg/30 border border-glassBorder rounded px-2 py-1.5 text-sm focus:outline-none focus:border-neonBlue">
+                         </div>
+                     </div>
+
+                     <div class="mt-auto pt-4 flex justify-end gap-3 border-t border-glassBorder bg-black/20 p-4">
+                         <button onclick="closeRiskModal()" class="px-4 py-2 rounded-lg text-sm hover:bg-white/5 transition-colors">Close</button>
+                         <button class="px-4 py-2 rounded-lg text-sm bg-neonBlue hover:bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all">Update Status</button>
+                     </div>
+                 `;
+            } else {
+                closeRiskModal();
+            }
+        }
+
+        function closeRiskModal() {
+            const modal = document.getElementById('risk-modal');
+            modal.classList.add('hidden');
+        }
+
+    </script>
+</body>
+
+</html>
